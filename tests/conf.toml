@@ -1,0 +1,308 @@
+[global]
+req_timeout_ms = 60000
+poll_timeout_ms = 100
+
+[localhost.log_broker]
+module = "mahos.node.log_broker"
+class = "LogBroker"
+target = { log = "localhost::log_broker" }
+xpub_endpoint = "tcp://127.0.0.1:5555"
+xsub_endpoint = "tcp://127.0.0.1:5556"
+file = false
+
+[localhost.param_server]
+module = "mahos.node.param_server"
+class = "ParamServer"
+target = { log = "localhost::log_broker" }
+rep_endpoint = "tcp://127.0.0.1:5557"
+pub_endpoint = "tcp://127.0.0.1:5558"
+
+[localhost.server]
+module = "mahos.inst.server"
+class = "InstrumentServer"
+target = { log = "localhost::log_broker" }
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5559"
+pub_endpoint = "tcp://127.0.0.1:5560"
+
+[localhost.server.instrument.sg]
+module = "mock"
+class = "SG_mock"
+[localhost.server.instrument.sg.conf]
+resource = "VISA::SG"
+power_bounds = [0.0, 47.0]
+freq_bounds = [9E3, 6E9]
+
+[localhost.server.instrument.fg]
+module = "mock"
+class = "FG_mock"
+[localhost.server.instrument.fg.conf]
+resource = "VISA::FG"
+
+[localhost.server.instrument.pg]
+module = "dtg"
+class = "DTG5274_mock"
+[localhost.server.instrument.pg.conf]
+root_local = "."
+[localhost.server.instrument.pg.conf.channels]
+laser = 6
+sync = 5
+gate = 4
+trigger = 3
+mw = 2
+mw_i = 1
+mw_q = 0
+
+[localhost.server.instrument.piezo]
+module = "mock"
+class = "Piezo_mock"
+
+[localhost.server.instrument.tdc]
+module = "mock"
+class = "MCS_mock"
+
+[localhost.server.instrument.clock]
+module = "mock"
+class = "Clock_mock"
+conf = { line = "/DummyDev1/Ctr0" }
+
+[localhost.server.instrument.pd0]
+module = "mock"
+class = "Counter_mock"
+conf = { source = "/DummyDev1/Ctr1" }
+
+[localhost.server.instrument.pd1]
+module = "mock"
+class = "Counter_mock"
+conf = { source = "/DummyDev1/Ctr2" }
+
+[localhost.server.instrument.spectrometer]
+module = "mock"
+class = "Spectrometer_mock"
+[localhost.server.instrument.spectrometer.conf]
+base_config = "default_expt"
+
+[localhost.server.instrument.camera]
+module = "mock"
+class = "Camera_mock"
+
+[localhost.server.instrument_overlay.scanner]
+module = "confocal_scanner_mock"
+class = "ConfocalScanner_mock"
+[localhost.server.instrument_overlay.scanner.conf]
+piezo = "$piezo"
+pd0 = "$pd0"
+pd1 = "$pd1"
+
+[localhost.server.instrument_overlay.isweeper]
+module = "iodmr_sweeper_mock"
+class = "IODMRSweeperCommand_mock"
+[localhost.server.instrument_overlay.isweeper.conf]
+sg = "$sg"
+camera = "$camera"
+
+[localhost.server2]
+module = "mahos.inst.server"
+class = "InstrumentServer"
+target = { log = "localhost::log_broker" }
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5561"
+pub_endpoint = "tcp://127.0.0.1:5562"
+
+[localhost.server2.instrument.sg2]
+module = "mock"
+class = "SG_mock"
+[localhost.server2.instrument.sg2.conf]
+resource = "VISA:SG2"
+power_bounds = [1.0, 10.0]
+freq_bounds = [1E6, 6E9]
+
+[localhost.confocal]
+module = "mahos.meas.confocal"
+class = "Confocal"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5570"
+pub_endpoint = "tcp://127.0.0.1:5571"
+poll_timeout_ms = 80
+[localhost.confocal.tracer]
+size = 1000
+samples = 5
+time_window_sec = 0.01
+interval_sec = 0.01
+[localhost.confocal.piezo]
+interval_sec = 0.2
+[localhost.confocal.target]
+log = "localhost::log_broker"
+[localhost.confocal.target.servers]
+clock = "localhost::server"
+scanner = "localhost::server"
+piezo = "localhost::server"
+pd0 = "localhost::server"
+pd1 = "localhost::server"
+sg = "localhost::server2"
+
+[localhost.tracker]
+module = "mahos.meas.confocal_tracker"
+class = "ConfocalTracker"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5572"
+pub_endpoint = "tcp://127.0.0.1:5573"
+[localhost.tracker.target]
+log = "localhost::log_broker"
+confocal = "localhost::confocal"
+manager = "localhost::manager"
+
+[localhost.odmr]
+module = "mahos.meas.odmr"
+class = "ODMR"
+rep_endpoint = "tcp://127.0.0.1:5574"
+pub_endpoint = "tcp://127.0.0.1:5575"
+[localhost.odmr.sweeper]
+pd_clock = "/Dummy"
+[localhost.odmr.target]
+log = "localhost::log_broker"
+[localhost.odmr.target.servers]
+sg = "localhost::server"
+pg = "localhost::server"
+pd0 = "localhost::server"
+pd1 = "localhost::server"
+
+[localhost.hbt]
+module = "mahos.meas.hbt"
+class = "HBT"
+rep_endpoint = "tcp://127.0.0.1:5576"
+pub_endpoint = "tcp://127.0.0.1:5577"
+[localhost.hbt.target]
+log = "localhost::log_broker"
+[localhost.hbt.target.servers]
+tdc = "localhost::server"
+
+[localhost.podmr]
+module = "mahos.meas.podmr"
+class = "PODMR"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5578"
+pub_endpoint = "tcp://127.0.0.1:5579"
+[localhost.podmr.target]
+log = "localhost::log_broker"
+[localhost.podmr.target.servers]
+tdc = "localhost::server"
+sg = "localhost::server"
+pg = "localhost::server"
+fg = "localhost::server"
+
+[localhost.iodmr]
+module = "mahos.meas.iodmr"
+class = "IODMR"
+rep_endpoint = "tcp://127.0.0.1:5580"
+pub_endpoint = "tcp://127.0.0.1:5581"
+[localhost.iodmr.target]
+log = "localhost::log_broker"
+[localhost.iodmr.target.servers]
+isweeper = "localhost::server"
+
+[localhost.spectroscopy]
+module = "mahos.meas.spectroscopy"
+class = "Spectroscopy"
+rep_endpoint = "tcp://127.0.0.1:5582"
+pub_endpoint = "tcp://127.0.0.1:5583"
+[localhost.spectroscopy.target]
+log = "localhost::log_broker"
+[localhost.spectroscopy.target.servers]
+spectrometer = "localhost::server"
+
+[localhost.camera]
+module = "mahos.meas.camera"
+class = "Camera"
+rep_endpoint = "tcp://127.0.0.1:5584"
+pub_endpoint = "tcp://127.0.0.1:5585"
+[localhost.camera.target]
+log = "localhost::log_broker"
+[localhost.camera.target.servers]
+camera = "localhost::server"
+
+[localhost.manager]
+module = "mahos.meas.state_manager"
+class = "StateManager"
+target = { log = "localhost::log_broker" }
+rep_endpoint = "tcp://127.0.0.1:5586"
+pub_endpoint = "tcp://127.0.0.1:5587"
+
+[localhost.manager.node]
+"localhost::hbt" = ["mahos.msgs.common_msgs", "BinaryState"]
+"localhost::odmr" = ["mahos.msgs.common_msgs", "BinaryState"]
+"localhost::podmr" = ["mahos.msgs.common_msgs", "BinaryState"]
+"localhost::confocal" = ["mahos.msgs.confocal_msgs", "ConfocalState"]
+"localhost::tracker" = ["mahos.msgs.common_msgs", "BinaryState"]
+
+[localhost.manager.command]
+prepare_scan = { "localhost::odmr" = "IDLE" , "localhost::hbt" = "IDLE", "localhost::podmr" = "IDLE" }
+
+[localhost.confocal_gui]
+module = "mahos.gui.confocal"
+class = "ConfocalGUI"
+move_interval_ms = 10
+[localhost.confocal_gui.target]
+confocal = "localhost::confocal"
+tracker = "localhost::tracker"
+param_server = "localhost::param_server"
+
+[localhost.odmr_gui]
+module = "mahos.gui.odmr"
+class = "ODMRGUI"
+[localhost.odmr_gui.target]
+odmr = "localhost::odmr"
+param_server = "localhost::param_server"
+confocal = "localhost::confocal"
+
+[localhost.hbt_gui]
+module = "mahos.gui.hbt"
+class = "HBTGUI"
+[localhost.hbt_gui.target]
+hbt = "localhost::hbt"
+param_server = "localhost::param_server"
+
+[localhost.podmr_gui]
+module = "mahos.gui.podmr"
+class = "PODMRGUI"
+[localhost.podmr_gui.target]
+podmr = "localhost::podmr"
+param_server = "localhost::param_server"
+
+[localhost.iodmr_gui]
+module = "mahos.gui.iodmr"
+class = "IODMRGUI"
+[localhost.iodmr_gui.target]
+iodmr = "localhost::iodmr"
+param_server = "localhost::param_server"
+
+[localhost.spectroscopy_gui]
+module = "mahos.gui.spectroscopy"
+class = "SpectroscopyGUI"
+[localhost.spectroscopy_gui.target]
+spectroscopy = "localhost::spectroscopy"
+param_server = "localhost::param_server"
+confocal = "localhost::confocal"
+
+[localhost.camera_gui]
+module = "mahos.gui.camera"
+class = "CameraGUI"
+[localhost.camera_gui.target]
+camera = "localhost::camera"
+param_server = "localhost::param_server"
+
+[localhost.pulse_monitor]
+module = "mahos.gui.pulse_monitor"
+class = "PulseMonitor"
+[localhost.pulse_monitor.target]
+pulse = "localhost::podmr"
+
+[localhost.main_monitor]
+module = "mahos.gui.main_monitor"
+class = "MainMonitor"
+work_dir = "~"
+[localhost.main_monitor.target]
+log = "localhost::log_broker"
+param_server = "localhost::param_server"
+servers = ["localhost::server", "localhost::server2"]
+manager = "localhost::manager"

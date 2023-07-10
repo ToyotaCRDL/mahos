@@ -1,0 +1,33 @@
+Contributing to mahos
+=====================
+
+Thank you so much for investing your time in contributing to our project.
+Any contributions including bug reports and patches are always welcomed.
+
+Bug reports
+-----------
+
+Please submit a new issue for a bug report.
+
+Patches
+-------
+
+Please submit a pull request for your patch after reviewing the notes below.
+
+Testing
+^^^^^^^
+
+Please use following commands in the project's root directory in order to check your patch can be merged.
+You can also hit ``make`` to do all.
+
+- ``black .`` to format the codes.
+- ``flake8 .`` for code linting.
+- ``pytest`` to check whether all the unit tests are passing.
+
+Contributor License Agreement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To avoid possible legal (copyright, patent, etc.) issues, we ask you to sign
+the Contributor License Agreement (CLA) before merging your contribution.
+The signing process can be done on the GitHub pull request page.
+Please follow the instructions by "CLA Assistant Lite bot" there.

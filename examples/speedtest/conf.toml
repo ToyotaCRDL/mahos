@@ -1,0 +1,11 @@
+[localhost.server]
+module = "nodes"
+class = "Server"
+rep_endpoint = "tcp://127.0.0.1:5566"
+data_size = 1_000_000
+
+[localhost.tester]
+module = "nodes"
+class = "Tester"
+[localhost.tester.target]
+server = "localhost::server"

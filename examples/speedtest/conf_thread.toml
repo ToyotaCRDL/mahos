@@ -1,0 +1,14 @@
+[thread.localhost]
+all = ["server", "tester"]
+
+[localhost.server]
+module = "nodes"
+class = "Server"
+rep_endpoint = "inproc://rep"
+data_size = 1_000_000
+
+[localhost.tester]
+module = "nodes"
+class = "Tester"
+[localhost.tester.target]
+server = "localhost::server"

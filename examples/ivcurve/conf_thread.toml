@@ -1,0 +1,52 @@
+# all communications are threaded
+
+[global]
+req_timeout_ms = 60000
+poll_timeout_ms = 100
+
+[thread.localhost]
+all = ["log_broker", "server", "ivcurve", "ivcurve_gui"]
+
+[localhost.log_broker]
+module = "mahos.node.log_broker"
+class = "LogBroker"
+target = { log = "localhost::log_broker" }
+xpub_endpoint = "inproc://log_xpub"
+xsub_endpoint = "inproc://log_xsub"
+
+[localhost.server]
+module = "mahos.inst.server"
+class = "InstrumentServer"
+target = { log = "localhost::log_broker" }
+log_level = "DEBUG"
+rep_endpoint = "inproc://server_rep"
+pub_endpoint = "inproc://server_pub"
+
+[localhost.server.instrument.source]
+module = "instruments"
+class = "VoltageSource_mock"
+[localhost.server.instrument.source.conf]
+resource = "VISA::DUMMY0"
+
+[localhost.server.instrument.meter]
+module = "instruments"
+class = "Multimeter_mock"
+[localhost.server.instrument.meter.conf]
+resource = "VISA::DUMMY1"
+
+[localhost.ivcurve]
+module = "ivcurve"
+class = "IVCurve"
+rep_endpoint = "inproc://ivcurve_rep"
+pub_endpoint = "inproc://ivcurve_pub"
+[localhost.ivcurve.target]
+log = "localhost::log_broker"
+[localhost.ivcurve.target.servers]
+source = "localhost::server"
+meter = "localhost::server"
+
+[localhost.ivcurve_gui]
+module = "ivcurve_gui"
+class = "IVCurveGUI"
+[localhost.ivcurve_gui.target]
+ivcurve = "localhost::ivcurve"

@@ -1,0 +1,25 @@
+[localhost.clock]
+module = "nodes"
+class = "Clock"
+pub_endpoint = "tcp://127.0.0.1:5566"
+
+[localhost.multiplier]
+module = "nodes"
+class = "Multiplier"
+rep_endpoint = "tcp://127.0.0.1:5567"
+
+[localhost.a]
+module = "nodes"
+class = "A"
+pub_endpoint = "tcp://127.0.0.1:5568"
+rep_endpoint = "tcp://127.0.0.1:5569"
+[localhost.a.target]
+B = "localhost::b"
+
+[localhost.b]
+module = "nodes"
+class = "B"
+pub_endpoint = "tcp://127.0.0.1:5570"
+rep_endpoint = "tcp://127.0.0.1:5571"
+[localhost.b.target]
+A = "localhost::a"
