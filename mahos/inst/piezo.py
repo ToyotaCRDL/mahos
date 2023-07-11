@@ -293,6 +293,9 @@ class E727_3_USB_AO(E727_3_USB):
         for ax, p in zip(self.AXIS_IDs, pos):
             self.target[ax] = p
 
+    def get_scan_buffer_size(self):
+        return self._ao.get_onboard_buffer_size()
+
     # Standard API
 
     def close(self):
@@ -328,7 +331,7 @@ class E727_3_USB_AO(E727_3_USB):
         return self._ao.stop()
 
     def get(self, key: str, args=None):
-        if key == "onboard_buffer_size":
+        if key in ("onboard_buffer_size", "scan_buffer_size"):
             return self._ao.get_onboard_buffer_size()
         elif key == "buffer_size":
             return self._ao.get_buffer_size()

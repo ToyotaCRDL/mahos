@@ -241,14 +241,14 @@ class AnalogOut(ConfigurableTask):
         if self.task is None:
             return None
         size = D.uInt32()
-        self.task.GetBufInputOnbrdBufSize(D.byref(size))
+        self.task.GetBufOutputOnbrdBufSize(D.byref(size))
         return size.value
 
     def get_buffer_size(self) -> int | None:
         if self.task is None:
             return None
         size = D.uInt32()
-        self.task.GetBufInputBufSize(D.byref(size))
+        self.task.GetBufOutputBufSize(D.byref(size))
         return size.value
 
     # Standard API

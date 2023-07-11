@@ -178,21 +178,34 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
 
         return True
 
+    def _init_piezo(self) -> bool:
+        success = (
+            self.piezo.stop()
+            and self.piezo.configure({})
+            and self.piezo.start()
+        )
+        if not success:
+            return self.fail_with("Failed to initialize piezo.")
+
+        size = self.piezo.get_scan_buffer_size()
+        if self.xlen > size:
+            return self.fail_with(f"xlen {self.xlen} is greater than buffer size {size}")
+
+        success = (
+            self.move_piezo_to_initial()
+            and self.piezo.stop()
+        )
+
+        if not success:
+            return self.fail_with("Failed to move piezo to initial.")
+        return True
+
     def start(self) -> bool:
         if self.running:
             self.logger.warn("start() is called while running.")
             return True
 
-        success = (
-            self.piezo.stop()
-            and self.piezo.configure({})
-            and self.piezo.start()
-            and self.move_piezo_to_initial()
-            and self.piezo.stop()
-        )
-
-        if not success:
-            self.logger.error("Failed to initialize piezo.")
+        if not self._init_piezo():
             return False
 
         freq = 1.0 / self.time_window * self.oversample
