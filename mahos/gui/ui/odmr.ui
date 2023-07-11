@@ -366,10 +366,33 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
+         <item row="2" column="1">
           <widget class="QCheckBox" name="backgroundBox">
            <property name="text">
             <string>Measure Background Data</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Detection</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QSpinBox" name="pdrateBox">
+           <property name="suffix">
+            <string> kHz</string>
+           </property>
+           <property name="prefix">
+            <string>pd rate: </string>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>100</number>
            </property>
           </widget>
          </item>
@@ -432,9 +455,10 @@
   <tabstop>sweepsBox</tabstop>
   <tabstop>mwcontBox</tabstop>
   <tabstop>backgroundBox</tabstop>
+  <tabstop>pdrateBox</tabstop>
   <tabstop>cwButton</tabstop>
-  <tabstop>pulseButton</tabstop>
   <tabstop>windowBox</tabstop>
+  <tabstop>pulseButton</tabstop>
   <tabstop>laserdelayBox</tabstop>
   <tabstop>laserwidthBox</tabstop>
   <tabstop>mwdelayBox</tabstop>

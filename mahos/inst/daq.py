@@ -332,11 +332,38 @@ class AnalogInTask(D.Task):
 
         self._i = 0
         self._drop_left = abs(drop_first)
+        if self._every:
+            self._drop_samples = self._drop_left
+        else:
+            self._drop_samples = self._drop_left * self._cb_samples
         self._read = D.int32()
+
+    def _read_samples(self, samples):
+        data = np.zeros(samples, dtype=np.float64)
+        self.ReadAnalogF64(
+            samples,
+            10.0,
+            D.DAQmx_Val_GroupByChannel,
+            data,
+            len(data),
+            D.byref(self._read),
+            None,
+        )
+        if samples != self._read.value:
+            raise InstError(
+                self._name,
+                "Fail to read requested number ({}) of samples! read: {}".format(
+                    samples, self._read.value
+                ),
+            )
+        return data
 
     def EveryNCallback(self) -> int:
         if self._drop_left > 0:
             self._drop_left -= 1
+            if self._drop_left == 0:
+                # just finished drop period, perform dummy read.
+                data = self._read_samples(self._drop_samples)
             return 0  # should return 0 anyway
 
         if self._every:
@@ -346,24 +373,7 @@ class AnalogInTask(D.Task):
             if self._i % self._cb_samples != 0:
                 return 0  # should return 0 anyway
 
-        data = np.zeros(self._cb_samples, dtype=np.float64)
-        self.ReadAnalogF64(
-            self._cb_samples,
-            10.0,
-            D.DAQmx_Val_GroupByChannel,
-            data,
-            len(data),
-            D.byref(self._read),
-            None,
-        )
-        if self._cb_samples != self._read.value:
-            raise InstError(
-                self._name,
-                "Fail to read requested number ({}) of samples! read: {}".format(
-                    self._cb_samples, self._read.value
-                ),
-            )
-
+        data = self._read_samples(self._cb_samples)
         ret = []
         for i in range(self._line_num):
             # Slice data for i-th channel.
@@ -692,11 +702,30 @@ class BufferedEdgeCounterTask(D.Task):
         self._last_data = 0
         self._i = 0
         self._drop_left = abs(drop_first)
+        if self._every:
+            self._drop_samples = self._drop_left
+        else:
+            self._drop_samples = self._drop_left * self._cb_samples
         self._read = D.int32()
+
+    def _read_samples(self, samples):
+        data = np.zeros(samples, dtype=np.uint32)
+        self.ReadCounterU32(samples, 10.0, data, len(data), D.byref(self._read), None)
+        if samples != self._read.value:
+            raise InstError(
+                self._name,
+                "Fail to read requested number ({}) of samples! read: {}".format(
+                    samples, self._read.value
+                ),
+            )
+        return data
 
     def EveryNCallback(self) -> int:
         if self._drop_left > 0:
             self._drop_left -= 1
+            if self._drop_left == 0:
+                # just finished drop period, perform dummy read.
+                data = self._read_samples(self._drop_samples)
             return 0  # should return 0 anyway
 
         if self._every:
@@ -706,15 +735,7 @@ class BufferedEdgeCounterTask(D.Task):
             if self._i % self._cb_samples != 0:
                 return 0  # should return 0 anyway
 
-        data = np.zeros(self._cb_samples, dtype=np.uint32)
-        self.ReadCounterU32(self._cb_samples, 10.0, data, len(data), D.byref(self._read), None)
-        if self._cb_samples != self._read.value:
-            raise InstError(
-                self._name,
-                "Fail to read requested number ({}) of samples! read: {}".format(
-                    self._cb_samples, self._read.value
-                ),
-            )
+        data = self._read_samples(self._cb_samples)
 
         if self._gate:
             ar = np.diff(data)[::2]

@@ -460,6 +460,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.peaks = ODMRPeaksWidget(self.plot.plot, parent=self.peaksTab)
         self._peaksTab_layout.addWidget(self.peaks)
 
+        self._analog = False
+
         self.setEnabled(False)
 
     def init_with_status(self, status: BinaryStatus):
@@ -541,6 +543,11 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 ("stop", self.stopBox, 1e-6),
             ],
         )
+        self._analog = "pd_rate" in params
+        if self._analog:
+            apply_widgets(params, [("pd_rate", self.pdrateBox, 1e-3)])  # Hz to kHz
+        else:
+            self.pdrateBox.setEnabled(False)
 
         self.saveconfocalBox.setEnabled(self.confocal_cli is not None)
         self.saveconfocalBox.setChecked(self.confocal_cli is not None)
@@ -678,6 +685,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             t["burst_num"] = self.bnumBox.value()
         params["timing"] = t
         params["continue_mw"] = self.mwcontBox.isChecked()
+        if self._analog:
+            params["pd_rate"] = self.pdrateBox.value() * 1e3  # kHz to Hz
 
         return params
 
@@ -740,6 +749,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.backgroundBox,
         ):
             w.setEnabled(state == BinaryState.IDLE)
+
+        self.pdrateBox.setEnabled(self._analog and state == BinaryState.IDLE)
 
         self.windowBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())
 
