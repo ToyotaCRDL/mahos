@@ -143,7 +143,7 @@ class ODMR(BasicMeasNode):
 
     def wait(self):
         self.logger.info("Waiting for instrument server...")
-        for inst in ("sg", "pg", "pd0", "pd1"):
+        for inst in ("sg", "pg", "pd0"):
             self.cli.wait(inst)
         self.logger.info("Server is up!")
 

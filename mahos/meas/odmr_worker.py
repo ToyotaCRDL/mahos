@@ -123,13 +123,17 @@ class Sweeper(Worker):
         )
         return success
 
-    def _get_analog_samples(self, params: dict) -> int:
-        return round(params["time_window"] * params["pd_rate"])
+    def _get_oversamp_CW_analog(self, params: dict) -> int:
+        return round(params["timing"]["time_window"] * params["pd_rate"])
+
+    def _get_oversamp_pulse_analog(self, params: dict) -> int:
+        t = params["timing"]
+        return round(t["laser_width"] * params["pd_rate"] * t["burst_num"])
 
     def configure_pg_CW_analog(self, params: dict) -> bool:
         freq = 1.0e6
         period = round(freq / params["pd_rate"])
-        samples = self._get_analog_samples(params)
+        samples = self._get_oversamp_CW_analog(params)
         w = 1  # 1 us
         pat_laser_mw = [(("laser", "mw"), period - w), (("laser", "mw", "gate"), w)] * samples
         pat_laser = [(("laser"), period - w), (("laser", "gate"), w)] * samples
@@ -354,7 +358,11 @@ class Sweeper(Worker):
     def start_analog_pd(self, params: dict) -> bool:
         rate = params["pd_rate"]
         num = params["num"]
-        drop = self._drop_first * self._get_analog_samples(params)
+        if params["method"] == "cw":
+            oversamp = self._get_oversamp_CW_analog(params)
+        else:
+            oversamp = self._get_oversamp_pulse_analog(params)
+        drop = self._drop_first * oversamp
         if params.get("background", False):
             num *= 2
             drop *= 2
@@ -368,6 +376,7 @@ class Sweeper(Worker):
             "every": True,
             "drop_first": drop,
             "clock_mode": True,
+            "oversample": oversamp,
         }
 
         success = all([pd.configure(params_pd) for pd in self.pds]) and all(
@@ -394,10 +403,12 @@ class Sweeper(Worker):
             return self.fail_with_release("Failed to configure SG.")
         if not self.configure_pg(self.data.params):
             return self.fail_with_release("Failed to configure PG.")
-        if self._pd_analog and not self.start_analog_pd(self.data.params):
-            return self.fail_with_release("Failed to start PD (Analog).")
-        elif not self.start_apd(self.data.params):
-            return self.fail_with_release("Failed to start APD.")
+        if self._pd_analog:
+            if not self.start_analog_pd(self.data.params):
+                return self.fail_with_release("Failed to start PD (Analog).")
+        else:
+            if not self.start_apd(self.data.params):
+                return self.fail_with_release("Failed to start APD.")
 
         time.sleep(self._start_delay)
 
