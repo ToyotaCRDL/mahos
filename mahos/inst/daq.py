@@ -304,6 +304,7 @@ class AnalogOut(ConfigurableTask):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
+
 class AnalogInTask(D.Task):
     def __init__(
         self,
