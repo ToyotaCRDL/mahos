@@ -289,7 +289,7 @@ class AnalogInTask(D.Task):
         name: str,
         line_num: int,
         every: bool,
-        burst: int,
+        oversample: int,
         drop_first: int,
         cb_samples: int,
         everyN_handler: Callable[[np.ndarray | list[np.ndarray]], None],
@@ -301,7 +301,7 @@ class AnalogInTask(D.Task):
         self._name = name
         self._line_num = line_num
         self._every = every
-        self._burst = burst
+        self._oversample = oversample
         self._cb_samples = cb_samples
 
         self._everyN_handler = everyN_handler
@@ -346,9 +346,11 @@ class AnalogInTask(D.Task):
         for i in range(self._line_num):
             # Slice data for i-th channel.
             d = data[i * self._cb_samples : (i + 1) * self._cb_samples]
-            # Take mean for each burst samples.
-            # Note that self._cb_samples % self._burst is always 0.
-            ret.append(d.reshape(self._cb_samples // self._burst, self._burst).mean(axis=1))
+            # Take mean for each oversample samples.
+            # Note that self._cb_samples % self._oversample is always 0.
+            ret.append(
+                d.reshape(self._cb_samples // self._oversample, self._oversample).mean(axis=1)
+            )
 
         if self._line_num == 1:
             self._everyN_handler(ret[0])
@@ -377,9 +379,9 @@ class AnalogIn(ConfigurableTask):
     :type finite: bool
     :param every: (default False) Switch if every1 mode or not.
     :type every: bool
-    :param burst: (default 1) cb_samples and samples are multiplied by `burst`,
-                  and everyN_handler is passed mean of `burst` readings.
-    :type burst: int
+    :param oversample: (default 1) cb_samples and samples are multiplied by `oversample`,
+                       and everyN_handler is passed mean of `oversample` readings.
+    :type oversample: int
     :param stamp: (default False) Attach timestamp for each samples.
     :type stamp: bool
     :param drop_first: (default 0) drop the data on first N callbacks.
@@ -521,13 +523,13 @@ class AnalogIn(ConfigurableTask):
         rate = params.get("rate", 10000.0)
         clock_dir = _edge_polarity(params.get("clock_dir", True))
         every = params.get("every", False)
-        burst = params.get("burst", 1)
+        oversample = params.get("oversample", 1)
         self._stamp = params.get("stamp", False)
         drop_first = params.get("drop_first", 0)
         self.finite = params.get("finite", True)
 
-        cb_samples *= burst
-        samples *= burst
+        cb_samples *= oversample
+        samples *= oversample
         if every and samples % cb_samples != 0:
             self.logger.error("samples must be integer multiple of cb_samples.")
             return False
@@ -544,7 +546,7 @@ class AnalogIn(ConfigurableTask):
             self.full_name(),
             len(self.lines),
             every,
-            burst,
+            oversample,
             drop_first,
             cb_samples,
             self._append_data,
@@ -582,24 +584,30 @@ class AnalogIn(ConfigurableTask):
 
         return True
 
-    def read_on_demand(self, burst: int = 1) -> float | np.ndarray:
+    def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
         """Read out analog voltages on demand.
 
         if len(self.lines) is 1, the value is returned in float.
         Otherwise values are returned in ndarray (size: len(self.lines), type: float64).
 
-        :param burst: number of samples per channels, which is used for burst-read and averaging.
+        :param oversample: number of samples per channels, which is used for averaging.
 
         """
 
         line_num = len(self.lines)
-        volt = np.zeros(burst * line_num, dtype=np.float64)
+        volt = np.zeros(oversample * line_num, dtype=np.float64)
         read_samps = D.int32()
 
         self.task.ReadAnalogF64(
-            burst, 10.0, D.DAQmx_Val_GroupByChannel, volt, len(volt), D.byref(read_samps), None
+            oversample,
+            10.0,
+            D.DAQmx_Val_GroupByChannel,
+            volt,
+            len(volt),
+            D.byref(read_samps),
+            None,
         )
-        ret = [np.mean(volt[i * burst : (i + 1) * burst]) for i in range(line_num)]
+        ret = [np.mean(volt[i * oversample : (i + 1) * oversample]) for i in range(line_num)]
 
         if line_num == 1:
             return ret[0]

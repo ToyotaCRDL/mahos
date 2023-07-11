@@ -138,6 +138,7 @@ class Tracer(Worker):
         self.interval_sec = conf.get("interval_sec", 0.5)
         self.size = conf.get("size", DEFAULT_TRACER_SIZE)
         self.cb_samples = conf.get("samples", 5)
+        self.oversample = conf.get("oversample", 1)
         self.time_window_sec = conf.get("time_window_sec", 0.01)
 
         self.trace = Trace(size=self.size, channels=len(self.pds))
@@ -150,7 +151,7 @@ class Tracer(Worker):
         if not self.lock_instruments():
             return self.fail_with_release("Error acquiring instrument locks.")
 
-        freq = 1.0 / self.time_window_sec
+        freq = 1.0 / self.time_window_sec * self.oversample
         rate = freq * 2  # max. expected sampling rate. double expected freq for safety
         samples = self.cb_samples * 10  # large samples to assure enough buffer size
         params_clock = {"freq": freq, "samples": samples, "finite": False}
@@ -164,6 +165,7 @@ class Tracer(Worker):
             "clock": self.clock.get_internal_output(),
             "time_window": self.time_window_sec,  # only for APDCounter
             "clock_mode": True,  # only for AnalogIn
+            "oversample": self.oversample,  # only for AnalogIn
         }
         success = (
             self.clock.configure(params_clock)
