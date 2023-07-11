@@ -283,6 +283,358 @@ class AnalogOut(ConfigurableTask):
             return False
 
 
+class AnalogInTask(D.Task):
+    def __init__(
+        self,
+        name: str,
+        line_num: int,
+        every: bool,
+        burst: int,
+        drop_first: int,
+        cb_samples: int,
+        everyN_handler: Callable[[np.ndarray | list[np.ndarray]], None],
+        every1_handler: Callable[[], None],
+        done_handler: Callable[[int], None],
+    ):
+        D.Task.__init__(self)
+
+        self._name = name
+        self._line_num = line_num
+        self._every = every
+        self._burst = burst
+        self._cb_samples = cb_samples
+
+        self._everyN_handler = everyN_handler
+        self._every1_handler = every1_handler
+        self._done_handler = done_handler
+
+        self._i = 0
+        self._drop_left = abs(drop_first)
+        self._read = D.int32()
+
+    def EveryNCallback(self) -> int:
+        if self._drop_left > 0:
+            self._drop_left -= 1
+            return 0  # should return 0 anyway
+
+        if self._every:
+            self._every1_handler()
+
+            self._i += 1
+            if self._i % self._cb_samples != 0:
+                return 0  # should return 0 anyway
+
+        data = np.zeros(self._cb_samples, dtype=np.float64)
+        self.ReadAnalogF64(
+            self._cb_samples,
+            10.0,
+            D.DAQmx_Val_GroupByChannel,
+            data,
+            len(data),
+            D.byref(self._read),
+            None,
+        )
+        if self._cb_samples != self._read.value:
+            raise InstError(
+                self._name,
+                "Fail to read requested number ({}) of samples! read: {}".format(
+                    self._cb_samples, self._read.value
+                ),
+            )
+
+        ret = []
+        for i in range(self._line_num):
+            # Slice data for i-th channel.
+            d = data[i * self._cb_samples : (i + 1) * self._cb_samples]
+            # Take mean for each burst samples.
+            # Note that self._cb_samples % self._burst is always 0.
+            ret.append(d.reshape(self._cb_samples // self._burst, self._burst).mean(axis=1))
+
+        if self._line_num == 1:
+            self._everyN_handler(ret[0])
+        else:
+            self._everyN_handler(ret)
+
+        return 0  # should return 0 anyway
+
+    def DoneCallback(self, status) -> int:
+        self._done_handler(status)
+
+        return 0  # should return 0 anyway
+
+
+class AnalogIn(ConfigurableTask):
+    """A configurable DAQ Task class for Analog Input voltage channel.
+
+    Readings are buffered and read at each `cb_samples`.
+
+    :param lines: Sequence of strings to designate DAQ's physical channels.
+    :type lines: list[str]
+
+    :param bounds: bounds (min, max) values of the expected input voltages per channels.
+    :type bounds: list[tuple[float, float]]
+    :param finite: (default True) Switch if finite mode or infinite mode.
+    :type finite: bool
+    :param every: (default False) Switch if every1 mode or not.
+    :type every: bool
+    :param burst: (default 1) cb_samples and samples are multiplied by `burst`,
+                  and everyN_handler is passed mean of `burst` readings.
+    :type burst: int
+    :param stamp: (default False) Attach timestamp for each samples.
+    :type stamp: bool
+    :param drop_first: (default 0) drop the data on first N callbacks.
+    :type drop_first: int
+
+    Finite or Infinite mode
+    -----------------------
+
+    In finite mode (finite=True), task is finished with `samples`.
+    In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop()
+    (`samples` is used to determine the buffer size.)
+
+    Callback handlers
+    -----------------
+
+    You'd pass three callback handler functions: every1_handler, everyN_handler, and done_handler.
+    If every1 mode (every=True), EveryNCallBack is called with N=1 regardress of `cb_samples`.
+    And every1_handler is called at each callbacks.
+    EveryNCallBack aquires data and call everyN_handler at each `cb_samples` callbacks.
+    If every1 mode is not active (every=False), EveryNCallBack is called
+    after acquiring `cb_samples`, and everyN_handler is called for each callback.
+    In this mode every1_handler is never called.
+
+    """
+
+    def __init__(self, name, conf=None, prefix=None):
+        ConfigurableTask.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.check_required_conf(("lines",))
+        self.lines = conf["lines"]
+        self.bounds = self.conf["bounds"]
+
+        self.buffer_size = self.conf.get("buffer_size", 10000)
+        self.queue = LockedQueue(self.buffer_size)
+        self._stamp = False
+
+    def _null_every1_handler(self):
+        pass
+
+    def _null_done_handler(self, status: int):
+        pass
+
+    def _check_buffer_size(self, finite, every, cb_samples) -> bool:
+        bs = D.uInt32()
+        self.task.GetBufInputBufSize(D.byref(bs))
+        self.logger.debug("Buffer size: {}.".format(bs.value))
+        return True
+
+    def _append_data(self, data: np.ndarray | list[np.ndarray]):
+        if not self.queue.append((data, time.time_ns()) if self._stamp else data):
+            self.logger.warn("queue is overflowing. The oldest data is discarded.")
+
+    def pop_opt(
+        self,
+    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float] | None:
+        """Get data from buffer.
+
+        :returns: np.ndarray if len(lines) == 1 and stamp == False.
+                  list[np.ndarray] if len(lines) > 1 and stamp == False.
+                  tuple[np.ndarray, float] if len(lines) == 1 and stamp == True.
+                  tuple[list[np.ndarray], float] if len(lines) > 1 and stamp == True.
+                  None if buffer is empty.
+
+        """
+
+        return self.queue.pop_opt()
+
+    def pop_all_opt(
+        self,
+    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]] | None:
+        """Get all data from buffer as list. If buffer is empty, returns None.
+
+        :returns: list[np.ndarray] if len(lines) == 1 and stamp == False.
+                  list[list[np.ndarray]] if len(lines) > 1 and stamp == False.
+                  list[tuple[np.ndarray, float]] if len(lines) == 1 and stamp == True.
+                  list[tuple[list[np.ndarray], float]] if len(lines) > 1 and stamp == True.
+                  None if buffer is empty.
+
+        """
+
+        return self.queue.pop_all_opt()
+
+    def pop_block(
+        self,
+    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]:
+        """Get data from buffer.
+
+        If buffer is empty, this function blocks until data is ready.
+
+        see pop_block() for return value types.
+
+        """
+
+        return self.queue.pop_block()
+
+    def pop_all_block(
+        self,
+    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]]:
+        """Get all data from buffer as list.
+
+        If buffer is empty, this function blocks until data is ready.
+
+        see pop_all_opt() for return value types.
+
+        """
+
+        return self.queue.pop_all_block()
+
+    def _get_bounds(self, params: dict) -> tuple[bool, list[tuple[float, float]]]:
+        bounds = params.get("bounds", [(-10.0, 10.0)] * len(self.lines))
+        if len(bounds) == 2 and isinstance(bounds[0], (float, np.floating, int, np.integer)):
+            bounds = [bounds] * len(self.lines)
+        if len(bounds) != len(self.lines):
+            self.logger.error(f"len(bounds) is invalid: {len(bounds)} != {len(self.lines)}.")
+            return False, []
+        return True, bounds
+
+    def configure_on_demand(self, params: dict) -> bool:
+        success, bounds = self._get_bounds(params)
+        if not success:
+            return False
+
+        self.finite = False
+        self.task = D.Task()
+        for line, bound in zip(self.lines, bounds):
+            self.task.CreateAIVoltageChan(
+                line, "", D.DAQmx_Val_RSE, bound[0], bound[1], D.DAQmx_Val_Volts, None
+            )
+        self.task.SetSampTimingType(_samp_timing_clock_or_ondemand(False))
+        self.logger.debug("Configured OnDemand mode.")
+        return True
+
+    def configure_clock(self, params: dict) -> bool:
+        if not self.check_required_params(params, ("clock", "cb_samples", "samples")):
+            return False
+        clock = params["clock"]
+        cb_samples = params["cb_samples"]
+        samples = params["samples"]
+
+        rate = params.get("rate", 10000.0)
+        clock_dir = _edge_polarity(params.get("clock_dir", True))
+        every = params.get("every", False)
+        burst = params.get("burst", 1)
+        self._stamp = params.get("stamp", False)
+        drop_first = params.get("drop_first", 0)
+        self.finite = params.get("finite", True)
+
+        cb_samples *= burst
+        samples *= burst
+        if every and samples % cb_samples != 0:
+            self.logger.error("samples must be integer multiple of cb_samples.")
+            return False
+
+        success, bounds = self._get_bounds(params)
+        if not success:
+            return False
+
+        self.queue = LockedQueue(self.buffer_size)
+
+        every1_handler = params.get("every1_handler", self._null_every1_handler)
+        done_handler = params.get("done_handler", self._null_done_handler)
+        self.task = AnalogInTask(
+            self.full_name(),
+            len(self.lines),
+            every,
+            burst,
+            drop_first,
+            cb_samples,
+            self._append_data,
+            every1_handler,
+            done_handler,
+        )
+
+        for line, bound in zip(self.lines, bounds):
+            self.task.CreateAIVoltageChan(
+                line, "", D.DAQmx_Val_RSE, bound[0], bound[1], D.DAQmx_Val_Volts, None
+            )
+        self.task.SetSampTimingType(_samp_timing_clock_or_ondemand(True))
+
+        self.task.CfgSampClkTiming(
+            clock,
+            rate,
+            clock_dir,
+            _samples_finite_or_cont(self.finite),
+            # a bit larger samples to assure buffer size
+            samples + 1,
+        )
+
+        if not self._check_buffer_size(self.finite, every, cb_samples):
+            return False
+
+        if every:
+            self.task.AutoRegisterEveryNSamplesEvent(D.DAQmx_Val_Acquired_Into_Buffer, 1, 0)
+        else:
+            self.task.AutoRegisterEveryNSamplesEvent(
+                D.DAQmx_Val_Acquired_Into_Buffer, cb_samples, 0
+            )
+
+        if "done_handler" in params:
+            self.task.AutoRegisterDoneEvent(0)
+
+        return True
+
+    def read_on_demand(self, burst: int = 1) -> float | np.ndarray:
+        """Read out analog voltages on demand.
+
+        if len(self.lines) is 1, the value is returned in float.
+        Otherwise values are returned in ndarray (size: len(self.lines), type: float64).
+
+        :param burst: number of samples per channels, which is used for burst-read and averaging.
+
+        """
+
+        line_num = len(self.lines)
+        volt = np.zeros(burst * line_num, dtype=np.float64)
+        read_samps = D.int32()
+
+        self.task.ReadAnalogF64(
+            burst, 10.0, D.DAQmx_Val_GroupByChannel, volt, len(volt), D.byref(read_samps), None
+        )
+        ret = [np.mean(volt[i * burst : (i + 1) * burst]) for i in range(line_num)]
+
+        if line_num == 1:
+            return ret[0]
+        else:
+            return ret
+
+    # Standard API
+
+    def configure(self, params: dict) -> bool:
+        self.clock_mode = params.get("clock_mode", False)
+
+        if self.clock_mode:
+            return self.configure_clock(params)
+        else:
+            return self.configure_on_demand(params)
+
+    def get(self, key: str, args=None):
+        if key == "data":
+            if not self.clock_mode:
+                return self.read_on_demand()
+            if args:
+                return self.pop_block()
+            else:
+                return self.pop_opt()
+        elif key == "all_data":
+            if args:
+                return self.pop_all_block()
+            else:
+                return self.pop_all_opt()
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+
 class BufferedEdgeCounterTask(D.Task):
     def __init__(
         self,
@@ -380,12 +732,12 @@ class BufferedEdgeCounter(ConfigurableTask):
     -----------------------
 
     In finite mode (finite=True), task is finished with `samples`.
-    In inifinite mode (finite=False), task continues infinitely but it can be stopped by _stop()
+    In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop()
     (`samples` is used to determine the buffer size.)
 
     In infinite mode, buffersize is fixed by NI-DAQmx and cannot call EveryNCallBack
     at arbitrary `cb_samples`.
-    Buffer size must be even integer multiple of N of callback.
+    Buffer size must be even integer multiple of cb_samples.
     So setting every=True is recommended if rate is not high.
 
     Callback handlers
