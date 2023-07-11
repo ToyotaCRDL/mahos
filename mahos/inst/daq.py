@@ -410,7 +410,6 @@ class AnalogIn(ConfigurableTask):
 
         self.check_required_conf(("lines",))
         self.lines = conf["lines"]
-        self.bounds = self.conf["bounds"]
 
         self.buffer_size = self.conf.get("buffer_size", 10000)
         self.queue = LockedQueue(self.buffer_size)
@@ -450,7 +449,7 @@ class AnalogIn(ConfigurableTask):
     def pop_all_opt(
         self,
     ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]] | None:
-        """Get all data from buffer as list. If buffer is empty, returns None.
+        """Get all data from buffer as list.
 
         :returns: list[np.ndarray] if len(lines) == 1 and stamp == False.
                   list[list[np.ndarray]] if len(lines) > 1 and stamp == False.

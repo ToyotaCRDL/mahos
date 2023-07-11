@@ -18,7 +18,7 @@ from ..msgs import param_msgs as P
 from ..msgs.inst_pg_msgs import Block, Blocks
 from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface
-from ..inst.daq_interface import APDCounterInterface
+from ..inst.daq_interface import BufferedReaderInterface
 from .common_worker import Worker
 
 
@@ -29,7 +29,7 @@ class Sweeper(Worker):
         Worker.__init__(self, cli, logger)
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
-        self.pds = [APDCounterInterface(cli, n) for n in conf.get("pds", ["pd0", "pd1"])]
+        self.pds = [BufferedReaderInterface(cli, n) for n in conf.get("pds", ["pd0", "pd1"])]
         self.add_instruments(self.sg, self.pg, *self.pds)
 
         if "pd_clock" not in conf:

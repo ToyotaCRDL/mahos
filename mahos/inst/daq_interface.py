@@ -7,7 +7,7 @@ Typed Interface for NI-DAQ.
 
 """
 
-from typing import Optional, List, Sequence
+from __future__ import annotations
 
 import numpy as np
 
@@ -34,7 +34,7 @@ class AnalogOutInterface(InstrumentInterface):
     def configure_clock(
         self,
         samples: int,
-        rate: Optional[float] = None,
+        rate: float | None = None,
         clock_dir: bool = True,
         finite: bool = True,
         timeout_sec: float = 5.0,
@@ -58,13 +58,71 @@ class AnalogOutInterface(InstrumentInterface):
         return self.configure(params)
 
 
+class AnalogInInterface(InstrumentInterface):
+    def pop_block(
+        self,
+    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]:
+        """Get data from buffer.
+
+        If buffer is empty, this function blocks until data is ready.
+
+        see pop_block() for return value types.
+
+        """
+
+        return self.get("data", True)
+
+    def pop_all_block(
+        self,
+    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]]:
+        """Get all data from buffer as list.
+
+        If buffer is empty, this function blocks until data is ready.
+
+        see pop_all_opt() for return value types.
+
+        """
+
+        return self.get("all_data", True)
+
+    def pop_opt(
+        self,
+    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float] | None:
+        """Get data from buffer.
+
+        :returns: np.ndarray if len(lines) == 1 and stamp == False.
+                  list[np.ndarray] if len(lines) > 1 and stamp == False.
+                  tuple[np.ndarray, float] if len(lines) == 1 and stamp == True.
+                  tuple[list[np.ndarray], float] if len(lines) > 1 and stamp == True.
+                  None if buffer is empty.
+
+        """
+
+        return self.get("data", False)
+
+    def pop_all_opt(
+        self,
+    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]] | None:
+        """Get all data from buffer as list.
+
+        :returns: list[np.ndarray] if len(lines) == 1 and stamp == False.
+                  list[list[np.ndarray]] if len(lines) > 1 and stamp == False.
+                  list[tuple[np.ndarray, float]] if len(lines) == 1 and stamp == True.
+                  list[tuple[list[np.ndarray], float]] if len(lines) > 1 and stamp == True.
+                  None if buffer is empty.
+
+        """
+
+        return self.get("all_data", False)
+
+
 class BufferedEdgeCounterInterface(InstrumentInterface):
     def pop_block(self) -> np.ndarray:
         """Get data from buffer. If buffer is empty, this function blocks until data is ready."""
 
         return self.get("data", True)
 
-    def pop_all_block(self) -> List[np.ndarray]:
+    def pop_all_block(self) -> list[np.ndarray]:
         """Get all data from buffer as list.
 
         If buffer is empty, this function blocks until data is ready.
@@ -73,27 +131,75 @@ class BufferedEdgeCounterInterface(InstrumentInterface):
 
         return self.get("all_data", True)
 
-    def pop_opt(self) -> Optional[np.ndarray]:
+    def pop_opt(self) -> np.ndarray | None:
         """Get data from buffer. If buffer is empty, returns None."""
 
         return self.get("data", False)
 
-    def pop_all_opt(self) -> Optional[List[np.ndarray]]:
+    def pop_all_opt(self) -> list[np.ndarray] | None:
         """Get all data from buffer as list. If buffer is empty, returns None."""
 
         return self.get("all_data", False)
 
 
 class APDCounterInterface(BufferedEdgeCounterInterface):
-    def correct_cps(self, raw_cps: Sequence[float]) -> np.ndarray:
+    def correct_cps(self, raw_cps: list[float]) -> np.ndarray:
         """Correct the raw values in cps according to correction factors."""
 
         return self.get("correct", raw_cps)
 
-    def get_correction_factor(self, xs_cps: Sequence[float]) -> np.ndarray:
+    def get_correction_factor(self, xs_cps: list[float]) -> np.ndarray:
         """Get the correction factor for given cps values."""
 
         return self.get("correction_factor", xs_cps)
+
+
+class BufferedReaderInterface(InstrumentInterface):
+    """Common interface for AnalogIn and BufferedEdgeCounter."""
+
+    def pop_block(
+        self,
+    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]:
+        """Get data from buffer.
+
+        If buffer is empty, this function blocks until data is ready.
+
+        """
+
+        return self.get("data", True)
+
+    def pop_all_block(
+        self,
+    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]]:
+        """Get all data from buffer as list.
+
+        If buffer is empty, this function blocks until data is ready.
+
+        """
+
+        return self.get("all_data", True)
+
+    def pop_opt(
+        self,
+    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float] | None:
+        """Get data from buffer.
+
+        If buffer is empty, returns None.
+
+        """
+
+        return self.get("data", False)
+
+    def pop_all_opt(
+        self,
+    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]] | None:
+        """Get all data from buffer as list.
+
+        If buffer is empty, returns None.
+
+        """
+
+        return self.get("all_data", False)
 
 
 class DigitalOutInterface(InstrumentInterface):
