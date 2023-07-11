@@ -132,7 +132,6 @@ class Tracer(Worker):
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger)
         self.clock = ClockSourceInterface(cli, "clock")
-        # TODO: apd -> generic pd (photo detector)
         self.pds = [BufferedReaderInterface(cli, n) for n in conf.get("pds", ["pd0", "pd1"])]
         self.add_instruments(self.clock, *self.pds)
 
@@ -152,15 +151,19 @@ class Tracer(Worker):
             return self.fail_with_release("Error acquiring instrument locks.")
 
         freq = 1.0 / self.time_window_sec
+        rate = freq * 2  # max. expected sampling rate. double expected freq for safety
         samples = self.cb_samples * 10  # large samples to assure enough buffer size
         params_clock = {"freq": freq, "samples": samples, "finite": False}
         params_pd = {
             "cb_samples": self.cb_samples,
             "samples": samples,
-            "time_window": self.time_window_sec,
+            "rate": rate,
             "finite": False,
+            "every": False,
             "stamp": True,
             "clock": self.clock.get_internal_output(),
+            "time_window": self.time_window_sec, # only for APDCounter
+            "clock_mode": True, # only for AnalogIn
         }
         success = (
             self.clock.configure(params_clock)

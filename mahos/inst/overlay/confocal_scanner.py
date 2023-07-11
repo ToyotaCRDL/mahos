@@ -207,13 +207,14 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             "rate": rate,
         }
         params_pd = {
-            "clock": clock,
             "cb_samples": self.xlen,
             "samples": total_samples,
             "rate": rate,
-            "time_window": self.time_window,
             "finite": True,
             "every": False,
+            "clock": clock,
+            "time_window": self.time_window, # only for APDCounter
+            "clock_mode": True, # only for AnalogIn
         }
 
         success = (
