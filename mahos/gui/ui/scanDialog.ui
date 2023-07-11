@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>897</width>
+    <width>1125</width>
     <height>264</height>
    </rect>
   </property>
@@ -112,7 +112,7 @@
      <item row="2" column="2">
       <widget class="QSpinBox" name="dummysampleBox">
        <property name="prefix">
-        <string>dummy samples </string>
+        <string>dummy samp: </string>
        </property>
        <property name="minimum">
         <number>1</number>
@@ -128,7 +128,7 @@
      <item row="2" column="1">
       <widget class="QDoubleSpinBox" name="timeBox">
        <property name="prefix">
-        <string>time window </string>
+        <string>time window: </string>
        </property>
        <property name="suffix">
         <string> ms</string>
@@ -148,25 +148,6 @@
       <widget class="QLabel" name="label">
        <property name="text">
         <string>Scan mode</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="3">
-      <widget class="QSpinBox" name="pollsampleBox">
-       <property name="suffix">
-        <string/>
-       </property>
-       <property name="prefix">
-        <string>poll samples </string>
-       </property>
-       <property name="minimum">
-        <number>1000</number>
-       </property>
-       <property name="maximum">
-        <number>10000</number>
-       </property>
-       <property name="singleStep">
-        <number>1000</number>
        </property>
       </widget>
      </item>
@@ -255,16 +236,6 @@
       <widget class="QLabel" name="minLabel">
        <property name="text">
         <string>min</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="4">
-      <widget class="QDoubleSpinBox" name="delayBox">
-       <property name="prefix">
-        <string>delay: </string>
-       </property>
-       <property name="suffix">
-        <string> ms</string>
        </property>
       </widget>
      </item>
@@ -376,6 +347,48 @@
        </property>
       </widget>
      </item>
+     <item row="2" column="5">
+      <widget class="QDoubleSpinBox" name="delayBox">
+       <property name="prefix">
+        <string>delay: </string>
+       </property>
+       <property name="suffix">
+        <string> ms</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="4">
+      <widget class="QSpinBox" name="pollsampleBox">
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="prefix">
+        <string>poll samp: </string>
+       </property>
+       <property name="minimum">
+        <number>1000</number>
+       </property>
+       <property name="maximum">
+        <number>10000</number>
+       </property>
+       <property name="singleStep">
+        <number>1000</number>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QSpinBox" name="oversampleBox">
+       <property name="prefix">
+        <string>oversamp: </string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -398,6 +411,7 @@
   <tabstop>linemodeBox</tabstop>
   <tabstop>timeBox</tabstop>
   <tabstop>dummysampleBox</tabstop>
+  <tabstop>oversampleBox</tabstop>
   <tabstop>pollsampleBox</tabstop>
   <tabstop>delayBox</tabstop>
   <tabstop>roiButton</tabstop>

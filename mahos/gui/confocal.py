@@ -160,14 +160,10 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
         for mode in scan_capability:
             self.modeBox.addItem(mode_to_str(mode))
 
-        self.modeBox.currentIndexChanged.connect(self.update_dummysampleBox)
-        self.modeBox.currentIndexChanged.connect(self.update_pollsampleBox)
-        self.modeBox.currentIndexChanged.connect(self.update_delayBox)
+        self.modeBox.currentIndexChanged.connect(self.update_modal_boxes)
         self.modeBox.setCurrentIndex(0)
 
-        self.update_dummysampleBox()
-        self.update_pollsampleBox()
-        self.update_delayBox()
+        self.update_modal_boxes()
         self.update_xstep_size()
         self.update_ystep_size()
 
@@ -234,6 +230,7 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
         )
         if mode == ScanMode.ANALOG:
             self.dummysampleBox.setValue(params.get("dummy_samples", 1))
+            self.oversampleBox.setValue(params.get("oversample", 1))
         if mode == ScanMode.COM_DIPOLL:
             self.pollsampleBox.setValue(params.get("poll_samples", 1000))
         if mode != ScanMode.ANALOG:
@@ -270,15 +267,12 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
         )
         self.ysizeLabel.setText("{:.4f}".format(self.ymaxBox.value() - self.yminBox.value()))
 
-    def update_dummysampleBox(self):
+    def update_modal_boxes(self):
         self.dummysampleBox.setEnabled(str_to_mode(self.modeBox.currentText()) == ScanMode.ANALOG)
-
-    def update_pollsampleBox(self):
+        self.oversampleBox.setEnabled(str_to_mode(self.modeBox.currentText()) == ScanMode.ANALOG)
         self.pollsampleBox.setEnabled(
             str_to_mode(self.modeBox.currentText()) == ScanMode.COM_DIPOLL
         )
-
-    def update_delayBox(self):
         self.delayBox.setEnabled(str_to_mode(self.modeBox.currentText()) != ScanMode.ANALOG)
 
     def validate(self):
@@ -316,6 +310,9 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
     def get_dummy_samples(self):
         return self.dummysampleBox.value()
 
+    def get_oversample(self):
+        return self.oversampleBox.value()
+
     def get_poll_samples(self):
         return self.pollsampleBox.value()
 
@@ -341,6 +338,7 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
 
         if params["mode"] == ScanMode.ANALOG:
             params["dummy_samples"] = self.get_dummy_samples()
+            params["oversample"] = self.get_oversample()
         if params["mode"] == ScanMode.COM_DIPOLL:
             params["poll_samples"] = self.get_poll_samples()
         if params["mode"] != ScanMode.ANALOG:
@@ -377,14 +375,10 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
         for mode in scan_capability:
             self.modeBox.addItem(mode_to_str(mode))
 
-        self.modeBox.currentIndexChanged.connect(self.update_dummysampleBox)
-        self.modeBox.currentIndexChanged.connect(self.update_pollsampleBox)
-        self.modeBox.currentIndexChanged.connect(self.update_delayBox)
+        self.modeBox.currentIndexChanged.connect(self.update_modal_boxes)
         self.modeBox.setCurrentIndex(0)
 
-        self.update_dummysampleBox()
-        self.update_pollsampleBox()
-        self.update_delayBox()
+        self.update_modal_boxes()
 
         self.update_xyxstep()
         self.update_xyystep()
@@ -442,15 +436,12 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
         self.orderList.insertItem(i + 1, self.orderList.takeItem(i))
         self.orderList.setCurrentRow(i + 1)
 
-    def update_dummysampleBox(self):
+    def update_modal_boxes(self):
         self.dummysampleBox.setEnabled(str_to_mode(self.modeBox.currentText()) == ScanMode.ANALOG)
-
-    def update_pollsampleBox(self):
+        self.oversampleBox.setEnabled(str_to_mode(self.modeBox.currentText()) == ScanMode.ANALOG)
         self.pollsampleBox.setEnabled(
             str_to_mode(self.modeBox.currentText()) == ScanMode.COM_DIPOLL
         )
-
-    def update_delayBox(self):
         self.delayBox.setEnabled(str_to_mode(self.modeBox.currentText()) != ScanMode.ANALOG)
 
     def validate(self):
@@ -518,6 +509,9 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
     def get_dummy_samples(self):
         return self.dummysampleBox.value()
 
+    def get_oversample(self):
+        return self.oversampleBox.value()
+
     def get_poll_samples(self):
         return self.pollsampleBox.value()
 
@@ -552,6 +546,7 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
 
         if params["mode"] == ScanMode.ANALOG:
             params["dummy_samples"] = self.get_dummy_samples()
+            params["oversample"] = self.get_oversample()
         if params["mode"] == ScanMode.COM_DIPOLL:
             params["poll_samples"] = self.get_poll_samples()
         if params["mode"] != ScanMode.ANALOG:
@@ -578,6 +573,7 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
             )
             if mode == ScanMode.ANALOG:
                 self.dummysampleBox.setValue(params.get("dummy_samples", 1))
+                self.oversampleBox.setValue(params.get("oversample", 1))
             if mode == ScanMode.COM_DIPOLL:
                 self.pollsampleBox.setValue(params.get("poll_samples", 1000))
             if mode != ScanMode.ANALOG:
