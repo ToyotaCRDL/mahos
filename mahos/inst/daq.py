@@ -237,6 +237,20 @@ class AnalogOut(ConfigurableTask):
 
         return self.set_output(volts, auto_start=True)
 
+    def get_onboard_buffer_size(self) -> int | None:
+        if self.task is None:
+            return None
+        size = D.uInt32()
+        self.task.GetBufInputOnbrdBufSize(D.byref(size))
+        return size.value
+
+    def get_buffer_size(self) -> int | None:
+        if self.task is None:
+            return None
+        size = D.uInt32()
+        self.task.GetBufInputBufSize(D.byref(size))
+        return size.value
+
     # Standard API
 
     def configure(self, params: dict) -> bool:
@@ -279,9 +293,16 @@ class AnalogOut(ConfigurableTask):
         if key == "voltage":
             return self.set_output_once(value)
         else:
-            self.logger.error(f"unknown set() key: {key}")
-            return False
+            return self.fail_with(f"unknown set() key: {key}")
 
+    def get(self, key: str, args=None):
+        if key == "onboard_buffer_size":
+            return self.get_onboard_buffer_size()
+        elif key == "buffer_size":
+            return self.get_buffer_size()
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
 
 class AnalogInTask(D.Task):
     def __init__(

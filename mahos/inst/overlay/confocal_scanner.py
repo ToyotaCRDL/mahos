@@ -7,6 +7,7 @@ import threading
 from ...util import conv
 from .overlay import InstrumentOverlay
 from ...msgs.confocal_msgs import ScanMode, ScanDirection, LineMode
+from ..daq import BufferedEdgeCounter, AnalogIn
 
 
 class ConfocalScannerMixin(object):
@@ -26,6 +27,7 @@ class ConfocalScannerMixin(object):
         self.line_mode: LineMode = params["line_mode"]
         self.time_window = params["time_window"]
         self.delay = params.get("delay", 0.0)
+        self.oversample = params.get("oversample", 1)
 
     def _make_scan_array(self, ndummy):
         def xar_zigzag(x, ylen):
@@ -50,9 +52,10 @@ class ConfocalScannerMixin(object):
             xar = np.tile(xar, ylen)
             return xar
 
-        xs = np.linspace(self.xmin, self.xmax, self.xnum)
+        xs = np.linspace(self.xmin, self.xmax, self.xnum * self.oversample)
         ys = np.linspace(self.ymin, self.ymax, self.ynum)
         # add dummy (repeated) sampling points at the start of each line
+        ndummy *= self.oversample
         self.xlen = len(xs) + ndummy
         ylen = len(ys)
         yar = np.repeat(ys, self.xlen)
@@ -154,18 +157,20 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
 
         self.line_timeout = params.get("line_timeout", 20.0)
         if not isinstance(params["direction"], ScanDirection):
-            self.logger.error("direction must be ScanDirection.")
-            return False
+            return self.fail_with("direction must be ScanDirection.")
         if params["mode"] != ScanMode.ANALOG:
-            self.logger.error("Unsupported mode: {}".format(params["mode"]))
-            return False
+            return self.fail_with("Unsupported mode: {}".format(params["mode"]))
         self.dummy_samples = params.get("dummy_samples", 1)
         if not (isinstance(self.dummy_samples, int) and self.dummy_samples > 0):
-            self.logger.error("dummy_samples must be positive integer")
-            return False
+            return self.fail_with("dummy_samples must be positive integer")
 
         self._set_attrs(params)
         self._make_scan_array(self.dummy_samples)
+
+        if isinstance(self.pds[0], BufferedEdgeCounter) and self.oversample != 1:
+            return self.fail_with(f"oversample == {self.oversample} is not supported.")
+        if isinstance(self.pds[0], AnalogIn) and self.oversample < 1:
+            return self.fail_with("oversample must be positive integer.")
 
         self.loop_stop_ev = self.loop_thread = None
 
@@ -190,7 +195,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             self.logger.error("Failed to initialize piezo.")
             return False
 
-        freq = 1.0 / self.time_window
+        freq = 1.0 / self.time_window * self.oversample
         rate = freq * 2  # max. expected sampling rate. double expected freq for safety
         total_samples = len(self.scan_array)
 
@@ -206,8 +211,9 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             "samples": self.xlen,
             "rate": rate,
         }
+        # self.xlen = self.oversample * (self.xnum + self.dummy_samples)
         params_pd = {
-            "cb_samples": self.xlen,
+            "cb_samples": self.xnum + self.dummy_samples,
             "samples": total_samples,
             "rate": rate,
             "finite": True,
@@ -215,6 +221,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             "clock": clock,
             "time_window": self.time_window,  # only for APDCounter
             "clock_mode": True,  # only for AnalogIn
+            "oversample": self.oversample,  # only for AnalogIn
         }
 
         success = (
