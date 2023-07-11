@@ -213,8 +213,8 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             "finite": True,
             "every": False,
             "clock": clock,
-            "time_window": self.time_window, # only for APDCounter
-            "clock_mode": True, # only for AnalogIn
+            "time_window": self.time_window,  # only for APDCounter
+            "clock_mode": True,  # only for AnalogIn
         }
 
         success = (

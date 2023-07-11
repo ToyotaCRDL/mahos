@@ -162,8 +162,8 @@ class Tracer(Worker):
             "every": False,
             "stamp": True,
             "clock": self.clock.get_internal_output(),
-            "time_window": self.time_window_sec, # only for APDCounter
-            "clock_mode": True, # only for AnalogIn
+            "time_window": self.time_window_sec,  # only for APDCounter
+            "clock_mode": True,  # only for AnalogIn
         }
         success = (
             self.clock.configure(params_clock)
