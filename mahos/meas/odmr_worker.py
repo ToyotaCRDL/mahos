@@ -330,8 +330,9 @@ class Sweeper(Worker):
             t = params["timing"]
             time_window = t["burst_num"] * t["laser_width"]
 
-        freq = 1.0 / time_window
-        rate = freq * 2  # max. expected sampling rate. double expected freq for safety
+        # max. expected sampling rate. double expected freq due to gate mode.
+        # this max rate is achieved if freq switching time was zero (it's non-zero in reality).
+        rate = 2.0 / time_window
         num = params["num"]
         drop = self._drop_first * 2  # double drops due to gate mode
         if params.get("background", False):

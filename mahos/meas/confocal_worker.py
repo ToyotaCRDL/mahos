@@ -154,13 +154,12 @@ class Tracer(Worker):
         self.trace.yunit = self.pds[0].get_unit()
 
         freq = 1.0 / self.time_window_sec * self.oversample
-        rate = freq * 2  # max. expected sampling rate. double expected freq for safety
         samples = self.cb_samples * 10  # large samples to assure enough buffer size
         params_clock = {"freq": freq, "samples": samples, "finite": False}
         params_pd = {
             "cb_samples": self.cb_samples,
             "samples": samples,
-            "rate": rate,
+            "rate": freq,
             "finite": False,
             "every": False,
             "stamp": True,

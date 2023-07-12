@@ -202,7 +202,6 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             return False
 
         freq = 1.0 / self.time_window * self.oversample
-        rate = freq * 2  # max. expected sampling rate. double expected freq for safety
         total_samples = len(self.scan_array)
 
         self.params_clock = {"freq": freq, "samples": self.xlen, "finite": True}
@@ -215,13 +214,13 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             "clock_mode": True,
             "clock": clock,
             "samples": self.xlen,
-            "rate": rate,
+            "rate": freq,
         }
         # self.xlen = self.oversample * (self.xnum + self.dummy_samples)
         params_pd = {
             "cb_samples": self.xnum + self.dummy_samples,
             "samples": total_samples,
-            "rate": rate,
+            "rate": freq,
             "finite": True,
             "every": False,
             "clock": clock,
