@@ -280,7 +280,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
         elif key == "capability":
             return self.get_capability()
         elif key == "unit":
-            return self.pds[0].get_unit()
+            return self.pds[0].get("unit")
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
