@@ -326,6 +326,8 @@ class Counter_mock(Instrument):
             return self.get_data()
         elif key == "all_data":
             return [self.get_data()]
+        elif key == "unit":
+            return "cps"
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

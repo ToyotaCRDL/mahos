@@ -81,6 +81,7 @@ def plot_map(
     plot_pos=None,
     pos_color="#2bb32b",
     tight=True,
+    cunit_only=True,
 ):
     """Plot DataFrame as pseudo-color image"""
 
@@ -105,7 +106,7 @@ def plot_map(
     ax.set_aspect(aspect)
     plt.tick_params(axis="both", direction="out")
     map_ = ax.pcolormesh(X, Y, np.array(df2), cmap=cmap, vmin=vmin, vmax=vmax)
-    plt.colorbar(map_, ax=ax)
+    cbar = plt.colorbar(map_, ax=ax)
     if invX:
         ax.set_xlim(xmax, xmin)
     else:
@@ -118,11 +119,14 @@ def plot_map(
     if units is not None:
         ax.set_xlabel(f"{xl} ({units[xl]})")
         ax.set_ylabel(f"{yl} ({units[yl]})")
-        ax.set_title(f"{cl} ({units[cl]})")
+        if cunit_only:
+            cbar.set_label(units[cl])
+        else:
+            cbar.set_label(f"{cl} ({units[cl]})")
     else:
         ax.set_xlabel(xl)
         ax.set_ylabel(yl)
-        ax.set_title(cl)
+        cbar.set_label(cl)
 
     if plot_pos is not None:
         x, y = plot_pos

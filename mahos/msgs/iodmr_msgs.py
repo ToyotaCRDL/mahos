@@ -17,6 +17,7 @@ from .data_msgs import Data
 
 class IODMRData(Data):
     def __init__(self, params: dict | None = None):
+        self.set_version(0)
         self.init_params(params)
 
         self.data_sum = None

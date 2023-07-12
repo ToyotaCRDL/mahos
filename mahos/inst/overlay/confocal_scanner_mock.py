@@ -82,6 +82,8 @@ class ConfocalScanner_mock(InstrumentOverlay):
             return self.get_line()
         elif key == "capability":
             return self.get_capability()
+        elif key == "unit":
+            return "cps"
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

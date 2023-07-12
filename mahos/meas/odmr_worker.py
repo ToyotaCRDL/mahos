@@ -398,6 +398,7 @@ class Sweeper(Worker):
         else:
             # TODO: check ident if resume?
             self.data.update_params(params)
+        self.data.yunit = self.pds[0].get_unit()
 
         if not self.configure_sg(self.data.params):
             return self.fail_with_release("Failed to configure SG.")

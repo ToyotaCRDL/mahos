@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from ..msgs.confocal_msgs import Image, Trace, ScanDirection
+from ..msgs.confocal_msgs import Image, Trace, ScanDirection, update_image, update_trace
 from ..node.log import DummyLogger
 from ..util.io import save_pickle_or_h5, load_pickle_or_h5
 from ..util.image import save_map, plot_map, plot_map_only
@@ -39,7 +39,9 @@ class ConfocalIO(object):
     def load_image(self, filename: str) -> Image | None:
         """Load image from filename. return None if load is failed."""
 
-        return load_pickle_or_h5(filename, Image, self.logger)
+        d = load_pickle_or_h5(filename, Image, self.logger)
+        if d is not None:
+            return update_image(d)
 
     def export_image(self, filename: str, image: Image, params: dict | None = None) -> bool:
         """Export the image to text or image files.
@@ -114,7 +116,7 @@ class ConfocalIO(object):
             _x, _y = self.get_xylabel(image)
             df = self.create_dataframe(image)
             fn_head, ext = path.splitext(filename)
-            units = {_x: "um", _y: "um", "I": "cps"}
+            units = {_x: "um", _y: "um", "I": image.cunit}
             plot_map(
                 filename,
                 df,
@@ -159,7 +161,9 @@ class ConfocalIO(object):
     def load_trace(self, filename: str) -> Trace | None:
         """Load trace from filename. return None if load is failed."""
 
-        return load_pickle_or_h5(filename, Trace, self.logger)
+        d = load_pickle_or_h5(filename, Trace, self.logger)
+        if d is not None:
+            return update_trace(d)
 
     def export_trace(self, filename: str, trace: Trace, params: dict | None = None) -> bool:
         """Export the trace to text or image files."""
@@ -231,7 +235,7 @@ class ConfocalIO(object):
         df = self.create_dataframe(image)
 
         fn_head, ext = path.splitext(fn)
-        units = {_x: "um", _y: "um", "I": "cps"}
+        units = {_x: "um", _y: "um", "I": image.cunit}
         if params.get("only", False):
             plot_map_only(
                 fn_head,
@@ -283,7 +287,7 @@ class ConfocalIO(object):
         with open(fn, "w", encoding="utf-8", newline="\n") as fo:
             fo.write("# PD trace data taken by mahos.meas.confocal. Saved at: %s\n" % (tim,))
             fo.write("# {}\n".format(" ".join([f"PD{i}" for i in range(trace.channels())])))
-            fo.write("# {}\n".format(" ".join(["cps"] * trace.channels())))
+            fo.write("# {}\n".format(" ".join([trace.yunit] * trace.channels())))
         with open(fn, "ab") as fo:
             np.savetxt(fo, np.column_stack(trace.traces))
         self.logger.info(f"Exported Trace to {fn}.")
@@ -302,7 +306,7 @@ class ConfocalIO(object):
             plt.xlabel("Data points")
 
         plt.legend()
-        plt.ylabel("Intensity (cps)")
+        plt.ylabel(f"Intensity ({trace.yunit})")
         plt.tight_layout()
         plt.savefig(fn)
         plt.close()

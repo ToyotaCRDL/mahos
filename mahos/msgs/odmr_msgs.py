@@ -38,7 +38,7 @@ class ODMRData(BasicMeasData):
         self.bg_data = None
 
     def init_axes(self):
-        self.xlabel: str = "Microwave Frequency"
+        self.xlabel: str = "Frequency"
         self.xunit: str = "Hz"
         self.ylabel: str = "Intensity"
         self.yunit: str = ""

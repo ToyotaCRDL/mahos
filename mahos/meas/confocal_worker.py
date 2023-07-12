@@ -151,6 +151,8 @@ class Tracer(Worker):
         if not self.lock_instruments():
             return self.fail_with_release("Error acquiring instrument locks.")
 
+        self.trace.yunit = self.pds[0].get_unit()
+
         freq = 1.0 / self.time_window_sec * self.oversample
         rate = freq * 2  # max. expected sampling rate. double expected freq for safety
         samples = self.cb_samples * 10  # large samples to assure enough buffer size
@@ -292,13 +294,17 @@ class Scanner(Worker):
     def start(self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]) -> bool:
         params = P.unwrap(params)
 
-        success = self.scanner.lock() and self.scanner.configure(params) and self.scanner.start()
+        self.image = Image(params)
+        if not self.scanner.lock():
+            return self.fail_with_release("Error acquiring scanner lock.")
+        self.image.cunit = self.scanner.get_unit()
+
+        success = self.scanner.configure(params) and self.scanner.start()
 
         if not success:
             return self.fail_with_release("Error starting scanner.")
 
         self.logger.info("Started scanner.")
-        self.image = Image(params)
         self.image.running = True
         return True
 

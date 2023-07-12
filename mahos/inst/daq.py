@@ -669,6 +669,8 @@ class AnalogIn(ConfigurableTask):
                 return self.pop_all_block()
             else:
                 return self.pop_all_opt()
+        elif key == "unit":
+            return "V"
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
@@ -949,6 +951,8 @@ class BufferedEdgeCounter(ConfigurableTask):
                 return self.pop_all_block()
             else:
                 return self.pop_all_opt()
+        elif key == "unit":
+            return ""
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
@@ -1014,6 +1018,8 @@ class APDCounter(BufferedEdgeCounter):
             return np.array([self.correct_cps(x) for x in args])
         elif key == "correction_factor":
             return np.array([self.correction_factor(x) for x in args])
+        elif key == "unit":
+            return "cps"
         else:
             return BufferedEdgeCounter.get(self, key, args)
 

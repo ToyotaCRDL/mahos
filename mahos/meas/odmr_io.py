@@ -133,8 +133,8 @@ class ODMRIO(object):
 
         with open(fn, "w", encoding="utf-8", newline="\n") as fo:
             fo.write("# ODMR data taken by mahos.meas.odmr.\n")
-            fo.write("# Frequency Intensity\n")
-            fo.write("# Hz cps\n")
+            fo.write(f"# {data.xlabel} {data.ylabel}\n")
+            fo.write(f"# {data.xunit} {data.yunit}\n")
         with open(fn, "ab") as fo:
             np.savetxt(fo, np.column_stack((xdata, ydata)), delimiter=",")
         self.logger.info(f"Exported Data to {fn}.")
@@ -160,7 +160,7 @@ class ODMRIO(object):
         if normalize_n:
             plt.ylabel("Normalized Intensity")
         else:
-            plt.ylabel("Intensity (cps)")
+            plt.ylabel(f"Intensity ({data_list[0].yunit})")
 
         label = params.get("label") or [f"data{i}" for i in range(len(data_list))]
         offset = params.get("offset") or [0.0] * len(data_list)

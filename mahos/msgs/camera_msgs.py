@@ -15,6 +15,7 @@ from .inst_camera_msgs import FrameResult
 
 class Image(Data):
     def __init__(self, params: dict | None = None):
+        self.set_version(0)
         self.init_params(params)
 
         self.image = None

@@ -1938,7 +1938,7 @@ class traceView(ClientWidget, Ui_traceView):
 
         self.pi.showGrid(x=True, y=True)
         self.pi.setLabel("bottom", "Data point")
-        self.pi.setLabel("left", "Intensity", "cps")
+        self.pi.setLabel("left", "Intensity", "")
 
     def init_connection(self):
         self.saveButton.clicked.connect(self.save_data)
@@ -1984,6 +1984,8 @@ class traceView(ClientWidget, Ui_traceView):
         return sdf.index.values, sdf[0].values
 
     def init_with_first_data(self, trace: Trace):
+        self.pi.setLabel("left", "Intensity", trace.yunit)
+
         chs = trace.channels()
         if chs == 1:
             self._single_channel = True

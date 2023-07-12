@@ -58,7 +58,60 @@ class AnalogOutInterface(InstrumentInterface):
         return self.configure(params)
 
 
-class AnalogInInterface(InstrumentInterface):
+class BufferedReaderInterface(InstrumentInterface):
+    """Common interface for AnalogIn and BufferedEdgeCounter."""
+
+    def pop_block(
+        self,
+    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]:
+        """Get data from buffer.
+
+        If buffer is empty, this function blocks until data is ready.
+
+        """
+
+        return self.get("data", True)
+
+    def pop_all_block(
+        self,
+    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]]:
+        """Get all data from buffer as list.
+
+        If buffer is empty, this function blocks until data is ready.
+
+        """
+
+        return self.get("all_data", True)
+
+    def pop_opt(
+        self,
+    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float] | None:
+        """Get data from buffer.
+
+        If buffer is empty, returns None.
+
+        """
+
+        return self.get("data", False)
+
+    def pop_all_opt(
+        self,
+    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]] | None:
+        """Get all data from buffer as list.
+
+        If buffer is empty, returns None.
+
+        """
+
+        return self.get("all_data", False)
+
+    def get_unit(self) -> str:
+        """Get reading / count unit in str."""
+
+        return self.get("unit")
+
+
+class AnalogInInterface(BufferedReaderInterface):
     def pop_block(
         self,
     ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]:
@@ -116,7 +169,7 @@ class AnalogInInterface(InstrumentInterface):
         return self.get("all_data", False)
 
 
-class BufferedEdgeCounterInterface(InstrumentInterface):
+class BufferedEdgeCounterInterface(BufferedReaderInterface):
     def pop_block(self) -> np.ndarray:
         """Get data from buffer. If buffer is empty, this function blocks until data is ready."""
 
@@ -152,54 +205,6 @@ class APDCounterInterface(BufferedEdgeCounterInterface):
         """Get the correction factor for given cps values."""
 
         return self.get("correction_factor", xs_cps)
-
-
-class BufferedReaderInterface(InstrumentInterface):
-    """Common interface for AnalogIn and BufferedEdgeCounter."""
-
-    def pop_block(
-        self,
-    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]:
-        """Get data from buffer.
-
-        If buffer is empty, this function blocks until data is ready.
-
-        """
-
-        return self.get("data", True)
-
-    def pop_all_block(
-        self,
-    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]]:
-        """Get all data from buffer as list.
-
-        If buffer is empty, this function blocks until data is ready.
-
-        """
-
-        return self.get("all_data", True)
-
-    def pop_opt(
-        self,
-    ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float] | None:
-        """Get data from buffer.
-
-        If buffer is empty, returns None.
-
-        """
-
-        return self.get("data", False)
-
-    def pop_all_opt(
-        self,
-    ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]] | None:
-        """Get all data from buffer as list.
-
-        If buffer is empty, returns None.
-
-        """
-
-        return self.get("all_data", False)
 
 
 class DigitalOutInterface(InstrumentInterface):

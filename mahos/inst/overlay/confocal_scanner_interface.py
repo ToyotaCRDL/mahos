@@ -17,7 +17,7 @@ from ...msgs.confocal_msgs import ScanMode, ScanDirection
 
 
 class ConfocalScannerInterface(InstrumentInterface):
-    """Interface for Signal Genetator."""
+    """Interface for Confocal Scanner."""
 
     def get_line(self) -> T.Optional[np.ndarray]:
         """Get single scan line. None is returned when scan is finished."""
@@ -28,6 +28,9 @@ class ConfocalScannerInterface(InstrumentInterface):
         """Get scanner capablities."""
 
         return self.get("capability")
+
+    def get_unit(self) -> str:
+        return self.get("unit")
 
     def configure_scan(
         self,

@@ -232,6 +232,9 @@ class Data(Message):
         # _version_h5 may be used by the readers
         if "_version_h5" in group.attrs:
             data.set_version_h5(group.attrs["_version_h5"])
+        # if data is unversioned, set version 0 explicitly.
+        if "_version" not in group.attrs:
+            data.set_version(0)
 
         for key, val in group.items():
             # if key not in d.__dict__:

@@ -61,6 +61,7 @@ class PlotWidget(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent)
 
         self._normalize_updated = False
+        self._yunit = ""
         self.init_ui()
         self.init_view()
 
@@ -113,7 +114,7 @@ class PlotWidget(QtWidgets.QWidget):
 
         self.plot.showGrid(x=True, y=True)
         self.plot.setLabel("bottom", "Microwave frequency", "Hz")
-        self.plot.setLabel("left", "Intensity", "cps")
+        self.plot.setLabel("left", "Intensity", "")
         self.img_plot.setLabel("bottom", "Microwave frequency", "Hz")
         self.img_plot.setLabel("left", "Number of accumulation")
 
@@ -121,6 +122,10 @@ class PlotWidget(QtWidgets.QWidget):
         self.normalizenBox.valueChanged.connect(self.update_normalize)
 
     def refresh(self, data_list: list[tuple[ODMRData, bool, str]], data: ODMRData):
+        if not self._yunit:
+            self._yunit = data.yunit
+            self.update_ylabel(self.normalizenBox.value())
+
         if data.has_data():
             self.update_image(data)
         self.update_plot(data_list)
@@ -197,11 +202,14 @@ class PlotWidget(QtWidgets.QWidget):
         else:
             self.layout.removeItem(self.img_plot)
 
-    def update_normalize(self, n):
-        if n:
+    def update_ylabel(self, normalize_n: int):
+        if normalize_n:
             self.plot.setLabel("left", "Normalized Intensity")
         else:
-            self.plot.setLabel("left", "Intensity", "cps")
+            self.plot.setLabel("left", "Intensity", self._yunit)
+
+    def update_normalize(self, normalize_n: int):
+        self.update_ylabel(normalize_n)
         self._normalize_updated = True
 
 

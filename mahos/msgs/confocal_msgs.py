@@ -181,6 +181,7 @@ class PiezoPos(Message):
 
 class Image(Data):
     def __init__(self, params: dict | None = None):
+        self.set_version(1)
         self.init_params(params)
 
         if self.has_params():
@@ -193,6 +194,9 @@ class Image(Data):
         self.aborted: bool = False
         self.start_time: float = time.time()
         self.finish_time: float | None = None
+
+        self.clabel: str = "Intensity"
+        self.cunit: str = ""
 
     def has_data(self) -> bool:
         """return True if data is ready and valid data could be read out."""
@@ -250,12 +254,30 @@ class Image(Data):
         return {"direction": self._h5_read_direction, "params": self._h5_read_params}
 
 
+def update_image(image: Image):
+    """update image to latest format"""
+
+    if image.version() <= 0:
+        # version 0 to 1
+        ## add missing attributes
+        image.clabel: str = "Intensity"
+        image.cunit: str = "cps"  # old data were in cps
+        image.set_version(1)
+
+    return image
+
+
 class Trace(Data):
     def __init__(self, size=0, channels=2):
+        self.set_version(1)
+
         # trace data
         self.traces = [np.zeros(size) for _ in range(channels)]
         # time stamps
         self.stamps = [np.zeros(size, dtype="datetime64[ns]") for _ in range(channels)]
+
+        self.ylabel: str = "Intensity"
+        self.yunit: str = ""
 
     def channels(self) -> int:
         return len(self.traces)
@@ -298,6 +320,19 @@ class Trace(Data):
 
     def _h5_readers(self) -> dict:
         return {"stamps": self._h5_read_stamps, "traces": self._h5_read_traces}
+
+
+def update_trace(trace: Trace):
+    """update trace to latest format"""
+
+    if trace.version() <= 0:
+        # version 0 to 1
+        ## add missing attributes
+        trace.ylabel: str = "Intensity"
+        trace.yunit: str = "cps"  # old data were in cps
+        trace.set_version(1)
+
+    return trace
 
 
 class ConfocalStatus(Status):
