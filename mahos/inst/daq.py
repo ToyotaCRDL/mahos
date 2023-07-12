@@ -400,11 +400,15 @@ class AnalogInTask(D.Task):
 class AnalogIn(ConfigurableTask):
     """A configurable DAQ Task class for Analog Input voltage channel.
 
-    Readings are buffered and read at each `cb_samples`.
+    This class supports buffered clock-mode and on-demand-mode.
+    In clock-mode, readings are synchronized to a clock, buffered, and read at each `cb_samples`.
+    In on-demand-mode, data are read on get("data") request.
 
     :param lines: Sequence of strings to designate DAQ's physical channels.
     :type lines: list[str]
 
+    :param clock_mode: If True (False), configures as clock-mode (on-demand-mode).
+    :type clock_mode: bool
     :param bounds: bounds (min, max) values of the expected input voltages per channels.
     :type bounds: list[tuple[float, float]]
     :param finite: (default True) Switch if finite mode or infinite mode.
@@ -423,7 +427,7 @@ class AnalogIn(ConfigurableTask):
     -----------------------
 
     In finite mode (finite=True), task is finished with `samples`.
-    In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop()
+    In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop().
     (`samples` is used to determine the buffer size.)
 
     Callback handlers
@@ -455,11 +459,12 @@ class AnalogIn(ConfigurableTask):
     def _null_done_handler(self, status: int):
         pass
 
-    def _check_buffer_size(self, finite, every, cb_samples) -> bool:
-        bs = D.uInt32()
-        self.task.GetBufInputBufSize(D.byref(bs))
-        self.logger.debug("Buffer size: {}.".format(bs.value))
-        return True
+    def get_buffer_size(self) -> int | None:
+        if self.task is None:
+            return None
+        size = D.uInt32()
+        self.task.GetBufInputBufSize(D.byref(size))
+        return size.value
 
     def _append_data(self, data: np.ndarray | list[np.ndarray]):
         if not self.queue.append((data, time.time_ns()) if self._stamp else data):
@@ -601,8 +606,7 @@ class AnalogIn(ConfigurableTask):
             samples + 1,
         )
 
-        if not self._check_buffer_size(self.finite, every, cb_samples):
-            return False
+        self.logger.debug(f"Buffer size: {self.get_buffer_size()}")
 
         if every:
             self.task.AutoRegisterEveryNSamplesEvent(D.DAQmx_Val_Acquired_Into_Buffer, 1, 0)
@@ -764,6 +768,15 @@ class BufferedEdgeCounter(ConfigurableTask):
 
     Counts are buffered and read at each `cb_samples`.
 
+    :param counter: The device name for counter (like /Dev1/Ctr0).
+    :type counter: str
+    :param source: The pin name for counter source (like /Dev1/PFI0).
+    :type source: str
+    :param source_dir: (default: True) Source direction. True (False) for rising (falling) edge.
+    :type source_dir: bool
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+
     :param finite: (default True) Switch if finite mode or infinite mode.
     :type finite: bool
     :param every: (default False) Switch if every1 mode or not.
@@ -784,13 +797,13 @@ class BufferedEdgeCounter(ConfigurableTask):
     -----------------------
 
     In finite mode (finite=True), task is finished with `samples`.
-    In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop()
+    In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop().
     (`samples` is used to determine the buffer size.)
 
-    In infinite mode, buffersize is fixed by NI-DAQmx and cannot call EveryNCallBack
-    at arbitrary `cb_samples`.
-    Buffer size must be even integer multiple of cb_samples.
-    So setting every=True is recommended if rate is not high.
+    In infinite mode, buffer size is automatically assigned by NI-DAQmx.
+    On some device, we cannot call EveryNCallBack at arbitrary `cb_samples`.
+    (For example, buffer size must be even integer multiple of cb_samples.)
+    Setting every=True may resolve such a situation.
 
     Callback handlers
     -----------------
@@ -823,23 +836,12 @@ class BufferedEdgeCounter(ConfigurableTask):
     def _null_done_handler(self, status: int):
         pass
 
-    def _check_buffer_size(self, finite, every, cb_samples) -> bool:
-        bs = D.uInt32()
-        self.task.GetBufInputBufSize(D.byref(bs))
-        if not (finite or every):
-            if bs.value % (2 * cb_samples) != 0:
-                msg = "Buffer size ({}) must be even integer multiple of cb_samples ({}).".format(
-                    bs.value, cb_samples
-                )
-                self.logger.error(msg)
-                return False
-            else:
-                self.logger.debug(
-                    "Buffer size OK. buffer size: {} cb_samples: {}.".format(bs.value, cb_samples)
-                )
-        else:
-            self.logger.debug("Buffer size: {}.".format(bs.value))
-        return True
+    def get_buffer_size(self) -> int | None:
+        if self.task is None:
+            return None
+        size = D.uInt32()
+        self.task.GetBufInputBufSize(D.byref(size))
+        return size.value
 
     def _append_data(self, data: np.ndarray):
         if not self.queue.append((data, time.time_ns()) if self._stamp else data):
@@ -925,8 +927,7 @@ class BufferedEdgeCounter(ConfigurableTask):
             samples + 1,
         )
 
-        if not self._check_buffer_size(self.finite, every, cb_samples):
-            return False
+        self.logger.debug(f"Buffer size: {self.get_buffer_size()}")
 
         if every:
             self.task.AutoRegisterEveryNSamplesEvent(D.DAQmx_Val_Acquired_Into_Buffer, 1, 0)
@@ -961,9 +962,12 @@ class BufferedEdgeCounter(ConfigurableTask):
 class APDCounter(BufferedEdgeCounter):
     """BufferedEdgeCounter for counting APD output pulses.
 
-    :param np.ndarray corr_x_kcps: x-data of correction factor.
-    :param np.ndarray corr_y: y-data of correction factor.
-    :param float dark_cps: (default 0.0) dark count.
+    :param corr_x_kcps: x-data of correction factor.
+    :type corr_x_kcps: np.ndarray
+    :param corr_y: y-data of correction factor.
+    :type corr_y: np.ndarray
+    :param dark_cps: (default 0.0) dark count.
+    :type dark_cps: float
 
     """
 
@@ -1059,9 +1063,12 @@ class SingleShotTask(Instrument):
 class DigitalOut(SingleShotTask):
     """A DAQ Task class for a Digital Output channels.
 
-    :param list lines: Sequence of strings to designate DAQ's physical channels.
-    :param bool auto_start: If True, StartTask() is called in the constructor.
-    :param dict command: dict of command name to predefined output data.
+    :param lines: Sequence of strings to designate DAQ's physical channels.
+    :type lines: list[str]
+    :param auto_start: If True, StartTask() is called in the constructor.
+    :type auto_start: bool
+    :param command: dict of command name to predefined output data.
+    :type command: dict[str, list[bool | int]]
 
     """
 
@@ -1170,8 +1177,10 @@ class DigitalOut(SingleShotTask):
 class DOPulser(SingleShotTask):
     """A DAQ Task class for a Digital Output channel, especially for pulsing.
 
-    :param str line: str to designate DAQ's physical channels.
-    :param bool auto_start: If True, StartTask() is called in the constructor.
+    :param line: str to designate DAQ's physical channels.
+    :type line: str
+    :param auto_start: If True, StartTask() is called in the constructor.
+    :type auto_start: bool
 
     """
 
@@ -1221,12 +1230,17 @@ class DOPulser(SingleShotTask):
 class DIPoller(SingleShotTask):
     """A DAQ Task class for Digital Input channel(s), especially for polling input(s).
 
-    :param str line: str to designate DAQ's physical channels.
-    :param int line_num: Number of channel lines.
-    :param int sample_per_ch: Sample number for each channel.
-    :param bool polarity: Set False if lines are active-low (you want to wait for low level).
+    :param line: str to designate DAQ's physical channels.
+    :type line: str
+    :param line_num: Number of channel lines.
+    :type line_num: int
+    :param sample_per_ch: Sample number for each channel.
+    :type sample_per_ch: int
+    :param polarity: Set False if lines are active-low (you want to wait for low level).
         DIPoller.wait_all will be alias of wait_all_pos (wait_all_neg) if polarity is True (False).
-    :param bool auto_start: If True, StartTask() is called in the constructor.
+    :type polarity: bool
+    :param auto_start: If True, StartTask() is called in the constructor.
+    :type auto_start: bool
 
     """
 
@@ -1344,15 +1358,7 @@ class DICounter(SingleShotTask):
 
 
 class AOPutter(SingleShotTask):
-    """[DEPRECATED] Use AnalogOut instead.
-
-    :param str line: str to designate DAQ's physical channels.
-    :param int line_num: Number of channel lines.
-    :param float min_val: Minimum value of the output voltage.
-    :param float max_val: Maximum value of the output voltage.
-    :param bool auto_start: If True, StartTask() is called in the constructor.
-
-    """
+    """[DEPRECATED] Use AnalogOut instead."""
 
     def __init__(self, name, conf, prefix=None):
         SingleShotTask.__init__(self, name, conf=conf, prefix=prefix)
@@ -1418,13 +1424,7 @@ class AOPutter(SingleShotTask):
 
 
 class AIReader(SingleShotTask):
-    """A DAQ Task class for simple Analog Input voltage channel(s).
-
-    :param str line: str to designate DAQ's physical channels.
-    :param int line_num: Number of channel lines.
-    :param bool auto_start: If True, StartTask() is called in the constructor.
-
-    """
+    """[DEPRECATED] Use AnalogIn instead."""
 
     def __init__(self, name, conf, prefix=None):
         SingleShotTask.__init__(self, name, conf=conf, prefix=prefix)
