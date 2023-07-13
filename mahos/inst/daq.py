@@ -63,6 +63,12 @@ def _samp_timing_clock_or_ondemand(clock: bool):
         return D.DAQmx_Val_OnDemand
 
 
+def _device_name(ident: str) -> str:
+    """Extract device name from resource (line, counter, etc.) identifier."""
+
+    return ident.strip("/").split("/")[0]
+
+
 class ConfigurableTask(Instrument):
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
@@ -107,18 +113,18 @@ class ConfigurableTask(Instrument):
 class ClockSource(ConfigurableTask):
     """A configurable DAQ Task class to provide a clock source.
 
-    :param str channel: str to designate DAQ's physical channels.
-    :param bool auto_start: If True, StartTask() is called in the constructor.
+    :param counter: DAQ's counter name.
+    :type counter: str
 
     """
 
     def __init__(self, name, conf, prefix=None):
         ConfigurableTask.__init__(self, name, conf=conf, prefix=prefix)
-        self.check_required_conf(("line",))
-        self.line = conf["line"]
+        self.check_required_conf(("counter",))
+        self.counter = conf["counter"]
 
     def get_internal_output(self):
-        return self.line + "InternalOutput"
+        return self.counter + "InternalOutput"
 
     # Standard API
 
@@ -137,10 +143,75 @@ class ClockSource(ConfigurableTask):
         duty = params.get("duty", 0.5)
 
         self.task.CreateCOPulseChanFreq(
-            self.line, "", D.DAQmx_Val_Hz, idle_state, initial_delay, freq, duty
+            self.counter, "", D.DAQmx_Val_Hz, idle_state, initial_delay, freq, duty
         )
-        # TODO: is this necessary?
         self.task.CfgImplicitTiming(_samples_finite_or_cont(self.finite), samples)
+
+        msg = f"Clock configured. freq: {freq:.2f} Hz."
+        if self.finite:
+            msg += f" {samples} pulses."
+        self.logger.debug(msg)
+
+        return True
+
+    def get(self, key: str, args=None):
+        if key == "internal_output":
+            return self.get_internal_output()
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+
+class ClockDivider(ConfigurableTask):
+    """A configurable DAQ Task class to provide a clock divider.
+
+    :param counter: DAQ's counter name.
+    :type counter: str
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        ConfigurableTask.__init__(self, name, conf=conf, prefix=prefix)
+        self.check_required_conf(("counter",))
+        self.counter = conf["counter"]
+
+    def get_internal_output(self):
+        return self.counter + "InternalOutput"
+
+    # Standard API
+
+    def configure(self, params: dict) -> bool:
+        self.task = D.Task()
+
+        if not self.check_required_params(params, ("source", "ratio", "samples")):
+            return False
+        source = params["source"]
+        ratio = params["ratio"]
+        samples = params["samples"]
+
+        # ~ 50% duty (exactly 50% if ratio is even)
+        low, high = ratio // 2 + ratio % 2, ratio // 2
+
+        # optional params
+        self.finite = params.get("finite", True)
+        idle_state = _low_or_high(params.get("idle_state", False))  # default to low idle state
+        initial_delay = params.get("initial_delay", 0)
+
+        self.task.CreateCOPulseChanTicks(
+            self.counter,
+            "",
+            source,
+            idle_state,
+            initial_delay,
+            low,
+            high,
+        )
+        self.task.CfgImplicitTiming(_samples_finite_or_cont(self.finite), samples)
+
+        msg = f"Divider configured. ratio: {ratio}."
+        if self.finite:
+            msg += f" {samples} pulses."
+        self.logger.debug(msg)
 
         return True
 
@@ -464,6 +535,14 @@ class AnalogIn(ConfigurableTask):
         size = D.uInt32()
         self.task.GetBufInputBufSize(D.byref(size))
         return size.value
+
+    def get_max_rate(self) -> float | None:
+        rate = D.float64()
+        if len(self.lines) == 1:
+            D.GetDevAIMaxSingleChanRate(_device_name(self.lines[0]), D.byref(rate))
+        else:
+            D.GetDevAIMaxMultiChanRate(_device_name(self.lines[0]), D.byref(rate))
+        return rate.value
 
     def _append_data(self, data: np.ndarray | list[np.ndarray]):
         if not self.queue.append((data, time.time_ns()) if self._stamp else data):
@@ -841,6 +920,11 @@ class BufferedEdgeCounter(ConfigurableTask):
         size = D.uInt32()
         self.task.GetBufInputBufSize(D.byref(size))
         return size.value
+
+    def get_max_rate(self) -> float | None:
+        rate = D.float64()
+        D.DAQmxGetDevCIMaxTimebase(_device_name(self.counter), D.byref(rate))
+        return rate.value
 
     def _append_data(self, data: np.ndarray):
         if not self.queue.append((data, time.time_ns()) if self._stamp else data):

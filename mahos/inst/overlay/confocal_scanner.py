@@ -52,10 +52,9 @@ class ConfocalScannerMixin(object):
             xar = np.tile(xar, ylen)
             return xar
 
-        xs = np.linspace(self.xmin, self.xmax, self.xnum * self.oversample)
+        xs = np.linspace(self.xmin, self.xmax, self.xnum)
         ys = np.linspace(self.ymin, self.ymax, self.ynum)
         # add dummy (repeated) sampling points at the start of each line
-        ndummy *= self.oversample
         self.xlen = len(xs) + ndummy
         ylen = len(ys)
         yar = np.repeat(ys, self.xlen)
@@ -86,6 +85,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
     def __init__(self, name, conf, prefix=None):
         InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
         self.clock = self.conf.get("clock")
+        self.divider = self.conf.get("divider")
         self.piezo = self.conf.get("piezo")
         self.pds = [self.conf.get(n) for n in self.conf.get("pds", ["pd0", "pd1"])]
         self.add_instruments(self.clock, self.piezo, *self.pds)
@@ -167,15 +167,28 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
         self._set_attrs(params)
         self._make_scan_array(self.dummy_samples)
 
-        if isinstance(self.pds[0], BufferedEdgeCounter) and self.oversample != 1:
+        if (
+            self.divider is None or isinstance(self.pds[0], BufferedEdgeCounter)
+        ) and self.oversample != 1:
             return self.fail_with(f"oversample == {self.oversample} is not supported.")
         if isinstance(self.pds[0], AnalogIn) and self.oversample < 1:
             return self.fail_with("oversample must be positive integer.")
+        if not self._check_pd_rate():
+            return False
 
         self.loop_stop_ev = self.loop_thread = None
 
         self.logger.info(f"Configured with dummy_samples == {self.dummy_samples}")
 
+        return True
+
+    def _check_pd_rate(self) -> bool:
+        freq_pd = self.oversample / self.time_window
+        for pd in self.pds:
+            rate = pd.get_max_rate()
+            if freq_pd > rate:
+                msg = f"PD freq ({freq_pd:.2f} Hz) exceeds max rate ({rate:.2f}) Hz"
+                return self.fail_with(msg)
         return True
 
     def _init_piezo(self) -> bool:
@@ -193,37 +206,48 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             return self.fail_with("Failed to move piezo to initial.")
         return True
 
-    def start(self) -> bool:
-        if self.running:
-            self.logger.warn("start() is called while running.")
-            return True
-
-        if not self._init_piezo():
-            return False
-
-        freq = 1.0 / self.time_window * self.oversample
+    def _start_piezo_pd(self) -> bool:
+        freq_piezo = 1.0 / self.time_window
+        freq_pd = freq_piezo * self.oversample
         total_samples = len(self.scan_array)
 
-        self.params_clock = {"freq": freq, "samples": self.xlen, "finite": True}
-        if not self.clock.configure(self.params_clock):
-            self.logger.error("failed to configure clock.")
-            return False
-        clock = self.clock.get_internal_output()
+        if self.oversample == 1:
+            self.params_clock = {"freq": freq_piezo, "samples": self.xlen, "finite": True}
+            if not self.clock.configure(self.params_clock):
+                return self.fail_with("failed to configure clock.")
+            clock_pd = clock_piezo = self.clock.get_internal_output()
+        else:
+            self.params_clock = {
+                "freq": freq_pd,
+                "samples": self.xlen * self.oversample,
+                "finite": True,
+            }
+            if not self.clock.configure(self.params_clock):
+                return self.fail_with("failed to configure clock.")
+            clock_pd = self.clock.get_internal_output()
+            params_divider = {
+                "ratio": self.oversample,
+                "samples": total_samples,
+                "source": clock_pd,
+                "finite": True,
+            }
+            if not self.divider.configure(params_divider):
+                return self.fail_with("failed to configure divider.")
+            clock_piezo = self.divider.get_internal_output()
 
         self.params_piezo = {
             "clock_mode": True,
-            "clock": clock,
+            "clock": clock_piezo,
             "samples": self.xlen,
-            "rate": freq,
+            "rate": freq_piezo,
         }
-        # self.xlen = self.oversample * (self.xnum + self.dummy_samples)
         params_pd = {
-            "cb_samples": self.xnum + self.dummy_samples,
+            "cb_samples": self.xlen,
             "samples": total_samples,
-            "rate": freq,
+            "rate": freq_pd,
             "finite": True,
             "every": False,
-            "clock": clock,
+            "clock": clock_pd,
             "time_window": self.time_window,  # only for APDCounter
             "clock_mode": True,  # only for AnalogIn
             "oversample": self.oversample,  # only for AnalogIn
@@ -235,18 +259,31 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             and self.piezo.write_scan_array(self.scan_array[: self.xlen, :])
         )
         if not success:
-            self.logger.error("failed to configure piezo.")
+            return self.fail_with("failed to configure and start piezo.")
+
+        if not (
+            all([pd.configure(params_pd) for pd in self.pds])
+            and all([pd.start() for pd in self.pds])
+        ):
+            return self.fail_with("failed to configure and start PD.")
+
+        return True
+
+    def start(self) -> bool:
+        if self.running:
+            self.logger.warn("start() is called while running.")
+            return True
+
+        if not self._init_piezo():
+            return False
+        if not self._start_piezo_pd():
             return False
 
-        success = all([pd.configure(params_pd) for pd in self.pds])
-        if not success:
-            self.logger.error("failed to configure PD.")
-            return False
-
-        success = all([pd.start() for pd in self.pds]) and self.clock.start()
-        if not success:
-            self.logger.error("failed to start PD or clock.")
-            return False
+        if self.oversample != 1:
+            if not self.divider.start():
+                return self.fail_with("failed to start divider.")
+        if not self.clock.start():
+            return self.fail_with("failed to start clock.")
 
         self.loop_stop_ev = threading.Event()
         self.loop_thread = threading.Thread(target=self.line_loop, args=(self.loop_stop_ev,))
@@ -266,6 +303,8 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
         self.loop_stop_ev.set()
         self.loop_thread.join()
         success = self.clock.stop() and all([pd.stop() for pd in self.pds]) and self.piezo.stop()
+        if self.oversample != 1:
+            success &= self.divider.stop()
 
         if not success:
             self.logger.error("failed to stop piezo, PD, or clock.")
