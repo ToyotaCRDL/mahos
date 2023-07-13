@@ -2,6 +2,22 @@
 Changelog
 =========
 
+[Unreleased (0.2.1-rc)]
+-----------------------
+
+Added
+^^^^^
+
+- inst/daq: AnalogIn and CounterDivider classes
+- inst/pd: LUCI10 and OE200 classes
+
+Changed
+^^^^^^^
+
+- APDCounter has been moved from inst.daq to inst.pd.
+- meas/confocal,odmr: can be used not only with APDCounter, but also analog-PDs like OE200.
+- meas/confocal_io: image export puts the c-unit label (like cps) at colorbar, not as title.
+
 [0.2.0] - 2023-07-10
 --------------------
 
