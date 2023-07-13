@@ -304,7 +304,7 @@ class Ui_trackDialog(object):
         self.gridLayout.addWidget(self.delayBox, 3, 2, 1, 1)
         self.oversampleBox = QtWidgets.QSpinBox(parent=trackDialog)
         self.oversampleBox.setMinimum(1)
-        self.oversampleBox.setMaximum(1000)
+        self.oversampleBox.setMaximum(100000)
         self.oversampleBox.setObjectName("oversampleBox")
         self.gridLayout.addWidget(self.oversampleBox, 2, 3, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout)

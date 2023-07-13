@@ -167,7 +167,7 @@ class Ui_scanDialog(object):
         self.gridLayout.addWidget(self.pollsampleBox, 2, 4, 1, 1)
         self.oversampleBox = QtWidgets.QSpinBox(parent=scanDialog)
         self.oversampleBox.setMinimum(1)
-        self.oversampleBox.setMaximum(1000)
+        self.oversampleBox.setMaximum(100000)
         self.oversampleBox.setObjectName("oversampleBox")
         self.gridLayout.addWidget(self.oversampleBox, 2, 3, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout)
