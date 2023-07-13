@@ -259,8 +259,8 @@ class OE200(AnalogIn):
         else:
             to_write = self.gain_value
 
-        self.logger.debug(f"Writing LUCI-10 setting: {to_write:b}")
-        return self.luci._check_ret_value(self.luci.write_data(to_write))
+        self.logger.debug(f"Writing LUCI-10 setting: 0b{to_write:b}")
+        return self.luci.write_data(to_write)
 
     def _convert(self, data: np.ndarray | float) -> np.ndarray | float:
         """Convert raw reading (V) to power (W)."""
@@ -275,7 +275,7 @@ class OE200(AnalogIn):
     def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
         return self._convert(AnalogIn.read_on_demand(self, oversample))
 
-    def set_gain(self, low_noise: bool, gain_exponent: int) -> bool:
+    def _update_gain(self, low_noise: bool, gain_exponent: int) -> bool:
         self.low_noise = low_noise
         self.gain_exponent = gain_exponent
 
@@ -285,16 +285,21 @@ class OE200(AnalogIn):
             return self.fail_with(f"Invalid arguments: {low_noise}, {gain_exponent}")
 
         if low_noise:
-            self.gain_value |= 0x1_0000
+            self.gain_value |= 0b1_0000
 
         self.gain = 10**gain_exponent
+        return True
 
-        return self._write_settings()
+    def set_gain(self, low_noise: bool, gain_exponent: int) -> bool:
+        return self._update_gain(low_noise, gain_exponent) and self._write_settings()
 
     def set_coupling(self, DC_coupling: bool) -> bool:
         self.DC_coupling = DC_coupling
-
         return self._write_settings()
+
+    def set_gain_coupling(self, low_noise: bool, gain_exponent: int, DC_coupling: bool) -> bool:
+        self.DC_coupling = DC_coupling
+        return self._update_gain(low_noise, gain_exponent) and self._write_settings()
 
     def get_gain_coupling(self) -> dict:
         return {
@@ -314,6 +319,14 @@ class OE200(AnalogIn):
                 return self.fail_with("value must be a dict with low_noise and gain_exponent.")
         elif key == "coupling":
             return self.set_coupling(bool(value))
+        elif key == "gain_coupling":
+            try:
+                return self.set_gain_coupling(
+                    value["low_noise"], value["gain_exponent"], value["DC_coupling"]
+                )
+            except (KeyError, TypeError):
+                msg = "value must be a dict with low_noise, gain_exponent, and DC_coupling."
+                return self.fail_with(msg)
         else:
             return self.fail_with(f"Unknown set() key: {key}.")
 

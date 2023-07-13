@@ -59,7 +59,7 @@ class OE200Widget(ClientTopWidget, Ui_OE200Widget):
         self.setButton.clicked.connect(self.request_settings)
 
         self.update_box()
-        self.setWindowTitle(f"Mahos.OE200GUI ({join_name(name)})")
+        self.setWindowTitle(f"Mahos[F].OE200GUI ({join_name(name)})")
         self.get_initialize()
 
     def get_initialize(self):
@@ -84,12 +84,9 @@ class OE200Widget(ClientTopWidget, Ui_OE200Widget):
             gain_exponent = int(self.lowBox.currentText())
         else:
             gain_exponent = int(self.highBox.currentText())
+        DC_coupling = self.dcButton.isChecked()
 
-        self.pds[0].set_gain(low_noise, gain_exponent)
-        self.pds[0].set_coupling(self.dcButton.isChecked())
-
-    # def sizeHint(self):
-    #     return QtCore.QSize(500, 250 * len(self.buttons))
+        self.pds[0].set_gain_coupling(low_noise, gain_exponent, DC_coupling)
 
 
 class OE200GUI(GUINode):
