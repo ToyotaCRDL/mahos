@@ -276,6 +276,9 @@ class OE200(AnalogIn):
         return self._convert(AnalogIn.read_on_demand(self, oversample))
 
     def set_gain(self, low_noise: bool, gain_exponent: int) -> bool:
+        self.low_noise = low_noise
+        self.gain_exponent = gain_exponent
+
         try:
             self.gain_value = self.GAINS[low_noise][gain_exponent]
         except KeyError:
@@ -292,6 +295,13 @@ class OE200(AnalogIn):
         self.DC_coupling = DC_coupling
 
         return self._write_settings()
+
+    def get_gain_coupling(self) -> dict:
+        return {
+            "low_noise": self.low_noise,
+            "gain_exponent": self.gain_exponent,
+            "DC_coupling": self.DC_coupling,
+        }
 
     def set(self, key: str, value=None) -> bool:
         key = key.lower()
@@ -314,6 +324,8 @@ class OE200(AnalogIn):
             return AnalogIn.get(self, key, args)
         if key == "unit":
             return "W"
+        elif key == "gain_coupling":
+            return self.get_gain_coupling()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
