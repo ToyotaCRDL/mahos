@@ -2105,6 +2105,7 @@ class traceView(ClientWidget, Ui_traceView):
     def clear(self):
         self.cli.clear()
         self.fps_counter = FPSCounter()
+        self.pi.enableAutoRange()
 
     def save_data(self):
         default_path = str(self.param_cli.get_param("work_dir"))
