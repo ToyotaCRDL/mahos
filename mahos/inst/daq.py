@@ -14,7 +14,6 @@ import time
 from typing import Callable, Optional
 
 import numpy as np
-from scipy.interpolate import InterpolatedUnivariateSpline
 import PyDAQmx as D
 
 from ..util.locked_queue import LockedQueue
@@ -957,75 +956,6 @@ class BufferedEdgeCounter(ConfigurableTask):
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
-
-
-class APDCounter(BufferedEdgeCounter):
-    """BufferedEdgeCounter for counting APD output pulses.
-
-    :param corr_x_kcps: x-data of correction factor.
-    :type corr_x_kcps: np.ndarray
-    :param corr_y: y-data of correction factor.
-    :type corr_y: np.ndarray
-    :param dark_cps: (default 0.0) dark count.
-    :type dark_cps: float
-
-    """
-
-    def __init__(self, name, conf, prefix=None):
-        BufferedEdgeCounter.__init__(self, name, conf=conf, prefix=prefix)
-
-        self.check_required_conf(("corr_x_kcps", "corr_y"))
-
-        self._spline = InterpolatedUnivariateSpline(
-            1e3 * np.array(self.conf["corr_x_kcps"]), np.array(self.conf["corr_y"])
-        )
-        self._dark_count = self.conf.get("dark_cps", 0.0)
-
-    def correction_factor(self, cnt):
-        if cnt < 1e5:
-            return 1.0
-        else:
-            return self._spline(cnt)
-
-    def correct_cps(self, cps):
-        if isinstance(cps, (np.ndarray, list, tuple)):
-            cf = np.array([self.correction_factor(c) for c in cps])
-        else:
-            cf = self.correction_factor(cps)
-
-        return cps * cf - self._dark_count
-
-    def configure(self, params: dict) -> bool:
-        if "time_window" not in params:
-            self.logger.error("config must be given: time_window.")
-            return False
-        self.time_window = params["time_window"]
-        self.average = params.get("average", False)
-
-        return BufferedEdgeCounter.configure(self, params)
-
-    def _append_data(self, data: np.ndarray):
-        BufferedEdgeCounter._append_data(self, self._convert(data))
-
-    def _convert(self, data: np.ndarray):
-        """Convert count to cps value (divide by time window) and apply correction."""
-
-        if self.average:  # TODO: What's the meaning of average mode?
-            return self.correct_cps(data.mean() / self.time_window)
-        else:
-            return self.correct_cps(data.astype(np.float64) / self.time_window)
-
-    # Standard API
-
-    def get(self, key: str, args=None):
-        if key == "correct":
-            return np.array([self.correct_cps(x) for x in args])
-        elif key == "correction_factor":
-            return np.array([self.correction_factor(x) for x in args])
-        elif key == "unit":
-            return "cps"
-        else:
-            return BufferedEdgeCounter.get(self, key, args)
 
 
 class SingleShotTask(Instrument):

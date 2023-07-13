@@ -170,6 +170,8 @@ class AnalogInInterface(BufferedReaderInterface):
 
 
 class BufferedEdgeCounterInterface(BufferedReaderInterface):
+    # override pop_*() methods because BufferedEdgeCounter has one channel per class.
+
     def pop_block(self) -> np.ndarray:
         """Get data from buffer. If buffer is empty, this function blocks until data is ready."""
 
@@ -193,18 +195,6 @@ class BufferedEdgeCounterInterface(BufferedReaderInterface):
         """Get all data from buffer as list. If buffer is empty, returns None."""
 
         return self.get("all_data", False)
-
-
-class APDCounterInterface(BufferedEdgeCounterInterface):
-    def correct_cps(self, raw_cps: list[float]) -> np.ndarray:
-        """Correct the raw values in cps according to correction factors."""
-
-        return self.get("correct", raw_cps)
-
-    def get_correction_factor(self, xs_cps: list[float]) -> np.ndarray:
-        """Get the correction factor for given cps values."""
-
-        return self.get("correction_factor", xs_cps)
 
 
 class DigitalOutInterface(InstrumentInterface):

@@ -8,7 +8,6 @@ Worker for ODMR.
 """
 
 from __future__ import annotations
-
 import time
 
 import numpy as np
@@ -18,7 +17,7 @@ from ..msgs import param_msgs as P
 from ..msgs.inst_pg_msgs import Block, Blocks
 from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface
-from ..inst.daq_interface import BufferedReaderInterface
+from ..inst.pd_interface import PDInterface
 from .common_worker import Worker
 
 
@@ -29,7 +28,7 @@ class Sweeper(Worker):
         Worker.__init__(self, cli, logger)
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
-        self.pds = [BufferedReaderInterface(cli, n) for n in conf.get("pds", ["pd0", "pd1"])]
+        self.pds = [PDInterface(cli, n) for n in conf.get("pds", ["pd0", "pd1"])]
         self.add_instruments(self.sg, self.pg, *self.pds)
 
         if "pd_clock" not in conf:
