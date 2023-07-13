@@ -139,6 +139,7 @@ class Ui_ODMR(object):
         self.mwwidthBox.setObjectName("mwwidthBox")
         self.gridLayout_2.addWidget(self.mwwidthBox, 4, 4, 1, 1)
         self.windowBox = QtWidgets.QDoubleSpinBox(parent=self.measTab)
+        self.windowBox.setDecimals(4)
         self.windowBox.setMinimum(0.1)
         self.windowBox.setMaximum(1000.0)
         self.windowBox.setProperty("value", 10.0)

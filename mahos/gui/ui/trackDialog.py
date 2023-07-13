@@ -284,6 +284,7 @@ class Ui_trackDialog(object):
         self.yzzlenBox.setObjectName("yzzlenBox")
         self.gridLayout.addWidget(self.yzzlenBox, 15, 1, 1, 1)
         self.timeBox = QtWidgets.QDoubleSpinBox(parent=trackDialog)
+        self.timeBox.setDecimals(4)
         self.timeBox.setMinimum(0.1)
         self.timeBox.setMaximum(1000.0)
         self.timeBox.setProperty("value", 10.0)

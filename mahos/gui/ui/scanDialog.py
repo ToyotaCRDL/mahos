@@ -64,6 +64,7 @@ class Ui_scanDialog(object):
         self.dummysampleBox.setObjectName("dummysampleBox")
         self.gridLayout.addWidget(self.dummysampleBox, 2, 2, 1, 1)
         self.timeBox = QtWidgets.QDoubleSpinBox(parent=scanDialog)
+        self.timeBox.setDecimals(4)
         self.timeBox.setMinimum(0.1)
         self.timeBox.setMaximum(1000.0)
         self.timeBox.setProperty("value", 10.0)
