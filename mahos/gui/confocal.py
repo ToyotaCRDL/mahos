@@ -1146,6 +1146,9 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
 
         self.setEnabled(True)
 
+        # defer init_splitter() because direct call here won't respect real size.
+        QtCore.QTimer.singleShot(200, QtCore.Qt.TimerType.PreciseTimer, self.init_splitter)
+
     def init_view(self, pos):
         """Initialize views."""
 
@@ -1213,6 +1216,11 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             (y, z),
             self._style,
         )
+
+    def init_splitter(self):
+        sizes = self.splitter.sizes()
+        w = self._style.get("lut_width", 120)
+        self.splitter.setSizes([w, sum(sizes) - 3 * w, w, w])
 
     def load_buffers(self, pos):
         """get the image buffers from confocal and load all the images."""

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1612</width>
+    <width>1630</width>
     <height>639</height>
    </rect>
   </property>
@@ -30,23 +30,21 @@
     <number>0</number>
    </property>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <property name="spacing">
-      <number>0</number>
+    <widget class="QSplitter" name="splitter">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <item>
-      <widget class="HistogramLUTWidget" name="histo_XY"/>
-     </item>
-     <item>
-      <widget class="GraphicsView" name="graphicsView"/>
-     </item>
-     <item>
-      <widget class="HistogramLUTWidget" name="histo_XZ"/>
-     </item>
-     <item>
-      <widget class="HistogramLUTWidget" name="histo_YZ"/>
-     </item>
-    </layout>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="HistogramLUTWidget" name="histo_XY"/>
+     <widget class="GraphicsView" name="graphicsView"/>
+     <widget class="HistogramLUTWidget" name="histo_XZ"/>
+     <widget class="HistogramLUTWidget" name="histo_YZ"/>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
