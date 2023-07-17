@@ -6,7 +6,7 @@ Overview
 What is this?
 -------------
 
-Mahos is a library to create distributed measurement control system.
+MAHOS is a library to create distributed measurement control system.
 Researchers have to setup automated measurement system involving many instruments and computers,
 which sometimes becomes quite time-consuming, painful experience.
 This library tries to help ease these struggles by providing extensible framework.

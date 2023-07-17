@@ -3,7 +3,7 @@
 """
 File I/O for HBT Interferometer.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

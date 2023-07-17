@@ -1,7 +1,7 @@
 Node, Client, and Communication
 ===============================
 
-Mahos is a `distributed system`, which consists of multiple programs (processes) communicating each other.
+MAHOS is a `distributed system`, which consists of multiple programs (processes) communicating each other.
 We call these programs :term:`nodes <node>` (:class:`Node <mahos.node.node.Node>`).
 A node usually provides some services for other nodes.
 The :term:`node client` (:class:`NodeClient <mahos.node.client.NodeClient>`) provides the standard way to access node's functions.

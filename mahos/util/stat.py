@@ -3,7 +3,7 @@
 """
 Statistical Data Processing Utilities.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

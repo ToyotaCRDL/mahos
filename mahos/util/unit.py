@@ -3,7 +3,7 @@
 """
 Unit conversion module.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 The SI_scale function is taken from the pyqtgraph project (https://github.com/pyqtgraph/pyqtgraph),
 which is licensed under the MIT License:

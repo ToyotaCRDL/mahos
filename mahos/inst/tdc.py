@@ -3,7 +3,7 @@
 """
 Time to Digital Converter (Time Digitizer) module
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

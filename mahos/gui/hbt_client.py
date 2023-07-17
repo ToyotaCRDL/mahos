@@ -3,7 +3,7 @@
 """
 Qt signal-based clients of HBT.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

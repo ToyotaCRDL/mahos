@@ -1,12 +1,12 @@
-.. Mahos documentation master file, created by
+.. MAHOS documentation master file, created by
    sphinx-quickstart on Sun Apr  3 06:42:17 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Mahos documentation
+MAHOS documentation
 ===================
 
-Mahos: Measurement Automation Handling and Orchestration System.
+MAHOS: Measurement Automation Handling and Orchestration System.
 
 This package currently includes the following.
 

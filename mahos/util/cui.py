@@ -3,7 +3,7 @@
 """
 Character User Interface module
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 This file contains some common functions for CUI.
 

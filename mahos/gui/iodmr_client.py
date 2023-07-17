@@ -3,7 +3,7 @@
 """
 Qt signal-based clients of Imaging IODMR.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

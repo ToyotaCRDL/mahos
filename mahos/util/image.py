@@ -3,7 +3,7 @@
 """
 Plot / Convertion functions for 2D image data.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

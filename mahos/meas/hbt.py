@@ -3,7 +3,7 @@
 """
 Logic and instrument control part of HBT Interferometer.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

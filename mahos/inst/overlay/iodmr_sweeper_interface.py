@@ -3,7 +3,7 @@
 """
 Typed Interface for Imaging ODMR Sweeper.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

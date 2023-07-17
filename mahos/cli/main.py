@@ -3,7 +3,7 @@
 """
 main entrypoint of mahos cli.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

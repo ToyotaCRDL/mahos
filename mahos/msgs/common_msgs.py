@@ -3,7 +3,7 @@
 """
 Common and base definitions for mahos messages.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

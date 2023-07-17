@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 """
-Main monitor for Mahos system.
+Main monitor for MAHOS system.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -31,7 +31,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
 
         for table in (self.lockTable, self.stateTable):
             table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
-        self.setWindowTitle(f"Mahos.MainMonitor ({join_name(name)})")
+        self.setWindowTitle(f"MAHOS.MainMonitor ({join_name(name)})")
 
         self.conf = local_conf(gconf, name)
         target = self.conf["target"]

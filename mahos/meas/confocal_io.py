@@ -3,7 +3,7 @@
 """
 File I/O for confocal microscope.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

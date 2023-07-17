@@ -3,7 +3,7 @@
 """
 Base Data type definitions for mahos measurements.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -148,7 +148,7 @@ class Data(Message):
         if any((hasattr(self, s) for s in _H5_RESERVED_ATTRS)):
             raise RuntimeError("Attributes are not allowed: " + ", ".join(_H5_RESERVED_ATTRS))
         d = [
-            "Mahos Data in HDF5",
+            "MAHOS Data in HDF5",
             "See attribute _type for type information (module.class) for this Data",
             "Binary blobs (Opaque values) are in MessagePack format",
         ]

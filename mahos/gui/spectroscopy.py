@@ -3,7 +3,7 @@
 """
 GUI frontend of Spectroscopy.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -413,7 +413,7 @@ class SpectroscopyMainWindow(QtWidgets.QMainWindow):
             parent=self,
         )
 
-        self.setWindowTitle(f"Mahos.SpectroscopyGUI ({join_name(target['spectroscopy'])})")
+        self.setWindowTitle(f"MAHOS.SpectroscopyGUI ({join_name(target['spectroscopy'])})")
         self.setAnimated(False)
         self.setCentralWidget(self.spec)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)

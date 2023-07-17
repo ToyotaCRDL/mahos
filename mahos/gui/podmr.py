@@ -3,7 +3,7 @@
 """
 GUI frontend of Pulse ODMR.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -1378,7 +1378,7 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
             parent=self,
         )
 
-        self.setWindowTitle(f"Mahos.PODMRGUI ({join_name(target['podmr'])})")
+        self.setWindowTitle(f"MAHOS.PODMRGUI ({join_name(target['podmr'])})")
         self.setAnimated(False)
         self.setCentralWidget(self.podmr)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)

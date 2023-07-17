@@ -3,7 +3,7 @@
 """
 Qt signal-based clients of Pulse-based meas nodes.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

@@ -3,7 +3,7 @@
 """
 GUI client for Pulse-based measurement to visualize the Pulse Pattern.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -104,7 +104,7 @@ class PulseMonitorWidget(ClientTopWidget):
         vl.addLayout(hl)
         vl.addWidget(glw)
         self.setLayout(vl)
-        self.setWindowTitle(f"Mahos.PulseMonitor ({join_name(target)})")
+        self.setWindowTitle(f"MAHOS.PulseMonitor ({join_name(target)})")
 
         self.cli.pulseUpdated.connect(self.update)
 

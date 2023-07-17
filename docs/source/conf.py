@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "Mahos"
+project = "MAHOS"
 copyright = "2022, Toyota Central R&D Labs., Inc"
 author = "Kosuke Tahara"
 

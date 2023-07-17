@@ -3,7 +3,7 @@
 """
 GUI frontend of Imaging ODMR.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -334,7 +334,7 @@ class IODMRMainWindow(ClientMainWindow):
 
         self.data = DataStore()
         self.cw = IODMRWidget(parent=self)
-        self.setWindowTitle(f"Mahos.IODMRGUI ({name})")
+        self.setWindowTitle(f"MAHOS.IODMRGUI ({name})")
         self.setAnimated(False)
         self.setCentralWidget(self.cw)
 

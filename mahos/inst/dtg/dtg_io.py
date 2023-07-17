@@ -3,7 +3,7 @@
 """
 IO functions for Data Timing Generator.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

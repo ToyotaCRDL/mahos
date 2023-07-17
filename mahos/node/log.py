@@ -3,7 +3,7 @@
 """
 ZMQ-based loggers for mahos Nodes.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

@@ -3,7 +3,7 @@
 """
 GUI frontend of Confocal.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -2155,7 +2155,7 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
             gconf, target["confocal"], target["param_server"], context, parent=self
         )
 
-        self.setWindowTitle(f"Mahos.ConfocalGUI ({join_name(target['confocal'])})")
+        self.setWindowTitle(f"MAHOS.ConfocalGUI ({join_name(target['confocal'])})")
         self.setAnimated(False)
         self.setCentralWidget(self.confocal)
         self.d_traceView = QtWidgets.QDockWidget("Trace", parent=self)

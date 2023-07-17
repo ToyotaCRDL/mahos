@@ -3,7 +3,7 @@
 """
 Common GUI for BasicMeasNode.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -263,7 +263,7 @@ class BasicMeasMainWindow(QtWidgets.QMainWindow):
             gconf, target["meas"], target["param_server"], self.plot, context, parent=self
         )
 
-        self.setWindowTitle(f"Mahos.BasicMeasGUI ({join_name(target['meas'])})")
+        self.setWindowTitle(f"MAHOS.BasicMeasGUI ({join_name(target['meas'])})")
         self.setAnimated(False)
         self.setCentralWidget(self.meas)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)

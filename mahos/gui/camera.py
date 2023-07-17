@@ -3,7 +3,7 @@
 """
 GUI frontend of Camera.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -32,7 +32,7 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
     def __init__(self, gconf: dict, name, param_server_name, context, parent=None):
         ClientTopWidget.__init__(self, parent)
         self.setupUi(self)
-        self.setWindowTitle(f"Mahos.CameraGUI ({join_name(name)})")
+        self.setWindowTitle(f"MAHOS.CameraGUI ({join_name(name)})")
 
         self.iv = pg.ImageView(view=pg.PlotItem())
         self.verticalLayout.addWidget(self.iv)

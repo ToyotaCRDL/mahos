@@ -3,7 +3,7 @@
 """
 Piezo Stage module.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 available class(es):
     E727_3_USB - PI E727.3 Piezo controller using PIPython (GCS USB).

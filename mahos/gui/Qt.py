@@ -3,7 +3,7 @@
 """
 Qt wrapper-wrapper.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 """
 
 from PyQt6 import QtCore, QtGui, QtWidgets

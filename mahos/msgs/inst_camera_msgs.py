@@ -3,7 +3,7 @@
 """
 Message Types for Camera Instruments.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

@@ -153,7 +153,7 @@ class Ui_MainMonitor(object):
 
     def retranslateUi(self, MainMonitor):
         _translate = QtCore.QCoreApplication.translate
-        MainMonitor.setWindowTitle(_translate("MainMonitor", "Mahos Main Monitor"))
+        MainMonitor.setWindowTitle(_translate("MainMonitor", "MAHOS Main Monitor"))
         self.label.setText(_translate("MainMonitor", "Working Dir"))
         self.pathButton.setText(_translate("MainMonitor", "..."))
         self.label_5.setText(_translate("MainMonitor", "Log"))

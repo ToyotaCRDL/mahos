@@ -3,7 +3,7 @@
 """
 Base implementation for mahos Node.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

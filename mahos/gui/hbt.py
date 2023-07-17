@@ -3,7 +3,7 @@
 """
 GUI frontend of HBT Interferometer.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -459,7 +459,7 @@ class HBTMainWindow(QtWidgets.QMainWindow):
             parent=self,
         )
 
-        self.setWindowTitle(f"Mahos.HBTGUI ({join_name(target['hbt'])})")
+        self.setWindowTitle(f"MAHOS.HBTGUI ({join_name(target['hbt'])})")
         self.setAnimated(False)
         self.setCentralWidget(self.hbt)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)

@@ -3,7 +3,7 @@
 """
 NI-DAQ module.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 This module requires PyDAQmx library.
 

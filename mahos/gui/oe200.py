@@ -3,7 +3,7 @@
 """
 GUI client of InstrumentServer to operate OE-200 Photo Receiver.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -59,7 +59,7 @@ class OE200Widget(ClientTopWidget, Ui_OE200Widget):
         self.setButton.clicked.connect(self.request_settings)
 
         self.update_box()
-        self.setWindowTitle(f"Mahos[F].OE200GUI ({join_name(name)})")
+        self.setWindowTitle(f"MAHOS[F].OE200GUI ({join_name(name)})")
         self.get_initialize()
 
     def get_initialize(self):

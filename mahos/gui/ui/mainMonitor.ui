@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Mahos Main Monitor</string>
+   <string>MAHOS Main Monitor</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>

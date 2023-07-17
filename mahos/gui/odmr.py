@@ -3,7 +3,7 @@
 """
 GUI frontend of ODMR.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 
@@ -795,7 +795,7 @@ class ODMRMainWindow(QtWidgets.QMainWindow):
             parent=self,
         )
 
-        self.setWindowTitle(f"Mahos.ODMRGUI ({join_name(target['odmr'])})")
+        self.setWindowTitle(f"MAHOS.ODMRGUI ({join_name(target['odmr'])})")
         self.setAnimated(False)
         self.setCentralWidget(self.odmr)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)

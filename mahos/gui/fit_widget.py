@@ -3,7 +3,7 @@
 """
 Common widgets/utilities for GUI to deal with Data Buffer/Fitting functions of BasicMeasNode.
 
-.. This file is a part of Mahos project.
+.. This file is a part of MAHOS project.
 
 """
 

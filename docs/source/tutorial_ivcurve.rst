@@ -298,7 +298,7 @@ This extensibility is one of the advantages of the distributed systems.
 If you have experience in Qt (PyQt) programming, let's take a look at ``ivcurve_gui.py``.
 The GUI component (IVCurveWidget) is composed quite simply by virtue of ``QBasicMeasClient``.
 This class is `Qt-version` of `BasicMeasClient` and emits Qt signal on reception of subscribed messages.
-In other words, it translates Mahos communication into Qt communication (signal-slot).
+In other words, it translates MAHOS communication into Qt communication (signal-slot).
 All we have to do for widget implementation is connecting the signals to slots updating the GUI state (Line 102-103) and sending requests (Line 124-136).
 
 There is a bit special custom on initialization (``init_with_status()``).

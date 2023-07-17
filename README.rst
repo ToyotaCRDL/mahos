@@ -1,8 +1,8 @@
 #####
-Mahos
+MAHOS
 #####
 
-Mahos: Measurement Automation Handling and Orchestration System.
+MAHOS: Measurement Automation Handling and Orchestration System.
 
 This package currently includes the following.
 
@@ -101,7 +101,7 @@ Below is short summary on mahos architecture.
 Nodes and clients
 -----------------
 
-Mahos system consists of multiple programs called `nodes <mahos/node/node.py>`_.
+MAHOS system consists of multiple programs called `nodes <mahos/node/node.py>`_.
 A node usually provides some services for other nodes.
 Nodes communicate each other using a `communication library <mahos/node/comm.py>`_.
 The `NodeClient <mahos/node/client.py>`_ provides the standard way to access node's functions.
