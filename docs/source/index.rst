@@ -24,6 +24,7 @@ This package currently includes the following.
    arch
    conf
    cli
+   contributing
    api
    glossary
 
