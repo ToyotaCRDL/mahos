@@ -3,7 +3,7 @@
 Contributor License Agreement
 =============================
 
-This Contribution License Agreement (“Agreement”) is agreed to by the party signing below (“You”),
+This Contribution License Agreement (“Agreement”) is agreed to by the party signing (“You”),
 and conveys certain license rights to TOYOTA CENTRAL R&D LABS., INC. (“TCRDL”) for Your contributions
 to TCRDL open source project “Measurement Automation Handling and Orchestration System (“MAHOS”)”.
 This Agreement is effective as of the latest signature date.

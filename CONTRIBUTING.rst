@@ -31,3 +31,11 @@ To avoid possible legal (copyright, patent, etc.) issues, we ask you to sign
 the Contributor License Agreement (CLA) before merging your contribution.
 The signing process can be done on the GitHub pull request page.
 Please follow the instructions by "CLA Assistant Lite bot" there.
+
+Maintainers
+-----------
+
+If you have any questions which you would like to ask in private,
+contact one of the maintainers below.
+
+- Kosuke Tahara <ktaha@mosk.tytlabs.co.jp>
