@@ -12,6 +12,13 @@ This package currently includes the following.
 - Implementations of microscopy / optically detected magnetic resonance (ODMR) system
   for solid-state color center research, based on above.
 
+Documentation
+=============
+
+`Documentation is browsable here <https://toyotacrdl.github.io/mahos/html/>`_.
+
+You can also make the documentation locally with ``make docs`` and browse it with ``make browse``.
+
 Install
 =======
 
@@ -92,34 +99,6 @@ Test
 ====
 
 ``pytest``
-
-Documentation
-=============
-
-`Documentation is browsable here <https://toyotacrdl.github.io/mahos/html/>`_.
-
-You can also make the documentation locally with ``make docs`` and browse it with ``make browse``.
-
-Below is short summary on mahos architecture.
-
-Nodes and clients
------------------
-
-MAHOS system consists of multiple programs called `nodes <mahos/node/node.py>`_.
-A node usually provides some services for other nodes.
-Nodes communicate each other using a `communication library <mahos/node/comm.py>`_.
-The `NodeClient <mahos/node/client.py>`_ provides the standard way to access node's functions.
-Nodes internally use the clients to access others, and custom programs can utilize them as well.
-
-Package layout
---------------
-
-- `node <mahos/node>`_ - Base node implementations.
-- `msgs <mahos/msgs>`_ - Message type definitions.
-- `inst <mahos/inst>`_  - Low-level drivers for instruments. `InstrumentServer <mahos/inst/server.py>`_ node provides RPC with unified API.
-- `meas <mahos/meas>`_ - High-level measurement logics. (explicit state management and file I/O, etc.).
-- `gui <mahos/gui>`_ - GUI frontends.
-- `cli <mahos/cli>`_ - Command Line Interfaces.
 
 License
 =======
