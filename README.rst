@@ -2,8 +2,7 @@
 MAHOS
 #####
 
-.. image:: badge.svg
-   :target: https://github.com/ToyotaCRDL/mahos/actions/workflows/build.yaml/badge.svg
+.. image:: https://github.com/ToyotaCRDL/mahos/actions/workflows/build.yaml/badge.svg
 
 MAHOS: Measurement Automation Handling and Orchestration System.
 
