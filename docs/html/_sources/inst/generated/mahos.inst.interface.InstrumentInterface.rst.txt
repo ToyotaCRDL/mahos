@@ -1,0 +1,39 @@
+﻿mahos.inst.interface.InstrumentInterface
+========================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.interface
+
+.. autoclass:: InstrumentInterface
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InstrumentInterface.__init__
+      ~InstrumentInterface.call
+      ~InstrumentInterface.configure
+      ~InstrumentInterface.get
+      ~InstrumentInterface.help
+      ~InstrumentInterface.is_locked
+      ~InstrumentInterface.lock
+      ~InstrumentInterface.pause
+      ~InstrumentInterface.release
+      ~InstrumentInterface.reset
+      ~InstrumentInterface.resume
+      ~InstrumentInterface.set
+      ~InstrumentInterface.shutdown
+      ~InstrumentInterface.start
+      ~InstrumentInterface.stop
+   
+   
+
+   
+   
+   

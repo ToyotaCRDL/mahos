@@ -1,0 +1,36 @@
+﻿mahos.meas.hbt.HBT
+==================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.meas.hbt
+
+.. autoclass:: HBT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HBT.__init__
+      ~HBT.change_state
+      ~HBT.close_resources
+      ~HBT.export_data
+      ~HBT.get_param_dict
+      ~HBT.get_param_dict_names
+      ~HBT.handle_req
+      ~HBT.load_data
+      ~HBT.main
+      ~HBT.save_data
+      ~HBT.update_plot_params
+      ~HBT.wait
+   
+   
+
+   
+   
+   

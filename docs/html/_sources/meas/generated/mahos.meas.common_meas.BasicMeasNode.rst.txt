@@ -1,0 +1,41 @@
+﻿mahos.meas.common\_meas.BasicMeasNode
+=====================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.meas.common_meas
+
+.. autoclass:: BasicMeasNode
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BasicMeasNode.__init__
+      ~BasicMeasNode.change_state
+      ~BasicMeasNode.clear_buffer
+      ~BasicMeasNode.clear_fit
+      ~BasicMeasNode.export_data
+      ~BasicMeasNode.fit
+      ~BasicMeasNode.get_param_dict
+      ~BasicMeasNode.get_param_dict_names
+      ~BasicMeasNode.handle_req
+      ~BasicMeasNode.load_data
+      ~BasicMeasNode.pop_buffer
+      ~BasicMeasNode.save_data
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

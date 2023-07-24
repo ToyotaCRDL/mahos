@@ -1,0 +1,28 @@
+﻿mahos.node.comm.Requester
+=========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.node.comm
+
+.. autoclass:: Requester
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Requester.__init__
+      ~Requester.close
+      ~Requester.create_socket
+      ~Requester.request
+   
+   
+
+   
+   
+   

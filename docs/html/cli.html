@@ -1,0 +1,613 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Command Line Interface &#8212; MAHOS 0.2.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'cli';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing to MAHOS" href="contributing.html" />
+    <link rel="prev" title="Configuration file" href="conf.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">MAHOS 0.2.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="overview.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="installation.html">
+                        Installation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="tutorial.html">
+                        Tutorial
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="arch.html">
+                        Architecture
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="conf.html">
+                        Configuration file
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        Command Line Interface
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="contributing.html">
+                        Contributing to MAHOS
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="api.html">
+                        API Reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="glossary.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+                </div>
+            </div>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="overview.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="installation.html">
+                        Installation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="tutorial.html">
+                        Tutorial
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="arch.html">
+                        Architecture
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="conf.html">
+                        Configuration file
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        Command Line Interface
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="contributing.html">
+                        Contributing to MAHOS
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="api.html">
+                        API Reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="glossary.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+                </div>
+            </div>
+            
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Command Line Interface</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="command-line-interface">
+<span id="mahos-cli"></span><h1>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this heading">#</a></h1>
+<p>After installing mahos package, a command <code class="docutils literal notranslate"><span class="pre">mahos</span></code> is installed.
+This command serves as a command line interface (CLI) to use mahos.
+The <code class="docutils literal notranslate"><span class="pre">mahos</span></code> CLI provides several sub-commands described below.</p>
+<section id="common-arguments">
+<h2>Common arguments<a class="headerlink" href="#common-arguments" title="Permalink to this heading">#</a></h2>
+<section id="c-config-file">
+<h3>-c [config file]<a class="headerlink" href="#c-config-file" title="Permalink to this heading">#</a></h3>
+<p>To use CLI, you have to prepare toml-based <a class="reference internal" href="conf.html"><span class="doc">configuration file</span></a>.
+The <code class="docutils literal notranslate"><span class="pre">-c</span></code> option specifies the path to config file.
+Defaults to <code class="docutils literal notranslate"><span class="pre">conf.toml</span></code>.</p>
+</section>
+<section id="h-hostname">
+<h3>-H [hostname]<a class="headerlink" href="#h-hostname" title="Permalink to this heading">#</a></h3>
+<p>CLI command usually targets a node.
+The full-name of the node consists of hostname and nodename.
+The <code class="docutils literal notranslate"><span class="pre">-H</span></code> option specifies the hostname part.
+Defaults to real hostname (<code class="docutils literal notranslate"><span class="pre">platform.uname().node</span></code>) if it is in the config file, or <code class="docutils literal notranslate"><span class="pre">localhost</span></code>.</p>
+</section>
+</section>
+<section id="mahos-run">
+<span id="id1"></span><h2>mahos run<a class="headerlink" href="#mahos-run" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">run</span> <span class="pre">[nodename]</span></code> starts a mahos node.</p>
+</section>
+<section id="mahos-launch">
+<span id="id2"></span><h2>mahos launch<a class="headerlink" href="#mahos-launch" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">[nodenames]</span></code> starts all the nodes (or specified nodes) pertaining to single host.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">-e</span> <span class="pre">[nodenames-to-exclude]</span></code> starts all the nodes excluding specified names.</p>
+</section>
+<section id="mahos-log">
+<h2>mahos log<a class="headerlink" href="#mahos-log" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">log</span> <span class="pre">[nodename=log_broker]</span></code> subscribes to a <a class="reference internal" href="node/generated/mahos.node.log_broker.LogBroker.html#mahos.node.log_broker.LogBroker" title="mahos.node.log_broker.LogBroker"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogBroker</span></code></a> to print logs on console.</p>
+</section>
+<section id="mahos-ls">
+<h2>mahos ls<a class="headerlink" href="#mahos-ls" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">ls</span></code> prints the list of defined nodes in the config file.</p>
+</section>
+<section id="mahos-graph">
+<span id="id3"></span><h2>mahos graph<a class="headerlink" href="#mahos-graph" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">graph</span></code> visualizes the config file as graph.</p>
+<p>Add option <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">[filename]</span></code> to save to a file.</p>
+</section>
+<section id="mahos-echo">
+<h2>mahos echo<a class="headerlink" href="#mahos-echo" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">echo</span> <span class="pre">-t</span> <span class="pre">[topicname]</span> <span class="pre">[nodename]</span></code> subscribes to a topic and print published messages.</p>
+</section>
+<section id="mahos-shell">
+<h2>mahos shell<a class="headerlink" href="#mahos-shell" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">shell</span> <span class="pre">[nodenames]</span></code> starts an IPython shell with clients for the nodes.</p>
+<p>A bound variable <code class="docutils literal notranslate"><span class="pre">cli</span></code> holds instances of the clients.
+For each client, <code class="docutils literal notranslate"><span class="pre">client.M</span></code> is the message module that may be required to invoke client APIs.</p>
+</section>
+<section id="mahos-data-ls">
+<h2>mahos data ls<a class="headerlink" href="#mahos-data-ls" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">ls</span> <span class="pre">[filenames]</span></code> prints the list of attributes and types in data files.</p>
+</section>
+<section id="mahos-data-print">
+<h2>mahos data print<a class="headerlink" href="#mahos-data-print" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">print</span> <span class="pre">[filenames]</span> <span class="pre">-k</span> <span class="pre">[keys=[params]]</span></code> prints the attributes in data files.</p>
+</section>
+<section id="mahos-data-plot">
+<h2>mahos data plot<a class="headerlink" href="#mahos-data-plot" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">plot</span> <span class="pre">[subcommand]</span></code> plots the data inside data files.</p>
+</section>
+<section id="mahos-plot">
+<h2>mahos plot<a class="headerlink" href="#mahos-plot" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">plot</span></code> is a shorthand of <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">plot</span></code>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="conf.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Configuration file</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="contributing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Contributing to MAHOS</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-arguments">Common arguments</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#c-config-file">-c [config file]</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#h-hostname">-H [hostname]</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-run">mahos run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-launch">mahos launch</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-log">mahos log</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-ls">mahos ls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-graph">mahos graph</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-echo">mahos echo</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-shell">mahos shell</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-ls">mahos data ls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-print">mahos data print</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-plot">mahos data plot</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-plot">mahos plot</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="_sources/cli.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2022, Toyota Central R&amp;D Labs., Inc.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

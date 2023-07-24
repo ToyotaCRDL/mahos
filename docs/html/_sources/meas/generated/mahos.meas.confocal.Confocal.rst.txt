@@ -1,0 +1,44 @@
+﻿mahos.meas.confocal.Confocal
+============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.meas.confocal
+
+.. autoclass:: Confocal
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Confocal.__init__
+      ~Confocal.change_state
+      ~Confocal.close_resources
+      ~Confocal.command_buffer
+      ~Confocal.command_trace
+      ~Confocal.direction_to_target_pos
+      ~Confocal.export_image
+      ~Confocal.export_trace
+      ~Confocal.export_view
+      ~Confocal.get_param_dict
+      ~Confocal.handle_req
+      ~Confocal.load_image
+      ~Confocal.load_trace
+      ~Confocal.main
+      ~Confocal.move
+      ~Confocal.restore_state
+      ~Confocal.save_image
+      ~Confocal.save_trace
+      ~Confocal.shutdown
+      ~Confocal.wait
+   
+   
+
+   
+   
+   

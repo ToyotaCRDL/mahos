@@ -1,0 +1,38 @@
+﻿mahos.meas.podmr.PODMR
+======================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.meas.podmr
+
+.. autoclass:: PODMR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PODMR.__init__
+      ~PODMR.change_state
+      ~PODMR.close_resources
+      ~PODMR.discard
+      ~PODMR.export_data
+      ~PODMR.get_param_dict
+      ~PODMR.get_param_dict_names
+      ~PODMR.handle_req
+      ~PODMR.load_data
+      ~PODMR.main
+      ~PODMR.save_data
+      ~PODMR.update_plot_params
+      ~PODMR.validate
+      ~PODMR.wait
+   
+   
+
+   
+   
+   

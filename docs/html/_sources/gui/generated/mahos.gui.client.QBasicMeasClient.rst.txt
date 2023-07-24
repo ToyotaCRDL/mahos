@@ -1,0 +1,41 @@
+﻿mahos.gui.client.QBasicMeasClient
+=================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.client
+
+.. autoclass:: QBasicMeasClient
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~QBasicMeasClient.__init__
+      ~QBasicMeasClient.check_buffer
+      ~QBasicMeasClient.check_data
+      ~QBasicMeasClient.check_state
+      ~QBasicMeasClient.get_buffer
+      ~QBasicMeasClient.get_data
+      ~QBasicMeasClient.get_state
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~QBasicMeasClient.bufferUpdated
+      ~QBasicMeasClient.dataUpdated
+      ~QBasicMeasClient.stateUpdated
+      ~QBasicMeasClient.statusUpdated
+      ~QBasicMeasClient.stopped
+   
+   

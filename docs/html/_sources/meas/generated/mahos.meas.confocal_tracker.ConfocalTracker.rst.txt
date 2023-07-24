@@ -1,0 +1,43 @@
+﻿mahos.meas.confocal\_tracker.ConfocalTracker
+============================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.meas.confocal_tracker
+
+.. autoclass:: ConfocalTracker
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ConfocalTracker.__init__
+      ~ConfocalTracker.change_state
+      ~ConfocalTracker.get_bounds
+      ~ConfocalTracker.get_new_pos
+      ~ConfocalTracker.get_z
+      ~ConfocalTracker.handle_req
+      ~ConfocalTracker.load_params
+      ~ConfocalTracker.main
+      ~ConfocalTracker.optimize
+      ~ConfocalTracker.prepare_states
+      ~ConfocalTracker.request_move
+      ~ConfocalTracker.request_scan
+      ~ConfocalTracker.restart
+      ~ConfocalTracker.restore_states
+      ~ConfocalTracker.save_params
+      ~ConfocalTracker.start
+      ~ConfocalTracker.stop
+      ~ConfocalTracker.track_now
+      ~ConfocalTracker.wait
+   
+   
+
+   
+   
+   

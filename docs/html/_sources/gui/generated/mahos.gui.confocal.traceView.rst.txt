@@ -1,0 +1,45 @@
+﻿mahos.gui.confocal.traceView
+============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.confocal
+
+.. autoclass:: traceView
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~traceView.__init__
+      ~traceView.clear
+      ~traceView.init_connection
+      ~traceView.init_plot
+      ~traceView.init_with_first_data
+      ~traceView.save_data
+      ~traceView.toggle0
+      ~traceView.toggle1
+      ~traceView.toggle_raw
+      ~traceView.toggle_total
+      ~traceView.update
+      ~traceView.update_buttons
+      ~traceView.update_dual
+      ~traceView.update_fontsize
+      ~traceView.update_single
+      ~traceView.update_xaxis
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

@@ -1,0 +1,52 @@
+﻿mahos.gui.odmr.ODMRWidget
+=========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.odmr
+
+.. autoclass:: ODMRWidget
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ODMRWidget.__init__
+      ~ODMRWidget.apply_widgets
+      ~ODMRWidget.export_data
+      ~ODMRWidget.finalize
+      ~ODMRWidget.get_params
+      ~ODMRWidget.get_plottable_data
+      ~ODMRWidget.get_pulse_window
+      ~ODMRWidget.init_connection
+      ~ODMRWidget.init_widgets
+      ~ODMRWidget.init_with_status
+      ~ODMRWidget.load_data
+      ~ODMRWidget.refresh_plot
+      ~ODMRWidget.request_start
+      ~ODMRWidget.request_stop
+      ~ODMRWidget.save_data
+      ~ODMRWidget.start_sweep
+      ~ODMRWidget.switch_cw
+      ~ODMRWidget.switch_pulse
+      ~ODMRWidget.update_buffer
+      ~ODMRWidget.update_data
+      ~ODMRWidget.update_pulse_label
+      ~ODMRWidget.update_state
+      ~ODMRWidget.update_step_label
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

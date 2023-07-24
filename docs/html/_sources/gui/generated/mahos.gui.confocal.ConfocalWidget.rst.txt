@@ -1,0 +1,90 @@
+﻿mahos.gui.confocal.ConfocalWidget
+=================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.confocal
+
+.. autoclass:: ConfocalWidget
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ConfocalWidget.X_edited
+      ~ConfocalWidget.Y_edited
+      ~ConfocalWidget.Z_edited
+      ~ConfocalWidget.__init__
+      ~ConfocalWidget.direction_to_scanitem
+      ~ConfocalWidget.export_image
+      ~ConfocalWidget.export_image_xy
+      ~ConfocalWidget.export_image_xz
+      ~ConfocalWidget.export_image_yz
+      ~ConfocalWidget.export_view
+      ~ConfocalWidget.finalize_manual_scan
+      ~ConfocalWidget.finalize_scan
+      ~ConfocalWidget.finalize_track
+      ~ConfocalWidget.get_export_params
+      ~ConfocalWidget.get_pos
+      ~ConfocalWidget.get_scan_capability
+      ~ConfocalWidget.go_center
+      ~ConfocalWidget.go_home
+      ~ConfocalWidget.init_connections
+      ~ConfocalWidget.init_move
+      ~ConfocalWidget.init_splitter
+      ~ConfocalWidget.init_view
+      ~ConfocalWidget.init_with_status
+      ~ConfocalWidget.load_buffers
+      ~ConfocalWidget.load_image
+      ~ConfocalWidget.move_crosshair
+      ~ConfocalWidget.request_idle
+      ~ConfocalWidget.request_interact
+      ~ConfocalWidget.request_move_X
+      ~ConfocalWidget.request_move_Y
+      ~ConfocalWidget.request_move_Z
+      ~ConfocalWidget.request_piezo
+      ~ConfocalWidget.request_track_now
+      ~ConfocalWidget.request_track_start
+      ~ConfocalWidget.request_track_stop
+      ~ConfocalWidget.request_xyscan
+      ~ConfocalWidget.request_xzscan
+      ~ConfocalWidget.request_yzscan
+      ~ConfocalWidget.save_image
+      ~ConfocalWidget.save_image_xy
+      ~ConfocalWidget.save_image_xz
+      ~ConfocalWidget.save_image_yz
+      ~ConfocalWidget.set_background
+      ~ConfocalWidget.set_home
+      ~ConfocalWidget.start_scan
+      ~ConfocalWidget.switch_PosEdit
+      ~ConfocalWidget.switch_TgtBox
+      ~ConfocalWidget.switch_buttons
+      ~ConfocalWidget.switch_interaction
+      ~ConfocalWidget.update_PosEdit
+      ~ConfocalWidget.update_XPosEdit
+      ~ConfocalWidget.update_XYbox
+      ~ConfocalWidget.update_XZbox
+      ~ConfocalWidget.update_YPosEdit
+      ~ConfocalWidget.update_YZbox
+      ~ConfocalWidget.update_ZPosEdit
+      ~ConfocalWidget.update_roiXY
+      ~ConfocalWidget.update_roiXZ
+      ~ConfocalWidget.update_roiYZ
+      ~ConfocalWidget.update_state
+      ~ConfocalWidget.update_tracker_state
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

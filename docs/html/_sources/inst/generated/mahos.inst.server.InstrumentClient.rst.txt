@@ -1,0 +1,39 @@
+﻿mahos.inst.server.InstrumentClient
+==================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.server
+
+.. autoclass:: InstrumentClient
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InstrumentClient.__init__
+      ~InstrumentClient.call
+      ~InstrumentClient.configure
+      ~InstrumentClient.get
+      ~InstrumentClient.help
+      ~InstrumentClient.is_locked
+      ~InstrumentClient.lock
+      ~InstrumentClient.pause
+      ~InstrumentClient.release
+      ~InstrumentClient.reset
+      ~InstrumentClient.resume
+      ~InstrumentClient.set
+      ~InstrumentClient.shutdown
+      ~InstrumentClient.start
+      ~InstrumentClient.stop
+   
+   
+
+   
+   
+   

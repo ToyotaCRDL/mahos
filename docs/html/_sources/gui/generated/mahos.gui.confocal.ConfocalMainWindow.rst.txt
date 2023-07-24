@@ -1,0 +1,32 @@
+﻿mahos.gui.confocal.ConfocalMainWindow
+=====================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.confocal
+
+.. autoclass:: ConfocalMainWindow
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ConfocalMainWindow.__init__
+      ~ConfocalMainWindow.closeEvent
+      ~ConfocalMainWindow.shutdown
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   
