@@ -1,1 +1,3 @@
 doctrees
+!source/img/*.svg
+!html/_images/*.svg

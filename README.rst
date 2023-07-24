@@ -2,6 +2,9 @@
 MAHOS
 #####
 
+.. image:: badge.svg
+   :target: https://github.com/ToyotaCRDL/mahos/actions/workflows/build.yaml/badge.svg
+
 MAHOS: Measurement Automation Handling and Orchestration System.
 
 This package currently includes the following.
@@ -94,7 +97,9 @@ Test
 Documentation
 =============
 
-You can make the documentation locally with ``make docs`` and browse it with ``make browse``.
+`Documentation is browsable here <https://toyotacrdl.github.io/mahos/html/>`_.
+
+You can also make the documentation locally with ``make docs`` and browse it with ``make browse``.
 
 Below is short summary on mahos architecture.
 
@@ -136,4 +141,4 @@ Copyright 2012 Luke Campagnola, University of North Carolina at Chapel Hill.
 Contributing
 ============
 
-Please check out `Contribution Guidelines <CONTRIBUTING.rst>`_.
+Please check out `Contribution Guidelines <https://toyotacrdl.github.io/mahos/html/contributing.html>`_.

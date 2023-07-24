@@ -26,8 +26,9 @@ docs:
 	cd docs && make html
 
 browse: docs
-	$(OPEN) docs/build/html/index.html
+	$(OPEN) docs/html/index.html
 
 clean:
-	$(RM) -r docs/build
+	$(RM) -r docs/doctrees
+	$(RM) -r docs/html
 	$(RM) -r docs/source/*/generated
