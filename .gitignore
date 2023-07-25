@@ -3,9 +3,6 @@
 .vscode
 *~
 
-# generated docs
-docs/source/*/generated
-
 # binaries / caches / generated data
 *.h5
 *.pkl
@@ -17,6 +14,12 @@ docs/source/*/generated
 .DS_Store
 Thumbs.db
 Share.lnk
+
+# generated docs
+docs_src/*/generated
+!docs_src/img/*.svg
+docs/.doctrees
+!docs/_images/*.svg
 
 ## Below is copied from github/gitignore/Python.gitignore
 

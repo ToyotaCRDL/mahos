@@ -23,12 +23,11 @@ format:
 	black .
 
 docs:
-	cd docs && make html
+	sphinx-build -b html docs_src docs
 
-browse: docs
-	$(OPEN) docs/html/index.html
+browse:
+	$(OPEN) docs/index.html
 
 clean:
-	$(RM) -r docs/doctrees
-	$(RM) -r docs/html
-	$(RM) -r docs/source/*/generated
+	$(RM) -r docs
+	$(RM) -r docs_src/*/generated

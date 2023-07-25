@@ -15,9 +15,9 @@ This package currently includes the following.
 Documentation
 =============
 
-`Documentation is browsable here <https://toyotacrdl.github.io/mahos/html/>`_.
+`Documentation is browsable here <https://toyotacrdl.github.io/mahos/>`_.
 
-You can also make the documentation locally with ``make docs`` and browse it with ``make browse``.
+You can also browse the documentation locally with ``make browse``.
 
 Install
 =======
@@ -119,4 +119,4 @@ Copyright 2012 Luke Campagnola, University of North Carolina at Chapel Hill.
 Contributing
 ============
 
-Please check out `Contribution Guidelines <https://toyotacrdl.github.io/mahos/html/contributing.html>`_.
+Please check out `Contribution Guidelines <https://toyotacrdl.github.io/mahos/contributing.html>`_.
