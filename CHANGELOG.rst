@@ -2,8 +2,13 @@
 Changelog
 =========
 
-[Unreleased (0.2.1-rc)]
------------------------
+[Unreleased]
+------------
+
+[0.2.1] - 2023-07-26
+--------------------
+
+0.2.1 is the first release after open-sourcing this project.
 
 Added
 ^^^^^
@@ -17,6 +22,7 @@ Changed
 - APDCounter has been moved from inst.daq to inst.pd.
 - meas/confocal,odmr: can be used not only with APDCounter, but also analog-PDs like OE200.
 - meas/confocal_io: image export puts the c-unit label (like cps) at colorbar, not as title.
+- docs: directory structure has been changed for github-pages publication.
 
 [0.2.0] - 2023-07-10
 --------------------

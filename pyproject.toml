@@ -18,7 +18,8 @@ classifiers = [
 ]
 
 [project.urls]
-Documentation = "https://toyotacrdl.github.io/mahos/"
+Homepage = "https://github.com/ToyotaCRDL/mahos"
+Documentation = "https://toyotacrdl.github.io/mahos"
 Repository = "https://github.com/ToyotaCRDL/mahos.git"
 Changelog = "https://github.com/ToyotaCRDL/mahos/blob/main/CHANGELOG.rst"
 
