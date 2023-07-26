@@ -38,7 +38,7 @@ Run
 To use the mahos-based system, you have to write a toml `configuration file <https://toyotacrdl.github.io/mahos/conf.html>`_ first.
 With your config, use the `command line interface <https://toyotacrdl.github.io/mahos/cli.html>`_ to start the nodes and interact with them.
 
-- The `tutorial <https://toyotacrdl.github.io/mahos/tutorial.html>`_ and corresponding `examples <examples>`_ are provided to get used to these concepts.
+- The `tutorial <https://toyotacrdl.github.io/mahos/tutorial.html>`_ and corresponding `examples <https://github.com/ToyotaCRDL/mahos/tree/main/examples>`_ are provided to get used to these concepts.
 - There is an `example config <https://github.com/ToyotaCRDL/mahos/blob/main/tests/conf.toml>`_ for the unit test too.
   Here you can observe main built-in measurement logics and GUIs with mock instruments
   (microscopy / ODMR system for color centers, for the time being).
@@ -51,7 +51,7 @@ Test
 License
 =======
 
-The mahos project is licensed under the `3-Clause BSD License <LICENSE>`_.
+The mahos project is licensed under the `3-Clause BSD License <https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE>`_.
 
 Redistribution
 --------------
