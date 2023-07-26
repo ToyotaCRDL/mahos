@@ -22,7 +22,7 @@ copyright = "2022, Toyota Central R&D Labs., Inc"
 author = "Kosuke Tahara"
 
 # The full version, including alpha/beta/rc tags
-release = "0.2.0"
+release = "0.2.1"
 
 
 # -- General configuration ---------------------------------------------------
