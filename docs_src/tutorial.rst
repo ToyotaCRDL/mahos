@@ -6,4 +6,4 @@ Tutorial
 
    tutorial_comm
    tutorial_ivcurve
-   tutorial_next_step
+   tutorial_next_steps

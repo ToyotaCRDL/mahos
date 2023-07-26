@@ -90,7 +90,4 @@ mahos data plot
 
 ``mahos data plot [subcommand]`` plots the data inside data files.
 
-mahos plot
-----------
-
 ``mahos plot`` is a shorthand of ``mahos data plot``.

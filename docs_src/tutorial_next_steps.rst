@@ -1,5 +1,5 @@
-Tutorial: Next Step
-===================
+Tutorial: Next Steps
+====================
 
 There are several ways to go forward after finishing the tutorial.
 
@@ -55,7 +55,7 @@ We have already seen an example in :doc:`tutorial_ivcurve`.
 Writing gui Node
 ^^^^^^^^^^^^^^^^
 
-Do you need GUI?  If so, you can try to write a :class:`GUINode <mahos.gui.gui_node.GUINode>`.
+If GUI is necessary, you can try to write a :class:`GUINode <mahos.gui.gui_node.GUINode>`.
 Since the existing implementations are based on `PyQt <https://riverbankcomputing.com/software/pyqt/>`_,
 you will need some experiences or practices to use it.
 
