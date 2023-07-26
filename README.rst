@@ -18,7 +18,7 @@ Documentation
 `Documentation is browsable here <https://toyotacrdl.github.io/mahos/>`_.
 
 You can also browse the documentation locally by ``make browse`` or
-opening `docs <docs>`_ with a web browser.
+opening ``docs`` directory with a web browser.
 
 Install
 =======
@@ -39,7 +39,7 @@ To use the mahos-based system, you have to write a toml `configuration file <htt
 With your config, use the `command line interface <https://toyotacrdl.github.io/mahos/cli.html>`_ to start the nodes and interact with them.
 
 - The `tutorial <https://toyotacrdl.github.io/mahos/tutorial.html>`_ and corresponding `examples <examples>`_ are provided to get used to these concepts.
-- There is an `example config <tests/conf.toml>`_ for the unit test too.
+- There is an `example config <https://github.com/ToyotaCRDL/mahos/blob/main/tests/conf.toml>`_ for the unit test too.
   Here you can observe main built-in measurement logics and GUIs with mock instruments
   (microscopy / ODMR system for color centers, for the time being).
 
@@ -56,10 +56,10 @@ The mahos project is licensed under the `3-Clause BSD License <LICENSE>`_.
 Redistribution
 --------------
 
-The `GUI theme <mahos/gui/breeze_resources>`_ is taken from `BreezeStyleSheets <https://github.com/Alexhuszagh/BreezeStyleSheets>`_ project,
+The `GUI theme <https://github.com/ToyotaCRDL/mahos/tree/main/mahos/gui/breeze_resources>`_ is taken from `BreezeStyleSheets <https://github.com/Alexhuszagh/BreezeStyleSheets>`_ project,
 which is licensed under the `MIT license: Copyright 2013-2014 Colin Duquesnoy and 2015-2016 Alex Huszagh <https://github.com/Alexhuszagh/BreezeStyleSheets/blob/main/LICENSE.md>`_.
 
-A `file <mahos/util/unit.py>`_ includes a function from the `pyqtgraph <https://github.com/pyqtgraph/pyqtgraph>`_ project,
+A `file <https://github.com/ToyotaCRDL/mahos/blob/main/mahos/util/unit.py>`_ includes a function from the `pyqtgraph <https://github.com/pyqtgraph/pyqtgraph>`_ project,
 which is licensed under the `MIT license: Copyright 2012 Luke Campagnola, University of North Carolina at Chapel Hill <https://github.com/pyqtgraph/pyqtgraph/blob/master/LICENSE.txt>`_.
 
 Contributing

@@ -8,7 +8,7 @@ version = "0.2.1"
 description = "Measurement Automation Handling and Orchestration System"
 readme = "README.rst"
 requires-python = ">=3.8, <3.11"
-license = { file = "LICENSE" }
+license = { text = "BSD License (BSD-3-Clause)" }
 keywords = [ "measurement automation", "laboratory automation", "instrumentation", ]
 authors = [
     { name = "Kosuke Tahara", email = "ktaha@mosk.tytlabs.co.jp" },
