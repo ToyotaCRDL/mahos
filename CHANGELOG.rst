@@ -5,6 +5,11 @@ Changelog
 [Unreleased]
 ------------
 
+[0.2.2] - 2023-07-26
+--------------------
+
+Fixed README and metadata. No code is changed since 0.2.1.
+
 [0.2.1] - 2023-07-26
 --------------------
 
