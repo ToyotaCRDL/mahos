@@ -1,6 +1,36 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "mahos"
+version = "0.2.0"
+description = "Measurement Automation Handling and Orchestration System"
+readme = "README.rst"
+requires-python = ">=3.8, <3.11"
+license = { file = "LICENSE" }
+keywords = [ "measurement automation", "laboratory automation", "instrumentation", ]
+authors = [
+    { name = "Kosuke Tahara", email = "ktaha@mosk.tytlabs.co.jp" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Documentation = "https://toyotacrdl.github.io/mahos/"
+Repository = "https://github.com/ToyotaCRDL/mahos.git"
+Changelog = "https://github.com/ToyotaCRDL/mahos/blob/main/CHANGELOG.rst"
+
+[project.scripts]
+mahos = "mahos.cli.main:main"
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.packages.find]
+include = ["mahos*"]
+
 [tool.black]
 line-length = 99
 # mahos/gui/ui/*.py is auto-generated. test/podmr_patterns.py is too large.
