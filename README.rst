@@ -57,12 +57,11 @@ Redistribution
 --------------
 
 The `GUI theme <mahos/gui/breeze_resources>`_ is taken from `BreezeStyleSheets <https://github.com/Alexhuszagh/BreezeStyleSheets>`_ project,
-which is licensed under the `MIT license <https://github.com/Alexhuszagh/BreezeStyleSheets/blob/main/LICENSE.md>`_:
-Copyright 2013-2014 Colin Duquesnoy and 2015-2016 Alex Huszagh.
+which is licensed under the `MIT license: Copyright 2013-2014 Colin Duquesnoy and 2015-2016 Alex Huszagh <https://github.com/Alexhuszagh/BreezeStyleSheets/blob/main/LICENSE.md>`_.
+.
 
 A `file <mahos/util/unit.py>`_ includes a function from the `pyqtgraph <https://github.com/pyqtgraph/pyqtgraph>`_ project,
-which is licensed under the `MIT license <https://github.com/pyqtgraph/pyqtgraph/blob/master/LICENSE.txt>`_:
-Copyright 2012 Luke Campagnola, University of North Carolina at Chapel Hill.
+which is licensed under the `MIT license: Copyright 2012 Luke Campagnola, University of North Carolina at Chapel Hill <https://github.com/pyqtgraph/pyqtgraph/blob/master/LICENSE.txt>`_.
 
 Contributing
 ============
