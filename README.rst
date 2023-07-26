@@ -17,83 +17,31 @@ Documentation
 
 `Documentation is browsable here <https://toyotacrdl.github.io/mahos/>`_.
 
-You can also browse the documentation locally with ``make browse``.
+You can also browse the documentation locally by ``make browse`` or
+opening `docs <docs>`_ with a web browser.
 
 Install
 =======
 
-#. You need Python >= 3.8, < 3.11.
-#. ``virtualenv`` is the recommended tool for virtual environment management.
+Read the `Installation guide <https://toyotacrdl.github.io/mahos/installation.html>`_.
+
+In short, we recommend editable installation with cloned repository
+because this library is under development:
+
 #. Clone this repo somewhere.
-#. Install `Requirements`_.
-#. Install `The mahos package`_.
-
-Requirements
-------------
-
-#. Manual installations: there are some requirements installation of which is not quite straightforward.
-   Follow instructions in the subsections below.
-#. See `requirements.txt <requirements.txt>`_ for (remaining) required python packages.
-   You can install them with ``pip install -r requirements.txt``
-
-Graphviz
-^^^^^^^^
-
-You need `Graphviz <https://graphviz.org/download/>`_ for ``mahos graph`` command.
-You can skip this if you don't need ``mahos graph`` command.
-
-Windows
-.......
-
-You have to install C++ compiler `Microsoft C++ Build Tools <https://visualstudio.microsoft.com/ja/visual-cpp-build-tools/>`_ and
-graphviz binary (version 2).
-And then, use following command to install pygraphviz.
-
-.. code-block:: bash
-
-  pip install --global-option build_ext --global-option "-IC:\Program Files\Graphviz\include" --global-option "-LC:\Program Files\Graphviz\lib" pygraphviz
-
-Linux
-.....
-
-You can install the graphviz with package manager (e.g. ``sudo apt install graphviz libgraphviz-dev`` for Ubuntu/Debian),
-and then ``pip install pygraphviz``.
-
-OpenCV
-^^^^^^
-
-To use full-features of image analysis modules, install OpenCV (>= 3.0.0) with Python binding.
-There are several methods to install this, and the easiest are following.
-
-- Windows: ``pip install opencv-python`` to install CPU-only binary
-- Linux: the pre-compiled package (e.g. ``sudo apt install python3-opencv`` for Ubuntu/Debian)
-
-The mahos package
------------------
-
-Clone this repo and ``pip install -e .``
-
-Here, -e (editable) is optional but recommended.
+#. Install the requirements: ``pip install -r requirements.txt``
+#. Install the ``mahos`` package: ``pip install -e .``
 
 Run
 ===
 
-To use the mahos system, you have to write a toml configuration file first.
-There is an `example file <tests/conf.toml>`_ for local testing.
+To use the mahos-based system, you have to write a toml `configuration file <https://toyotacrdl.github.io/mahos/conf.html>`_ first.
+With your config, use the `command line interface <https://toyotacrdl.github.io/mahos/cli.html>`_ to start the nodes and interact with them.
 
-With your config, use ``mahos`` command to start the nodes and interact with them.
-
-- ``mahos run [nodename]``: run a node.
-- ``mahos launch [nodenames]``: start all the nodes (or specified nodes) pertaining to single host in the config file.
-- ``mahos log``: subscribe to a LogBroker to print logs on console.
-- ``mahos ls``: print the list of defined nodes in the config file.
-- ``mahos graph``: visualize the config file as graph.
-- ``mahos echo [nodename] -t [topicname]``: subscribe to a topic and print published messages.
-- ``mahos shell [nodenames]``: start an IPython shell with the clients for the nodes.
-- ``mahos data [subcommand]``: list/print attributes in data files or plot data files.
-- ``mahos plot``: shorthand of ``mahos data plot``.
-
-Check ``mahos [subcommand] -h`` for more details.
+- The `tutorial <https://toyotacrdl.github.io/mahos/tutorial.html>`_ and corresponding `examples <examples>`_ are provided to get used to these concepts.
+- There is an `example config <tests/conf.toml>`_ for the unit test too.
+  Here you can observe main built-in measurement logics and GUIs with mock instruments
+  (microscopy / ODMR system for color centers, for the time being).
 
 Test
 ====
