@@ -23,6 +23,7 @@ class TDCInterface(InstrumentInterface):
         """Load control file and set range and binwidth according to trange and tbin in sec.
 
         Note that actual timebin maybe rounded.
+        Set tbin to 0.0 for minimum bin.
 
         """
 
@@ -33,6 +34,7 @@ class TDCInterface(InstrumentInterface):
         """Set range and binwidth according to trange and tbin in sec.
 
         Note that actual timebin maybe rounded.
+        Set tbin to 0.0 for minimum bin.
 
         """
 

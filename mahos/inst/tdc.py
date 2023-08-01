@@ -391,6 +391,8 @@ class MCS(Instrument):
 
         """
 
+        if tbin == 0.0:
+            tbin = self.resolution_sec
         success = self.set_bitshift(int(np.round(np.log2(tbin / self.resolution_sec))))
         tbin = self.resolution_sec * self.get_binwidth()
         success &= self.set_range(int(round(trange / tbin)))
