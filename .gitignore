@@ -11,6 +11,7 @@
 *.pdf
 *.dll
 *.svg
+*.lst
 .DS_Store
 Thumbs.db
 Share.lnk

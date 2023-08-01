@@ -177,8 +177,8 @@ def build_blocks(
     ]
     ptn_final = [(("sync", "mw_x"), final_block_width)]
 
-    # flatten
-    blocks = list(chain.from_iterable(blocks))
+    # flatten list[list[Block]] to Blocks[Block]
+    blocks = Blocks(chain.from_iterable(blocks))
 
     # insert init/final
     blocks.insert(0, Block("INIT", ptn_init))

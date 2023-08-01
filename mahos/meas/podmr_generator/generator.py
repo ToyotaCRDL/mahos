@@ -103,7 +103,7 @@ class PatternGenerator(object):
             reduce_start_divisor,
             params.get("ignore_basewidth", False),
         )
-        return blocks, freq
+        return blocks, freq, common_pulses
 
     def _generate(
         self,

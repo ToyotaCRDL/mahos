@@ -7,11 +7,13 @@ Typed Interface for Time to Digital Converter.
 
 """
 
-from typing import Optional
+from __future__ import annotations
 
 import numpy as np
 
 from .interface import InstrumentInterface
+
+from ..msgs.inst_tdc_msgs import RawEvents
 
 
 class TDCInterface(InstrumentInterface):
@@ -57,7 +59,7 @@ class TDCInterface(InstrumentInterface):
 
         return self.get("bin")
 
-    def get_data(self, ch: int) -> Optional[np.ndarray]:
+    def get_data(self, ch: int) -> np.ndarray | None:
         """Get data of channel `ch`."""
 
         return self.get("data", ch)
@@ -66,3 +68,8 @@ class TDCInterface(InstrumentInterface):
         """Get status of channel `ch`."""
 
         return self.get("status", ch)
+
+    def get_raw_events(self, **args) -> RawEvents | None:
+        """Get raw events."""
+
+        return self.get("raw_events", args)

@@ -232,7 +232,7 @@ class Pulser(Worker):
             block_base=conf.get("block_base", 4),
             print_fn=self.logger.info,
         )
-        self.eos_margine = conf.get("eos_margine", 1e-6)
+        self.eos_margin = conf.get("eos_margin", 1e-6)
 
         self.data = PODMRData()
         self.op = PODMRDataOperator()
@@ -265,7 +265,7 @@ class Pulser(Worker):
         tdc_params = {
             "file": "podmr",
             "bin": params["timebin"],
-            "range": self.length / self.freq - self.eos_margine,
+            "range": self.length / self.freq - self.eos_margin,
         }
         if not self.tdc.configure(tdc_params):
             self.logger.error("Error configuring TDC.")

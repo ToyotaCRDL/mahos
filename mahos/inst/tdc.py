@@ -7,12 +7,16 @@ Time to Digital Converter (Time Digitizer) module
 
 """
 
+from __future__ import annotations
+
 import ctypes as C
-from typing import Optional
+import re
+import os
 
 import numpy as np
 
 from .instrument import Instrument
+from ..msgs.inst_tdc_msgs import RawEvents
 
 
 def c_str(s: str) -> C.c_char_p:
@@ -153,7 +157,7 @@ class MCS(Instrument):
 
         return self.dll.GetSpec(i, nDisplay)
 
-    def get_data(self, nDisplay: int) -> Optional[np.ndarray]:
+    def get_data(self, nDisplay: int) -> np.ndarray | None:
         """Get whole spectrum at <nDisplay>.
 
         Spectrum data is returned as numpy.ndarray.
@@ -181,7 +185,7 @@ class MCS(Instrument):
         else:
             return np.array(buf)
 
-    def get_count(self, nDisplay: int) -> Optional[np.ndarray]:
+    def get_count(self, nDisplay: int) -> np.ndarray | None:
         cnt = (C.c_double * self.MAXCNT)()
         if self.dll.LVGetCnt(cnt, nDisplay) == 0:
             return np.array(cnt)
@@ -255,6 +259,71 @@ class MCS(Instrument):
     def set_mcssetting(self, setting: BOARDSETTING):
         self.dll.StoreMCSSetting(C.byref(setting), self.nDev)
         self.dll.NewSetting(self.nDev)
+
+    def load_lst_file(self, file: str, binary: bool = True) -> RawEvents | None:
+        """Load the *.lst file to get RawEvents data."""
+
+        if file not in self._file:
+            self.logger.error("Unknown file label name")
+            return None
+
+        format_info = {
+            "datalength": None,
+            "channel": None,
+            "edge": None,
+            "timedata": None,
+            "datalost": None,
+        }
+
+        if binary:
+            mode = "rb"
+        else:
+            mode = "r"
+
+        header = []
+        f = open(self._file[file], mode)
+
+        pat_b = re.compile(r"^;datalength=(\d+)bytes")
+        pat_c = re.compile(r"^;bit(\d+)\.\.(\d+):channel")
+        pat_e = re.compile(r"^;bit(\d+):edge")
+        pat_t = re.compile(r"^;bit(\d+)\.\.(\d+):timedata")
+        pat_l = re.compile(r"^;bit(\d+):data_lost")
+
+        while True:
+            l = f.readline().strip()
+            if binary:
+                l = l.decode("utf-8")
+
+            ll = l.replace(" ", "")
+            if (m := pat_b.match(ll)) is not None:
+                format_info["datalength"] = int(m.group(1))
+            elif (m := pat_c.match(ll)) is not None:
+                format_info["channel"] = (int(m.group(1)), int(m.group(2)))
+            elif (m := pat_e.match(ll)) is not None:
+                format_info["edge"] = int(m.group(1))
+            elif (m := pat_t.match(ll)) is not None:
+                format_info["timedata"] = (int(m.group(1)), int(m.group(2)))
+            elif (m := pat_l.match(ll)) is not None:
+                format_info["datalost"] = int(m.group(1))
+
+            if l == "[DATA]":
+                break
+            header.append(l)
+
+        self.logger.debug(f"Loaded header. {format_info}")
+
+        if not binary:
+            data = np.array([int(l, base=16) for l in f.readlines()], dtype=np.uint64)
+        else:
+            dsize = os.path.getsize(self._file[file]) - f.tell()
+            # print(dsize, dsize // datalength, dsize % datalength)
+            dl = format_info["datalength"]
+            if dsize % dl:
+                self.logger.error(f"data size {dsize} is not integer multiple of datalength {dl}")
+                return None
+            data = np.fromfile(f, dtype=np.uint64)
+
+        return RawEvents(header="\n".join(header), format_info=format_info, data=data)
 
     def configure_load_range_bin(self, flabel: str, trange: float, tbin: float) -> bool:
         """Load control file and set range and binwidth according to trange and tbin in sec.
@@ -332,6 +401,11 @@ class MCS(Instrument):
             if not isinstance(args, int):
                 self.logger.error('get("status", args): args must be int (channel).')
             return self.get_status(args)
+        elif key == "raw_events":
+            _args = {"file": "lst", "binary": True}
+            if isinstance(args, dict):
+                _args.update(args)
+            return self.load_lst_file(**_args)
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
