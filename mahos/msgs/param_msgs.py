@@ -153,7 +153,10 @@ class NumberParam(Param):
         if isinstance(self, IntParam):
             vs = f"{int(val):d}"
         else:  # FloatParam
-            vs = f"{val:.{self._digit}f}"
+            if self.SI_prefix():
+                vs = f"{val:.{self._digit}f}"
+            else:
+                vs = f"{val:.{self._digit}e}"
         if prefix or unit:
             vs += f" {prefix}{unit}"
         return vs
