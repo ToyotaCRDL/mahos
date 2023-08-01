@@ -117,6 +117,20 @@ class MCS(Instrument):
             ("timepreset", C.c_double),
         ]
 
+    class DATSETTING(C.Structure):
+        _fields_ = [
+            ("savedata", C.c_int),
+            ("autoinc", C.c_int),
+            ("fmt", C.c_int),
+            ("mpafmt", C.c_int),
+            ("sephead", C.c_int),
+            ("smpts", C.c_int),
+            ("caluse", C.c_int),
+            ("filename", C.c_char * 256),
+            ("specfile", C.c_char * 256),
+            ("command", C.c_char * 256),
+        ]
+
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
 
@@ -126,6 +140,7 @@ class MCS(Instrument):
         self.logger.info(f"Loaded {fn}")
 
         self._file = self.conf.get("file", {})
+        self._home = self.conf.get("home", "C:\\mcs8x64")
         self.logger.debug(f"available set or ctl files: {self._file}")
 
     def run_command(self, cmd: str) -> bool:
@@ -207,6 +222,28 @@ class MCS(Instrument):
         self.dll.StoreSettingData(C.byref(setting), nDisplay)
         self.dll.NewSetting(self.nDev)
 
+    def get_data_setting(self) -> DATSETTING:
+        setting = self.DATSETTING()
+        self.dll.GetDatSetting(C.byref(setting))
+        return setting
+
+    def set_data_setting(self, setting: DATSETTING):
+        self.dll.StoreDatSetting(C.byref(setting))
+        self.dll.NewSetting(self.nDev)
+
+    def set_save_file_name(self, name: str) -> bool:
+        setting = self.get_data_setting()
+        setting.filename = name.encode()
+        self.set_data_setting(setting)
+        return True
+
+    def remove_saved_file(self, name: str) -> bool:
+        f = os.path.join(self._home, name)
+        if not os.path.exists(f):
+            return self.fail_with(f"File doesn't exist: {f}")
+        os.remove(f)
+        return True
+
     def set_range(self, value: int) -> bool:
         return self.run_command(f"range={value}")
 
@@ -260,11 +297,18 @@ class MCS(Instrument):
         self.dll.StoreMCSSetting(C.byref(setting), self.nDev)
         self.dll.NewSetting(self.nDev)
 
-    def load_lst_file(self, file: str, binary: bool = True) -> RawEvents | None:
+    def load_lst_file(self, file_name: str) -> RawEvents | None:
         """Load the *.lst file to get RawEvents data."""
 
-        if file not in self._file:
-            self.logger.error("Unknown file label name")
+        file_name = os.path.join(self._home, file_name)
+
+        setting = self.get_data_setting()
+        if setting.mpafmt == 0:
+            binary = False
+        elif setting.mpafmt == 1:
+            binary = True
+        else:
+            self.logger.error(f"Unsupported DATSETTING.mpafmt: {setting.mapfmt}")
             return None
 
         format_info = {
@@ -281,7 +325,7 @@ class MCS(Instrument):
             mode = "r"
 
         header = []
-        f = open(self._file[file], mode)
+        f = open(file_name, mode)
 
         pat_b = re.compile(r"^;datalength=(\d+)bytes")
         pat_c = re.compile(r"^;bit(\d+)\.\.(\d+):channel")
@@ -315,7 +359,7 @@ class MCS(Instrument):
         if not binary:
             data = np.array([int(l, base=16) for l in f.readlines()], dtype=np.uint64)
         else:
-            dsize = os.path.getsize(self._file[file]) - f.tell()
+            dsize = os.path.getsize(file_name) - f.tell()
             # print(dsize, dsize // datalength, dsize % datalength)
             dl = format_info["datalength"]
             if dsize % dl:
@@ -384,6 +428,10 @@ class MCS(Instrument):
             return self.clear()
         elif key == "sweeps":
             return self.set_sweep_preset(value, bool(value))
+        elif key == "file_name":
+            return self.set_save_file_name(value)
+        elif key == "remove_file":
+            return self.remove_saved_file(value)
         else:
             self.logger.error(f"unknown set() key: {key}")
             return False
@@ -402,10 +450,7 @@ class MCS(Instrument):
                 self.logger.error('get("status", args): args must be int (channel).')
             return self.get_status(args)
         elif key == "raw_events":
-            _args = {"file": "lst", "binary": True}
-            if isinstance(args, dict):
-                _args.update(args)
-            return self.load_lst_file(**_args)
+            return self.load_lst_file(args)
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

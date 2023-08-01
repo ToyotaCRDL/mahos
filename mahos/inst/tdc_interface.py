@@ -49,6 +49,16 @@ class TDCInterface(InstrumentInterface):
 
         return self.set("sweeps", sweeps)
 
+    def set_save_file_name(self, name: str) -> bool:
+        """set save file name."""
+
+        return self.set("file_name", name)
+
+    def remove_saved_file(self, name: str) -> bool:
+        """remove saved file."""
+
+        return self.set("remove_file", name)
+
     def get_range_bin(self) -> dict:
         """Get range and bin."""
 
@@ -69,7 +79,7 @@ class TDCInterface(InstrumentInterface):
 
         return self.get("status", ch)
 
-    def get_raw_events(self, **args) -> RawEvents | None:
-        """Get raw events."""
+    def get_raw_events(self, name: str) -> RawEvents | None:
+        """Get raw events stored in file `name`."""
 
-        return self.get("raw_events", args)
+        return self.get("raw_events", name)
