@@ -420,14 +420,14 @@ class Pulser(Worker):
             return False
 
         success = (
-            self.tdc.stop()
-            and self.wait_tdc_stop()
-            and self.update()
-            and self.tdc.release()
-            and self.pg.stop()
+            self.pg.stop()
             and self.pg.release()
             and self.sg.set_output(False)
             and self.sg.release()
+            and self.tdc.stop()
+            and self.wait_tdc_stop()
+            and self.update()
+            and self.tdc.release()
         )
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(False)
@@ -455,7 +455,7 @@ class Pulser(Worker):
         st0 = self.tdc.get_status(0)
         return bool(st0.started)
 
-    def wait_tdc_stop(self, timeout_sec=10.0, interval_sec=0.2) -> bool:
+    def wait_tdc_stop(self, timeout_sec=60.0, interval_sec=0.2) -> bool:
         """Wait for TDC status become not-running (stopped)."""
 
         self.logger.debug("Waiting TDC stop")
