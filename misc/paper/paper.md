@@ -62,4 +62,10 @@ optically detected magnetic resonance (ODMR) measurement implementations
 for research of solid-state color centers such as the Nitrogen-Vacancy (NV) center in diamond [@gruber1997; @jelezko2004; @wrachtrup2006].
 The covered functionalities are similar to that of the qudi project [@qudi].
 
+# Acknowledgements
+
+We acknowledge Prof. Mutsuko Hatano and Prof. Takayuki Iwasaki for their support in developing the predecessor project at Tokyo Institute of Technology.
+We are also grateful to Wataru Naruki, Kosuke Mizuno, and Ryota Kitagawa for contributing to and maintaining it.
+We thank Katsuhiro Kutsuki and Taishi Kimura for the opportunity and support to start up this project.
+
 # References
