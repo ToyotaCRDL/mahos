@@ -87,11 +87,11 @@ class TDCInterface(InstrumentInterface):
 
         return self.get("status", ch)
 
-    def get_raw_events(self, name: str) -> list[np.ndarray] | None:
-        """Get raw events stored in file `name`.
+    def get_raw_events(self) -> list[np.ndarray] | None:
+        """Get raw events of last measurement.
 
         Each array contains the raw events per channel in unit of timebin.
 
         """
 
-        return self.get("raw_events", name)
+        return self.get("raw_events")
