@@ -16,7 +16,6 @@ import os
 import numpy as np
 
 from .instrument import Instrument
-from ..msgs.inst_tdc_msgs import RawEvents
 
 
 def c_str(s: str) -> C.c_char_p:
@@ -28,8 +27,18 @@ def c_str(s: str) -> C.c_char_p:
 class MCS(Instrument):
     """Wrapper Class of DMCSX.dll for Fast ComTec MCS6 / MCS8 Series.
 
-    :param file: mapping from file label to actual file name. used in configure_load_range_bin().
-    :type file: dict[str, str]
+    :param base_configs: Mapping from base config name to actual file name.
+        Used in configure_base_range_bin() etc.
+    :type base_configs: dict[str, str]
+    :param home: (default: "C:\\mcs8x64") Home directory for mcs8 software.
+    :type home: str
+    :param remove_lst: (default: True) Remove *.lst file after loading it.
+    :type remove_lst: bool
+    :param lst_channels: (default: [8, 9]) Collected channels for lst file.
+        Under a setting, default value [8, 9] corresponds to STOP1 and STOP2.
+        As correspondence is unclear after reading the manual (maybe dependent on the setting),
+        it is recommended to inspect the output lst file first.
+    :type lst_channels: list[int]
 
     DLL Modifications
     =================
@@ -139,9 +148,12 @@ class MCS(Instrument):
         self.dll = C.windll.LoadLibrary(fn)
         self.logger.info(f"Loaded {fn}")
 
-        self._file = self.conf.get("file", {})
+        self._base_configs = self.conf.get("base_configs", {})
         self._home = self.conf.get("home", "C:\\mcs8x64")
-        self.logger.debug(f"available set or ctl files: {self._file}")
+        self._save_file_name = None
+        self._remove_lst = self.conf.get("remove_lst", True)
+        self._lst_channels = self.conf.get("lst_channels", [8, 9])
+        self.logger.debug(f"available base config files: {self._base_configs}")
 
     def run_command(self, cmd: str) -> bool:
         """Run a command in MCS Server. Return True on success."""
@@ -232,9 +244,13 @@ class MCS(Instrument):
         self.dll.NewSetting(self.nDev)
 
     def set_save_file_name(self, name: str) -> bool:
+        if not name.endswith(".mpa"):
+            name += ".mpa"
+
         setting = self.get_data_setting()
         setting.filename = name.encode()
         self.set_data_setting(setting)
+        self._save_file_name = name
         return True
 
     def remove_saved_file(self, name: str) -> bool:
@@ -297,10 +313,42 @@ class MCS(Instrument):
         self.dll.StoreMCSSetting(C.byref(setting), self.nDev)
         self.dll.NewSetting(self.nDev)
 
-    def load_lst_file(self, file_name: str) -> RawEvents | None:
-        """Load the *.lst file to get RawEvents data."""
+    def load_raw_events(self) -> list[np.ndarray] | None:
+        if not self._save_file_name:
+            self.logger.error("save file name has not been set.")
+            return None
 
+        file_name = os.path.splitext(self._save_file_name)[0] + ".lst"
         file_name = os.path.join(self._home, file_name)
+
+        ret = self.load_lst_file(file_name)
+
+        if self._remove_lst:
+            self.remove_saved_file(file_name)
+
+        if ret is None:
+            return None
+
+        _, format_info, data = ret
+        return self.convert_raw_events(format_info, data)
+
+    def convert_raw_events(self, format_info, data) -> list[np.ndarray]:
+        cl, ch = format_info["channel"]
+        tl, th = format_info["timedata"]
+        ch_data = (data >> cl) & 2 ** (ch - cl + 1) - 1
+
+        results = []
+        for i in self._lst_channels:
+            timedata = (data[ch_data == i] >> tl) & (2 ** (th - tl + 1) - 1)
+            results.append(timedata)
+        return results
+
+    def load_lst_file(self, file_name: str) -> tuple[str, dict, np.ndarray] | None:
+        """Load the lst file to get data."""
+
+        if not os.path.exists(file_name):
+            self.logger.error(f"File doesn't exist: {file_name}")
+            return None
 
         setting = self.get_data_setting()
         if setting.mpafmt == 0:
@@ -319,13 +367,8 @@ class MCS(Instrument):
             "datalost": None,
         }
 
-        if binary:
-            mode = "rb"
-        else:
-            mode = "r"
-
         header = []
-        f = open(file_name, mode)
+        f = open(file_name, "rb" if binary else "r")
 
         pat_b = re.compile(r"^;datalength=(\d+)bytes")
         pat_c = re.compile(r"^;bit(\d+)\.\.(\d+):channel")
@@ -333,7 +376,7 @@ class MCS(Instrument):
         pat_t = re.compile(r"^;bit(\d+)\.\.(\d+):timedata")
         pat_l = re.compile(r"^;bit(\d+):data_lost")
 
-        while True:
+        for _ in range(200):
             l = f.readline().strip()
             if binary:
                 l = l.decode("utf-8")
@@ -353,6 +396,9 @@ class MCS(Instrument):
             if l == "[DATA]":
                 break
             header.append(l)
+        else:
+            self.logger.error("[DATA] line not found in lst file.")
+            return None
 
         self.logger.debug(f"Loaded header. {format_info}")
 
@@ -360,32 +406,51 @@ class MCS(Instrument):
             data = np.array([int(l, base=16) for l in f.readlines()], dtype=np.uint64)
         else:
             dsize = os.path.getsize(file_name) - f.tell()
-            # print(dsize, dsize // datalength, dsize % datalength)
-            dl = format_info["datalength"]
-            if dsize % dl:
-                self.logger.error(f"data size {dsize} is not integer multiple of datalength {dl}")
+            dlen = format_info["datalength"]
+            if dsize % dlen:
+                self.logger.error(
+                    f"data size {dsize} is not integer multiple of datalength {dlen}"
+                )
                 return None
             data = np.fromfile(f, dtype=np.uint64)
 
-        return RawEvents(header="\n".join(header), format_info=format_info, data=data)
+        return header, format_info, data
 
-    def configure_load_range_bin(self, flabel: str, trange: float, tbin: float) -> bool:
-        """Load control file and set range and binwidth according to trange and tbin in sec.
+    def configure_base_range_bin_save(
+        self,
+        base_config: str,
+        trange: float,
+        tbin: float,
+        save_file: str,
+    ) -> bool:
+        """Load base config, set range and timebin in sec, and save file name.
 
         Note that actual timebin maybe rounded.
 
         """
 
-        if flabel not in self._file:
-            return self.fail_with("Unknown file label name")
+        if not self.configure_base_range_bin(base_config, trange, tbin):
+            return False
 
-        if not self.load_config(self._file[flabel]):
+        return self.set_save_file_name(save_file)
+
+    def configure_base_range_bin(self, base_config: str, trange: float, tbin: float) -> bool:
+        """Load base config and set range and timebin in sec.
+
+        Note that actual timebin maybe rounded.
+
+        """
+
+        if base_config not in self._base_configs:
+            return self.fail_with("Unknown base config name")
+
+        if not self.load_config(self._base_configs[base_config]):
             return False
 
         return self.configure_range_bin(trange, tbin)
 
     def configure_range_bin(self, trange: float, tbin: float) -> bool:
-        """Set range and binwidth according to trange and tbin in sec.
+        """Set range and timebin in sec.
 
         Note that actual timebin maybe rounded.
 
@@ -417,9 +482,13 @@ class MCS(Instrument):
         return self.run_command("cont")
 
     def configure(self, params: dict) -> bool:
-        if "file" in params and "range" in params and "bin" in params:
-            return self.configure_load_range_bin(params["file"], params["range"], params["bin"])
-        elif "range" in params and "bin" in params:
+        if all([k in params for k in ("base_config", "range", "bin", "save_file")]):
+            return self.configure_base_range_bin_save(
+                params["base_config"], params["range"], params["bin"], params["save_file"]
+            )
+        elif all([k in params for k in ("base_config", "range", "bin")]):
+            return self.configure_base_range_bin(params["file"], params["range"], params["bin"])
+        elif all([k in params for k in ("range", "bin")]):
             return self.configure_range_bin(params["range"], params["bin"])
         else:
             self.logger.error("invalid configure() params keys.")
@@ -430,10 +499,8 @@ class MCS(Instrument):
             return self.clear()
         elif key == "sweeps":
             return self.set_sweep_preset(value, bool(value))
-        elif key == "file_name":
+        elif key == "save_file":
             return self.set_save_file_name(value)
-        elif key == "remove_file":
-            return self.remove_saved_file(value)
         else:
             self.logger.error(f"unknown set() key: {key}")
             return False
@@ -452,7 +519,7 @@ class MCS(Instrument):
                 self.logger.error('get("status", args): args must be int (channel).')
             return self.get_status(args)
         elif key == "raw_events":
-            return self.load_lst_file(args)
+            return self.load_raw_events()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

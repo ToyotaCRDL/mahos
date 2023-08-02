@@ -13,21 +13,32 @@ import numpy as np
 
 from .interface import InstrumentInterface
 
-from ..msgs.inst_tdc_msgs import RawEvents
-
 
 class TDCInterface(InstrumentInterface):
     """Interface for Time to Digital Converter."""
 
-    def configure_load_range_bin(self, fn: str, trange: float, tbin: float) -> bool:
-        """Load control file and set range and binwidth according to trange and tbin in sec.
+    def configure_base_range_bin_save(
+        self, base_config: str, trange: float, tbin: float, save_file: str
+    ) -> bool:
+        """Load base config, set range and timebin in sec, and save file name.
 
         Note that actual timebin maybe rounded.
         Set tbin to 0.0 for minimum bin.
 
         """
 
-        params = {"file": fn, "range": trange, "bin": tbin}
+        params = {"base_config": base_config, "range": trange, "bin": tbin, "save_file": save_file}
+        return self.configure(params)
+
+    def configure_base_range_bin(self, base_config: str, trange: float, tbin: float) -> bool:
+        """Load base config and set range and timebin in sec.
+
+        Note that actual timebin maybe rounded.
+        Set tbin to 0.0 for minimum bin.
+
+        """
+
+        params = {"base_config": base_config, "range": trange, "bin": tbin}
         return self.configure(params)
 
     def configure_range_bin(self, trange: float, tbin: float) -> bool:
@@ -56,11 +67,6 @@ class TDCInterface(InstrumentInterface):
 
         return self.set("file_name", name)
 
-    def remove_saved_file(self, name: str) -> bool:
-        """remove saved file."""
-
-        return self.set("remove_file", name)
-
     def get_range_bin(self) -> dict:
         """Get range and bin."""
 
@@ -81,7 +87,11 @@ class TDCInterface(InstrumentInterface):
 
         return self.get("status", ch)
 
-    def get_raw_events(self, name: str) -> RawEvents | None:
-        """Get raw events stored in file `name`."""
+    def get_raw_events(self, name: str) -> list[np.ndarray] | None:
+        """Get raw events stored in file `name`.
+
+        Each array contains the raw events per channel in unit of timebin.
+
+        """
 
         return self.get("raw_events", name)

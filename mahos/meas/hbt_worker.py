@@ -65,7 +65,7 @@ class Listener(Worker):
             if not ("range" in params and "bin" in params):
                 self.logger.error("Required params: range and bin.")
                 return False
-            c = {"file": "hbt", "range": params["range"], "bin": params["bin"]}
+            c = {"base_config": "hbt", "range": params["range"], "bin": params["bin"]}
 
             success &= self.tdc.configure(c)
             timebin = self.tdc.get_timebin()

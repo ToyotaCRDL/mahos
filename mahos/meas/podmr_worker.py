@@ -263,7 +263,7 @@ class Pulser(Worker):
 
         # Detector
         tdc_params = {
-            "file": "podmr",
+            "base_config": "podmr",
             "bin": params["timebin"],
             "range": self.length / self.freq - self.eos_margin,
         }
