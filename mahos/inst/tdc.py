@@ -487,7 +487,9 @@ class MCS(Instrument):
                 params["base_config"], params["range"], params["bin"], params["save_file"]
             )
         elif all([k in params for k in ("base_config", "range", "bin")]):
-            return self.configure_base_range_bin(params["base_config"], params["range"], params["bin"])
+            return self.configure_base_range_bin(
+                params["base_config"], params["range"], params["bin"]
+            )
         elif all([k in params for k in ("range", "bin")]):
             return self.configure_range_bin(params["range"], params["bin"])
         else:
