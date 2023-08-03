@@ -37,8 +37,8 @@ class DG2000(VisaInstrument):
         self.update_freq_bounds()
 
         self.ext_ref_clock = self.conf.get("ext_ref_clock", False)
-        if self.ext_ref_clock:
-            self.logger.debug("Using external clock reference")
+        self.set_reference_clock(bool(self.ext_ref_clock))
+
         c = self.conf.get("gate", {})
         self.gate_conf = {
             "source": c.get("source", "EXT"),
@@ -195,6 +195,7 @@ class DG2000(VisaInstrument):
     def set_reference_clock(self, external: bool) -> bool:
         source = "EXT" if external else "INT"
         self.inst.write(f":ROSC:SOUR {source}")
+        self.logger.info(f"Reference clock: {source}")
         return True
 
     def configure_CW(

@@ -32,6 +32,8 @@ class MCS(Instrument):
     :type base_configs: dict[str, str]
     :param home: (default: "C:\\mcs8x64") Home directory for mcs8 software.
     :type home: str
+    :param ext_ref_clock: use external reference clock source.
+    :type ext_ref_clock: bool
     :param remove_lst: (default: True) Remove *.lst file after loading it.
     :type remove_lst: bool
     :param lst_channels: (default: [8, 9]) Collected channels for lst file.
@@ -154,6 +156,11 @@ class MCS(Instrument):
         self._remove_lst = self.conf.get("remove_lst", True)
         self._lst_channels = self.conf.get("lst_channels", [8, 9])
         self.logger.debug(f"available base config files: {self._base_configs}")
+
+        # Ref. clock setting is not affected by load_config() and
+        # persistent during MCS software is alive.
+        self.ext_ref_clock = self.conf.get("ext_ref_clock", False)
+        self.set_reference_clock(bool(self.ext_ref_clock))
 
     def run_command(self, cmd: str) -> bool:
         """Run a command in MCS Server. Return True on success."""
@@ -301,6 +308,17 @@ class MCS(Instrument):
             s.prena = s.prena & ~(1 << 2)
         s.swpreset = preset
 
+        self.set_mcssetting(s)
+        return True
+
+    def set_reference_clock(self, external: bool) -> bool:
+        s = self.get_mcssetting()
+        if external:
+            s.extclk = 1
+            self.logger.info("Reference clock: External")
+        else:
+            s.extclk = 0
+            self.logger.info("Reference clock: Internal")
         self.set_mcssetting(s)
         return True
 
