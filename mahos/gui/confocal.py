@@ -51,6 +51,7 @@ from ..util.stat import simple_moving_average
 from ..util.timer import FPSCounter
 from .gui_node import GUINode
 from .dialog import save_dialog, load_dialog, export_dialog
+from .param import apply_widgets
 from .common_widget import ClientWidget
 
 
@@ -105,7 +106,7 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
         zbound,
         roibound,
         pos,
-        scan_capability,
+        params,
         default_path,
         parent=None,
     ):
@@ -157,11 +158,22 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
             w.valueChanged.connect(self.update_ystep_size)
 
         self.modeBox.clear()
-        for mode in scan_capability:
+        for mode in params["mode"].options():
             self.modeBox.addItem(mode_to_str(mode))
 
         self.modeBox.currentIndexChanged.connect(self.update_modal_boxes)
         self.modeBox.setCurrentIndex(0)
+
+        apply_widgets(
+            params,
+            [
+                ("delay", self.delayBox, 1e3),
+                ("time_window", self.timeBox, 1e3),
+                ("dummy_samples", self.dummysampleBox),
+                ("oversample", self.oversampleBox),
+                ("poll_samples", self.pollsampleBox),
+            ],
+        )
 
         self.update_modal_boxes()
         self.update_xstep_size()
@@ -350,7 +362,7 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
 class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
     """Dialog for Tracking function."""
 
-    def __init__(self, xbound, ybound, zbound, scan_capability, parent=None):
+    def __init__(self, xbound, ybound, zbound, params, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
 
@@ -372,11 +384,22 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
             w.valueChanged.connect(self.update_yzzstep)
 
         self.modeBox.clear()
-        for mode in scan_capability:
+        for mode in params["mode"].options():
             self.modeBox.addItem(mode_to_str(mode))
 
         self.modeBox.currentIndexChanged.connect(self.update_modal_boxes)
         self.modeBox.setCurrentIndex(0)
+
+        apply_widgets(
+            params,
+            [
+                ("delay", self.delayBox, 1e3),
+                ("time_window", self.timeBox, 1e3),
+                ("dummy_samples", self.dummysampleBox),
+                ("oversample", self.oversampleBox),
+                ("poll_samples", self.pollsampleBox),
+            ],
+        )
 
         self.update_modal_boxes()
 
@@ -1084,7 +1107,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self._invert = invert
 
         self._finalizing = False
-        self._scan_capability = None
+        self._scan_param_dict = None
         self._prev_pos = None
         self._move_interval_ms = move_interval_ms
 
@@ -1135,8 +1158,8 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         # update initial GUI state
         self.update_state(status.state, last_state=ConfocalState.IDLE)
 
-        # try to store scan_capability
-        self.get_scan_capability()
+        # try to store scan param dict
+        self.get_scan_param_dict()
 
         self.cli.stateUpdated.connect(self.update_state)
         self.cli.xyImageUpdated.connect(self.XY.update_image)
@@ -1625,8 +1648,8 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self.cli.change_state(ConfocalState.INTERACT)
 
     def request_xyscan(self):
-        scan_capability = self.get_scan_capability()
-        if scan_capability is None:
+        scan_params = self.get_scan_param_dict()
+        if scan_params is None:
             return
         x, y, z = self.get_pos()
         d = scanDialog(
@@ -1637,7 +1660,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.zbound,
             self.XY.roi.parentBounds(),
             (x, y, z),
-            scan_capability,
+            scan_params,
             str(self.param_cli.get_param("work_dir")),
             parent=self,
         )
@@ -1645,8 +1668,8 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self.start_scan(d, ScanDirection.XY)
 
     def request_xzscan(self):
-        scan_capability = self.get_scan_capability()
-        if scan_capability is None:
+        scan_params = self.get_scan_param_dict()
+        if scan_params is None:
             return
         # Note permutation (X, Y, Z) -> (X, Z, Y)
         x, y, z = self.get_pos()
@@ -1658,7 +1681,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.ybound,
             self.XZ.roi.parentBounds(),
             (x, z, y),
-            scan_capability,
+            scan_params,
             str(self.param_cli.get_param("work_dir")),
             parent=self,
         )
@@ -1666,8 +1689,8 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self.start_scan(d, ScanDirection.XZ)
 
     def request_yzscan(self):
-        scan_capability = self.get_scan_capability()
-        if scan_capability is None:
+        scan_params = self.get_scan_param_dict()
+        if scan_params is None:
             return
         # Note permutation (X, Y, Z) -> (Y, Z, X)
         x, y, z = self.get_pos()
@@ -1679,7 +1702,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.xbound,
             self.YZ.roi.parentBounds(),
             (y, z, x),
-            scan_capability,
+            scan_params,
             str(self.param_cli.get_param("work_dir")),
             parent=self,
         )
@@ -1702,20 +1725,20 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self._prev_pos = self.get_pos()
         self.cli.change_state(ConfocalState.SCAN, params)
 
-    def get_scan_capability(self):
-        if self._scan_capability is None:
+    def get_scan_param_dict(self):
+        if self._scan_param_dict is None:
             params = self.cli.get_param_dict("scan")
             if params is None or "mode" not in params:
-                print("[ERROR] Failed to get scan capability")
+                print("[ERROR] Failed to get scan params")
                 return None
-            self._scan_capability = params["mode"].options()
-        return self._scan_capability
+            self._scan_param_dict = params
+        return self._scan_param_dict
 
     def request_track_start(self):
-        scan_capability = self.get_scan_capability()
-        if scan_capability is None:
+        scan_params = self.get_scan_param_dict()
+        if scan_params is None:
             return
-        d = trackDialog(self.xbound, self.ybound, self.zbound, scan_capability, parent=self)
+        d = trackDialog(self.xbound, self.ybound, self.zbound, scan_params, parent=self)
         c = self.tracker_cli.load_params()
         if c is not None:
             d.load_parameter(c)

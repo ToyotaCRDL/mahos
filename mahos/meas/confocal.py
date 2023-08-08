@@ -253,7 +253,7 @@ class Confocal(Node):
         else:
             self.pg = DummyWorker()
 
-        self.scanner = Scanner(self.cli, self.logger)
+        self.scanner = Scanner(self.cli, self.logger, self.conf.get("scanner", {}))
         self.piezo = Piezo(self.cli, self.logger, self.conf.get("piezo", {}))
         self.tracer = Tracer(self.cli, self.logger, self.conf.get("tracer", {}))
 

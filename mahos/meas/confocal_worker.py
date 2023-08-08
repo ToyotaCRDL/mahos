@@ -264,10 +264,11 @@ class Tracer(Worker):
 
 
 class Scanner(Worker):
-    def __init__(self, cli, logger):
+    def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger)
         self.scanner = ConfocalScannerInterface(cli, "scanner")
         self.add_instrument(self.scanner)
+        self._conf = conf
 
         self.image = Image()
 
@@ -282,13 +283,20 @@ class Scanner(Worker):
             # "ymin": 5.0, "ymax": 25.0,
             # "xnum": 10, "ynum": 20,
             # "z": 50.0,
-            delay=P.FloatParam(0.0, 0.0, 100e-3),
+            delay=P.FloatParam(self._conf.get("delay", 0.0), 0.0, 100e-3),
             direction=P.EnumParam(ScanDirection, ScanDirection.XY),
-            time_window=P.FloatParam(10e-3, 0.1e-3, 1.0),
+            time_window=P.FloatParam(self._conf.get("time_window", 10e-3), 0.1e-3, 1.0),
             ident=P.UUIDParam(),
             mode=P.EnumParam(ScanMode, capability[0], capability),
             line_mode=P.EnumParam(LineMode, LineMode.ASCEND),
         )
+
+        if ScanMode.ANALOG in capability:
+            d["dummy_samples"] = P.IntParam(self._conf.get("dummy_samples", 0), 0, 1000)
+            d["oversample"] = P.IntParam(self._conf.get("oversample", 1), 1, 10_000_000)
+        if ScanMode.COM_DIPOLL in capability:
+            d["poll_samples"] = P.IntParam(self._conf.get("poll_samples", 1), 1, 1000)
+
         return d
 
     def start(self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]) -> bool:
