@@ -226,7 +226,7 @@ class OE200(AnalogIn):
     :param index: (default: 1) Index of LUCI-10 device.
     :type index: int
 
-    :param DC_coupling: (default: False) Init setting. True (False) for DC (AC) coupling.
+    :param DC_coupling: (default: True) Init setting. True (False) for DC (AC) coupling.
     :type DC_coupling: bool
     :param low_noise: (default: True) Init setting. True (False) for low_noise (high_speed) mode.
     :type low_noise: bool
@@ -247,7 +247,7 @@ class OE200(AnalogIn):
 
         self.luci = LUCI10(name + "_luci", self.conf, prefix=prefix)
 
-        self.DC_coupling = self.conf.get("DC_coupling", False)
+        self.DC_coupling = self.conf.get("DC_coupling", True)
         low_noise = self.conf.get("low_noise", True)
         gain_exponent = self.conf.get("gain_exponent", 3)
         if not self.set_gain(low_noise, gain_exponent):
