@@ -99,6 +99,7 @@ class Sweeper(Worker):
             stop=P.FloatParam(f_stop, f_min, f_max),
             num=P.IntParam(self._conf.get("num", 101), 2, 10000),
             power=P.FloatParam(self._conf.get("power", p_min), p_min, p_max),
+            sweeps=P.IntParam(0, 0, 1_000_000_000),
             timing=timing,
             background=P.BoolParam(False, doc="take background data"),
             background_delay=P.FloatParam(

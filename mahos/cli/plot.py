@@ -91,6 +91,7 @@ def plot_odmr(args):
         "color_fit": args.color_fit,
         "marker": args.marker,
         "marker_bg": args.marker_bg,
+        "label": args.label,
         "offset": args.offset,
         "linewidth": args.linewidth,
         "linewidth_fit": args.linewidth_fit,
@@ -421,6 +422,7 @@ def add_odmr_parser(sub_parsers):
     p.add_argument("--color_fit", type=str, nargs="+", help="matplotlib colors for fitting lines")
     p.add_argument("--marker", type=str, nargs="+", help="matplotlib markers for data")
     p.add_argument("--marker_bg", type=str, nargs="+", help="matplotlib markers for background")
+    p.add_argument("-l", "--label", type=str, nargs="+", help="matplotlib labels")
     p.add_argument("--linewidth", type=float, help="linewidth for data")
     p.add_argument("--linewidth_fit", type=float, default=1.0, help="linewidth for fitting line")
     p.add_argument("-O", "--offset", type=float, nargs="+", help="offset along y-axis")
