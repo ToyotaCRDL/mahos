@@ -603,6 +603,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.numBox.setValue(data.params["num"])
         self.powerBox.setValue(data.params["power"])
         self.backgroundBox.setChecked(data.params.get("background", False))
+        if self._analog and "pd_rate" in data.params:
+            self.pdrateBox.setValue(round(data.params["pd_rate"] * 1e-3))
         timing = data.params["timing"]
         if data.params["method"] == "cw":
             self.cwButton.setChecked(True)
