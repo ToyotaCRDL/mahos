@@ -257,6 +257,13 @@ class DTG5000(VisaInstrument):
 
         return t
 
+    def _block_to_str(self, block: Block, max_len=10):
+        s = f"{block.name}(x{block.Nrep})|"
+        patterns = block.pattern_to_strs()
+        if len(patterns) <= max_len:
+            return s + "|".join(patterns)
+        return s + "|".join(patterns[: max_len - 1]) + "|...|" + patterns[-1]
+
     def generate_tree(
         self,
         blocks: Blocks[Block],
@@ -276,7 +283,7 @@ class DTG5000(VisaInstrument):
 
             seq_trees.append(gen_sequence("", block.name, block.Nrep, "", "", int(block.trigger)))
 
-            self.logger.debug(f"{block.name}(x{block.Nrep})|" + "|".join(block.pattern_to_strs()))
+            self.logger.debug(self._block_to_str(block))
             pulses = np.concatenate(
                 [
                     self.channels_to_int(channels) * np.ones(length, dtype=np.uint8)
