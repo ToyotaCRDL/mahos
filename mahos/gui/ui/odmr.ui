@@ -383,7 +383,7 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
+         <item row="2" column="3">
           <widget class="QSpinBox" name="pdrateBox">
            <property name="suffix">
             <string> kHz</string>
@@ -396,6 +396,22 @@
            </property>
            <property name="maximum">
             <number>10000</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QDoubleSpinBox" name="bgdelayBox">
+           <property name="prefix">
+            <string>bg delay: </string>
+           </property>
+           <property name="suffix">
+            <string> ms</string>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -458,10 +474,11 @@
   <tabstop>sweepsBox</tabstop>
   <tabstop>mwcontBox</tabstop>
   <tabstop>backgroundBox</tabstop>
+  <tabstop>bgdelayBox</tabstop>
   <tabstop>pdrateBox</tabstop>
   <tabstop>cwButton</tabstop>
-  <tabstop>windowBox</tabstop>
   <tabstop>pulseButton</tabstop>
+  <tabstop>windowBox</tabstop>
   <tabstop>laserdelayBox</tabstop>
   <tabstop>laserwidthBox</tabstop>
   <tabstop>mwdelayBox</tabstop>

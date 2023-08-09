@@ -515,6 +515,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
 
         self.cwButton.toggled.connect(self.switch_cw)
         self.pulseButton.toggled.connect(self.switch_pulse)
+        self.backgroundBox.toggled.connect(self.switch_background)
 
     def init_widgets(self):
         self.tabWidget.setCurrentIndex(0)
@@ -550,6 +551,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 ("num", self.numBox),
                 ("start", self.startBox, 1e-6),
                 ("stop", self.stopBox, 1e-6),
+                ("background_delay", self.bgdelayBox, 1e3),
             ],
         )
         self._analog = "pd_rate" in params
@@ -596,19 +598,25 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         ):
             w.setEnabled(checked)
 
+    def switch_background(self, checked):
+        self.bgdelayBox.setEnabled(checked)
+
     def apply_widgets(self, data: ODMRData):
         start, stop = data.bounds()
-        self.startBox.setValue(start * 1.0e-6)
-        self.stopBox.setValue(stop * 1.0e-6)
+        self.startBox.setValue(start * 1e-6)
+        self.stopBox.setValue(stop * 1e-6)
         self.numBox.setValue(data.params["num"])
         self.powerBox.setValue(data.params["power"])
-        self.backgroundBox.setChecked(data.params.get("background", False))
+        bg = data.params.get("background", False)
+        self.backgroundBox.setChecked(bg)
+        if bg and "background_delay" in data.params:
+            self.bgdelayBox.setValue(data.params["background_delay"] * 1e3)
         if self._analog and "pd_rate" in data.params:
             self.pdrateBox.setValue(round(data.params["pd_rate"] * 1e-3))
         timing = data.params["timing"]
         if data.params["method"] == "cw":
             self.cwButton.setChecked(True)
-            self.windowBox.setValue(timing["time_window"] * 1.0e3)
+            self.windowBox.setValue(timing["time_window"] * 1e3)
         else:
             self.pulseButton.setChecked(True)
             self.laserdelayBox.setValue(timing["laser_delay"] * 1e9)
@@ -681,6 +689,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params["power"] = self.powerBox.value()
         params["sweeps"] = self.sweepsBox.value()
         params["background"] = self.backgroundBox.isChecked()
+        params["background_delay"] = self.bgdelayBox.value() * 1e-3  # ms to s
 
         if self.cwButton.isChecked():
             params["method"] = "cw"
@@ -758,6 +767,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.pulseButton,
             self.sweepsBox,
             self.backgroundBox,
+            self.bgdelayBox,
         ):
             w.setEnabled(state == BinaryState.IDLE)
 

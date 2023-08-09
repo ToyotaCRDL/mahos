@@ -101,6 +101,14 @@ class Sweeper(Worker):
             power=P.FloatParam(self._conf.get("power", p_min), p_min, p_max),
             timing=timing,
             background=P.BoolParam(False, doc="take background data"),
+            background_delay=P.FloatParam(
+                0.0,
+                0.0,
+                1.0,
+                unit="s",
+                SI_prefix=True,
+                doc="delay between normal and background (reference) measurements",
+            ),
             resume=P.BoolParam(False),
             continue_mw=P.BoolParam(False),
             ident=P.UUIDParam(optional=True, enable=False),
@@ -139,6 +147,7 @@ class Sweeper(Worker):
     def configure_pg_CW_analog(self, params: dict) -> bool:
         freq = 10.0e6
         period = round(freq / params["pd_rate"])
+        bg_delay = round(freq * params.get("background_delay", 0.0))
         samples = self._get_oversamp_CW_analog(params)
         w = 10  # 1 us
         pat_laser_mw = [(("laser", "mw"), period - w), (("laser", "mw", "gate"), w)] * samples
@@ -146,7 +155,7 @@ class Sweeper(Worker):
         if params.get("background", False):
             b = Block(
                 "CW-ODMR",
-                [(None, 8)] + pat_laser_mw + [(None, 8)] + pat_laser + [("trigger", 1)],
+                [(None, 8)] + pat_laser_mw + [(None, 8 + bg_delay)] + pat_laser + [("trigger", 1)],
                 trigger=True,
             )
         else:
@@ -160,7 +169,8 @@ class Sweeper(Worker):
 
     def configure_pg_CW_apd(self, params: dict) -> bool:
         freq = 1.0e6
-        window = round(params["timing"]["time_window"] * freq)
+        window = round(freq * params["timing"]["time_window"])
+        bg_delay = round(freq * params.get("background_delay", 0.0))
         if params.get("background", False):
             b = Block(
                 "CW-ODMR",
@@ -169,7 +179,7 @@ class Sweeper(Worker):
                     ("gate", 1),
                     (("laser", "mw"), window),
                     ("gate", 1),
-                    (None, 6),
+                    (None, 6 + bg_delay),
                     ("gate", 1),
                     ("laser", window),
                     (("gate", "trigger"), 1),
