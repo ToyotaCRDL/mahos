@@ -105,8 +105,8 @@ class ConfigurableTask(Instrument):
         if not self.finite:
             try:
                 self.task.StopTask()
-            except D.DAQmxFunctions.RuntimeAborted_RoutingError:
-                self.logger.exception("Error in StopTask()")
+            except D.DAQmxFunctions.DAQException:
+                self.logger.exception("Exception in StopTask()")
         self.task.ClearTask()
         self.task = None
         self.logger.debug("Stopped and Cleared Task.")
