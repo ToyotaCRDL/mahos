@@ -547,6 +547,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             params,
             [
                 ("power", self.powerBox),
+                ("num", self.numBox),
                 ("start", self.startBox, 1e-6),
                 ("stop", self.stopBox, 1e-6),
             ],

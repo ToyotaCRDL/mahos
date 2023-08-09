@@ -291,7 +291,7 @@ class Scanner(Worker):
         )
 
         if ScanMode.ANALOG in capability:
-            d["dummy_samples"] = P.IntParam(self._conf.get("dummy_samples", 0), 0, 1000)
+            d["dummy_samples"] = P.IntParam(self._conf.get("dummy_samples", 10), 1, 1000)
             d["oversample"] = P.IntParam(self._conf.get("oversample", 1), 1, 10_000_000)
         if ScanMode.COM_DIPOLL in capability:
             d["poll_samples"] = P.IntParam(self._conf.get("poll_samples", 1), 1, 1000)

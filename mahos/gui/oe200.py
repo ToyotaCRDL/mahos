@@ -67,6 +67,7 @@ class OE200Widget(ClientTopWidget, Ui_OE200Widget):
         if d is None:
             print("[ERROR] Failed to get current setting.")
         self.lowButton.setChecked(d["low_noise"])
+        self.highButton.setChecked(not d["low_noise"])
         if d["low_noise"]:
             self.lowBox.setCurrentIndex(self.lowBox.findText(str(d["gain_exponent"])))
         else:

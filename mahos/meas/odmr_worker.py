@@ -40,6 +40,7 @@ class Sweeper(Worker):
         self._sg_first = conf.get("sg_first", False)
         self._pd_analog = conf.get("pd_analog", False)
         self._continue_mw = False
+        self._conf = conf
 
         self.data = ODMRData()
 
@@ -48,7 +49,9 @@ class Sweeper(Worker):
 
     def get_param_dict(self, method: str) -> P.ParamDict[str, P.PDValue] | None:
         if method == "cw":
-            timing = P.ParamDict(time_window=P.FloatParam(10e-3, 0.1e-3, 1.0))
+            timing = P.ParamDict(
+                time_window=P.FloatParam(self._conf.get("time_window", 10e-3), 0.1e-3, 1.0)
+            )
         elif method == "pulse":
             timing = P.ParamDict(
                 laser_delay=P.FloatParam(
@@ -88,12 +91,14 @@ class Sweeper(Worker):
             return None
         f_min, f_max = bounds["freq"]
         p_min, p_max = bounds["power"]
+        f_start = max(min(self._conf.get("start", 2.74e9), f_max), f_min)
+        f_stop = max(min(self._conf.get("stop", 3.00e9), f_max), f_min)
         d = P.ParamDict(
             method=P.StrChoiceParam(method, ("cw", "pulse")),
-            start=P.FloatParam(2.74e9, f_min, f_max),
-            stop=P.FloatParam(3.00e9, f_min, f_max),
-            num=P.IntParam(101, 2, 10000),
-            power=P.FloatParam(p_min, p_min, p_max),
+            start=P.FloatParam(f_start, f_min, f_max),
+            stop=P.FloatParam(f_stop, f_min, f_max),
+            num=P.IntParam(self._conf.get("num", 101), 2, 10000),
+            power=P.FloatParam(self._conf.get("power", p_min), p_min, p_max),
             timing=timing,
             background=P.BoolParam(False, doc="take background data"),
             resume=P.BoolParam(False),
@@ -102,7 +107,9 @@ class Sweeper(Worker):
         )
 
         if self._pd_analog:
-            d["pd_rate"] = P.FloatParam(1e3, 1e3, 100e3, doc="PD sampling rate")
+            d["pd_rate"] = P.FloatParam(
+                self._conf.get("pd_rate", 400e3), 1e3, 10000e3, doc="PD sampling rate"
+            )
         return d
 
     def validate_params(
@@ -130,10 +137,10 @@ class Sweeper(Worker):
         return round(t["laser_width"] * params["pd_rate"] * t["burst_num"])
 
     def configure_pg_CW_analog(self, params: dict) -> bool:
-        freq = 1.0e6
+        freq = 10.0e6
         period = round(freq / params["pd_rate"])
         samples = self._get_oversamp_CW_analog(params)
-        w = 1  # 1 us
+        w = 10  # 1 us
         pat_laser_mw = [(("laser", "mw"), period - w), (("laser", "mw", "gate"), w)] * samples
         pat_laser = [(("laser"), period - w), (("laser", "gate"), w)] * samples
         if params.get("background", False):
@@ -362,6 +369,7 @@ class Sweeper(Worker):
             oversamp = self._get_oversamp_CW_analog(params)
         else:
             oversamp = self._get_oversamp_pulse_analog(params)
+        self.logger.info(f"Analog PD oversample: {oversamp}")
         drop = self._drop_first * oversamp
         if params.get("background", False):
             num *= 2
@@ -480,9 +488,9 @@ class Sweeper(Worker):
         else:
             success &= self.sg.set_output(False)
 
-        success &= (
-            all([pd.stop() for pd in self.pds]) and self.pg.stop() and self.release_instruments()
-        )
+        success &= all([pd.stop() for pd in self.pds])
+        success &= self.pg.stop()
+        success &= self.release_instruments()
 
         self.data.finalize()
 
