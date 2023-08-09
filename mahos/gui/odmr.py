@@ -515,7 +515,6 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
 
         self.cwButton.toggled.connect(self.switch_cw)
         self.pulseButton.toggled.connect(self.switch_pulse)
-        self.backgroundBox.toggled.connect(self.switch_background)
 
     def init_widgets(self):
         self.tabWidget.setCurrentIndex(0)
@@ -597,9 +596,6 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.bnumBox,
         ):
             w.setEnabled(checked)
-
-    def switch_background(self, checked):
-        self.bgdelayBox.setEnabled(checked)
 
     def apply_widgets(self, data: ODMRData):
         start, stop = data.bounds()
@@ -767,11 +763,11 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.pulseButton,
             self.sweepsBox,
             self.backgroundBox,
-            self.bgdelayBox,
         ):
             w.setEnabled(state == BinaryState.IDLE)
 
-        self.pdrateBox.setEnabled(self._analog and state == BinaryState.IDLE)
+        self.pdrateBox.setEnabled(state == BinaryState.IDLE and self._analog)
+        self.bgdelayBox.setEnabled(state == BinaryState.IDLE and self.backgroundBox.isChecked())
 
         self.windowBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())
 
