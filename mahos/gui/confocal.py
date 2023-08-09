@@ -62,6 +62,8 @@ class imageDialog(QtWidgets.QDialog, Ui_imageDialog):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
 
+        for b in (self.minBox, self.maxBox):
+            b.setOpts(siPrefix=True)
         self.minBox.setValue(levels[0])
         self.maxBox.setValue(levels[1])
 
