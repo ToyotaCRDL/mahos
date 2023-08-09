@@ -272,17 +272,16 @@ class Scanner(Worker):
 
         self.image = Image()
 
-    def get_param_dict(self) -> P.ParamDict[str, P.PDValue] | None:
+    def get_param_dict(self, name: str) -> P.ParamDict[str, P.PDValue] | None:
         capability = self.scanner.get_capability()
-        if capability is None:
-            self.logger.error("Failed to get scanner capability.")
+        range_ = self.scanner.get_range()
+        if capability is None or range_ is None:
+            self.logger.error("Failed to get scanner capability or range.")
             return None
 
-        d = P.ParamDict(  # TODO: accept direction and give ranges ?
-            # "xmin": 10.0, "xmax": 20.0,
-            # "ymin": 5.0, "ymax": 25.0,
-            # "xnum": 10, "ynum": 20,
-            # "z": 50.0,
+        d = P.ParamDict(
+            xnum=P.IntParam(self._conf.get("xnum", 51), 1, 1001),
+            ynum=P.IntParam(self._conf.get("ynum", 51), 1, 1001),
             delay=P.FloatParam(self._conf.get("delay", 0.0), 0.0, 100e-3),
             direction=P.EnumParam(ScanDirection, ScanDirection.XY),
             time_window=P.FloatParam(self._conf.get("time_window", 10e-3), 0.1e-3, 1.0),
@@ -296,6 +295,24 @@ class Scanner(Worker):
             d["oversample"] = P.IntParam(self._conf.get("oversample", 1), 1, 10_000_000)
         if ScanMode.COM_DIPOLL in capability:
             d["poll_samples"] = P.IntParam(self._conf.get("poll_samples", 1), 1, 1000)
+
+        if name.startswith("xy"):
+            xrange, yrange, zrange = range_[0], range_[1], range_[2]
+            d["direction"].set(ScanDirection.XY)
+        elif name.startswith("xz"):
+            xrange, yrange, zrange = range_[0], range_[2], range_[1]
+            d["direction"].set(ScanDirection.XZ)
+        elif name.startswith("yz"):
+            xrange, yrange, zrange = range_[1], range_[2], range_[0]
+            d["direction"].set(ScanDirection.YZ)
+        else:
+            return d
+
+        d["xmin"] = P.FloatParam(xrange[0], xrange[0], xrange[1], unit="um")
+        d["xmax"] = P.FloatParam(xrange[1], xrange[0], xrange[1], unit="um")
+        d["ymin"] = P.FloatParam(yrange[0], yrange[0], yrange[1], unit="um")
+        d["ymax"] = P.FloatParam(yrange[1], yrange[0], yrange[1], unit="um")
+        d["z"] = P.FloatParam((zrange[0] + zrange[1]) / 2.0, zrange[0], zrange[1], unit="um")
 
         return d
 

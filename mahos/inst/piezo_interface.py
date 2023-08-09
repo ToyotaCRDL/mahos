@@ -41,7 +41,7 @@ class PiezoInterface(InstrumentInterface):
         return self.get("target")
 
     def get_range(self):
-        """Get position range."""
+        """Get travel range. range[i][0] (range[i][1]) is min (max) of i-th axis."""
 
         return self.get("range")
 

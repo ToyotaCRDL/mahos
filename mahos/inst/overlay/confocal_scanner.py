@@ -319,6 +319,8 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             return self.get_capability()
         elif key == "unit":
             return self.pds[0].get("unit")
+        elif key == "range":
+            return self.piezo.get_range()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
@@ -485,6 +487,8 @@ class ConfocalScannerCommand(InstrumentOverlay, ConfocalScannerMixin):
             return self.get_capability()
         elif key == "unit":
             return self.pds[0].get("unit")
+        elif key == "range":
+            return self.piezo.get_range()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

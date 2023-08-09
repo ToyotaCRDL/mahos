@@ -167,6 +167,8 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
         apply_widgets(
             params,
             [
+                ("xnum", self.xnumBox),
+                ("ynum", self.ynumBox),
                 ("delay", self.delayBox, 1e3),
                 ("time_window", self.timeBox, 1e3),
                 ("dummy_samples", self.dummysampleBox),
@@ -393,6 +395,8 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
         apply_widgets(
             params,
             [
+                ("xnum", self.xnumBox),
+                ("ynum", self.ynumBox),
                 ("delay", self.delayBox, 1e3),
                 ("time_window", self.timeBox, 1e3),
                 ("dummy_samples", self.dummysampleBox),

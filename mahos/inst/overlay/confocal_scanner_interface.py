@@ -32,6 +32,11 @@ class ConfocalScannerInterface(InstrumentInterface):
     def get_unit(self) -> str:
         return self.get("unit")
 
+    def get_range(self):
+        """Get travel range. range[i][0] (range[i][1]) is min (max) of i-th axis."""
+
+        return self.get("range")
+
     def configure_scan(
         self,
         mode: ScanMode,

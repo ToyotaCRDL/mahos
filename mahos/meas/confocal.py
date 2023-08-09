@@ -386,8 +386,8 @@ class Confocal(Node):
 
         return Resp(True)
 
-    def _get_scan_param_dict(self) -> Resp:
-        params = self.scanner.get_param_dict()
+    def _get_scan_param_dict(self, name: str) -> Resp:
+        params = self.scanner.get_param_dict(name)
         if params is None:
             return self.fail_with("Cannot generate param dict.")
         else:
@@ -395,8 +395,8 @@ class Confocal(Node):
 
     def get_param_dict(self, msg: GetParamDictReq) -> Resp:
         n = msg.name.lower()
-        if n == "scan":
-            return self._get_scan_param_dict()
+        if n.endswith("scan"):
+            return self._get_scan_param_dict(n)
         else:
             return Resp(False, "Unknown param dict name " + n)
 

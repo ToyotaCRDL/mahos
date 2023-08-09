@@ -84,6 +84,8 @@ class ConfocalScanner_mock(InstrumentOverlay):
             return self.get_capability()
         elif key == "unit":
             return "cps"
+        elif key == "range":
+            return self.piezo.get_range()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
