@@ -31,7 +31,7 @@
       ~ConfocalWidget.finalize_track
       ~ConfocalWidget.get_export_params
       ~ConfocalWidget.get_pos
-      ~ConfocalWidget.get_scan_capability
+      ~ConfocalWidget.get_scan_param_dict
       ~ConfocalWidget.go_center
       ~ConfocalWidget.go_home
       ~ConfocalWidget.init_connections

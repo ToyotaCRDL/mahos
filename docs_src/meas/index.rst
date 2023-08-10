@@ -18,6 +18,7 @@ The mahos.meas package provides high-level measurement logics.
    odmr.ODMR
    podmr.PODMR
    iodmr.IODMR
+   qdyne.Qdyne
    camera.Camera
    hbt.HBT
    spectroscopy.Spectroscopy
