@@ -15,6 +15,7 @@
 .DS_Store
 Thumbs.db
 Share.lnk
+compile_commands.json
 
 # generated docs
 docs_src/*/generated

@@ -17,6 +17,9 @@ import numpy as np
 
 from .instrument import Instrument
 
+from ..msgs.inst_tdc_msgs import RawEvents
+from ..util.io import save_h5
+
 
 def c_str(s: str) -> C.c_char_p:
     """Convert Python string to C Constant String (pointer to NULL terminated of chars)"""
@@ -152,6 +155,7 @@ class MCS(Instrument):
 
         self._base_configs = self.conf.get("base_configs", {})
         self._home = self.conf.get("home", "C:\\mcs8x64")
+        self._home_raw_events = self.conf.get("home_raw_events", self._home)
         self._save_file_name = None
         self._remove_lst = self.conf.get("remove_lst", True)
         self._lst_channels = self.conf.get("lst_channels", [8, 9])
@@ -331,24 +335,40 @@ class MCS(Instrument):
         self.dll.StoreMCSSetting(C.byref(setting), self.nDev)
         self.dll.NewSetting(self.nDev)
 
-    def load_raw_events(self) -> list[np.ndarray] | None:
+    def load_raw_events(self) -> str | None:
         if not self._save_file_name:
             self.logger.error("save file name has not been set.")
             return None
 
-        file_name = os.path.splitext(self._save_file_name)[0] + ".lst"
-        file_name = os.path.join(self._home, file_name)
+        lst_file_name = os.path.splitext(self._save_file_name)[0] + ".lst"
+        lst_file_path = os.path.join(self._home, lst_file_name)
 
-        ret = self.load_lst_file(file_name)
+        ret = self.load_lst_file(lst_file_path)
 
         if self._remove_lst:
-            self.remove_saved_file(file_name)
+            self.remove_saved_file(lst_file_path)
 
         if ret is None:
             return None
 
         _, format_info, data = ret
-        return self.convert_raw_events(format_info, data)
+        events = self.convert_raw_events(format_info, data)
+
+        self.logger.debug("Start sorting raw events")
+        data = np.concatenate(events)
+        # in-place sort to reduce memory consumption? (effect not confirmed)
+        data.sort()
+        self.logger.debug("Finished sorting raw events")
+
+        h5_file_name = os.path.splitext(self._save_file_name)[0] + ".h5"
+        h5_path = os.path.join(self._home_raw_events, h5_file_name)
+
+        self.logger.debug(f"Saving converted raw events to {h5_path}")
+        success = save_h5(h5_path, RawEvents(data), RawEvents, self.logger, compression="lzf")
+        if success:
+            return h5_file_name
+        else:
+            return None
 
     def convert_raw_events(self, format_info, data) -> list[np.ndarray]:
         cl, ch = format_info["channel"]

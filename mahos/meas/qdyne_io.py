@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+
+"""
+File I/O for Qdyne.
+
+.. This file is a part of MAHOS project.
+
+"""
+
+from __future__ import annotations
+from os import path
+
+import matplotlib.pyplot as plt
+
+from ..msgs.qdyne_msgs import QdyneData, update_data
+from ..node.log import DummyLogger
+from ..util.io import save_pickle_or_h5, load_pickle_or_h5
+from ..util.conv import real_fft
+
+
+class QdyneIO(object):
+    def __init__(self, logger=None):
+        if logger is None:  # use DummyLogger on interactive use
+            self.logger = DummyLogger(self.__class__.__name__)
+        else:
+            self.logger = logger
+
+    def save_data(
+        self, filename: str, data: QdyneData, params: dict | None = None, note: str = ""
+    ) -> bool:
+        """Save data to filename. return True on success."""
+
+        if params is None:
+            params = {}
+
+        data.set_saved()
+
+        return save_pickle_or_h5(
+            filename,
+            data,
+            QdyneData,
+            self.logger,
+            note=note,
+            compression=params.get("compression", "lzf"),
+            compression_opts=params.get("compression_opts"),
+        )
+
+    def load_data(self, filename: str) -> QdyneData | None:
+        """Load data from filename. return None if load is failed."""
+
+        d = load_pickle_or_h5(filename, QdyneData, self.logger)
+        if d is not None:
+            return update_data(d)
+
+    def export_data(self, filename: str, data: QdyneData, params: dict | None = None):
+        if params is None:
+            params = {}
+
+        ext = path.splitext(filename)[1]
+        if ext in (".png", ".pdf", ".eps"):
+            return self._export_data_image(filename, data, params)
+        else:
+            self.logger.error(f"Unknown extension to export data: {filename}")
+            return False
+
+    def _export_data_image(self, filename: str, data: QdyneData, params: dict | None = None):
+        tbin = data.get_bin()
+        x = data.get_xdata() * tbin
+        y = data.get_ydata()
+
+        plt.plot(x, y, "C0.")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Detected photons")
+        plt.tight_layout()
+        plt.savefig(filename)
+        plt.close()
+
+        if params.get("fft", True):
+            f, P = real_fft(x, y)
+            plt.plot(f, P)
+            plt.xlabel("Frequency (Hz)")
+            # plt.ylabel("")
+            plt.tight_layout()
+            head, ext = path.splitext(filename)
+            plt.savefig(head + "_fft" + ext)
+            plt.close()
+
+        if params.get("pulse", False):
+            T = data.get_period_bins()
+            tbin = data.get_bin()
+            mod_sec = (data.raw_data % T) * tbin
+            coeff = 1e6
+            N, bins, patches = plt.hist(mod_sec * coeff, bins=1000)
+            sh = data.marker_indices[0] * tbin * coeff
+            st = data.marker_indices[1] * tbin * coeff
+            plt.vlines((sh, st), 0, max(N), "r")
+            plt.xlabel("Time (us)")
+            plt.ylabel("Events")
+            plt.tight_layout()
+            head, ext = path.splitext(filename)
+            plt.savefig(head + "_pulse" + ext)
+            plt.close()

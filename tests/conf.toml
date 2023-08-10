@@ -221,12 +221,26 @@ log = "localhost::log_broker"
 [localhost.camera.target.servers]
 camera = "localhost::server"
 
+[localhost.qdyne]
+module = "mahos.meas.qdyne"
+class = "Qdyne"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5586"
+pub_endpoint = "tcp://127.0.0.1:5587"
+[localhost.qdyne.target]
+log = "localhost::log_broker"
+[localhost.qdyne.target.servers]
+tdc = "localhost::server"
+sg = "localhost::server"
+pg = "localhost::server"
+fg = "localhost::server"
+
 [localhost.manager]
 module = "mahos.meas.state_manager"
 class = "StateManager"
 target = { log = "localhost::log_broker" }
-rep_endpoint = "tcp://127.0.0.1:5586"
-pub_endpoint = "tcp://127.0.0.1:5587"
+rep_endpoint = "tcp://127.0.0.1:5588"
+pub_endpoint = "tcp://127.0.0.1:5589"
 
 [localhost.manager.node]
 "localhost::hbt" = ["mahos.msgs.common_msgs", "BinaryState"]

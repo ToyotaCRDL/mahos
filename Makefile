@@ -28,6 +28,9 @@ docs:
 browse:
 	$(OPEN) docs/index.html
 
+ext:
+	cd mahos/ext && $(MAKE)
+
 clean:
 	$(RM) -r docs
 	$(RM) -r docs_src/*/generated
