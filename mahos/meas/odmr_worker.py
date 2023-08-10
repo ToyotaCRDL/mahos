@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 Worker for ODMR.
 
@@ -41,6 +40,12 @@ class Sweeper(Worker):
         self._pd_analog = conf.get("pd_analog", False)
         self._continue_mw = False
         self._conf = conf
+        self._post_process = conf.get("post_process", "sum").lower()
+
+        if self._post_process not in ("sum", "aux"):
+            raise ValueError(f"Unknown post_process {self._post_process}.")
+        if self._post_process == "aux" and len(self.pds) != 2:
+            raise ValueError("Number of PDs must be 2 when post_process is 'aux'.")
 
         self.data = ODMRData()
 
@@ -418,6 +423,8 @@ class Sweeper(Worker):
             # TODO: check ident if resume?
             self.data.update_params(params)
         self.data.yunit = self.pds[0].get_unit()
+        if self._post_process == "aux":
+            self.data.aux_unit = self.pds[1].get_unit()
 
         if not self.configure_sg(self.data.params):
             return self.fail_with_release("Failed to configure SG.")
@@ -452,33 +459,52 @@ class Sweeper(Worker):
             self.logger.info("Started sweeper.")
         return True
 
-    def get_line(self):
-        lines = [pd.pop_block() for pd in self.pds]
-        data = np.sum(lines, axis=0)
-        return data
+    def _append_line_nobg(self, data, line):
+        if data is None:
+            return np.array(line, ndmin=2).T
+        else:
+            return np.append(data, np.array(line, ndmin=2).T, axis=1)
+
+    def _append_line_bg(self, data, bg_data, line):
+        l_data = line[0::2]
+        l_bg = line[1::2]
+        if data is None:
+            return np.array(l_data, ndmin=2).T, np.array(l_bg, ndmin=2).T
+        else:
+            return (
+                np.append(data, np.array(l_data, ndmin=2).T, axis=1),
+                np.append(bg_data, np.array(l_bg, ndmin=2).T, axis=1),
+            )
 
     def append_line(self, line):
         if not self.data.measure_background():
-            if not self.data.has_data():
-                self.data.data = np.array(line, ndmin=2).T
-            else:
-                self.data.data = np.append(self.data.data, np.array(line, ndmin=2).T, axis=1)
+            self.data.data = self._append_line_nobg(self.data.data, line)
         else:
-            l_data = line[0::2]
-            l_bg = line[1::2]
-            if not self.data.has_data():
-                self.data.data = np.array(l_data, ndmin=2).T
-                self.data.bg_data = np.array(l_bg, ndmin=2).T
-            else:
-                self.data.data = np.append(self.data.data, np.array(l_data, ndmin=2).T, axis=1)
-                self.data.bg_data = np.append(self.data.bg_data, np.array(l_bg, ndmin=2).T, axis=1)
+            self.data.data, self.data.bg_data = self._append_line_bg(
+                self.data.data, self.data.bg_data, line
+            )
+
+    def append_aux_line(self, line):
+        if not self.data.measure_background():
+            self.data.aux_data = self._append_line_nobg(self.data.aux_data, line)
+        else:
+            self.data.aux_data, self.data.aux_bg_data = self._append_line_bg(
+                self.data.aux_data, self.data.aux_bg_data, line
+            )
 
     def work(self):
         if not self.data.running:
             return  # or raise Error?
 
-        line = self.get_line()
-        self.append_line(line)
+        lines = [pd.pop_block() for pd in self.pds]
+        if self._post_process == "sum":
+            line = np.sum(lines, axis=0)
+            self.append_line(line)
+        elif self._post_process == "aux":
+            self.append_line(line[0])
+            self.append_aux_line(lines[1])
+        else:
+            raise ValueError(f"Unknown post_process {self._post_process}")
 
     def is_finished(self) -> bool:
         if not self.data.has_params() or not self.data.has_data():

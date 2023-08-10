@@ -37,6 +37,9 @@ class ODMRData(BasicMeasData):
         self.data = None
         self.bg_data = None
 
+        self.aux_data = None
+        self.aux_bg_data = None
+
     def init_axes(self):
         self.xlabel: str = "Frequency"
         self.xunit: str = "Hz"
@@ -44,6 +47,8 @@ class ODMRData(BasicMeasData):
         self.yunit: str = ""
         self.xscale: str = "linear"
         self.yscale: str = "linear"
+
+        self.aux_unit: str | None = None
 
     def has_data(self) -> bool:
         """return True if data is ready and valid data could be read out."""
