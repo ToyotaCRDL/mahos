@@ -189,7 +189,7 @@ class QdyneAnalyzer(object):
             return False
         x = data.get_xdata() * data.get_bin()
         y = data.get_ydata()
-        data.fft_xdata, data.fft_ydata = real_fft(x, y)
+        data.fft_xdata, data.fft_data = real_fft(x, y)
         return True
 
 

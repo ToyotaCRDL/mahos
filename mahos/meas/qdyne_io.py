@@ -72,7 +72,7 @@ class QdyneIO(object):
         plt.savefig(filename)
         plt.close()
 
-        if params.get("trace", True):
+        if params.get("trace", False):
             x = data.get_xdata(False) * data.get_bin()
             y = data.get_ydata(False)
 
