@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 from ..msgs.qdyne_msgs import QdyneData, update_data
 from ..node.log import DummyLogger
 from ..util.io import save_pickle_or_h5, load_pickle_or_h5
-from ..util.conv import real_fft
 
 
 class QdyneIO(object):
@@ -64,25 +63,24 @@ class QdyneIO(object):
             return False
 
     def _export_data_image(self, filename: str, data: QdyneData, params: dict | None = None):
-        tbin = data.get_bin()
-        x = data.get_xdata() * tbin
-        y = data.get_ydata()
+        head, ext = path.splitext(filename)
 
-        plt.plot(x, y, "C0.")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Detected photons")
+        plt.plot(data.get_xdata(True), data.get_ydata(True))
+        plt.xlabel("Frequency (Hz)")
+        # plt.ylabel("")
         plt.tight_layout()
         plt.savefig(filename)
         plt.close()
 
-        if params.get("fft", True):
-            f, P = real_fft(x, y)
-            plt.plot(f, P)
-            plt.xlabel("Frequency (Hz)")
-            # plt.ylabel("")
+        if params.get("trace", True):
+            x = data.get_xdata(False) * data.get_bin()
+            y = data.get_ydata(False)
+
+            plt.plot(x, y, "C0.")
+            plt.xlabel("Time (s)")
+            plt.ylabel("Detected photons")
             plt.tight_layout()
-            head, ext = path.splitext(filename)
-            plt.savefig(head + "_fft" + ext)
+            plt.savefig(head + "_trace" + ext)
             plt.close()
 
         if params.get("pulse", False):
@@ -97,6 +95,5 @@ class QdyneIO(object):
             plt.xlabel("Time (us)")
             plt.ylabel("Events")
             plt.tight_layout()
-            head, ext = path.splitext(filename)
             plt.savefig(head + "_pulse" + ext)
             plt.close()

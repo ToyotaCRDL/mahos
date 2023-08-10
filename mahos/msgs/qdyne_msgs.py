@@ -43,6 +43,9 @@ class QdyneData(BasicMeasData):
         self.xdata = None
         self.data = None
 
+        self.fft_xdata = None
+        self.fft_data = None
+
         self.fit_xdata = None
         self.fit_data = None
 
@@ -158,25 +161,29 @@ class QdyneData(BasicMeasData):
     def get_fit_ydata(self) -> NDArray | None:
         return self.fit_data
 
-    def get_xdata(self) -> NDArray | None:
+    def get_xdata(self, fft: bool = False) -> NDArray | None:
         """get analyzed xdata.
+
+        :param freq: True (False) to get fft (time-domain) data.
 
         :returns: xdata if data is available.
                   None  if data is not ready.
 
         """
 
-        return self.xdata
+        return self.fft_xdata if fft else self.xdata
 
-    def get_ydata(self) -> NDArray | None:
+    def get_ydata(self, fft: bool = False) -> NDArray | None:
         """get analyzed ydata.
+
+        :param freq: True (False) to get fft (time-domain) data.
 
         :returns: ydata if data is available.
                   None  if data is not ready.
 
         """
 
-        return self.data
+        return self.fft_data if fft else self.data
 
     def get_pulse_params(self) -> dict:
         if not ("90pulse" in self.params and "180pulse" in self.params):

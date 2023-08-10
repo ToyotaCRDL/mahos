@@ -44,7 +44,7 @@ class ODMR(BasicMeasNode):
         :param sweeper.minimum_block_length: minimum block length in generated blocks
                                              (default: 1000)
         :type sweeper.minimum_block_length: int
-        :param sweeper.start_delay: (sec.) delay time before starting SG / PG output. (default: 0.0)
+        :param sweeper.start_delay: (sec.) delay time before starting SG/PG output. (default: 0.0)
         :type sweeper.start_delay: float
         :param sweeper.drop_first: drop first N freq points. (default: 0)
         :type sweeper.drop_first: int
