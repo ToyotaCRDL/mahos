@@ -33,10 +33,12 @@ class MCS(Instrument):
     :param base_configs: Mapping from base config name to actual file name.
         Used in configure_base_range_bin() etc.
     :type base_configs: dict[str, str]
-    :param home: (default: "C:\\mcs8x64") Home directory for mcs8 software.
-    :type home: str
     :param ext_ref_clock: use external reference clock source.
     :type ext_ref_clock: bool
+    :param home: (default: "C:\\mcs8x64") Home directory for mcs8 software.
+    :type home: str
+    :param home_raw_events: (default: "C:\\mcs8x64") Home directory to save RawEvents data.
+    :type home_raw_events: str
     :param remove_lst: (default: True) Remove *.lst file after loading it.
     :type remove_lst: bool
     :param lst_channels: (default: [8, 9]) Collected channels for lst file.
@@ -156,10 +158,10 @@ class MCS(Instrument):
         self._base_configs = self.conf.get("base_configs", {})
         self._home = self.conf.get("home", "C:\\mcs8x64")
         self._home_raw_events = self.conf.get("home_raw_events", self._home)
-        self._save_file_name = None
         self._remove_lst = self.conf.get("remove_lst", True)
         self._lst_channels = self.conf.get("lst_channels", [8, 9])
         self.logger.debug(f"available base config files: {self._base_configs}")
+        self._save_file_name = None
 
         # Ref. clock setting is not affected by load_config() and
         # persistent during MCS software is alive.
@@ -335,18 +337,19 @@ class MCS(Instrument):
         self.dll.StoreMCSSetting(C.byref(setting), self.nDev)
         self.dll.NewSetting(self.nDev)
 
-    def load_raw_events(self) -> str | None:
+    def get_raw_events(self) -> str | None:
         if not self._save_file_name:
             self.logger.error("save file name has not been set.")
             return None
 
-        lst_file_name = os.path.splitext(self._save_file_name)[0] + ".lst"
-        lst_file_path = os.path.join(self._home, lst_file_name)
+        lst_name = os.path.splitext(self._save_file_name)[0] + ".lst"
+        lst_path = os.path.join(self._home, lst_name)
 
-        ret = self.load_lst_file(lst_file_path)
+        ret = self.load_lst_file(lst_path)
+        self.logger.debug(f"Loaded lst file {lst_path}")
 
         if self._remove_lst:
-            self.remove_saved_file(lst_file_path)
+            self.remove_saved_file(lst_path)
 
         if ret is None:
             return None
@@ -360,13 +363,13 @@ class MCS(Instrument):
         data.sort()
         self.logger.debug("Finished sorting raw events")
 
-        h5_file_name = os.path.splitext(self._save_file_name)[0] + ".h5"
-        h5_path = os.path.join(self._home_raw_events, h5_file_name)
+        h5_name = os.path.splitext(self._save_file_name)[0] + ".h5"
+        h5_path = os.path.join(self._home_raw_events, h5_name)
 
-        self.logger.debug(f"Saving converted raw events to {h5_path}")
+        self.logger.info(f"Saving converted raw events to {h5_path}")
         success = save_h5(h5_path, RawEvents(data), RawEvents, self.logger, compression="lzf")
         if success:
-            return h5_file_name
+            return h5_name
         else:
             return None
 
@@ -559,7 +562,7 @@ class MCS(Instrument):
                 self.logger.error('get("status", args): args must be int (channel).')
             return self.get_status(args)
         elif key == "raw_events":
-            return self.load_raw_events()
+            return self.get_raw_events()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

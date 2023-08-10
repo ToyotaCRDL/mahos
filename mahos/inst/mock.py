@@ -358,7 +358,7 @@ class MCS_mock(Instrument):
 
         return status
 
-    def load_raw_events(self) -> RawEvents | None:
+    def get_raw_events(self) -> RawEvents | None:
         return RawEvents(np.arange(0, 10_000_000, 10, dtype=np.uint64))
 
     # Standard API
@@ -394,7 +394,7 @@ class MCS_mock(Instrument):
                 self.logger.error('get("status", args): args must be int (channel).')
             return self.get_status(args)
         elif key == "raw_events":
-            return self.load_raw_events()
+            return self.get_raw_events()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

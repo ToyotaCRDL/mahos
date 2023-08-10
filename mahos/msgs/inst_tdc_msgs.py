@@ -15,6 +15,12 @@ from .data_msgs import Data
 
 
 class RawEvents(Data):
+    """The raw events data.
+
+    :ivar data: The events data. Should be sorted before storing.
+
+    """
+
     def __init__(self, data: np.ndarray | None = None):
         self.data = data
 

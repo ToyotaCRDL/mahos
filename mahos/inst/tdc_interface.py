@@ -92,7 +92,10 @@ class TDCInterface(InstrumentInterface):
     def get_raw_events(self) -> str | RawEvents | None:
         """Get raw events of last measurement.
 
-        :returns: str: the file name of RawEvents.
+        Because RawEvents can be huge (> GB), the TDC can choose
+        to transfer data via file system, instead of mahos (ZeroMQ) message.
+
+        :returns: str: the file name of saved RawEvents.
                   RawEvents: the RawEvents.
                   None: failure.
 
