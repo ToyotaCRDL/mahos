@@ -342,3 +342,39 @@ class OE200(AnalogIn):
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
+
+
+class AnalogPD(AnalogIn):
+    """Generic Photo Detector based on DAQ AnalogIn with fixed amplifier gain and unit.
+
+    :param line: DAQ's physical channel for AnalogIn.
+    :type line: str
+    :param unit: (default: V) unit after conversion.
+    :type unit: str
+    :param gain: (default: 1.0) the fixed gain in [unit] / V.
+        Example) when a transimpedance amp with 1000 V / A is used for a photo diode and
+        the unit is 'A', gain should be set 1000.
+    :type gain: float
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        if "line" in conf and "lines" not in conf:
+            conf["lines"] = [conf["line"]]
+        AnalogIn.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.gain = self.conf.get("gain", 1.0)
+        self.unit = self.conf.get("unit", "V")
+
+    def _convert(self, data: np.ndarray | float) -> np.ndarray | float:
+        """Convert raw reading (V) to self.unit."""
+
+        return data / self.gain
+
+    # override AnalogIn methods to convert readings.
+
+    def _append_data(self, data: np.ndarray):
+        AnalogIn._append_data(self, self._convert(data))
+
+    def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
+        return self._convert(AnalogIn.read_on_demand(self, oversample))
