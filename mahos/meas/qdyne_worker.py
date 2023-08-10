@@ -206,6 +206,8 @@ class Pulser(Worker):
         self.length = self.offsets = self.freq = self.laser_timing = None
 
         self._home_raw_events = conf.get("home_raw_events", "")
+        self._remove_raw_events = conf.get("remove_raw_events", True)
+        self._start_delay = conf.get("start_delay", 0.0)
 
         mbl = conf.get("minimum_block_length", 1000)
         bb = conf.get("block_base", 4)
@@ -339,27 +341,30 @@ class Pulser(Worker):
         return True
 
     def fetch_data(self) -> bool:
-        self.logger.info("Fetching raw data.")
+        self.logger.info("Fetching raw events data.")
         raw_events = self.tdc.get_raw_events()
-        self.logger.info(f"TDC release: {self.tdc.release()}")
+        self.tdc.release()
 
         if raw_events is None:
-            self.logger.error("Failed to fetch raw data (tdc side).")
+            self.logger.error("Failed to fetch raw events data (tdc side).")
             return True  # return True anyway to finalize measurement
 
         if isinstance(raw_events, str):
-            raw_events = load_h5(
-                os.path.join(self._home_raw_events, raw_events), RawEvents, self.logger
-            )
+            raw_events_path = os.path.join(self._home_raw_events, raw_events)
+            self.logger.info(f"Start loading {raw_events_path}")
+            raw_events = load_h5(raw_events_path, RawEvents, self.logger)
+            if self._remove_raw_events:
+                if os.path.exists(raw_events_path):
+                    os.remove(raw_events_path)
+                    self.logger.debug(f"Removed {raw_events_path}")
 
         if raw_events is None:
-            self.logger.error("Failed to fetch raw data (load failure).")
+            self.logger.error("Failed to fetch raw events data (load failure).")
             return True  # return True anyway to finalize measurement
 
-        self.logger.info("Finished fetching raw data.")
         self.data.set_raw_data(raw_events.data)
 
-        self.logger.info("Analyzing raw data.")
+        self.logger.info("Analyzing fetched raw data.")
         self.analyzer.analyze(self.data)
         self.logger.info("Finished analyzing raw data.")
 
@@ -393,7 +398,9 @@ class Pulser(Worker):
         success &= self.sg.set_output(not self.data.params.get("nomw", False))
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(True)
-        # time.sleep(1)
+
+        time.sleep(self._start_delay)
+
         success &= self.pg.start()
 
         if not success:

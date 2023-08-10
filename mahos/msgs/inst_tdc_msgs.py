@@ -15,5 +15,8 @@ from .data_msgs import Data
 
 
 class RawEvents(Data):
-    def __init__(self, data: np.ndarray):
+    def __init__(self, data: np.ndarray | None = None):
+        self.data = data
+
+    def set_data(self, data: np.ndarray):
         self.data = data
