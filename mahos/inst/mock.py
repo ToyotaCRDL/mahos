@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import typing as T
+from __future__ import annotations
 import time
 import enum
 
@@ -560,7 +560,7 @@ class Camera_mock(Instrument):
         exposure_time_sec: float,
         burst_num: int = 1,
         binning: int = 1,
-        roi: T.Optional[dict] = None,
+        roi: dict | None = None,
     ) -> bool:
         self._exposure_time = exposure_time_sec
         self._mode = self.Mode.SOFT_TRIGGER
