@@ -31,7 +31,7 @@ class MCS(Instrument):
     """Wrapper Class of DMCSX.dll for Fast ComTec MCS6 / MCS8 Series.
 
     :param base_configs: Mapping from base config name to actual file name.
-        Used in configure_base_range_bin() etc.
+        Used in configure_base_range_bin() etc. See load_config() for details.
     :type base_configs: dict[str, str]
     :param ext_ref_clock: use external reference clock source.
     :type ext_ref_clock: bool
@@ -179,9 +179,27 @@ class MCS(Instrument):
             return True
 
     def load_config(self, fn: str) -> bool:
-        """Load config (*.set) file for MCS."""
+        """Load configuration file for MCS.
 
-        return self.run_command(f"loadcnf {fn}")
+        Setting file (*.set) is loaded by loadcnf command.
+        Control (*.ctl) is executed by run command.
+
+        Setting file is logically proper,
+        however, loadcnf command can cause hang-up in some cases.
+        (depending on MCS software versions or config content, details unknown.)
+        This problem can be avoided sometimes using run command instead of loadcnf.
+        The *.set file can be just renamed to *.ctl for this use case.
+
+        """
+
+        if fn.lower().endswith(".set"):
+            self.logger.info(f"loading config by loadcnf {fn}")
+            return self.run_command(f"loadcnf {fn}")
+        elif fn.lower().endswith(".ctl"):
+            self.logger.info(f"loading config by run {fn}")
+            return self.run_command(f"run {fn}")
+        else:
+            return self.fail_with(f"Unknown file type: {fn}")
 
     def clear(self) -> bool:
         """Clear all spectra data."""
