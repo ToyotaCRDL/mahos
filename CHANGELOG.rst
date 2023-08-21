@@ -5,6 +5,12 @@ Changelog
 [Unreleased]
 ------------
 
+Added
+^^^^^
+
+- meas: added new measurement Qdyne.
+- inst/tdc: added raw event recording features for above.
+
 [0.2.2] - 2023-07-26
 --------------------
 
