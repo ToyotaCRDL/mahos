@@ -119,7 +119,8 @@ class QdyneAnalyzer(object):
     def _analyze_py(self, data: QdyneData) -> bool:
         """Analyze data.raw_data and set data.data and data.xdata.
 
-        This is deprecated. analyze() using C++ extension is way faster.
+        This is Python implementation and thus deprecated:
+            analyze() using C++ extension is way faster.
 
         """
 
@@ -144,7 +145,7 @@ class QdyneAnalyzer(object):
         rd = data.raw_data
 
         idx = 0
-        each = 100
+        each = 1000
         w = StopWatch()
         for i, t in enumerate(data.xdata):
             # head, tail = t + signal_head, t + signal_tail
@@ -179,7 +180,7 @@ class QdyneAnalyzer(object):
             # we can use the last period
             N += 1
 
-        data.xdata = np.arange(0, N * T, T)
+        data.xdata = np.arange(0, N * T, T, dtype=np.uint64)
         data.data = np.zeros(N, dtype=np.uint64)
         C.analyze(data.raw_data, data.xdata, data.data, signal_head, signal_tail)
         return True

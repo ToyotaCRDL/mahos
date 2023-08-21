@@ -5,13 +5,12 @@
 
 namespace py = pybind11;
 
-using std::chrono::seconds;
 using std::chrono::system_clock;
 
 uint64_t
-search_head(py::array_t<uint64_t>& raw_data, uint64_t start_idx, uint64_t head)
+search_head(const py::array_t<uint64_t>& raw_data, uint64_t start_idx, uint64_t head)
 {
-    for (int i = start_idx; i < raw_data.size(); i++) {
+    for (py::ssize_t i = static_cast<py::ssize_t>(start_idx); i < raw_data.size(); i++) {
         if (head <= raw_data.at(i)) {
             return i;
         }
@@ -20,9 +19,9 @@ search_head(py::array_t<uint64_t>& raw_data, uint64_t start_idx, uint64_t head)
 }
 
 uint64_t
-search_tail(py::array_t<uint64_t>& raw_data, uint64_t start_idx, uint64_t tail)
+search_tail(const py::array_t<uint64_t>& raw_data, uint64_t start_idx, uint64_t tail)
 {
-    for (int i = start_idx; i < raw_data.size(); i++) {
+    for (py::ssize_t i = static_cast<py::ssize_t>(start_idx); i < raw_data.size(); i++) {
         if (tail < raw_data.at(i)) {
             return i;
         }
@@ -31,8 +30,8 @@ search_tail(py::array_t<uint64_t>& raw_data, uint64_t start_idx, uint64_t tail)
 }
 
 void
-analyze(py::array_t<uint64_t> raw_data,
-        py::array_t<uint64_t> xdata,
+analyze(const py::array_t<uint64_t> raw_data,
+        const py::array_t<uint64_t> xdata,
         py::array_t<uint64_t> data,
         uint64_t signal_head,
         uint64_t signal_tail,
@@ -40,14 +39,15 @@ analyze(py::array_t<uint64_t> raw_data,
 {
     uint64_t idx = 0, head_idx = 0, tail_idx = 0;
     system_clock::time_point prev = system_clock::now();
-    for (int i = 0; i < xdata.size(); i++) {
+    for (py::ssize_t i = 0; i < xdata.size(); i++) {
         uint64_t t = xdata.at(i);
         uint64_t head = t + signal_head;
         uint64_t tail = t + signal_tail;
 
         head_idx = search_head(raw_data, idx, head);
         if (head_idx == static_cast<uint64_t>(raw_data.size())) {
-            std::cout << "[WARN] head index got out of bounds" << std::endl;
+            std::cout << "[cqdyne_analyzer][WARN] head index got out of bounds. idx = " << idx
+                      << "." << std::endl;
             return;
         }
         tail_idx = search_tail(raw_data, head_idx, tail);
@@ -61,7 +61,7 @@ analyze(py::array_t<uint64_t> raw_data,
         if (i > 0 && i % print_each == 0) {
             system_clock::time_point now = system_clock::now();
             double r = static_cast<double>(i) / xdata.size() * 100.0;
-            std::cout << i << "/" << xdata.size() << "( " << r << "%) : "
+            std::cout << "[cqdyne_analyzer][" << i << "/" << xdata.size() << "](" << r << "%) : "
                       << std::chrono::duration_cast<std::chrono::milliseconds>(now - prev).count()
                       << " ms" << std::endl;
             prev = now;
