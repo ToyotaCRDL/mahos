@@ -80,4 +80,4 @@ But we are working toward better documentation.
 It could be used at least to discover which module or class is important.
 
 You will eventually be required to read the codes to fully understand the mahos internals.
-We are very happy if you could report some bugs / add missing documentation / give us any feedbacks.
+We are very happy if you could :doc:`report / fix bugs, add missing code / documentation, or give us any feedbacks<contributing>`.

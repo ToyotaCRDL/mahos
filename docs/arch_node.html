@@ -432,11 +432,11 @@ document.write(`
                   
   <section id="node-client-and-communication">
 <h1>Node, Client, and Communication<a class="headerlink" href="#node-client-and-communication" title="Permalink to this heading">#</a></h1>
-<p>MAHOS is a <cite>distributed system</cite>, which consists of multiple programs (processes) communicating each other.
+<p>MAHOS helps to build <cite>distributed systems</cite>, which consists of multiple programs (processes) communicating each other.
 We call these programs <a class="reference internal" href="glossary.html#term-node"><span class="xref std std-term">nodes</span></a> (<a class="reference internal" href="node/Node.html#mahos.node.node.Node" title="mahos.node.node.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>).
 A node usually provides some services for other nodes.
 The <a class="reference internal" href="glossary.html#term-node-client"><span class="xref std std-term">node client</span></a> (<a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient" title="mahos.node.client.NodeClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeClient</span></code></a>) provides the standard way to access node’s functions.
-The core functionalities of node systems are implementated in <a class="reference internal" href="node/index.html#mahos-node"><span class="std std-ref">mahos.node</span></a> package.</p>
+The core functionalities of node systems are implemented in <a class="reference internal" href="node/index.html#mahos-node"><span class="std std-ref">mahos.node</span></a> package.</p>
 <p>The node <a class="reference internal" href="node/generated/mahos.node.comm.Context.html#mahos.node.comm.Context" title="mahos.node.comm.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">communication</span></code></a> is currently based on <a class="reference external" href="https://zeromq.org/">ZeroMQ</a> library.
 The transport layer is abstracted by ZeroMQ, and we can choose different transports by changing a configuration (the endpoint) only.
 However, we assume TCP unless otherwise specified.

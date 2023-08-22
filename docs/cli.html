@@ -418,24 +418,25 @@ document.write(`
 <p>After installing mahos package, a command <code class="docutils literal notranslate"><span class="pre">mahos</span></code> is installed.
 This command serves as a command line interface (CLI) to use mahos.
 The <code class="docutils literal notranslate"><span class="pre">mahos</span></code> CLI provides several sub-commands described below.</p>
+<section id="node-operations">
+<h2>Node operations<a class="headerlink" href="#node-operations" title="Permalink to this heading">#</a></h2>
 <section id="common-arguments">
-<h2>Common arguments<a class="headerlink" href="#common-arguments" title="Permalink to this heading">#</a></h2>
+<h3>Common arguments<a class="headerlink" href="#common-arguments" title="Permalink to this heading">#</a></h3>
+<p>There are common arguments for node operation commands:</p>
 <section id="c-config-file">
-<h3>-c [config file]<a class="headerlink" href="#c-config-file" title="Permalink to this heading">#</a></h3>
-<p>To use CLI, you have to prepare toml-based <a class="reference internal" href="conf.html"><span class="doc">configuration file</span></a>.
+<h4>-c [config file]<a class="headerlink" href="#c-config-file" title="Permalink to this heading">#</a></h4>
+<p>To operate on MAHOS nodes, you have to prepare toml-based <a class="reference internal" href="conf.html"><span class="doc">configuration file</span></a>.
 The <code class="docutils literal notranslate"><span class="pre">-c</span></code> option specifies the path to config file.
 Defaults to <code class="docutils literal notranslate"><span class="pre">conf.toml</span></code>.</p>
 </section>
 <section id="h-hostname">
-<h3>-H [hostname]<a class="headerlink" href="#h-hostname" title="Permalink to this heading">#</a></h3>
+<h4>-H [hostname]<a class="headerlink" href="#h-hostname" title="Permalink to this heading">#</a></h4>
 <p>CLI command usually targets a node.
 The full-name of the node consists of hostname and nodename.
 The <code class="docutils literal notranslate"><span class="pre">-H</span></code> option specifies the hostname part.
 Defaults to real hostname (<code class="docutils literal notranslate"><span class="pre">platform.uname().node</span></code>) if it is in the config file, or <code class="docutils literal notranslate"><span class="pre">localhost</span></code>.</p>
 </section>
 </section>
-<section id="node-operations">
-<h2>Node operations<a class="headerlink" href="#node-operations" title="Permalink to this heading">#</a></h2>
 <section id="mahos-run">
 <span id="id1"></span><h3>mahos run<a class="headerlink" href="#mahos-run" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">run</span> <span class="pre">[nodename]</span></code> starts a mahos node.</p>
@@ -534,12 +535,12 @@ For each client, <code class="docutils literal notranslate"><span class="pre">cl
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-arguments">Common arguments</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#c-config-file">-c [config file]</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#h-hostname">-H [hostname]</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#node-operations">Node operations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-arguments">Common arguments</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#c-config-file">-c [config file]</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#h-hostname">-H [hostname]</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#node-operations">Node operations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-run">mahos run</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-launch">mahos launch</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-log">mahos log</a></li>

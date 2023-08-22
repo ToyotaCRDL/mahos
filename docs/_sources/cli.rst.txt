@@ -9,26 +9,28 @@ After installing mahos package, a command ``mahos`` is installed.
 This command serves as a command line interface (CLI) to use mahos.
 The ``mahos`` CLI provides several sub-commands described below.
 
-Common arguments
-----------------
+Node operations
+---------------
 
--c [config file]
+Common arguments
 ^^^^^^^^^^^^^^^^
 
-To use CLI, you have to prepare toml-based :doc:`configuration file <conf>`.
+There are common arguments for node operation commands:
+
+-c [config file]
+................
+
+To operate on MAHOS nodes, you have to prepare toml-based :doc:`configuration file <conf>`.
 The ``-c`` option specifies the path to config file.
 Defaults to ``conf.toml``.
 
 -H [hostname]
-^^^^^^^^^^^^^^
+.............
 
 CLI command usually targets a node.
 The full-name of the node consists of hostname and nodename.
 The ``-H`` option specifies the hostname part.
 Defaults to real hostname (``platform.uname().node``) if it is in the config file, or ``localhost``.
-
-Node operations
----------------
 
 .. _mahos run:
 

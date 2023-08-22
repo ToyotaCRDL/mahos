@@ -14,7 +14,7 @@ Instrument
 ----------
 
 An instrument driver is implemented as a subclass of :class:`Instrument <mahos.inst.instrument.Instrument>`.
-The instrument should provide :ref:`instrument-api` by overriding private methods like ``_start()``.
+The instrument should provide :ref:`instrument-api` by overriding methods like ``start()``.
 
 InstrumentOverlay
 -----------------
