@@ -1,0 +1,51 @@
+﻿mahos.inst.piezo.E727\_3\_USB
+=============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.piezo
+
+.. autoclass:: E727_3_USB
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~E727_3_USB.__init__
+      ~E727_3_USB.close
+      ~E727_3_USB.close_usb
+      ~E727_3_USB.configure
+      ~E727_3_USB.get
+      ~E727_3_USB.get_error
+      ~E727_3_USB.get_pos
+      ~E727_3_USB.get_pos_ont
+      ~E727_3_USB.get_range
+      ~E727_3_USB.get_target
+      ~E727_3_USB.init_device
+      ~E727_3_USB.init_param
+      ~E727_3_USB.query_on_target
+      ~E727_3_USB.query_pos
+      ~E727_3_USB.query_servo
+      ~E727_3_USB.query_target_pos
+      ~E727_3_USB.set
+      ~E727_3_USB.set_servo
+      ~E727_3_USB.set_target
+      ~E727_3_USB.set_target_X
+      ~E727_3_USB.set_target_Y
+      ~E727_3_USB.set_target_Z
+      ~E727_3_USB.set_target_pos
+      ~E727_3_USB.start
+      ~E727_3_USB.start_servo
+      ~E727_3_USB.stop
+      ~E727_3_USB.update_target_pos
+   
+   
+
+   
+   
+   

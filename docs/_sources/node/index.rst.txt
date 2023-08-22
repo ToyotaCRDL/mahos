@@ -20,3 +20,4 @@ The mahos.node includes core implementation of mahos's node system.
    comm.Publisher
    comm.Requester
    log_broker.LogBroker
+   param_server.ParamServer

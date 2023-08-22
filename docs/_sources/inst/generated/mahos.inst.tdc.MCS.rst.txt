@@ -1,0 +1,69 @@
+﻿mahos.inst.tdc.MCS
+==================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.tdc
+
+.. autoclass:: MCS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MCS.__init__
+      ~MCS.clear
+      ~MCS.configure
+      ~MCS.configure_base_range_bin
+      ~MCS.configure_base_range_bin_save
+      ~MCS.configure_range_bin
+      ~MCS.convert_raw_events
+      ~MCS.get
+      ~MCS.get_binwidth
+      ~MCS.get_bitshift
+      ~MCS.get_count
+      ~MCS.get_data
+      ~MCS.get_data_point
+      ~MCS.get_data_setting
+      ~MCS.get_mcssetting
+      ~MCS.get_range
+      ~MCS.get_range_bin
+      ~MCS.get_raw_events
+      ~MCS.get_setting
+      ~MCS.get_status
+      ~MCS.get_timebin
+      ~MCS.load_config
+      ~MCS.load_lst_file
+      ~MCS.remove_saved_file
+      ~MCS.resume
+      ~MCS.run_command
+      ~MCS.set
+      ~MCS.set_bitshift
+      ~MCS.set_data_setting
+      ~MCS.set_mcssetting
+      ~MCS.set_range
+      ~MCS.set_reference_clock
+      ~MCS.set_save_file_name
+      ~MCS.set_setting
+      ~MCS.set_sweep_preset
+      ~MCS.start
+      ~MCS.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MCS.EOS_DEADTIME
+      ~MCS.MAXCNT
+      ~MCS.nDev
+   
+   

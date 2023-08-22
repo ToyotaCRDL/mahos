@@ -1,0 +1,48 @@
+﻿mahos.msgs.podmr\_msgs.PODMRData
+================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.msgs.podmr_msgs
+
+.. autoclass:: PODMRData
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PODMRData.__init__
+      ~PODMRData.can_resume
+      ~PODMRData.get_bin
+      ~PODMRData.get_fit_xdata
+      ~PODMRData.get_fit_ydata
+      ~PODMRData.get_method
+      ~PODMRData.get_pulse_params
+      ~PODMRData.get_range
+      ~PODMRData.get_raw_xdata
+      ~PODMRData.get_sampling_rate
+      ~PODMRData.get_total_scale
+      ~PODMRData.get_xdata
+      ~PODMRData.get_ydata
+      ~PODMRData.has_data
+      ~PODMRData.has_raw_data
+      ~PODMRData.init_xdata
+      ~PODMRData.is_CPlike
+      ~PODMRData.is_correlation
+      ~PODMRData.is_partial
+      ~PODMRData.is_supersampling
+      ~PODMRData.is_sweepN
+      ~PODMRData.measurement_time
+      ~PODMRData.partial
+      ~PODMRData.sweeps
+   
+   
+
+   
+   
+   

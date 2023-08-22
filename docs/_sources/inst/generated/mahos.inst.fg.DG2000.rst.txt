@@ -1,0 +1,56 @@
+﻿mahos.inst.fg.DG2000
+====================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.fg
+
+.. autoclass:: DG2000
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DG2000.__init__
+      ~DG2000.configure
+      ~DG2000.configure_CW
+      ~DG2000.configure_gate
+      ~DG2000.get
+      ~DG2000.get_bounds
+      ~DG2000.set
+      ~DG2000.set_amplitude
+      ~DG2000.set_burst
+      ~DG2000.set_burst_gate_polarity
+      ~DG2000.set_burst_idle_level
+      ~DG2000.set_burst_mode
+      ~DG2000.set_burst_trig_slope
+      ~DG2000.set_burst_trig_source
+      ~DG2000.set_freq
+      ~DG2000.set_function
+      ~DG2000.set_output
+      ~DG2000.set_output_impedance
+      ~DG2000.set_period
+      ~DG2000.set_phase
+      ~DG2000.set_reference_clock
+      ~DG2000.set_square_duty
+      ~DG2000.trigger
+      ~DG2000.update_amplitude_bounds
+      ~DG2000.update_freq_bounds
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DG2000.IDLE_LEVEL
+      ~DG2000.TRIG_SOURCE
+   
+   

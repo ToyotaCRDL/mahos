@@ -1,0 +1,44 @@
+﻿mahos.gui.camera.CameraWidget
+=============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.camera
+
+.. autoclass:: CameraWidget
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CameraWidget.__init__
+      ~CameraWidget.finalize
+      ~CameraWidget.init_connection
+      ~CameraWidget.init_widget
+      ~CameraWidget.init_with_status
+      ~CameraWidget.load_data
+      ~CameraWidget.request_start
+      ~CameraWidget.request_stop
+      ~CameraWidget.save_data
+      ~CameraWidget.set_widget_values
+      ~CameraWidget.sizeHint
+      ~CameraWidget.update_acquisitions_box
+      ~CameraWidget.update_image
+      ~CameraWidget.update_roi_boxes
+      ~CameraWidget.update_state
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

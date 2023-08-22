@@ -1,0 +1,42 @@
+﻿mahos.gui.iodmr.IODMRMainWindow
+===============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.iodmr
+
+.. autoclass:: IODMRMainWindow
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~IODMRMainWindow.__init__
+      ~IODMRMainWindow.finalize_sweep
+      ~IODMRMainWindow.init_connection
+      ~IODMRMainWindow.init_menu
+      ~IODMRMainWindow.init_view
+      ~IODMRMainWindow.init_with_status
+      ~IODMRMainWindow.load_data
+      ~IODMRMainWindow.request_start
+      ~IODMRMainWindow.request_stop
+      ~IODMRMainWindow.save_data
+      ~IODMRMainWindow.start_sweep
+      ~IODMRMainWindow.update_data
+      ~IODMRMainWindow.update_view
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

@@ -1,0 +1,49 @@
+﻿mahos.inst.camera.BaslerPylonCamera
+===================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.camera
+
+.. autoclass:: BaslerPylonCamera
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BaslerPylonCamera.__init__
+      ~BaslerPylonCamera.close
+      ~BaslerPylonCamera.configure
+      ~BaslerPylonCamera.configure_continuous
+      ~BaslerPylonCamera.configure_hard_trigger
+      ~BaslerPylonCamera.configure_soft_trigger
+      ~BaslerPylonCamera.get
+      ~BaslerPylonCamera.get_frame
+      ~BaslerPylonCamera.get_frame_soft_trig_imm
+      ~BaslerPylonCamera.hasattr
+      ~BaslerPylonCamera.load_default
+      ~BaslerPylonCamera.poll_loop_continuous
+      ~BaslerPylonCamera.poll_loop_hard_trig
+      ~BaslerPylonCamera.reset
+      ~BaslerPylonCamera.set
+      ~BaslerPylonCamera.set_binning
+      ~BaslerPylonCamera.set_burst_frames
+      ~BaslerPylonCamera.set_exposure_time
+      ~BaslerPylonCamera.set_frame_burst_trigger
+      ~BaslerPylonCamera.set_frame_rate
+      ~BaslerPylonCamera.set_frame_start_trigger
+      ~BaslerPylonCamera.set_pixel_format
+      ~BaslerPylonCamera.set_roi
+      ~BaslerPylonCamera.start
+      ~BaslerPylonCamera.stop
+   
+   
+
+   
+   
+   

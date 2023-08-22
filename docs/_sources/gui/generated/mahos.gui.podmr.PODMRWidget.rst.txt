@@ -1,0 +1,79 @@
+﻿mahos.gui.podmr.PODMRWidget
+===========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.podmr
+
+.. autoclass:: PODMRWidget
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PODMRWidget.__init__
+      ~PODMRWidget.adjust_analysis_timing
+      ~PODMRWidget.apply_fg_widgets
+      ~PODMRWidget.apply_meas_widgets
+      ~PODMRWidget.apply_plot_widgets
+      ~PODMRWidget.check_ddphase
+      ~PODMRWidget.discard_data
+      ~PODMRWidget.export_data
+      ~PODMRWidget.finalize
+      ~PODMRWidget.get_fg_mode
+      ~PODMRWidget.get_fg_mode_dict
+      ~PODMRWidget.get_fg_params
+      ~PODMRWidget.get_method
+      ~PODMRWidget.get_params
+      ~PODMRWidget.get_plot_params
+      ~PODMRWidget.get_plottable_data
+      ~PODMRWidget.has_fg
+      ~PODMRWidget.init_connection
+      ~PODMRWidget.init_delay
+      ~PODMRWidget.init_radiobuttons
+      ~PODMRWidget.init_widgets
+      ~PODMRWidget.init_with_status
+      ~PODMRWidget.load_data
+      ~PODMRWidget.refresh_plot
+      ~PODMRWidget.request_start
+      ~PODMRWidget.request_stop
+      ~PODMRWidget.reset_tau_modes
+      ~PODMRWidget.round_box_values
+      ~PODMRWidget.save_data
+      ~PODMRWidget.set_method
+      ~PODMRWidget.set_plot_mode
+      ~PODMRWidget.set_ref_mode
+      ~PODMRWidget.set_tau_mode
+      ~PODMRWidget.start
+      ~PODMRWidget.switch_fg
+      ~PODMRWidget.switch_method
+      ~PODMRWidget.switch_partial
+      ~PODMRWidget.update_Nstop
+      ~PODMRWidget.update_buffer
+      ~PODMRWidget.update_data
+      ~PODMRWidget.update_indicator
+      ~PODMRWidget.update_inst_bounds
+      ~PODMRWidget.update_plot_enable
+      ~PODMRWidget.update_plot_params
+      ~PODMRWidget.update_save_button
+      ~PODMRWidget.update_state
+      ~PODMRWidget.update_stop
+      ~PODMRWidget.update_widgets
+      ~PODMRWidget.validate_pulse
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PODMRWidget.METHODS
+   
+   

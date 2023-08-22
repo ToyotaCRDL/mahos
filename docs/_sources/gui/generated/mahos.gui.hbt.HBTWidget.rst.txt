@@ -1,0 +1,48 @@
+﻿mahos.gui.hbt.HBTWidget
+=======================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.hbt
+
+.. autoclass:: HBTWidget
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HBTWidget.__init__
+      ~HBTWidget.apply_widgets
+      ~HBTWidget.export_data
+      ~HBTWidget.finalize
+      ~HBTWidget.get_plot_params
+      ~HBTWidget.get_plottable_data
+      ~HBTWidget.init_connection
+      ~HBTWidget.init_widgets
+      ~HBTWidget.init_with_status
+      ~HBTWidget.load_data
+      ~HBTWidget.refresh_plot
+      ~HBTWidget.request_start
+      ~HBTWidget.request_stop
+      ~HBTWidget.save_data
+      ~HBTWidget.update_buffer
+      ~HBTWidget.update_data
+      ~HBTWidget.update_plot_enable
+      ~HBTWidget.update_plot_params
+      ~HBTWidget.update_state
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

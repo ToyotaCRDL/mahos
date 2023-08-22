@@ -1,0 +1,66 @@
+﻿mahos.inst.sg.N5182B
+====================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.sg
+
+.. autoclass:: N5182B
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~N5182B.__init__
+      ~N5182B.abort
+      ~N5182B.configure
+      ~N5182B.configure_CW
+      ~N5182B.configure_point_trig_freq_sweep
+      ~N5182B.get
+      ~N5182B.get_bounds
+      ~N5182B.get_freq_bounds
+      ~N5182B.get_power_bounds
+      ~N5182B.initiate
+      ~N5182B.query_power_condition
+      ~N5182B.set
+      ~N5182B.set_dm
+      ~N5182B.set_dm_invert
+      ~N5182B.set_dm_source
+      ~N5182B.set_freq_CW
+      ~N5182B.set_freq_list
+      ~N5182B.set_freq_mode
+      ~N5182B.set_freq_range
+      ~N5182B.set_init_cont
+      ~N5182B.set_list_type
+      ~N5182B.set_modulation
+      ~N5182B.set_output
+      ~N5182B.set_point_trig_source
+      ~N5182B.set_power
+      ~N5182B.set_power_mode
+      ~N5182B.set_route_trig_out
+      ~N5182B.set_sweep_points
+      ~N5182B.set_trig_source
+      ~N5182B.start
+      ~N5182B.stop
+      ~N5182B.trigger
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~N5182B.EXT_TRIG_SOURCE
+      ~N5182B.FREQ_MODE
+      ~N5182B.POWER_MODE
+      ~N5182B.TRIG_OUT_ROUTE
+      ~N5182B.TRIG_SOURCE
+   
+   
