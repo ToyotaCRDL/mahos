@@ -52,6 +52,17 @@ class QdyneIO(object):
             return update_data(d)
 
     def export_data(self, filename: str, data: QdyneData, params: dict | None = None):
+        """
+
+        :param filename: supported extensions: .png, .pdf, and .eps.
+        :param data: single data
+        :param params.trace: If True, plot time-domain trace data too.
+        :type params.trace: bool
+        :param params.pulse: If True, plot a pulse-histogram data too. Requires raw_data.
+        :type params.pulse: bool
+
+        """
+
         if params is None:
             params = {}
 
@@ -84,6 +95,10 @@ class QdyneIO(object):
             plt.close()
 
         if params.get("pulse", False):
+            if not data.has_raw_data():
+                self.logger.error("params.pulse is True but no raw_data.")
+                return
+
             T = data.get_period_bins()
             tbin = data.get_bin()
             mod_sec = (data.raw_data % T) * tbin

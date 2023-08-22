@@ -176,6 +176,8 @@ class DTG5000(VisaInstrument):
     :type root_local: str
     :param root_remote: Root directory in remote DTG.
     :type root_remote: str
+    :params channels: mapping from channel names to indices.
+    :type channels: dict[str | bytes, int]
 
     :param start_delay_sec: (default: 1.0) Delay between output relay on and sequencer start.
         This is to wait the output relay to stabilize.

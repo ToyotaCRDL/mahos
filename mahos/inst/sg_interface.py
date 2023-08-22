@@ -7,7 +7,7 @@ Typed Interface for Signal Generator.
 
 """
 
-from typing import Optional
+from __future__ import annotations
 
 from .interface import InstrumentInterface
 
@@ -72,15 +72,20 @@ class SGInterface(InstrumentInterface):
         return self.configure({"mode": "cw", "freq": freq, "power": power})
 
     def configure_point_trig_freq_sweep(
-        self, start: float, stop: float, num: int, power: float, params: Optional[dict] = None
+        self, start: float, stop: float, num: int, power: float, params: dict | None = None
     ) -> bool:
         """Configure frequency sweep with point trigger.
 
         :param start: (Hz) start frequnecy.
+        :type start: float
         :param stop: (Hz) stop frequnecy.
+        :type stop: float
         :param num: number of frequnecy points.
+        :type num: int
         :param power: (dBm) RF power.
+        :type power: float
         :param params: other parameters.
+        :type params: dict[str, Any]
 
         """
 

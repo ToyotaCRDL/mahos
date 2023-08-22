@@ -7,7 +7,7 @@ Typed Interface for Piezo Stage.
 
 """
 
-from typing import Union, Sequence, Optional
+from __future__ import annotations
 
 from .interface import InstrumentInterface
 
@@ -15,7 +15,7 @@ from .interface import InstrumentInterface
 class PiezoInterface(InstrumentInterface):
     """Interface for Piezo."""
 
-    def set_target(self, value: Union[dict, Sequence[float]]) -> bool:
+    def set_target(self, value: dict | list[float]) -> bool:
         """Set the piezo target position."""
 
         return self.set("target", value)
@@ -57,7 +57,7 @@ class AOPiezoInterface(PiezoInterface):
     def configure_clock(
         self,
         samples: int,
-        rate: Optional[float] = None,
+        rate: float | None = None,
         clock_dir: bool = True,
         finite: bool = True,
         timeout_sec: float = 5.0,

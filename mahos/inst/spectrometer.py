@@ -7,9 +7,9 @@ Spectrometer module.
 
 """
 
+from __future__ import annotations
 import sys
 import os
-import typing as T
 
 import numpy as np
 import clr
@@ -39,7 +39,12 @@ from PrincetonInstruments.LightField.AddIns import FrameCombinationMethod  # noq
 
 
 class LightField(Instrument):
-    """Wrapper for LightField Software from Princeton Instrument."""
+    """Wrapper for LightField Software from Princeton Instrument.
+
+    :param base_config: A base configuration (Experiment) name to load on init.
+    :param base_config: str | None
+
+    """
 
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
@@ -70,12 +75,12 @@ class LightField(Instrument):
             self.logger.error(f"{name} is not a valid base_config.")
             return False
 
-    def get_base_config(self) -> T.Optional[str]:
+    def get_base_config(self) -> str | None:
         """get current base config."""
 
         return self._current_base_config
 
-    def get_base_configs(self) -> T.List[str]:
+    def get_base_configs(self) -> list[str]:
         """get list of available base configs."""
 
         return list(self.expt.GetSavedExperiments())
@@ -129,7 +134,7 @@ class LightField(Instrument):
     def get_grating_center_wavelength(self) -> float:
         return self.expt.GetValue(SpectrometerSettings.GratingCenterWavelength)
 
-    def capture(self) -> T.Optional[np.ndarray]:
+    def capture(self) -> np.ndarray | None:
         nframes = 1
         frames = self.expt.Capture(nframes)
         if frames.Regions.Length != 1:

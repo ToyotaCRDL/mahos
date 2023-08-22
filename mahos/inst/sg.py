@@ -7,7 +7,7 @@ Signal Generator module.
 
 """
 
-import typing as T
+from __future__ import annotations
 import enum
 
 from .visa_instrument import VisaInstrument
@@ -22,10 +22,10 @@ class Mode(enum.Enum):
 class N5182B(VisaInstrument):
     """Keysight N5182B/N5172B Vector Signal Generator.
 
-    :param power_bounds: `Required` Power bounds in dBm (min, max).
-    :type power_bounds: Tuple[float, float]
-    :param freq_bounds: `Required` Frequency bounds in Hz (min, max).
-    :type freq_bounds: Tuple[float, float]
+    :param power_bounds: Power bounds in dBm (min, max).
+    :type power_bounds: tuple[float, float]
+    :param freq_bounds: Frequency bounds in Hz (min, max).
+    :type freq_bounds: tuple[float, float]
     :param point_trig_freq_sweep.trig: point trigger source on freq sweep. one of TRIG_SOURCE.
     :type point_trig_freq_sweep.trig: str
     :param point_trig_freq_sweep.ext_trig: ext trig source on freq sweep. one of EXT_TRIG_SOURCE.
@@ -169,7 +169,7 @@ class N5182B(VisaInstrument):
         self.inst.write("POW:MODE " + mode)
         return True
 
-    def _fmt_freq(self, freq) -> T.Optional[str]:
+    def _fmt_freq(self, freq) -> str | None:
         """Format frequency as string.
 
         Frequency may be passed as string (e.g. '100 MHz') or number (1.0E8).
@@ -479,10 +479,10 @@ class N5182B(VisaInstrument):
 class MG3710E(VisaInstrument):
     """Anritsu MG3710E Vector Signal Generator.
 
-    :param power_bounds: `Required` Power bounds in dBm (min, max).
-    :type power_bounds: Tuple[float, float]
-    :param freq_bounds: `Required` Frequency bounds in Hz (min, max).
-    :type freq_bounds: Tuple[float, float]
+    :param power_bounds: Power bounds in dBm (min, max).
+    :type power_bounds: tuple[float, float]
+    :param freq_bounds: Frequency bounds in Hz (min, max).
+    :type freq_bounds: tuple[float, float]
     :param point_trig_freq_sweep.trig: trigger source on frequency sweep. one of TRIG_SOURCE.
     :type point_trig_freq_sweep.trig: str
 
@@ -620,7 +620,7 @@ class MG3710E(VisaInstrument):
         self.inst.write("POW:MODE " + mode)
         return True
 
-    def _fmt_freq(self, freq) -> T.Optional[str]:
+    def _fmt_freq(self, freq) -> str | None:
         """Format frequency as string.
 
         Frequency may be passed as string (e.g. '100 MHz') or number (1.0E8).
@@ -930,7 +930,14 @@ class MG3710E(VisaInstrument):
 
 
 class DS_SG(VisaInstrument):
-    """DS Instruments Signal Generator."""
+    """DS Instruments Signal Generator.
+
+    :param power_bounds: Power bounds in dBm (min, max).
+    :type power_bounds: tuple[float, float]
+    :param freq_bounds: Frequency bounds in Hz (min, max).
+    :type freq_bounds: tuple[float, float]
+
+    """
 
     def __init__(self, name, conf, prefix=None):
         conf["write_termination"] = "\n"
@@ -982,7 +989,7 @@ class DS_SG(VisaInstrument):
         self.inst.write("ABORT")
         return True
 
-    def _fmt_freq(self, freq) -> T.Optional[str]:
+    def _fmt_freq(self, freq) -> str | None:
         """Format frequency as string.
 
         Frequency may be passed as string (e.g. '100 MHz') or number (1.0E8).

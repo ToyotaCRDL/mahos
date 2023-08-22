@@ -39,7 +39,7 @@ class MCS(Instrument):
     :type home: str
     :param home_raw_events: (default: "C:\\mcs8x64") Home directory to save RawEvents data.
     :type home_raw_events: str
-    :param remove_lst: (default: True) Remove *.lst file after loading it.
+    :param remove_lst: (default: True) Remove .lst file after loading it.
     :type remove_lst: bool
     :param lst_channels: (default: [8, 9]) Collected channels for lst file.
         Under a setting, default value [8, 9] corresponds to STOP1 and STOP2.
@@ -181,14 +181,14 @@ class MCS(Instrument):
     def load_config(self, fn: str) -> bool:
         """Load configuration file for MCS.
 
-        Setting file (*.set) is loaded by loadcnf command.
-        Control (*.ctl) is executed by run command.
+        Setting file (.set) is loaded by loadcnf command.
+        Control (.ctl) is executed by run command.
 
         Setting file is logically proper,
         however, loadcnf command can cause hang-up in some cases.
         (depending on MCS software versions or config content, details unknown.)
         This problem can be avoided sometimes using run command instead of loadcnf.
-        The *.set file can be just renamed to *.ctl for this use case.
+        The .set file can be just renamed to .ctl for this use case.
 
         """
 

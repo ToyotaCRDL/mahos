@@ -7,7 +7,7 @@ Typed Interface for Function Generator.
 
 """
 
-import typing as T
+from __future__ import annotations
 
 from .interface import InstrumentInterface
 
@@ -23,7 +23,7 @@ class FGInterface(InstrumentInterface):
     def get_bounds(self) -> dict:
         """Get bounds.
 
-        Returns:
+        :returns: dict[str, tuple[float, float]] with following two keys.
             ampl (low, high): (V) voltage amplitude bounds in Vpp (peak-to-peak).
             freq (low, high): (Hz) frequency bounds.
 
@@ -60,7 +60,7 @@ class FGInterface(InstrumentInterface):
         ampl_vpp: float,
         phase_deg: float,
         source: str = "",
-        polarity: T.Optional[bool] = None,
+        polarity: bool | None = None,
         idle_level: str = "",
         ch: int = 1,
         reset: bool = True,

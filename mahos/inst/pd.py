@@ -95,6 +95,7 @@ class LUCI10(Instrument):
     2. Place C DLL (C:\\Program Files (x86)\\FEMTO\\LUCI-10\\Driver\\LUCI_10_x64.dll) somewhere.
 
     :param dll_path: The path to the directory containing DLL.
+    :type dll_path: str
     :param index: (default: 1) Index of LUCI10 device.
     :type index: int
 

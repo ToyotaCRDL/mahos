@@ -23,7 +23,12 @@ from ..msgs.confocal_msgs import Axis
 
 
 class E727_3_USB(Instrument):
-    """E727.3 driver using USB connection of PIPython."""
+    """E727.3 driver using USB connection of PIPython.
+
+    :param start_servo: (default: True) if True, start servo on init.
+    :type start_servo: bool
+
+    """
 
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
@@ -213,6 +218,27 @@ class E727_3_USB(Instrument):
 
 
 class E727_3_USB_AO(E727_3_USB):
+    """E727.3 driver using USB connection of PIPython and DAQ AnalogOut.
+
+    :param start_servo: (default: True) if True, start servo on init.
+    :type start_servo: bool
+    :param lines: list of strings to designate DAQ AnalogOut physical channels.
+    :type lines: list[str]
+    :param scale_volt_per_um: the AnalogOut voltage scale in V / um.
+        the output voltage is determined by: (pos_um - offset_um) * scale_volt_per_um.
+    :type scale_volt_per_um: float
+    :param offset_um: the AnalogOut voltage offset in um. see scale_volt_per_um too.
+    :type offset_um: float
+    :param transform: (default: identity matrix) a 3x3 linear transformation matrix
+        from (real) target coordinate to command coordinate.
+        This is usable for tilt correction etc.
+    :type transform: list[list[float]]
+    :param range: travel range in target coordinate in the following format:
+        [ [xmin, xmax], [ymin, ymax], [zmin, zmax] ].
+    :type range: list[tuple[float, float]]
+
+    """
+
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
         self.init_device()

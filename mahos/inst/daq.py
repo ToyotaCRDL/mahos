@@ -70,6 +70,14 @@ def _device_name(ident: str) -> str:
 
 
 class ConfigurableTask(Instrument):
+    """Base class for configurable DAQ Tasks.
+
+    :ivar running: True when measurement is running.
+    :ivar finite: True when configured as finite sampling task.
+    :ivar task: The PyDAQmx Task.
+
+    """
+
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
         self.running = False
@@ -229,8 +237,10 @@ class ClockDivider(ConfigurableTask):
 class AnalogOut(ConfigurableTask):
     """A configurable DAQ Task class for Analog Output voltage channel(s).
 
-    :param list lines: Sequence of strings to designate DAQ's physical channels.
-    :param list bounds: bounds (min, max) values of the output voltage per channels.
+    :param lines: list of strings to designate DAQ's physical channels.
+    :type lines: list[str]
+    :param bounds: bounds (min, max) values of the output voltage per channels.
+    :type bounds: list[tuple[float, float]]
 
     """
 
@@ -477,7 +487,7 @@ class AnalogIn(ConfigurableTask):
     In clock-mode, readings are synchronized to a clock, buffered, and read at each `cb_samples`.
     In on-demand-mode, data are read on get("data") request.
 
-    :param lines: Sequence of strings to designate DAQ's physical channels.
+    :param lines: list of strings to designate DAQ's physical channels.
     :type lines: list[str]
 
     :param clock_mode: If True (False), configures as clock-mode (on-demand-mode).
@@ -1080,7 +1090,7 @@ class SingleShotTask(Instrument):
 class DigitalOut(SingleShotTask):
     """A DAQ Task class for a Digital Output channels.
 
-    :param lines: Sequence of strings to designate DAQ's physical channels.
+    :param lines: list of strings to designate DAQ's physical channels.
     :type lines: list[str]
     :param auto_start: If True, StartTask() is called in the constructor.
     :type auto_start: bool
@@ -1363,125 +1373,6 @@ class DICounter(SingleShotTask):
         data = data.value
         self._count += data
         return data
-
-    # Standard API
-
-    def get(self, key: str, args=None):
-        if key == "data":
-            return self.get_data()
-        else:
-            self.logger.error(f"unknown get() key: {key}")
-            return None
-
-
-class AOPutter(SingleShotTask):
-    """[DEPRECATED] Use AnalogOut instead."""
-
-    def __init__(self, name, conf, prefix=None):
-        SingleShotTask.__init__(self, name, conf=conf, prefix=prefix)
-
-        self.check_required_conf(("line", "line_num", "min_val", "max_val"))
-        line = self.conf["line"]
-        self.line_num = self.conf["line_num"]
-        self.min_val = self.conf["min_val"]
-        self.max_val = self.conf["max_val"]
-        self.bounds = (self.min_val, self.max_val)
-
-        self.task.CreateAOVoltageChan(
-            line, "", self.min_val, self.max_val, D.DAQmx_Val_Volts, None
-        )
-
-        if self.conf.get("auto_start", True):
-            self.start()
-
-    def clip(self, v):
-        """Clip the voltage value if it exceeds max or min bounds."""
-
-        if v > self.max_val:
-            v = self.max_val
-        if v < self.min_val:
-            v = self.min_val
-
-        return v
-
-    def set_output(self, volt) -> bool:
-        """Output analog voltages. Volt can be int (for 1 channel), tuple, list or ndarray.
-        Voltages are clipped automatically.
-
-        """
-
-        if isinstance(volt, (int, float)):
-            if self.line_num != 1:
-                self.logger.error("Scalar output value is passed for multiple channels.")
-                return False
-            volt = self.clip(volt)
-        elif isinstance(volt, (tuple, list, np.ndarray)):
-            if self.line_num != len(volt):
-                self.logger.error("Number of output values is different from number of channels.")
-                return False
-            volt = [self.clip(v) for v in volt]
-        else:
-            self.logger.error("Voltage must be int, tuple, list or ndarray.")
-            return False
-
-        self.task.WriteAnalogF64(
-            1, 1, 10.0, D.DAQmx_Val_GroupByChannel, np.array(volt, dtype=np.float64), None, None
-        )
-
-        return True
-
-    # Standard API
-
-    def set(self, key: str, value=None) -> bool:
-        if key == "voltage":
-            return self.set_output(value)
-        else:
-            self.logger.error(f"unknown set() key: {key}")
-            return False
-
-
-class AIReader(SingleShotTask):
-    """[DEPRECATED] Use AnalogIn instead."""
-
-    def __init__(self, name, conf, prefix=None):
-        SingleShotTask.__init__(self, name, conf=conf, prefix=prefix)
-
-        self.check_required_conf(("line", "line_num", "min_val", "max_val"))
-        line = self.conf["line"]
-        self.line_num = self.conf["line_num"]
-        self.min_val = self.conf["min_val"]
-        self.max_val = self.conf["max_val"]
-        self.bounds = (self.min_val, self.max_val)
-
-        self.task.CreateAIVoltageChan(
-            line, "", D.DAQmx_Val_RSE, self.min_val, self.max_val, D.DAQmx_Val_Volts, None
-        )
-
-        if self.conf.get("auto_start", True):
-            self.start()
-
-    def get_data(self, average: int = 10):
-        """Read out analog voltages.
-
-        if line_num is 1, the value is returned in float.
-        Otherwise values are returned in ndarray (size: line_num, type: float64).
-
-        Average specifies number of samples per channels, which is used for averaging.
-
-        """
-
-        volt = np.zeros(average * self.line_num, dtype=np.float64)
-        read_samps = D.int32()
-
-        self.task.ReadAnalogF64(
-            average, 1, D.DAQmx_Val_GroupByChannel, volt, len(volt), D.byref(read_samps), None
-        )
-        ret = [np.average(volt[i * average : (i + 1) * average]) for i in range(self.line_num)]
-
-        if self.line_num == 1:
-            return ret[0]
-        else:
-            return ret
 
     # Standard API
 

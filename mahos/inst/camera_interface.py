@@ -17,6 +17,8 @@ class CameraInterface(InstrumentInterface):
     """Interface for Camera."""
 
     def get_frame(self, timeout_sec: float | None = None) -> FrameResult:
+        """Get a captured frame."""
+
         return self.get("frame", args=timeout_sec)
 
     def configure_continuous(
