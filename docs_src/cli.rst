@@ -27,11 +27,10 @@ The full-name of the node consists of hostname and nodename.
 The ``-H`` option specifies the hostname part.
 Defaults to real hostname (``platform.uname().node``) if it is in the config file, or ``localhost``.
 
-.. _mahos run:
-
-
 Node operations
 ---------------
+
+.. _mahos run:
 
 mahos run
 ^^^^^^^^^
