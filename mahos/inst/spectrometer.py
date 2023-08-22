@@ -23,19 +23,23 @@ from System import Int64
 from System import Double
 from System.Collections.Generic import List
 
-sys.path.append(os.environ["LIGHTFIELD_ROOT"])
-sys.path.append(os.environ["LIGHTFIELD_ROOT"] + "\\AddInViews")
-clr.AddReference("PrincetonInstruments.LightFieldViewV5")
-clr.AddReference("PrincetonInstruments.LightField.AutomationV5")
-clr.AddReference("PrincetonInstruments.LightFieldAddInSupportServices")
+if "LIGHTFIELD_ROOT" in os.environ:
+    sys.path.append(os.environ["LIGHTFIELD_ROOT"])
+    sys.path.append(os.environ["LIGHTFIELD_ROOT"] + "\\AddInViews")
+    clr.AddReference("PrincetonInstruments.LightFieldViewV5")
+    clr.AddReference("PrincetonInstruments.LightField.AutomationV5")
+    clr.AddReference("PrincetonInstruments.LightFieldAddInSupportServices")
 
-from PrincetonInstruments.LightField.Automation import Automation  # noqa: E402
-from PrincetonInstruments.LightField.AddIns import ExperimentSettings  # noqa: E402
-from PrincetonInstruments.LightField.AddIns import CameraSettings  # noqa: E402
-from PrincetonInstruments.LightField.AddIns import SpectrometerSettings  # noqa: E402
-from PrincetonInstruments.LightField.AddIns import FrameCombinationMethod  # noqa: E402
+try:
+    from PrincetonInstruments.LightField.Automation import Automation  # noqa: E402
+    from PrincetonInstruments.LightField.AddIns import ExperimentSettings  # noqa: E402
+    from PrincetonInstruments.LightField.AddIns import CameraSettings  # noqa: E402
+    from PrincetonInstruments.LightField.AddIns import SpectrometerSettings  # noqa: E402
+    from PrincetonInstruments.LightField.AddIns import FrameCombinationMethod  # noqa: E402
 
-# from PrincetonInstruments.LightField.AddIns import DeviceType
+    # from PrincetonInstruments.LightField.AddIns import DeviceType
+except ImportError:
+    print("mahos.inst.spectrometer: failed to import PrincetonInstruments")
 
 
 class LightField(Instrument):

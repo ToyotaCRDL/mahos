@@ -15,7 +15,7 @@ from functools import partial
 try:
     import cv2
 except ImportError:
-    print("cv2 couldn't be imported. (in mahos.meas.iodmr_fitter)")
+    print("mahos.meas.iodmr_fitter: failed to import cv2")
 
 import numpy as np
 from numpy.typing import NDArray
