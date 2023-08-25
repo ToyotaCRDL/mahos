@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 from . import data_ls
+from . import data_note
 from . import data_print
 from . import plot
 
 data_usage = """usage: mahos data COMMAND args
 
-COMMAND (l[s] | p[lot] | pr[int]) :
+COMMAND (l[s] | n[ote] | p[lot] | pr[int]) :
     the command to execute.
 
 """
@@ -21,6 +22,8 @@ def main(args):
 
     if "ls".startswith(pkg):
         return data_ls.main(args[1:])
+    elif "note".startswith(pkg):
+        return data_note.main(args[1:])
     elif "plot".startswith(pkg):
         return plot.main(args[1:])
     elif "print".startswith(pkg):
