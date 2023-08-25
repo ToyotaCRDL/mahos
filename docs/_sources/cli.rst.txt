@@ -88,6 +88,13 @@ mahos data ls
 
 ``mahos data ls [filenames]`` prints the list of attributes and types in data files.
 
+mahos data note
+^^^^^^^^^^^^^^^
+
+``mahos data note [filenames]`` prints (or amends) the note attribute in data files.
+
+Add option ``-a [new note string]`` to amend the note in the files.
+
 mahos data print
 ^^^^^^^^^^^^^^^^
 
