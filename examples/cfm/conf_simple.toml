@@ -91,8 +91,8 @@ module = "dtg"
 class = "DTG5274"
 [localhost.server.instrument.pg.conf]
 resource = "GPIB0::2"
-root_local = "C:\\DTG"
-root_remote = "Z:"
+local_dir = "C:\\DTG"
+remote_dir = "Z:"
 timeout = 180000.0
 start_delay_sec = 1.0
 [localhost.server.instrument.pg.conf.channels]
