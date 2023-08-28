@@ -16,6 +16,7 @@ Changed
 
 - make config key names consistent for several Instruments or measurement Workers.
   Suffix key name with '_dir' for directory path configs.
+
   - inst/piezo/E727_3: limits_um -> limit_um, range -> range_um
   - inst/camera/ThorlabsCamera: dll_path -> dll_dir
   - inst/dtg/DTG: root_local -> local_dir, root_remote -> remote_dir
