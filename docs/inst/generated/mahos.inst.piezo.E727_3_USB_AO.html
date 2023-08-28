@@ -609,10 +609,18 @@ document.write(`
 the output voltage is determined by: (pos_um - offset_um) * scale_volt_per_um.</p></li>
 <li><p><strong>offset_um</strong> (<em>float</em>) – the AnalogOut voltage offset in um. see scale_volt_per_um too.</p></li>
 <li><p><strong>transform</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>float</em><em>]</em><em>]</em>) – (default: identity matrix) a 3x3 linear transformation matrix
-from (real) target coordinate to command coordinate.
-This is usable for tilt correction etc.</p></li>
-<li><p><strong>range</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – travel range in target coordinate in the following format:
-[ [xmin, xmax], [ymin, ymax], [zmin, zmax] ].</p></li>
+from (real) target coordinate to command-value coordinate.
+This is usable for tilt correction to compensate the cross-talks in piezo axes.</p></li>
+<li><p><strong>limit_um</strong> – (default: [[0.0, 100.0], [0.0, 100.0], [0.0, 100.0)]) limits of positions
+in command coordinate in the following format:
+[[xmin, xmax], [ymin, ymax], [zmin, zmax]].</p></li>
+<li><p><strong>range_um</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – travel ranges in target coordinate in the following format:
+[[xmin, xmax], [ymin, ymax], [zmin, zmax]].
+This should be identical to limit_um if transform is default (identity matrix), i.e.,
+the target corrdinate and the command-value coordinate are identical.</p></li>
+<li><p><strong>axes_order</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – (default: [0, 1, 2]) permutation for piezo axes IDs and (x, y, z).
+When axes_order is [1, 2, 0], the x axis is piezo axis of index 1,
+and the y (z) axis is index 2 (0).</p></li>
 </ul>
 </dd>
 </dl>

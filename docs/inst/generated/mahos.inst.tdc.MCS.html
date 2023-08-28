@@ -606,8 +606,8 @@ document.write(`
 <li><p><strong>base_configs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – Mapping from base config name to actual file name.
 Used in configure_base_range_bin() etc. See load_config() for details.</p></li>
 <li><p><strong>ext_ref_clock</strong> (<em>bool</em>) – use external reference clock source.</p></li>
-<li><p><strong>home</strong> (<em>str</em>) – (default: “C:mcs8x64”) Home directory for mcs8 software.</p></li>
-<li><p><strong>home_raw_events</strong> (<em>str</em>) – (default: “C:mcs8x64”) Home directory to save RawEvents data.</p></li>
+<li><p><strong>mcs_dir</strong> (<em>str</em>) – (default: “C:mcs8x64”) The directory containing mcs8 software.</p></li>
+<li><p><strong>raw_events_dir</strong> (<em>str</em>) – (default: mcs_dir) The directory to save RawEvents data.</p></li>
 <li><p><strong>remove_lst</strong> (<em>bool</em>) – (default: True) Remove .lst file after loading it.</p></li>
 <li><p><strong>lst_channels</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – (default: [8, 9]) Collected channels for lst file.
 Under a setting, default value [8, 9] corresponds to STOP1 and STOP2.
