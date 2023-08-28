@@ -11,6 +11,18 @@ Added
 - meas: added new measurement Qdyne.
 - inst/tdc: added raw event recording features for above.
 
+Changed
+^^^^^^^
+
+- make config key names consistent for several Instruments or measurement Workers.
+  Suffix key name with '_dir' for directory path configs.
+  - inst/piezo/E727_3: limits_um -> limit_um, range -> range_um
+  - inst/camera/ThorlabsCamera: dll_path -> dll_dir
+  - inst/dtg/DTG: root_local -> local_dir, root_remote -> remote_dir
+  - inst/pd/LUCI10,OE200: dll_path -> dll_dir
+  - inst/tdc/MCS: home -> mcs_dir, home_raw_events -> raw_events_dir
+  - meas/qdyne_worker -> home_raw_events -> raw_events_dir
+
 [0.2.2] - 2023-07-26
 --------------------
 

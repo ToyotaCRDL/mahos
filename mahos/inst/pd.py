@@ -94,8 +94,8 @@ class LUCI10(Instrument):
     1. Install LUCI-10 software (you can skip LabVIEW driver installation).
     2. Place C DLL (C:\\Program Files (x86)\\FEMTO\\LUCI-10\\Driver\\LUCI_10_x64.dll) somewhere.
 
-    :param dll_path: The path to the directory containing DLL.
-    :type dll_path: str
+    :param dll_dir: The directory path containing DLL.
+    :type dll_dir: str
     :param index: (default: 1) Index of LUCI10 device.
     :type index: int
 
@@ -104,8 +104,8 @@ class LUCI10(Instrument):
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
 
-        if "dll_path" in self.conf:
-            p = os.path.expanduser(self.conf["dll_path"])
+        if "dll_dir" in self.conf:
+            p = os.path.expanduser(self.conf["dll_dir"])
             os.environ["PATH"] += os.pathsep + p
             os.add_dll_directory(p)
 
@@ -222,8 +222,8 @@ class OE200(AnalogIn):
     :param line: DAQ's physical channel for AnalogIn.
     :type line: str
 
-    :param dll_path: The path to the directory containing LUCI-10 DLL.
-    :type dll_path: str
+    :param dll_dir: The directory path containing LUCI-10 DLL.
+    :type dll_dir: str
     :param index: (default: 1) Index of LUCI-10 device.
     :type index: int
 

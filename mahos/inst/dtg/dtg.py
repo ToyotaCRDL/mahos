@@ -172,10 +172,10 @@ def gen_sequence(label, subname, Nrep, goto, jumpto, trigger):
 class DTG5000(VisaInstrument):
     """Base Class for DTG5000 series.
 
-    :param root_local: Root directory in local computer.
-    :type root_local: str
-    :param root_remote: Root directory in remote DTG.
-    :type root_remote: str
+    :param local_dir: Data exchange directory in local computer.
+    :type local_dir: str
+    :param remote_dir: Data exchange directory in remote DTG.
+    :type remote_dir: str
     :params channels: mapping from channel names to indices.
     :type channels: dict[str | bytes, int]
 
@@ -200,9 +200,9 @@ class DTG5000(VisaInstrument):
             conf["timeout"] = 20000.0
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
 
-        self.check_required_conf(("root_local", "root_remote"))
-        self.ROOT_LOCAL = conf["root_local"]
-        self.ROOT_REMOTE = conf["root_remote"]
+        self.check_required_conf(("local_dir", "remote_dir"))
+        self.LOCAL_DIR = conf["local_dir"]
+        self.REMOTE_DIR = conf["remote_dir"]
         self.SCAFFOLD = conf.get("scaffold_filename", "scaffold.dtg")
         self.SETUP = conf.get("setup_filename", "setup.dtg")
 
@@ -442,7 +442,7 @@ class DTG5000(VisaInstrument):
 
         if scaffold_name is None:
             scaffold_name = self.SCAFFOLD
-        scaffold_path = path.join(self.ROOT_LOCAL, scaffold_name)
+        scaffold_path = path.join(self.LOCAL_DIR, scaffold_name)
 
         tree = self.generate_tree(
             blocks,
@@ -467,8 +467,8 @@ class DTG5000(VisaInstrument):
         return self._write_load_setup(tree)
 
     def _write_load_setup(self, tree) -> bool:
-        local_path = path.join(self.ROOT_LOCAL, self.SETUP)
-        remote_path = "\\".join((self.ROOT_REMOTE, self.SETUP))  # remote (dtg) is always windows.
+        local_path = path.join(self.LOCAL_DIR, self.SETUP)
+        remote_path = "\\".join((self.REMOTE_DIR, self.SETUP))  # remote (dtg) is always windows.
         self.logger.info(f"Writing DTG setup file to {local_path}.")
         with open(local_path, "wb") as f:
             dtg_io.dump_tree(tree, f)
@@ -642,7 +642,7 @@ class DTG5000(VisaInstrument):
 
         if scaffold_name is None:
             scaffold_name = self.SCAFFOLD
-        scaffold_path = path.join(self.ROOT_LOCAL, scaffold_name)
+        scaffold_path = path.join(self.LOCAL_DIR, scaffold_name)
 
         tree = self.generate_tree_advanced(
             blocks,
@@ -812,8 +812,8 @@ class DTG5274_mock(DTG5274):
         Instrument.__init__(self, name, conf, prefix)
 
         self.inst = self.dummyInst()
-        self.check_required_conf(("root_local",))
-        self.ROOT_LOCAL = self.conf["root_local"]
+        self.check_required_conf(("local_dir",))
+        self.LOCAL_DIR = self.conf["local_dir"]
         self.SCAFFOLD = self.conf.get("scaffold_filename", "scaffold.dtg")
 
         self.CHANNELS = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7}

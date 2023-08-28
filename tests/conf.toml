@@ -43,7 +43,7 @@ resource = "VISA::FG"
 module = "dtg"
 class = "DTG5274_mock"
 [localhost.server.instrument.pg.conf]
-root_local = "."
+local_dir = "."
 [localhost.server.instrument.pg.conf.channels]
 laser = 6
 sync = 5

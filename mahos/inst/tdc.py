@@ -35,10 +35,10 @@ class MCS(Instrument):
     :type base_configs: dict[str, str]
     :param ext_ref_clock: use external reference clock source.
     :type ext_ref_clock: bool
-    :param home: (default: "C:\\mcs8x64") Home directory for mcs8 software.
-    :type home: str
-    :param home_raw_events: (default: "C:\\mcs8x64") Home directory to save RawEvents data.
-    :type home_raw_events: str
+    :param mcs_dir: (default: "C:\\mcs8x64") The directory containing mcs8 software.
+    :type mcs_dir: str
+    :param raw_events_dir: (default: mcs_dir) The directory to save RawEvents data.
+    :type raw_events_dir: str
     :param remove_lst: (default: True) Remove .lst file after loading it.
     :type remove_lst: bool
     :param lst_channels: (default: [8, 9]) Collected channels for lst file.
@@ -156,8 +156,8 @@ class MCS(Instrument):
         self.logger.info(f"Loaded {fn}")
 
         self._base_configs = self.conf.get("base_configs", {})
-        self._home = self.conf.get("home", "C:\\mcs8x64")
-        self._home_raw_events = self.conf.get("home_raw_events", self._home)
+        self._mcs_dir = os.path.expanduser(self.conf.get("mcs_dir", "C:\\mcs8x64"))
+        self._raw_events_dir = os.path.expanduser(self.conf.get("raw_events_dir", self._mcs_dir))
         self._remove_lst = self.conf.get("remove_lst", True)
         self._lst_channels = self.conf.get("lst_channels", [8, 9])
         self.logger.debug(f"available base config files: {self._base_configs}")
@@ -285,7 +285,7 @@ class MCS(Instrument):
         return True
 
     def remove_saved_file(self, name: str) -> bool:
-        f = os.path.join(self._home, name)
+        f = os.path.join(self._mcs_dir, name)
         if not os.path.exists(f):
             return self.fail_with(f"File doesn't exist: {f}")
         os.remove(f)
@@ -361,7 +361,7 @@ class MCS(Instrument):
             return None
 
         lst_name = os.path.splitext(self._save_file_name)[0] + ".lst"
-        lst_path = os.path.join(self._home, lst_name)
+        lst_path = os.path.join(self._mcs_dir, lst_name)
 
         ret = self.load_lst_file(lst_path)
         self.logger.debug(f"Loaded lst file {lst_path}")
@@ -382,7 +382,7 @@ class MCS(Instrument):
         self.logger.debug("Finished sorting raw events")
 
         h5_name = os.path.splitext(self._save_file_name)[0] + ".h5"
-        h5_path = os.path.join(self._home_raw_events, h5_name)
+        h5_path = os.path.join(self._raw_events_dir, h5_name)
 
         self.logger.info(f"Saving converted raw events to {h5_path}")
         success = save_h5(h5_path, RawEvents(data), RawEvents, self.logger, compression="lzf")

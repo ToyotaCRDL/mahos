@@ -28,16 +28,16 @@ class ThorlabsCamera(Instrument):
     1. Install SDK's Python wrapper library (thorlabs_tsi_sdk).
     2. Place SDK native DLLs somewhere.
 
-    :param dll_path: The path to the directory containing SDK DLLs.
-    :type dll_path: str
+    :param dll_dir: The directory path containing SDK DLLs.
+    :type dll_dir: str
 
     """
 
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
 
-        if "dll_path" in self.conf:
-            p = os.path.expanduser(self.conf["dll_path"])
+        if "dll_dir" in self.conf:
+            p = os.path.expanduser(self.conf["dll_dir"])
             os.environ["PATH"] += os.pathsep + p
             os.add_dll_directory(p)
 

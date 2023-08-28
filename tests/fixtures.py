@@ -87,7 +87,7 @@ def gconf():
     # fix timeout and interval to test quickly
     gconf["global"]["req_timeout_ms"] = 3000
     local_conf(gconf, server_name)["poll_timeout_ms"] = 10
-    local_conf(gconf, server_name)["instrument"]["pg"]["conf"]["root_local"] = script_dir
+    local_conf(gconf, server_name)["instrument"]["pg"]["conf"]["local_dir"] = script_dir
     local_conf(gconf, param_server_name)["poll_timeout_ms"] = 10
     local_conf(gconf, log_name)["poll_timeout_ms"] = 10
     confocal_conf = local_conf(gconf, confocal_name)

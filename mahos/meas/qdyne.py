@@ -68,8 +68,8 @@ class Qdyne(BasicMeasNode):
         :param pulser.start_delay: (sec.) delay time before starting PG output. (default: 0.0)
         :type pulser.start_delay: float
 
-        :param pulser.home_raw_events: (default: "") Home directory to load RawEvents file.
-        :type pulser.home_raw_events: str
+        :param pulser.raw_events_dir: (default: "") The directory to load RawEvents file.
+        :type pulser.raw_events_dir: str
         :param pulser.remove_raw_events: (default: True) Remove RawEvents file after loading it.
         :type pulser.remove_raw_events: bool
 

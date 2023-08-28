@@ -35,7 +35,8 @@ module = "piezo"
 class = "E727_3_USB_AO"
 [localhost.server.instrument.piezo.conf]
 lines = ["/Dev1/ao2", "/Dev1/ao3", "/Dev1/ao1"] # (y, z, x)
-limits_um = [ [0.0, 100.0], [0.0, 100.0], [0.0, 100.0]]
+limit_um = [[0.0, 100.0], [0.0, 100.0], [0.0, 100.0]]
+range_um = [[0.0, 100.0], [0.0, 100.0], [0.0, 100.0]]
 axes_order = [1, 2, 0] # (y, z, x)
 scale_volt_per_um = 0.2
 offset_um = 50.0

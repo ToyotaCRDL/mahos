@@ -215,7 +215,7 @@ class Pulser(Worker):
         self.timer = None
         self.length = self.offsets = self.freq = self.laser_timing = None
 
-        self._home_raw_events = conf.get("home_raw_events", "")
+        self._raw_events_dir = conf.get("raw_events_dir", "")
         self._remove_raw_events = conf.get("remove_raw_events", True)
         self._start_delay = conf.get("start_delay", 0.0)
 
@@ -360,7 +360,7 @@ class Pulser(Worker):
             return True  # return True anyway to finalize measurement
 
         if isinstance(raw_events, str):
-            raw_events_path = os.path.join(self._home_raw_events, raw_events)
+            raw_events_path = os.path.join(self._raw_events_dir, raw_events)
             self.logger.info(f"Start loading {raw_events_path}")
             raw_events = load_h5(raw_events_path, RawEvents, self.logger)
             if self._remove_raw_events:
