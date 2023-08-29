@@ -21,6 +21,19 @@ from .daq import AnalogIn, BufferedEdgeCounter
 class APDCounter(BufferedEdgeCounter):
     """BufferedEdgeCounter for counting APD output pulses.
 
+    :param counter: The device name for counter (like /Dev1/Ctr0).
+    :type counter: str
+    :param source: The pin name for counter source (like /Dev1/PFI0).
+    :type source: str
+    :param source_dir: (default: True) Source direction. True (False) for rising (falling) edge.
+    :type source_dir: bool
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+
     :param corr_x_kcps: x-data of correction factor.
     :type corr_x_kcps: np.ndarray
     :param corr_y: y-data of correction factor.
@@ -221,6 +234,12 @@ class OE200(AnalogIn):
 
     :param line: DAQ's physical channel for AnalogIn.
     :type line: str
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
 
     :param dll_dir: The directory path containing LUCI-10 DLL.
     :type dll_dir: str
@@ -350,6 +369,13 @@ class AnalogPD(AnalogIn):
 
     :param line: DAQ's physical channel for AnalogIn.
     :type line: str
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+
     :param unit: (default: V) unit after conversion.
     :type unit: str
     :param gain: (default: 1.0) the fixed gain in [unit] / V.
