@@ -26,6 +26,7 @@
       ~E727_3_USB_AO.join
       ~E727_3_USB_AO.shutdown
       ~E727_3_USB_AO.start
+      ~E727_3_USB_AO.start_scan
       ~E727_3_USB_AO.stop
       ~E727_3_USB_AO.um_to_volt
       ~E727_3_USB_AO.um_to_volt_raw

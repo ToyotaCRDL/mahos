@@ -621,6 +621,12 @@ the target corrdinate and the command-value coordinate are identical.</p></li>
 <li><p><strong>axes_order</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – (default: [0, 1, 2]) permutation for piezo axes IDs and (x, y, z).
 When axes_order is [1, 2, 0], the x axis is piezo axis of index 1,
 and the y (z) axis is index 2 (0).</p></li>
+<li><p><strong>samples_margin</strong> (<em>int</em>) – (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+params[“samples”] + samples_margin is passed for the argument.
+Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)</p></li>
+<li><p><strong>write_and_start</strong> (<em>bool</em>) – (default: False) if False, DAQ Task is started and then
+scan data is written in start_scan(). True reverses this order.
+Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)</p></li>
 </ul>
 </dd>
 </dl>
@@ -662,22 +668,25 @@ and the y (z) axis is index 2 (0).</p></li>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>()</p></td>
 <td><p>Start the instrument operation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_scan</span></code>(scan_array)</p></td>
+<td><p>start the configured scan with scan_array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
 <td><p>Stop the instrument operation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">um_to_volt</span></code>(pos_um[, update])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">um_to_volt</span></code>(pos_um[, update])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">um_to_volt_raw</span></code>(pos_um)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">um_to_volt_raw</span></code>(pos_um)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_target_pos</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_target_pos</span></code>()</p></td>
 <td><p>query target pos and update self.target.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">volt_to_um</span></code>(volt)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">volt_to_um</span></code>(volt)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_scan_array</span></code>(scan_array)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_scan_array</span></code>(scan_array)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

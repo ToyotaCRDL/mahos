@@ -607,6 +607,10 @@ In on-demand-mode, data are read on get(“data”) request.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lines</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – list of strings to designate DAQ’s physical channels.</p></li>
+<li><p><strong>buffer_size</strong> (<em>int</em>) – (default: 10000) Software buffer (queue) size.</p></li>
+<li><p><strong>samples_margin</strong> (<em>int</em>) – (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+params[“samples”] + samples_margin is passed for the argument.
+Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)</p></li>
 <li><p><strong>clock_mode</strong> (<em>bool</em>) – If True (False), configures as clock-mode (on-demand-mode).</p></li>
 <li><p><strong>bounds</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – bounds (min, max) values of the expected input voltages per channels.</p></li>
 <li><p><strong>finite</strong> (<em>bool</em>) – (default True) Switch if finite mode or infinite mode.</p></li>

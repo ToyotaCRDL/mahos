@@ -603,6 +603,13 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>counter</strong> (<em>str</em>) – The device name for counter (like /Dev1/Ctr0).</p></li>
+<li><p><strong>source</strong> (<em>str</em>) – The pin name for counter source (like /Dev1/PFI0).</p></li>
+<li><p><strong>source_dir</strong> (<em>bool</em>) – (default: True) Source direction. True (False) for rising (falling) edge.</p></li>
+<li><p><strong>buffer_size</strong> (<em>int</em>) – (default: 10000) Software buffer (queue) size.</p></li>
+<li><p><strong>samples_margin</strong> (<em>int</em>) – (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+params[“samples”] + samples_margin is passed for the argument.
+Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)</p></li>
 <li><p><strong>corr_x_kcps</strong> (<em>np.ndarray</em>) – x-data of correction factor.</p></li>
 <li><p><strong>corr_y</strong> (<em>np.ndarray</em>) – y-data of correction factor.</p></li>
 <li><p><strong>dark_cps</strong> (<em>float</em>) – (default 0.0) dark count.</p></li>

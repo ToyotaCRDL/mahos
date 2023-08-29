@@ -241,6 +241,10 @@ class AnalogOut(ConfigurableTask):
     :type lines: list[str]
     :param bounds: bounds (min, max) values of the output voltage per channels.
     :type bounds: list[tuple[float, float]]
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
 
     """
 
@@ -252,6 +256,8 @@ class AnalogOut(ConfigurableTask):
         self.bounds = self.conf["bounds"]
         if len(self.lines) != len(self.bounds):
             raise ValueError("Length of lines and bounds must match.")
+        self.clock_mode = False
+        self.samples_margin = self.conf.get("samples_margin", 1)
 
     def clip(self, volts: np.ndarray) -> np.ndarray:
         """Clip the voltage values if it exceeds max or min bounds."""
@@ -269,8 +275,8 @@ class AnalogOut(ConfigurableTask):
 
         """
 
-        if not self.running:
-            self.logger.error("output() is called while not running.")
+        if not self.clock_mode and not self.running:
+            self.logger.error("output() is called while not running in on-demand mode.")
             return False
         if not isinstance(volts, (np.ndarray, tuple, list)):
             self.logger.error("volts must be ndarray, tuple, or list.")
@@ -365,7 +371,7 @@ class AnalogOut(ConfigurableTask):
                 clock_dir,
                 _samples_finite_or_cont(self.finite),
                 # a bit larger samples to assure buffer size
-                samples + 1,
+                samples + self.samples_margin,
             )
 
         self.logger.debug(f"Configured. clock_mode: {self.clock_mode}")
@@ -489,6 +495,12 @@ class AnalogIn(ConfigurableTask):
 
     :param lines: list of strings to designate DAQ's physical channels.
     :type lines: list[str]
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
 
     :param clock_mode: If True (False), configures as clock-mode (on-demand-mode).
     :type clock_mode: bool
@@ -535,6 +547,8 @@ class AnalogIn(ConfigurableTask):
         self.buffer_size = self.conf.get("buffer_size", 10000)
         self.queue = LockedQueue(self.buffer_size)
         self._stamp = False
+        self.clock_mode = False
+        self.samples_margin = self.conf.get("samples_margin", 1)
 
     def _null_every1_handler(self):
         pass
@@ -694,7 +708,7 @@ class AnalogIn(ConfigurableTask):
             clock_dir,
             _samples_finite_or_cont(self.finite),
             # a bit larger samples to assure buffer size
-            samples + 1,
+            samples + self.samples_margin,
         )
 
         self.logger.debug(f"Buffer size: {self.get_buffer_size()}")
@@ -867,6 +881,10 @@ class BufferedEdgeCounter(ConfigurableTask):
     :type source_dir: bool
     :param buffer_size: (default: 10000) Software buffer (queue) size.
     :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
 
     :param finite: (default True) Switch if finite mode or infinite mode.
     :type finite: bool
@@ -920,6 +938,7 @@ class BufferedEdgeCounter(ConfigurableTask):
         self.buffer_size = self.conf.get("buffer_size", 10000)
         self.queue = LockedQueue(self.buffer_size)
         self._stamp = False
+        self.samples_margin = self.conf.get("samples_margin", 1)
 
     def _null_every1_handler(self):
         pass
@@ -1020,7 +1039,7 @@ class BufferedEdgeCounter(ConfigurableTask):
             clock_dir,
             _samples_finite_or_cont(self.finite),
             # a bit larger samples to assure buffer size
-            samples + 1,
+            samples + self.samples_margin,
         )
 
         self.logger.debug(f"Buffer size: {self.get_buffer_size()}")

@@ -253,6 +253,14 @@ class E727_3_USB_AO(E727_3_USB):
         When axes_order is [1, 2, 0], the x axis is piezo axis of index 1,
         and the y (z) axis is index 2 (0).
     :type axes_order: tuple[int, int, int]
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+    :param write_and_start: (default: False) if False, DAQ Task is started and then
+        scan data is written in start_scan(). True reverses this order.
+        Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)
+    :type write_and_start: bool
 
     """
 
@@ -267,6 +275,7 @@ class E727_3_USB_AO(E727_3_USB):
             raise ValueError("length of AO lines and number of axis don't match.")
         self._scale_volt_per_um = self.conf["scale_volt_per_um"]
         self._offset_um = self.conf["offset_um"]
+        self._write_and_start = self.conf.get("write_and_start", False)
 
         # linear transformation from target space (x, y, z) to command space (X, Y, Z)
         if "transform" in self.conf:
@@ -293,7 +302,11 @@ class E727_3_USB_AO(E727_3_USB):
         ao_name = name + "_ao"
         # bounds in volts converted from command space range
         bounds = [[self.um_to_volt_raw(v) for v in self.limit[ax]] for ax in self.AXIS_IDs]
-        ao_param = {"lines": lines, "bounds": bounds}
+        ao_param = {
+            "lines": lines,
+            "bounds": bounds,
+            "samples_margin": self.conf.get("samples_margin", 1),
+        }
         self._ao = AnalogOut(ao_name, ao_param, prefix=prefix)
 
         if self.conf.get("start_servo", True):
@@ -304,6 +317,14 @@ class E727_3_USB_AO(E727_3_USB):
         # Transpose to 3 x N, convert, and transpose again to N x 3.
         volts = self.um_to_volt(scan_array.T).T
         return self._ao.set_output(volts, auto_start=False)
+
+    def start_scan(self, scan_array: np.ndarray) -> bool:
+        """start the configured scan with scan_array."""
+
+        if self._write_and_start:
+            return self.write_scan_array(scan_array) and self.start()
+        else:
+            return self.start() and self.write_scan_array(scan_array)
 
     def join(self, timeout_sec: float):
         return self._ao.join(timeout_sec)
