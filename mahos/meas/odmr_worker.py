@@ -525,9 +525,9 @@ class Sweeper(Worker):
             line = np.sum(lines, axis=0)
             self.append_line(line)
         elif self._post_process == "aux":
-            if len(self.lines) != 2:
+            if len(lines) != 2:
                 raise ValueError("Number of data must be 2 when post_process is 'aux'.")
-            self.append_line(line[0])
+            self.append_line(lines[0])
             self.append_aux_line(lines[1])
         else:
             raise ValueError(f"Unknown post_process {self._post_process}")
