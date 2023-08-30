@@ -393,14 +393,18 @@ class AnalogPD(AnalogIn):
         self.gain = self.conf.get("gain", 1.0)
         self.unit = self.conf.get("unit", "V")
 
-    def _convert(self, data: np.ndarray | float) -> np.ndarray | float:
+    def _convert(
+        self, data: np.ndarray | list[np.ndarray] | float
+    ) -> np.ndarray | list[np.ndarray] | float:
         """Convert raw reading (V) to self.unit."""
 
+        if isinstance(data, list):
+            return [d / self.gain for d in data]
         return data / self.gain
 
     # override AnalogIn methods to convert readings.
 
-    def _append_data(self, data: np.ndarray):
+    def _append_data(self, data: np.ndarray | list[np.ndarray]):
         AnalogIn._append_data(self, self._convert(data))
 
     def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:

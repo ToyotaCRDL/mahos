@@ -415,6 +415,13 @@
            </property>
           </widget>
          </item>
+         <item row="1" column="3">
+          <widget class="QCheckBox" name="sgmodBox">
+           <property name="text">
+            <string>IQ modulation</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
@@ -472,6 +479,7 @@
   <tabstop>stopBox</tabstop>
   <tabstop>numBox</tabstop>
   <tabstop>sweepsBox</tabstop>
+  <tabstop>sgmodBox</tabstop>
   <tabstop>mwcontBox</tabstop>
   <tabstop>backgroundBox</tabstop>
   <tabstop>bgdelayBox</tabstop>

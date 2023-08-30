@@ -27,7 +27,8 @@ class Sweeper(Worker):
         Worker.__init__(self, cli, logger)
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
-        self.pds = [PDInterface(cli, n) for n in conf.get("pds", ["pd0", "pd1"])]
+        self.pd_names = conf.get("pds", ["pd0", "pd1"])
+        self.pds = [PDInterface(cli, n) for n in self.pd_names]
         self.add_instruments(self.sg, self.pg, *self.pds)
 
         if "pd_clock" not in conf:
@@ -44,8 +45,6 @@ class Sweeper(Worker):
 
         if self._post_process not in ("sum", "aux"):
             raise ValueError(f"Unknown post_process {self._post_process}.")
-        if self._post_process == "aux" and len(self.pds) != 2:
-            raise ValueError("Number of PDs must be 2 when post_process is 'aux'.")
 
         self.data = ODMRData()
 
@@ -115,6 +114,7 @@ class Sweeper(Worker):
                 SI_prefix=True,
                 doc="delay between normal and background (reference) measurements",
             ),
+            sg_modulation=P.BoolParam(False, doc="enable external IQ modulation for SG"),
             resume=P.BoolParam(False),
             continue_mw=P.BoolParam(False),
             ident=P.UUIDParam(optional=True, enable=False),
@@ -137,10 +137,16 @@ class Sweeper(Worker):
 
     def configure_sg(self, params: dict) -> bool:
         p = params
-        success = (
-            self.sg.configure_point_trig_freq_sweep(p["start"], p["stop"], p["num"], p["power"])
-            and self.sg.get_opc()
+        success = self.sg.configure_point_trig_freq_sweep(
+            p["start"], p["stop"], p["num"], p["power"]
         )
+        if params.get("sg_modulation", False):
+            success &= (
+                self.sg.set_modulation(True)
+                and self.sg.set_dm_source("EXT")
+                and self.sg.set_dm(True)
+            )
+        success &= self.sg.get_opc()
         return success
 
     def _get_oversamp_CW_analog(self, params: dict) -> int:
@@ -496,11 +502,22 @@ class Sweeper(Worker):
         if not self.data.running:
             return  # or raise Error?
 
-        lines = [pd.pop_block() for pd in self.pds]
+        lines = []
+        for pd in self.pds:
+            ls = pd.pop_block()
+            if isinstance(ls, list):
+                # PD has multi channel
+                lines.extend(ls)
+            else:
+                # single channel, assert ls is np.ndarray
+                lines.append(ls)
+
         if self._post_process == "sum":
             line = np.sum(lines, axis=0)
             self.append_line(line)
         elif self._post_process == "aux":
+            if len(self.lines) != 2:
+                raise ValueError("Number of data must be 2 when post_process is 'aux'.")
             self.append_line(line[0])
             self.append_aux_line(lines[1])
         else:
