@@ -409,3 +409,12 @@ class AnalogPD(AnalogIn):
 
     def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
         return self._convert(AnalogIn.read_on_demand(self, oversample))
+
+    def get(self, key: str, args=None):
+        if key in ("data", "all_data"):
+            return AnalogIn.get(self, key, args)
+        elif key == "unit":
+            return self.unit
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None

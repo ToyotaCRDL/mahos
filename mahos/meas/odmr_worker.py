@@ -428,9 +428,18 @@ class Sweeper(Worker):
         else:
             # TODO: check ident if resume?
             self.data.update_params(params)
-        self.data.yunit = self.pds[0].get_unit()
-        if self._post_process == "aux":
-            self.data.aux_unit = self.pds[1].get_unit()
+        if self._post_process == "sum":
+            self.data.yunit = self.pds[0].get_unit()
+        elif self._post_process == "aux":
+            if len(self.pds) == 1:
+                unit = self.pds[0].get_unit()
+                if isinstance(unit, str):
+                    self.data.yunit = self.data.aux_unit = unit
+                else:  # assume list[str]
+                    self.data.yunit, self.data.aux_unit = unit
+            else:  # assume len(self.pds) == 2
+                self.data.yunit = self.pds[0].get_unit()
+                self.data.aux_unit = self.pds[1].get_unit()
 
         if not self.configure_sg(self.data.params):
             return self.fail_with_release("Failed to configure SG.")
