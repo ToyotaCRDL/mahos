@@ -370,7 +370,6 @@ class AnalogOut(ConfigurableTask):
                 rate,
                 clock_dir,
                 _samples_finite_or_cont(self.finite),
-                # a bit larger samples to assure buffer size
                 samples + self.samples_margin,
             )
 
@@ -428,7 +427,7 @@ class AnalogInTask(D.Task):
         self._read = D.int32()
 
     def _read_samples(self, samples):
-        data = np.zeros(samples, dtype=np.float64)
+        data = np.zeros(samples * self._line_num, dtype=np.float64)
         self.ReadAnalogF64(
             samples,
             10.0,
@@ -707,7 +706,6 @@ class AnalogIn(ConfigurableTask):
             rate,
             clock_dir,
             _samples_finite_or_cont(self.finite),
-            # a bit larger samples to assure buffer size
             samples + self.samples_margin,
         )
 
@@ -1038,7 +1036,6 @@ class BufferedEdgeCounter(ConfigurableTask):
             rate,
             clock_dir,
             _samples_finite_or_cont(self.finite),
-            # a bit larger samples to assure buffer size
             samples + self.samples_margin,
         )
 
