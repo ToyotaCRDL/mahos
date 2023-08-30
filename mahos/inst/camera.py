@@ -28,17 +28,18 @@ class ThorlabsCamera(Instrument):
     1. Install SDK's Python wrapper library (thorlabs_tsi_sdk).
     2. Place SDK native DLLs somewhere.
 
-    :param dll_path: (Required) The path to the directory containing SDK DLLs.
+    :param dll_dir: The directory path containing SDK DLLs.
+    :type dll_dir: str
 
     """
 
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
 
-        self.check_required_conf(("dll_path",))
-        p = os.path.expanduser(self.conf["dll_path"])
-        os.environ["PATH"] += os.pathsep + p
-        os.add_dll_directory(p)
+        if "dll_dir" in self.conf:
+            p = os.path.expanduser(self.conf["dll_dir"])
+            os.environ["PATH"] += os.pathsep + p
+            os.add_dll_directory(p)
 
         from thorlabs_tsi_sdk.tl_camera import TLCameraSDK
 
@@ -147,7 +148,23 @@ class ThorlabsCamera(Instrument):
 
 
 class BaslerPylonCamera(Instrument):
-    """Wrapper for Basler Pylon."""
+    """Wrapper for Basler Pylon.
+
+    :param emulation: (default: False) use emulation mode.
+    :type emulation: bool
+    :param trigger_source: (default: "Line1") trigger source line.
+    :type trigger_source: str
+    :param trigger_wait_line: (default: "Line2") trigger wait line.
+    :type trigger_wait_line: str
+    :param trigger_wait_invert: (default: False) set True to invert trigger wait polarity.
+    :type trigger_wait_invert: bool
+    :param pixel_format: (default: "") the pixel format for camera acquisition.
+        Leave black to skip setting.
+    :type pixel_format: str
+    :param queue_size: (default: 8) size of the software frame queue.
+    :type queue_size: int
+
+    """
 
     class Mode(enum.Enum):
         UNCONFIGURED = 0

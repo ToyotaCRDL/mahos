@@ -70,7 +70,7 @@ class PODMRIO(object):
         return success
 
     def export_data(
-        self, fn, data: PODMRData | list[PODMRData], params: dict | None = None
+        self, filename: str, data: PODMRData | list[PODMRData], params: dict | None = None
     ) -> bool:
         """Export the data to text or image files.
 
@@ -136,14 +136,14 @@ class PODMRIO(object):
             if params.get("fit") and not self.refit_data(params, d):
                 return False
 
-        ext = path.splitext(fn)[1]
+        ext = path.splitext(filename)[1]
         if ext in (".txt", ".csv"):
             # TODO: accept data_list ?
-            return self._export_data_csv(fn, data)
+            return self._export_data_csv(filename, data)
         elif ext in (".png", ".pdf", ".eps"):
-            return self._export_data_image(fn, data_list, params)
+            return self._export_data_image(filename, data_list, params)
         else:
-            self.logger.error(f"Unknown extension to export data: {fn}")
+            self.logger.error(f"Unknown extension to export data: {filename}")
             return False
 
     def _export_data_csv(self, fn, data: PODMRData) -> bool:

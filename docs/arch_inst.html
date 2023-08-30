@@ -442,11 +442,11 @@ one doesn’t need to implement a <a class="reference internal" href="glossary.h
 <section id="instrument">
 <h2>Instrument<a class="headerlink" href="#instrument" title="Permalink to this heading">#</a></h2>
 <p>An instrument driver is implemented as a subclass of <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instrument</span></code></a>.
-The instrument should provide <a class="reference internal" href="inst/Instrument.html#instrument-api"><span class="std std-ref">Standard Instrument APIs</span></a> by overriding private methods like <code class="docutils literal notranslate"><span class="pre">_start()</span></code>.</p>
+The instrument should provide <a class="reference internal" href="inst/Instrument.html#instrument-api"><span class="std std-ref">Standard Instrument APIs</span></a> by overriding methods like <code class="docutils literal notranslate"><span class="pre">start()</span></code>.</p>
 </section>
 <section id="instrumentoverlay">
 <h2>InstrumentOverlay<a class="headerlink" href="#instrumentoverlay" title="Permalink to this heading">#</a></h2>
-<p><a class="reference internal" href="inst/generated/mahos.inst.overlay.overlay.InstrumentOverlay.html#mahos.inst.overlay.overlay.InstrumentOverlay" title="mahos.inst.overlay.overlay.InstrumentOverlay"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentOverlay</span></code></a> is a mechanism to define <cite>virtual instrument</cite> using multiple instruments.
+<p><a class="reference internal" href="inst/InstrumentOverlay.html#mahos.inst.overlay.overlay.InstrumentOverlay" title="mahos.inst.overlay.overlay.InstrumentOverlay"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentOverlay</span></code></a> is a mechanism to define <cite>virtual instrument</cite> using multiple instruments.
 The role is similar to <a class="reference internal" href="arch_meas.html"><span class="doc">meas layer</span></a>; however, overlay works on the same process / thread with each instrument and has direct reference to the <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instrument</span></code></a> instances.
 Thus, core procedures should be implemented as overlay when it needs strictly synchronous behaviour or the best performance (in terms of latency).
 It is also useful to define application-specific parametrization or fundamental modification to single instrument.</p>

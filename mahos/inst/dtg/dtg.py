@@ -170,7 +170,26 @@ def gen_sequence(label, subname, Nrep, goto, jumpto, trigger):
 
 
 class DTG5000(VisaInstrument):
-    """Base Class for DTG5000 series."""
+    """Base Class for DTG5000 series.
+
+    :param local_dir: Data exchange directory in local computer.
+    :type local_dir: str
+    :param remote_dir: Data exchange directory in remote DTG.
+    :type remote_dir: str
+    :params channels: mapping from channel names to indices.
+    :type channels: dict[str | bytes, int]
+
+    :param start_delay_sec: (default: 1.0) Delay between output relay on and sequencer start.
+        This is to wait the output relay to stabilize.
+    :type start_delay_sec: float
+    :param start_query_delay_sec: (default: 0.1) Delay for OPC? command after start command.
+    :type start_query_delay_sec: float
+    :param start_loop_delay_sec: (default: 1.0) Delay for each loop of the start loop.
+    :type start_loop_delay_sec: float
+    :param start_loop_num: (default: 20) Max. number of start command repeats in the start loop.
+    :type start_loop_num: int
+
+    """
 
     MAX_BLOCK_NUM = 8000
 
@@ -181,16 +200,19 @@ class DTG5000(VisaInstrument):
             conf["timeout"] = 20000.0
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
 
-        self.check_required_conf(("root_local", "root_remote"))
-        self.ROOT_LOCAL = conf["root_local"]
-        self.ROOT_REMOTE = conf["root_remote"]
+        self.check_required_conf(("local_dir", "remote_dir"))
+        self.LOCAL_DIR = conf["local_dir"]
+        self.REMOTE_DIR = conf["remote_dir"]
         self.SCAFFOLD = conf.get("scaffold_filename", "scaffold.dtg")
         self.SETUP = conf.get("setup_filename", "setup.dtg")
 
         self.CHANNELS = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7}
         if "channels" in conf:
             self.CHANNELS.update(conf["channels"])
-        self._start_delay_sec = conf.get("start_delay_sec", 0.1)
+        self._start_delay_sec = conf.get("start_delay_sec", 1.0)
+        self._start_query_delay_sec = conf.get("start_query_sec", 0.1)
+        self._start_loop_delay_sec = conf.get("start_loop_delay_sec", 1.0)
+        self._start_loop_num = conf.get("start_loop_num", 20)
 
         # last total block length and offsets.
         self.length = 0
@@ -420,7 +442,7 @@ class DTG5000(VisaInstrument):
 
         if scaffold_name is None:
             scaffold_name = self.SCAFFOLD
-        scaffold_path = path.join(self.ROOT_LOCAL, scaffold_name)
+        scaffold_path = path.join(self.LOCAL_DIR, scaffold_name)
 
         tree = self.generate_tree(
             blocks,
@@ -445,8 +467,8 @@ class DTG5000(VisaInstrument):
         return self._write_load_setup(tree)
 
     def _write_load_setup(self, tree) -> bool:
-        local_path = path.join(self.ROOT_LOCAL, self.SETUP)
-        remote_path = "\\".join((self.ROOT_REMOTE, self.SETUP))  # remote (dtg) is always windows.
+        local_path = path.join(self.LOCAL_DIR, self.SETUP)
+        remote_path = "\\".join((self.REMOTE_DIR, self.SETUP))  # remote (dtg) is always windows.
         self.logger.info(f"Writing DTG setup file to {local_path}.")
         with open(local_path, "wb") as f:
             dtg_io.dump_tree(tree, f)
@@ -620,7 +642,7 @@ class DTG5000(VisaInstrument):
 
         if scaffold_name is None:
             scaffold_name = self.SCAFFOLD
-        scaffold_path = path.join(self.ROOT_LOCAL, scaffold_name)
+        scaffold_path = path.join(self.LOCAL_DIR, scaffold_name)
 
         tree = self.generate_tree_advanced(
             blocks,
@@ -633,24 +655,6 @@ class DTG5000(VisaInstrument):
 
         self.logger.info(f"DTG tree prepared. Total length: {self.length}")
         return self._write_load_setup(tree)
-
-    def query_start(self, delay=0.1, maxloop=20) -> bool:
-        """query start until actually run.
-
-        if loop count reaches maxloop, return False.
-
-        """
-
-        start_loop_counter = 0
-        while self.inst.query("TBAS:RST?") != "RUN":
-            self.logger.debug(f"query start DTG #{start_loop_counter}")
-            # TODO: really? call start() iteratively?
-            self.start()
-            self.query_opc(delay=delay)
-            start_loop_counter += 1
-            if start_loop_counter > maxloop:
-                return False
-        return True
 
     def min_block_len(self, freq):
         if not hasattr(self, "MIN_BLOCK_LENGTH"):
@@ -672,24 +676,43 @@ class DTG5000(VisaInstrument):
         else:
             return 1
 
-    # Standard API
-
-    def start(self) -> bool:
-        """Set all outputs on and start sequencer.
-
-        Delay can be inserted for waiting output relay to stabilize.
-
-        """
-
+    def start_once(self):
         self.logger.info(
             "Setting output all-on and starting sequencer. Delay {:.1f} sec.".format(
                 self._start_delay_sec
             )
         )
+
         self.inst.write("OUTP:STAT:ALL ON")
         time.sleep(self._start_delay_sec)
         self.inst.write("TBAS:RUN ON")
-        return True
+
+    def get_sequencer_status(self) -> str:
+        return self.inst.query("TBAS:RST?")
+
+    def start_loop(self) -> bool:
+        """repeat start command until it actually starts."""
+
+        for i in range(self._start_loop_num):
+            self.start_once()
+            self.query_opc(delay=self._start_query_delay_sec)
+            status = self.get_sequencer_status()
+
+            self.logger.debug(f"{i}: TBAS:RST? = {status}")
+            if status in ("RUN", "WAIT"):
+                return True
+
+            time.sleep(self._start_loop_delay_sec)
+
+        self.logger.error("Failed to start.")
+        return False
+
+    # Standard API
+
+    def start(self) -> bool:
+        """Set all outputs on and start sequencer."""
+
+        return self.start_loop()
 
     def stop(self) -> bool:
         self.inst.write("TBAS:RUN OFF")
@@ -789,8 +812,8 @@ class DTG5274_mock(DTG5274):
         Instrument.__init__(self, name, conf, prefix)
 
         self.inst = self.dummyInst()
-        self.check_required_conf(("root_local",))
-        self.ROOT_LOCAL = self.conf["root_local"]
+        self.check_required_conf(("local_dir",))
+        self.LOCAL_DIR = self.conf["local_dir"]
         self.SCAFFOLD = self.conf.get("scaffold_filename", "scaffold.dtg")
 
         self.CHANNELS = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7}

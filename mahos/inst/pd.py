@@ -21,6 +21,19 @@ from .daq import AnalogIn, BufferedEdgeCounter
 class APDCounter(BufferedEdgeCounter):
     """BufferedEdgeCounter for counting APD output pulses.
 
+    :param counter: The device name for counter (like /Dev1/Ctr0).
+    :type counter: str
+    :param source: The pin name for counter source (like /Dev1/PFI0).
+    :type source: str
+    :param source_dir: (default: True) Source direction. True (False) for rising (falling) edge.
+    :type source_dir: bool
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+
     :param corr_x_kcps: x-data of correction factor.
     :type corr_x_kcps: np.ndarray
     :param corr_y: y-data of correction factor.
@@ -94,7 +107,8 @@ class LUCI10(Instrument):
     1. Install LUCI-10 software (you can skip LabVIEW driver installation).
     2. Place C DLL (C:\\Program Files (x86)\\FEMTO\\LUCI-10\\Driver\\LUCI_10_x64.dll) somewhere.
 
-    :param dll_path: The path to the directory containing DLL.
+    :param dll_dir: The directory path containing DLL.
+    :type dll_dir: str
     :param index: (default: 1) Index of LUCI10 device.
     :type index: int
 
@@ -103,8 +117,8 @@ class LUCI10(Instrument):
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
 
-        if "dll_path" in self.conf:
-            p = os.path.expanduser(self.conf["dll_path"])
+        if "dll_dir" in self.conf:
+            p = os.path.expanduser(self.conf["dll_dir"])
             os.environ["PATH"] += os.pathsep + p
             os.add_dll_directory(p)
 
@@ -220,9 +234,15 @@ class OE200(AnalogIn):
 
     :param line: DAQ's physical channel for AnalogIn.
     :type line: str
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
 
-    :param dll_path: The path to the directory containing LUCI-10 DLL.
-    :type dll_path: str
+    :param dll_dir: The directory path containing LUCI-10 DLL.
+    :type dll_dir: str
     :param index: (default: 1) Index of LUCI-10 device.
     :type index: int
 
@@ -349,6 +369,13 @@ class AnalogPD(AnalogIn):
 
     :param line: DAQ's physical channel for AnalogIn.
     :type line: str
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+
     :param unit: (default: V) unit after conversion.
     :type unit: str
     :param gain: (default: 1.0) the fixed gain in [unit] / V.

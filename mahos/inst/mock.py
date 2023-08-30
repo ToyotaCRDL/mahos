@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import typing as T
+from __future__ import annotations
 import time
 import enum
 
@@ -9,6 +9,7 @@ import numpy as np
 from .instrument import Instrument
 from ..msgs.confocal_msgs import Axis
 from ..msgs.inst_camera_msgs import FrameResult
+from ..msgs.inst_tdc_msgs import RawEvents
 
 
 class Clock_mock(Instrument):
@@ -337,6 +338,7 @@ class MCS_mock(Instrument):
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
         self._range = 10
+        self.resolution_sec = 0.2e-9
         self._bin = 0.2e-9
         self._sweeps = 0.0
         from .tdc import MCS
@@ -356,13 +358,17 @@ class MCS_mock(Instrument):
 
         return status
 
+    def get_raw_events(self) -> RawEvents | None:
+        return RawEvents(np.arange(0, 10_000_000, 10, dtype=np.uint64))
+
     # Standard API
 
     def configure(self, params: dict) -> bool:
         self.logger.info(f"Dummy conf for MCS: {params}")
         if "range" in params and "bin" in params:
-            self._range = int(round(params["range"] / params["bin"]))
-            self._bin = params["bin"]
+            tbin = params["bin"] or self.resolution_sec
+            self._range = int(round(params["range"] / tbin))
+            self._bin = tbin
         return True
 
     def set(self, key: str, value=None):
@@ -387,6 +393,8 @@ class MCS_mock(Instrument):
             if not isinstance(args, int):
                 self.logger.error('get("status", args): args must be int (channel).')
             return self.get_status(args)
+        elif key == "raw_events":
+            return self.get_raw_events()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
@@ -552,7 +560,7 @@ class Camera_mock(Instrument):
         exposure_time_sec: float,
         burst_num: int = 1,
         binning: int = 1,
-        roi: T.Optional[dict] = None,
+        roi: dict | None = None,
     ) -> bool:
         self._exposure_time = exposure_time_sec
         self._mode = self.Mode.SOFT_TRIGGER

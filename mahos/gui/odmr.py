@@ -78,8 +78,8 @@ class PlotWidget(QtWidgets.QWidget):
         self.lastnBox.setMaximum(10000)
         self.normalizenBox = QtWidgets.QSpinBox(parent=self)
         self.normalizenBox.setPrefix("normalize_n: ")
-        self.normalizenBox.setMinimum(0)
-        self.normalizenBox.setMaximum(1000)
+        self.normalizenBox.setMinimum(-100)
+        self.normalizenBox.setMaximum(100)
         for w in (self.lastnBox, self.normalizenBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)

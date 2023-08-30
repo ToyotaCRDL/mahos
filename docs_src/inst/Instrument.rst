@@ -27,7 +27,6 @@ Override these methods (with the same signature) to expose the instrument's func
 
 .. autosummary::
 
-   ~Instrument.__init__
    ~Instrument.check_required_conf
    ~Instrument.check_required_params
    ~Instrument.close

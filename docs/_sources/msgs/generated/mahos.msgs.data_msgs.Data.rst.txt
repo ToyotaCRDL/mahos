@@ -1,0 +1,38 @@
+﻿mahos.msgs.data\_msgs.Data
+==========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.msgs.data_msgs
+
+.. autoclass:: Data
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Data.get_attr_h5
+      ~Data.get_attr_h5_exn
+      ~Data.has_params
+      ~Data.init_params
+      ~Data.list_attr_h5
+      ~Data.note
+      ~Data.of_h5
+      ~Data.set_note
+      ~Data.set_version
+      ~Data.set_version_h5
+      ~Data.to_h5
+      ~Data.update_params
+      ~Data.version
+      ~Data.version_h5
+   
+   
+
+   
+   
+   

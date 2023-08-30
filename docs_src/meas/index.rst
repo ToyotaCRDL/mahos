@@ -17,18 +17,22 @@ The mahos.meas package provides high-level measurement logics.
    confocal_tracker.ConfocalTracker
    odmr.ODMR
    podmr.PODMR
+   qdyne.Qdyne
    iodmr.IODMR
-   camera.Camera
    hbt.HBT
    spectroscopy.Spectroscopy
+   camera.Camera
 
 .. rubric:: IO classes
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    ConfocalIO
    ODMRIO
    PODMRIO
-   SpectroscopyIO
+   QdyneIO
+   IODMRIO
    HBTIO
+   SpectroscopyIO
+   CameraIO

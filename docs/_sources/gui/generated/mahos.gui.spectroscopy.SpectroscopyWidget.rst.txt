@@ -1,0 +1,47 @@
+﻿mahos.gui.spectroscopy.SpectroscopyWidget
+=========================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.spectroscopy
+
+.. autoclass:: SpectroscopyWidget
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SpectroscopyWidget.__init__
+      ~SpectroscopyWidget.apply_widgets
+      ~SpectroscopyWidget.export_data
+      ~SpectroscopyWidget.finalize
+      ~SpectroscopyWidget.get_plottable_data
+      ~SpectroscopyWidget.init_connection
+      ~SpectroscopyWidget.init_widgets
+      ~SpectroscopyWidget.init_with_status
+      ~SpectroscopyWidget.load_data
+      ~SpectroscopyWidget.refresh_plot
+      ~SpectroscopyWidget.request_start
+      ~SpectroscopyWidget.request_stop
+      ~SpectroscopyWidget.save_data
+      ~SpectroscopyWidget.start_acquisition
+      ~SpectroscopyWidget.update_buffer
+      ~SpectroscopyWidget.update_data
+      ~SpectroscopyWidget.update_state
+      ~SpectroscopyWidget.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

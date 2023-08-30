@@ -17,7 +17,12 @@ from ..msgs.inst_pg_msgs import TriggerType, Block, Blocks
 
 
 class PulseStreamer(Instrument):
-    """Wrapper for Swabian Instrument Pulse Streamer 8/2."""
+    """Wrapper for Swabian Instrument Pulse Streamer 8/2.
+
+    :params channels: mapping from channel names to indices.
+    :type channels: dict[str | bytes, int]
+
+    """
 
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)

@@ -1,0 +1,29 @@
+﻿mahos.inst.daq\_interface.BufferedReaderInterface
+=================================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.daq_interface
+
+.. autoclass:: BufferedReaderInterface
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BufferedReaderInterface.get_unit
+      ~BufferedReaderInterface.pop_all_block
+      ~BufferedReaderInterface.pop_all_opt
+      ~BufferedReaderInterface.pop_block
+      ~BufferedReaderInterface.pop_opt
+   
+   
+
+   
+   
+   

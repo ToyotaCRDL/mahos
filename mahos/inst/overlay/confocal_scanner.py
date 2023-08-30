@@ -112,10 +112,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
                 return
             self.clock.configure(self.params_clock)
             self.piezo.configure(self.params_piezo)
-            self.piezo.start()
-            self.piezo.write_scan_array(
-                self.scan_array[(i + 1) * self.xlen : (i + 2) * self.xlen, :]
-            )
+            self.piezo.start_scan(self.scan_array[(i + 1) * self.xlen : (i + 2) * self.xlen, :])
             self.clock.start()
 
     def get_line(self):
@@ -253,10 +250,8 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             "oversample": self.oversample,  # only for AnalogIn
         }
 
-        success = (
-            self.piezo.configure(self.params_piezo)
-            and self.piezo.start()
-            and self.piezo.write_scan_array(self.scan_array[: self.xlen, :])
+        success = self.piezo.configure(self.params_piezo) and self.piezo.start_scan(
+            self.scan_array[: self.xlen, :]
         )
         if not success:
             return self.fail_with("failed to configure and start piezo.")

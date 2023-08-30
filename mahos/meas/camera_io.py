@@ -7,8 +7,8 @@ File I/O for Camera.
 
 """
 
+from __future__ import annotations
 from os import path
-import typing as T
 
 # import numpy as np
 import matplotlib.pyplot as plt
@@ -19,19 +19,31 @@ from ..util.io import save_pickle_or_h5, load_pickle_or_h5
 
 
 class CameraIO(object):
+    """IO class for Camera."""
+
     def __init__(self, logger=None):
         if logger is None:  # use DummyLogger on interactive use
             self.logger = DummyLogger(self.__class__.__name__)
         else:
             self.logger = logger
 
-    def save_data(self, fn, image: Image, note: str = "") -> bool:
-        return save_pickle_or_h5(fn, image, Image, self.logger, note=note)
+    def save_data(self, filename: str, image: Image, note: str = "") -> bool:
+        """Save data to filename. return True on success."""
 
-    def load_data(self, fn) -> T.Optional[Image]:
-        return load_pickle_or_h5(fn, Image, self.logger)
+        return save_pickle_or_h5(filename, image, Image, self.logger, note=note)
 
-    def export_data(self, fn, image: Image, params: T.Optional[dict] = None) -> bool:
+    def load_data(self, filename: str) -> Image | None:
+        """Load data from filename. return None if load is failed."""
+
+        return load_pickle_or_h5(filename, Image, self.logger)
+
+    def export_data(self, filename: str, image: Image, params: dict | None = None) -> bool:
+        """Export the data to text or image files.
+
+        :param filename: supported extensions: .png, .pdf, and .eps.
+
+        """
+
         if params is None:
             params = {}
 
@@ -39,21 +51,21 @@ class CameraIO(object):
             self.logger.error(f"Given object ({image}) is not an Image.")
             return False
 
-        ext = path.splitext(fn)[1]
+        ext = path.splitext(filename)[1]
         if ext in (".png", ".pdf", ".eps"):
-            return self._export_data_image(fn, image, params)
+            return self._export_data_image(filename, image, params)
         else:
-            self.logger.error(f"Unknown extension to export image: {fn}")
+            self.logger.error(f"Unknown extension to export image: {filename}")
             return False
 
-    def _export_data_image(self, fn, image: Image, params):
+    def _export_data_image(self, filename: str, image: Image, params):
         fig = plt.figure()
         fig.add_subplot(111)
 
         plt.imshow(image.image, origin="upper")
 
-        plt.savefig(fn)
+        plt.savefig(filename)
         plt.close()
 
-        self.logger.info(f"Exported Image to {fn}.")
+        self.logger.info(f"Exported Image to {filename}.")
         return True

@@ -1,0 +1,26 @@
+﻿mahos.msgs.camera\_msgs.Image
+=============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.msgs.camera_msgs
+
+.. autoclass:: Image
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Image.__init__
+      ~Image.update
+   
+   
+
+   
+   
+   

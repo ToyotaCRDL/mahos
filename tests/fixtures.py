@@ -15,6 +15,7 @@ from mahos.meas.confocal_tracker import ConfocalTracker, ConfocalTrackerClient
 from mahos.meas.odmr import ODMR, ODMRClient
 from mahos.meas.podmr import PODMR, PODMRClient
 from mahos.meas.iodmr import IODMR, IODMRClient
+from mahos.meas.qdyne import Qdyne, QdyneClient
 from mahos.meas.hbt import HBT, HBTClient
 from mahos.meas.spectroscopy import Spectroscopy, SpectroscopyClient
 from mahos.meas.camera import Camera, CameraClient
@@ -32,6 +33,7 @@ tracker_name = "localhost::tracker"
 odmr_name = "localhost::odmr"
 podmr_name = "localhost::podmr"
 iodmr_name = "localhost::iodmr"
+qdyne_name = "localhost::qdyne"
 hbt_name = "localhost::hbt"
 spectroscopy_name = "localhost::spectroscopy"
 camera_name = "localhost::camera"
@@ -85,7 +87,7 @@ def gconf():
     # fix timeout and interval to test quickly
     gconf["global"]["req_timeout_ms"] = 3000
     local_conf(gconf, server_name)["poll_timeout_ms"] = 10
-    local_conf(gconf, server_name)["instrument"]["pg"]["conf"]["root_local"] = script_dir
+    local_conf(gconf, server_name)["instrument"]["pg"]["conf"]["local_dir"] = script_dir
     local_conf(gconf, param_server_name)["poll_timeout_ms"] = 10
     local_conf(gconf, log_name)["poll_timeout_ms"] = 10
     confocal_conf = local_conf(gconf, confocal_name)
@@ -96,6 +98,7 @@ def gconf():
     local_conf(gconf, odmr_name)["poll_timeout_ms"] = 50
     local_conf(gconf, podmr_name)["poll_timeout_ms"] = 50
     local_conf(gconf, iodmr_name)["poll_timeout_ms"] = 50
+    local_conf(gconf, qdyne_name)["poll_timeout_ms"] = 50
     local_conf(gconf, hbt_name)["poll_timeout_ms"] = 50
     local_conf(gconf, spectroscopy_name)["poll_timeout_ms"] = 50
     local_conf(gconf, camera_name)["poll_timeout_ms"] = 50
@@ -151,6 +154,11 @@ def podmr_conf(gconf):
 @pytest.fixture
 def iodmr_conf(gconf):
     return local_conf(gconf, iodmr_name)
+
+
+@pytest.fixture
+def qdyne_conf(gconf):
+    return local_conf(gconf, qdyne_name)
 
 
 @pytest.fixture
@@ -300,6 +308,15 @@ def podmr(ctx, gconf):
 def iodmr(ctx, gconf):
     proc, shutdown_ev = start_node_proc(ctx, IODMR, gconf, iodmr_name)
     client = IODMRClient(gconf, iodmr_name)
+    yield client
+    client.close()
+    stop_proc(proc, shutdown_ev)
+
+
+@pytest.fixture
+def qdyne(ctx, gconf):
+    proc, shutdown_ev = start_node_proc(ctx, Qdyne, gconf, qdyne_name)
+    client = QdyneClient(gconf, qdyne_name)
     yield client
     client.close()
     stop_proc(proc, shutdown_ev)

@@ -7,9 +7,9 @@ Spectrometer module.
 
 """
 
+from __future__ import annotations
 import sys
 import os
-import typing as T
 
 import numpy as np
 import clr
@@ -23,23 +23,32 @@ from System import Int64
 from System import Double
 from System.Collections.Generic import List
 
-sys.path.append(os.environ["LIGHTFIELD_ROOT"])
-sys.path.append(os.environ["LIGHTFIELD_ROOT"] + "\\AddInViews")
-clr.AddReference("PrincetonInstruments.LightFieldViewV5")
-clr.AddReference("PrincetonInstruments.LightField.AutomationV5")
-clr.AddReference("PrincetonInstruments.LightFieldAddInSupportServices")
+if "LIGHTFIELD_ROOT" in os.environ:
+    sys.path.append(os.environ["LIGHTFIELD_ROOT"])
+    sys.path.append(os.environ["LIGHTFIELD_ROOT"] + "\\AddInViews")
+    clr.AddReference("PrincetonInstruments.LightFieldViewV5")
+    clr.AddReference("PrincetonInstruments.LightField.AutomationV5")
+    clr.AddReference("PrincetonInstruments.LightFieldAddInSupportServices")
 
-from PrincetonInstruments.LightField.Automation import Automation  # noqa: E402
-from PrincetonInstruments.LightField.AddIns import ExperimentSettings  # noqa: E402
-from PrincetonInstruments.LightField.AddIns import CameraSettings  # noqa: E402
-from PrincetonInstruments.LightField.AddIns import SpectrometerSettings  # noqa: E402
-from PrincetonInstruments.LightField.AddIns import FrameCombinationMethod  # noqa: E402
+try:
+    from PrincetonInstruments.LightField.Automation import Automation  # noqa: E402
+    from PrincetonInstruments.LightField.AddIns import ExperimentSettings  # noqa: E402
+    from PrincetonInstruments.LightField.AddIns import CameraSettings  # noqa: E402
+    from PrincetonInstruments.LightField.AddIns import SpectrometerSettings  # noqa: E402
+    from PrincetonInstruments.LightField.AddIns import FrameCombinationMethod  # noqa: E402
 
-# from PrincetonInstruments.LightField.AddIns import DeviceType
+    # from PrincetonInstruments.LightField.AddIns import DeviceType
+except ImportError:
+    print("mahos.inst.spectrometer: failed to import PrincetonInstruments")
 
 
 class LightField(Instrument):
-    """Wrapper for LightField Software from Princeton Instrument."""
+    """Wrapper for LightField Software from Princeton Instrument.
+
+    :param base_config: A base configuration (Experiment) name to load on init.
+    :param base_config: str | None
+
+    """
 
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
@@ -70,12 +79,12 @@ class LightField(Instrument):
             self.logger.error(f"{name} is not a valid base_config.")
             return False
 
-    def get_base_config(self) -> T.Optional[str]:
+    def get_base_config(self) -> str | None:
         """get current base config."""
 
         return self._current_base_config
 
-    def get_base_configs(self) -> T.List[str]:
+    def get_base_configs(self) -> list[str]:
         """get list of available base configs."""
 
         return list(self.expt.GetSavedExperiments())
@@ -129,7 +138,7 @@ class LightField(Instrument):
     def get_grating_center_wavelength(self) -> float:
         return self.expt.GetValue(SpectrometerSettings.GratingCenterWavelength)
 
-    def capture(self) -> T.Optional[np.ndarray]:
+    def capture(self) -> np.ndarray | None:
         nframes = 1
         frames = self.expt.Capture(nframes)
         if frames.Regions.Length != 1:

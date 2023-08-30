@@ -45,6 +45,8 @@ class PDInterface(BufferedReaderInterface):
 
 
 class APDCounterInterface(PDInterface):
+    """Interface for APDCounter."""
+
     def correct_cps(self, raw_cps: list[float]) -> np.ndarray:
         """Correct the raw values in cps according to correction factors."""
 
@@ -57,6 +59,8 @@ class APDCounterInterface(PDInterface):
 
 
 class OE200Interface(PDInterface):
+    """Interface for FEMTO Messtechnik OE-200 Variable Gain Photoreceiver."""
+
     def set_gain(self, low_noise: bool, gain_exponent: int) -> bool:
         return self.set("gain", {"low_noise": low_noise, "gain_exponent": gain_exponent})
 

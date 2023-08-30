@@ -55,6 +55,8 @@ class VisaInstrument(Instrument):
         return self.inst.query("SYST:ERR?")
 
     def check_error(self) -> bool:
+        """query error, parse the error message, and log it if there is an error."""
+
         ret = self.query_error()
         try:
             s = ret.split(",")

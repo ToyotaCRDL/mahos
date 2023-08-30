@@ -1,0 +1,29 @@
+﻿mahos.inst.pd.APDCounter
+========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.pd
+
+.. autoclass:: APDCounter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~APDCounter.__init__
+      ~APDCounter.configure
+      ~APDCounter.correct_cps
+      ~APDCounter.correction_factor
+      ~APDCounter.get
+   
+   
+
+   
+   
+   

@@ -7,7 +7,7 @@ Typed Interface for Spectrometer.
 
 """
 
-import typing as T
+from __future__ import annotations
 
 import numpy as np
 
@@ -17,7 +17,7 @@ from .interface import InstrumentInterface
 class SpectrometerInterface(InstrumentInterface):
     """Interface for Spectrometer."""
 
-    def get_data(self) -> T.Optional[np.ndarray]:
+    def get_data(self) -> np.ndarray | None:
         """Start one-time acquisition and return data.
 
         Shape of returned array is (2, number of pixels).
@@ -33,7 +33,7 @@ class SpectrometerInterface(InstrumentInterface):
     def get_config(self) -> dict:
         """Get config dict including following parameters.
 
-        Returns:
+        :returns: dict[str, Any] with following keys.
             base_config (str): loaded base config.
             exposure_time (float): exposure time in ms.
             exposures (int): number of repeated exposures.
@@ -43,12 +43,12 @@ class SpectrometerInterface(InstrumentInterface):
 
         return self.get("config")
 
-    def get_base_config(self) -> T.Optional[str]:
+    def get_base_config(self) -> str | None:
         """get current base config (saved experiment)."""
 
         return self.get("base_config")
 
-    def get_base_configs(self) -> T.List[str]:
+    def get_base_configs(self) -> list[str]:
         """get list of available base configs."""
 
         return self.get("base_configs")
@@ -90,17 +90,21 @@ class SpectrometerInterface(InstrumentInterface):
 
     def configure_acquisition(
         self,
-        base_config: T.Optional[str] = None,
-        exposure_time_ms: T.Optional[float] = None,
-        exposures: T.Optional[int] = None,
-        center_wavelength_nm: T.Optional[float] = None,
+        base_config: str | None = None,
+        exposure_time_ms: float | None = None,
+        exposures: int | None = None,
+        center_wavelength_nm: float | None = None,
     ) -> bool:
         """Configure acquisition.
 
         :param base_config: name of predefined base configuration.
+        :type base_config: str
         :param exposure_time_ms: (ms) exposure time in ms.
+        :type exposure_time_ms: float
         :param exposures: number of repeated exposures.
+        :type exposures: int
         :param center_wavelength_nm: (nm) center wavelength in nm.
+        :type center_wavelength_nm: float
 
         """
 

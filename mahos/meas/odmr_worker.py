@@ -155,7 +155,7 @@ class Sweeper(Worker):
         period = round(freq / params["pd_rate"])
         bg_delay = round(freq * params.get("background_delay", 0.0))
         samples = self._get_oversamp_CW_analog(params)
-        w = 10  # 1 us
+        w = 1  # 0.1 us
         pat_laser_mw = [(("laser", "mw"), period - w), (("laser", "mw", "gate"), w)] * samples
         pat_laser = [(("laser"), period - w), (("laser", "gate"), w)] * samples
         if params.get("background", False):

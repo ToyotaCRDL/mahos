@@ -1,0 +1,68 @@
+﻿mahos.inst.sg.MG3710E
+=====================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.sg
+
+.. autoclass:: MG3710E
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MG3710E.__init__
+      ~MG3710E.abort
+      ~MG3710E.configure
+      ~MG3710E.configure_CW
+      ~MG3710E.configure_point_trig_freq_sweep
+      ~MG3710E.get
+      ~MG3710E.get_bounds
+      ~MG3710E.get_freq_bounds
+      ~MG3710E.get_power_bounds
+      ~MG3710E.initiate
+      ~MG3710E.query_power_condition
+      ~MG3710E.set
+      ~MG3710E.set_arb
+      ~MG3710E.set_dm
+      ~MG3710E.set_dm_invert
+      ~MG3710E.set_dm_output
+      ~MG3710E.set_dm_source
+      ~MG3710E.set_freq_CW
+      ~MG3710E.set_freq_mode
+      ~MG3710E.set_freq_range
+      ~MG3710E.set_init_cont
+      ~MG3710E.set_list_type
+      ~MG3710E.set_modulation
+      ~MG3710E.set_output
+      ~MG3710E.set_power
+      ~MG3710E.set_power_mode
+      ~MG3710E.set_route_marker1
+      ~MG3710E.set_sweep_dwell_time
+      ~MG3710E.set_sweep_points
+      ~MG3710E.set_sweep_trig_source
+      ~MG3710E.set_sweep_trigger
+      ~MG3710E.set_sweep_trigger_mode
+      ~MG3710E.set_trig_source
+      ~MG3710E.start
+      ~MG3710E.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MG3710E.FREQ_MODE
+      ~MG3710E.MARKER1_ROUTE
+      ~MG3710E.POWER_MODE
+      ~MG3710E.TRIG_SOURCE
+   
+   

@@ -1,11 +1,11 @@
 Node, Client, and Communication
 ===============================
 
-MAHOS is a `distributed system`, which consists of multiple programs (processes) communicating each other.
+MAHOS helps to build `distributed systems`, which consists of multiple programs (processes) communicating each other.
 We call these programs :term:`nodes <node>` (:class:`Node <mahos.node.node.Node>`).
 A node usually provides some services for other nodes.
 The :term:`node client` (:class:`NodeClient <mahos.node.client.NodeClient>`) provides the standard way to access node's functions.
-The core functionalities of node systems are implementated in :ref:`mahos.node` package.
+The core functionalities of node systems are implemented in :ref:`mahos.node` package.
 
 The node :class:`communication <mahos.node.comm.Context>` is currently based on `ZeroMQ <https://zeromq.org/>`_ library.
 The transport layer is abstracted by ZeroMQ, and we can choose different transports by changing a configuration (the endpoint) only.

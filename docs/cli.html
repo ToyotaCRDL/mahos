@@ -418,16 +418,19 @@ document.write(`
 <p>After installing mahos package, a command <code class="docutils literal notranslate"><span class="pre">mahos</span></code> is installed.
 This command serves as a command line interface (CLI) to use mahos.
 The <code class="docutils literal notranslate"><span class="pre">mahos</span></code> CLI provides several sub-commands described below.</p>
+<section id="node-operations">
+<h2>Node operations<a class="headerlink" href="#node-operations" title="Permalink to this heading">#</a></h2>
 <section id="common-arguments">
-<h2>Common arguments<a class="headerlink" href="#common-arguments" title="Permalink to this heading">#</a></h2>
+<h3>Common arguments<a class="headerlink" href="#common-arguments" title="Permalink to this heading">#</a></h3>
+<p>There are common arguments for node operation commands:</p>
 <section id="c-config-file">
-<h3>-c [config file]<a class="headerlink" href="#c-config-file" title="Permalink to this heading">#</a></h3>
-<p>To use CLI, you have to prepare toml-based <a class="reference internal" href="conf.html"><span class="doc">configuration file</span></a>.
+<h4>-c [config file]<a class="headerlink" href="#c-config-file" title="Permalink to this heading">#</a></h4>
+<p>To operate on MAHOS nodes, you have to prepare toml-based <a class="reference internal" href="conf.html"><span class="doc">configuration file</span></a>.
 The <code class="docutils literal notranslate"><span class="pre">-c</span></code> option specifies the path to config file.
 Defaults to <code class="docutils literal notranslate"><span class="pre">conf.toml</span></code>.</p>
 </section>
 <section id="h-hostname">
-<h3>-H [hostname]<a class="headerlink" href="#h-hostname" title="Permalink to this heading">#</a></h3>
+<h4>-H [hostname]<a class="headerlink" href="#h-hostname" title="Permalink to this heading">#</a></h4>
 <p>CLI command usually targets a node.
 The full-name of the node consists of hostname and nodename.
 The <code class="docutils literal notranslate"><span class="pre">-H</span></code> option specifies the hostname part.
@@ -435,49 +438,58 @@ Defaults to real hostname (<code class="docutils literal notranslate"><span clas
 </section>
 </section>
 <section id="mahos-run">
-<span id="id1"></span><h2>mahos run<a class="headerlink" href="#mahos-run" title="Permalink to this heading">#</a></h2>
+<span id="id1"></span><h3>mahos run<a class="headerlink" href="#mahos-run" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">run</span> <span class="pre">[nodename]</span></code> starts a mahos node.</p>
 </section>
 <section id="mahos-launch">
-<span id="id2"></span><h2>mahos launch<a class="headerlink" href="#mahos-launch" title="Permalink to this heading">#</a></h2>
+<span id="id2"></span><h3>mahos launch<a class="headerlink" href="#mahos-launch" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">[nodenames]</span></code> starts all the nodes (or specified nodes) pertaining to single host.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">-e</span> <span class="pre">[nodenames-to-exclude]</span></code> starts all the nodes excluding specified names.</p>
 </section>
 <section id="mahos-log">
-<h2>mahos log<a class="headerlink" href="#mahos-log" title="Permalink to this heading">#</a></h2>
+<h3>mahos log<a class="headerlink" href="#mahos-log" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">log</span> <span class="pre">[nodename=log_broker]</span></code> subscribes to a <a class="reference internal" href="node/generated/mahos.node.log_broker.LogBroker.html#mahos.node.log_broker.LogBroker" title="mahos.node.log_broker.LogBroker"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogBroker</span></code></a> to print logs on console.</p>
 </section>
 <section id="mahos-ls">
-<h2>mahos ls<a class="headerlink" href="#mahos-ls" title="Permalink to this heading">#</a></h2>
+<h3>mahos ls<a class="headerlink" href="#mahos-ls" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">ls</span></code> prints the list of defined nodes in the config file.</p>
 </section>
 <section id="mahos-graph">
-<span id="id3"></span><h2>mahos graph<a class="headerlink" href="#mahos-graph" title="Permalink to this heading">#</a></h2>
+<span id="id3"></span><h3>mahos graph<a class="headerlink" href="#mahos-graph" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">graph</span></code> visualizes the config file as graph.</p>
 <p>Add option <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">[filename]</span></code> to save to a file.</p>
 </section>
 <section id="mahos-echo">
-<h2>mahos echo<a class="headerlink" href="#mahos-echo" title="Permalink to this heading">#</a></h2>
+<h3>mahos echo<a class="headerlink" href="#mahos-echo" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">echo</span> <span class="pre">-t</span> <span class="pre">[topicname]</span> <span class="pre">[nodename]</span></code> subscribes to a topic and print published messages.</p>
 </section>
 <section id="mahos-shell">
-<h2>mahos shell<a class="headerlink" href="#mahos-shell" title="Permalink to this heading">#</a></h2>
+<h3>mahos shell<a class="headerlink" href="#mahos-shell" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">shell</span> <span class="pre">[nodenames]</span></code> starts an IPython shell with clients for the nodes.</p>
 <p>A bound variable <code class="docutils literal notranslate"><span class="pre">cli</span></code> holds instances of the clients.
 For each client, <code class="docutils literal notranslate"><span class="pre">client.M</span></code> is the message module that may be required to invoke client APIs.</p>
 </section>
+</section>
+<section id="data-operations">
+<h2>Data operations<a class="headerlink" href="#data-operations" title="Permalink to this heading">#</a></h2>
 <section id="mahos-data-ls">
-<h2>mahos data ls<a class="headerlink" href="#mahos-data-ls" title="Permalink to this heading">#</a></h2>
+<h3>mahos data ls<a class="headerlink" href="#mahos-data-ls" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">ls</span> <span class="pre">[filenames]</span></code> prints the list of attributes and types in data files.</p>
 </section>
+<section id="mahos-data-note">
+<h3>mahos data note<a class="headerlink" href="#mahos-data-note" title="Permalink to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">note</span> <span class="pre">[filenames]</span></code> prints (or amends) the note attribute in data files.</p>
+<p>Add option <code class="docutils literal notranslate"><span class="pre">-a</span> <span class="pre">[new</span> <span class="pre">note</span> <span class="pre">string]</span></code> to amend the note in the files.</p>
+</section>
 <section id="mahos-data-print">
-<h2>mahos data print<a class="headerlink" href="#mahos-data-print" title="Permalink to this heading">#</a></h2>
+<h3>mahos data print<a class="headerlink" href="#mahos-data-print" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">print</span> <span class="pre">[filenames]</span> <span class="pre">-k</span> <span class="pre">[keys=[params]]</span></code> prints the attributes in data files.</p>
 </section>
 <section id="mahos-data-plot">
-<h2>mahos data plot<a class="headerlink" href="#mahos-data-plot" title="Permalink to this heading">#</a></h2>
+<h3>mahos data plot<a class="headerlink" href="#mahos-data-plot" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">plot</span> <span class="pre">[subcommand]</span></code> plots the data inside data files.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">plot</span></code> is a shorthand of <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">data</span> <span class="pre">plot</span></code>.</p>
+</section>
 </section>
 </section>
 
@@ -528,21 +540,28 @@ For each client, <code class="docutils literal notranslate"><span class="pre">cl
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-arguments">Common arguments</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#c-config-file">-c [config file]</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#h-hostname">-H [hostname]</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#node-operations">Node operations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-arguments">Common arguments</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#c-config-file">-c [config file]</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#h-hostname">-H [hostname]</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-run">mahos run</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-launch">mahos launch</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-log">mahos log</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-ls">mahos ls</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-graph">mahos graph</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-echo">mahos echo</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-shell">mahos shell</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-ls">mahos data ls</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-print">mahos data print</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-plot">mahos data plot</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-run">mahos run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-launch">mahos launch</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-log">mahos log</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-ls">mahos ls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-graph">mahos graph</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-echo">mahos echo</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-shell">mahos shell</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-operations">Data operations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-ls">mahos data ls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-note">mahos data note</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-print">mahos data print</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos-data-plot">mahos data plot</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

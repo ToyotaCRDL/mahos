@@ -1,0 +1,45 @@
+﻿mahos.inst.sg.DS\_SG
+====================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.sg
+
+.. autoclass:: DS_SG
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DS_SG.__init__
+      ~DS_SG.abort
+      ~DS_SG.configure
+      ~DS_SG.configure_CW
+      ~DS_SG.configure_point_trig_freq_sweep
+      ~DS_SG.get
+      ~DS_SG.get_bounds
+      ~DS_SG.get_freq_bounds
+      ~DS_SG.get_power_bounds
+      ~DS_SG.initiate
+      ~DS_SG.set
+      ~DS_SG.set_buzzer
+      ~DS_SG.set_freq_CW
+      ~DS_SG.set_freq_range
+      ~DS_SG.set_init_cont
+      ~DS_SG.set_list_type
+      ~DS_SG.set_output
+      ~DS_SG.set_power
+      ~DS_SG.set_sweep_dwell_time
+      ~DS_SG.set_sweep_points
+      ~DS_SG.set_trigger_mode
+   
+   
+
+   
+   
+   

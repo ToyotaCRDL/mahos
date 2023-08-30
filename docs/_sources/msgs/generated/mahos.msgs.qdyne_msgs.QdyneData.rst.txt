@@ -1,0 +1,45 @@
+﻿mahos.msgs.qdyne\_msgs.QdyneData
+================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.msgs.qdyne_msgs
+
+.. autoclass:: QdyneData
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~QdyneData.__init__
+      ~QdyneData.can_resume
+      ~QdyneData.get_bin
+      ~QdyneData.get_fit_xdata
+      ~QdyneData.get_fit_ydata
+      ~QdyneData.get_method
+      ~QdyneData.get_period
+      ~QdyneData.get_period_bins
+      ~QdyneData.get_pulse_params
+      ~QdyneData.get_xdata
+      ~QdyneData.get_ydata
+      ~QdyneData.has_data
+      ~QdyneData.has_raw_data
+      ~QdyneData.is_partial
+      ~QdyneData.remove_raw_data
+      ~QdyneData.set_instrument_params
+      ~QdyneData.set_laser_timing
+      ~QdyneData.set_marker_indices
+      ~QdyneData.set_raw_data
+      ~QdyneData.set_status
+      ~QdyneData.update_plot_params
+   
+   
+
+   
+   
+   

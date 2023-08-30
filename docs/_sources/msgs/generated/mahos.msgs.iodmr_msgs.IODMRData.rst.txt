@@ -1,0 +1,29 @@
+﻿mahos.msgs.iodmr\_msgs.IODMRData
+================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.msgs.iodmr_msgs
+
+.. autoclass:: IODMRData
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~IODMRData.__init__
+      ~IODMRData.finalize
+      ~IODMRData.is_finalized
+      ~IODMRData.resume
+      ~IODMRData.start
+   
+   
+
+   
+   
+   

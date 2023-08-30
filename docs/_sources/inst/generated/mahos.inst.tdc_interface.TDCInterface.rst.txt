@@ -1,0 +1,35 @@
+﻿mahos.inst.tdc\_interface.TDCInterface
+======================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.tdc_interface
+
+.. autoclass:: TDCInterface
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TDCInterface.clear
+      ~TDCInterface.configure_base_range_bin
+      ~TDCInterface.configure_base_range_bin_save
+      ~TDCInterface.configure_range_bin
+      ~TDCInterface.get_data
+      ~TDCInterface.get_range_bin
+      ~TDCInterface.get_raw_events
+      ~TDCInterface.get_status
+      ~TDCInterface.get_timebin
+      ~TDCInterface.set_save_file_name
+      ~TDCInterface.set_sweeps
+   
+   
+
+   
+   
+   

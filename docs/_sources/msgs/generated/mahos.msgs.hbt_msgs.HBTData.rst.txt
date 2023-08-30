@@ -1,0 +1,42 @@
+﻿mahos.msgs.hbt\_msgs.HBTData
+============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.msgs.hbt_msgs
+
+.. autoclass:: HBTData
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HBTData.__init__
+      ~HBTData.can_resume
+      ~HBTData.denormalize_xdata
+      ~HBTData.denormalize_ydata
+      ~HBTData.get_bg_ratio
+      ~HBTData.get_bin
+      ~HBTData.get_fit_xdata
+      ~HBTData.get_fit_ydata
+      ~HBTData.get_range
+      ~HBTData.get_reference
+      ~HBTData.get_reference_window
+      ~HBTData.get_t0
+      ~HBTData.get_xdata
+      ~HBTData.get_ydata
+      ~HBTData.has_data
+      ~HBTData.init_axes
+      ~HBTData.set_bin
+      ~HBTData.update_plot_params
+   
+   
+
+   
+   
+   

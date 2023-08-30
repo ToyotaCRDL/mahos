@@ -13,6 +13,8 @@ import numpy as np
 
 from .interface import InstrumentInterface
 
+from ..msgs.inst_tdc_msgs import RawEvents
+
 
 class TDCInterface(InstrumentInterface):
     """Interface for Time to Digital Converter."""
@@ -87,10 +89,15 @@ class TDCInterface(InstrumentInterface):
 
         return self.get("status", ch)
 
-    def get_raw_events(self) -> list[np.ndarray] | None:
+    def get_raw_events(self) -> str | RawEvents | None:
         """Get raw events of last measurement.
 
-        Each array contains the raw events per channel in unit of timebin.
+        Because RawEvents can be huge (> GB), the TDC can choose
+        to transfer data via file system, instead of mahos (ZeroMQ) message.
+
+        :returns: str: the file name of saved RawEvents.
+                  RawEvents: the RawEvents.
+                  None: failure.
 
         """
 

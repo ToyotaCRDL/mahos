@@ -13,7 +13,7 @@ import numpy as np
 try:
     import cv2
 except ImportError:
-    print("cv2 couldn't be imported. (in mahos.meas.confocal_tracker)")
+    print("mahos.meas.confocal_tracker: failed to import cv2")
 
 from .. import cache_dir
 from .confocal import ConfocalClient

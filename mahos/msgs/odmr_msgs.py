@@ -64,7 +64,10 @@ class ODMRData(BasicMeasData):
     def _get_ydata_nobg(self, last_n, normalize_n):
         ydata = np.mean(self.data[:, -last_n:], axis=1)
         if normalize_n:
-            coeff = np.mean(np.sort(ydata)[-normalize_n:])
+            if normalize_n > 0:
+                coeff = np.mean(np.sort(ydata)[-normalize_n:])
+            else:
+                coeff = np.mean(np.sort(ydata)[:-normalize_n])
             if coeff != 0.0:
                 ydata /= coeff
         return ydata, None
@@ -81,9 +84,15 @@ class ODMRData(BasicMeasData):
     ) -> tuple[NDArray | None, NDArray | None]:
         """get ydata.
 
+        :param last_n: if nonzero, take last_n sweeps to make y data.
+        :param normalize_n: if non-zero, normalize the y data.
+            if this has background data, any non-zero value invokes normalization
+            using background data. if background data is not available and normalize_n is
+            positive (negative), top (bottom) normalize_n data points are used to determine
+            the baseline.
         :returns: (raw_ydata, background_ydata) if normalize_n is 0 and background is available.
                   (raw_ydata, None) if normalize_n is 0 and background is not available.
-                  (normalized_ydata, None) if normalize_n is positive.
+                  (normalized_ydata, None) if normalize_n is non-zero.
                   (None, None) if data is not ready.
 
         """
@@ -119,7 +128,10 @@ class ODMRData(BasicMeasData):
 
         ## normalize by measured ydata.
         ydata = np.mean(self.data[:, -last_n:], axis=1)
-        coeff = np.mean(np.sort(ydata)[-normalize_n:])
+        if normalize_n > 0:
+            coeff = np.mean(np.sort(ydata)[-normalize_n:])
+        else:
+            coeff = np.mean(np.sort(ydata)[:-normalize_n])
         if coeff == 0.0:
             return self.fit_data
         return self.fit_data / coeff

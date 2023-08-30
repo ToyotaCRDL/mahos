@@ -10,7 +10,7 @@ available class(es):
 
 """
 
-import typing as T
+from __future__ import annotations
 from itertools import product
 
 import numpy as np
@@ -23,7 +23,20 @@ from ..msgs.confocal_msgs import Axis
 
 
 class E727_3_USB(Instrument):
-    """E727.3 driver using USB connection of PIPython."""
+    """E727.3 driver using USB connection of PIPython.
+
+    :param start_servo: (default: True) if True, start servo on init.
+    :type start_servo: bool
+    :param limit_um: (default: [[0.0, 100.0], [0.0, 100.0], [0.0, 100.0)]) limits of positions
+        in command coordinate in the following format:
+        [[xmin, xmax], [ymin, ymax], [zmin, zmax]].
+    :type limit_um: list[tuple[float, float]]
+    :param axes_order: (default: [0, 1, 2]) permutation for piezo axes IDs and (x, y, z).
+        When axes_order is [1, 2, 0], the x axis is piezo axis of index 1,
+        and the y (z) axis is index 2 (0).
+    :type axes_order: tuple[int, int, int]
+
+    """
 
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
@@ -44,19 +57,19 @@ class E727_3_USB(Instrument):
         self.logger.info(f"Connected to {devs[0]}.")
 
     def init_param(self):
-        limits = self.conf.get("limits_um", ((0.0, 100.0), (0.0, 100.0), (0.0, 100.0)))
-        for low, high in limits:
-            if low < 0.0 or high > 100.0:
-                raise ValueError("limits_um is invalid")
+        limit = self.conf.get("limit_um", ((0.0, 100.0), (0.0, 100.0), (0.0, 100.0)))
+        for low, high in limit:
+            if low < 0.0 or high > 200.0:
+                raise ValueError("limit_um is invalid")
         axes_order = self.conf.get("axes_order", [0, 1, 2])
 
         ids = self.dev.qSAI()
         self.AXIS_IDs = [ids[i] for i in axes_order]
         self.AXIS_ID_X, self.AXIS_ID_Y, self.AXIS_ID_Z = self.AXIS_IDs
         self.Axis_to_ID = {Axis.X: self.AXIS_ID_X, Axis.Y: self.AXIS_ID_Y, Axis.Z: self.AXIS_ID_Z}
-        self.limits = {ax: r for ax, r in zip(self.AXIS_IDs, limits)}
+        self.limit = {ax: r for ax, r in zip(self.AXIS_IDs, limit)}
         self.target = {ax: 0.0 for ax in self.AXIS_IDs}
-        self._range = [self.limits[ax] for ax in self.AXIS_IDs]
+        self.range = [self.limit[ax] for ax in self.AXIS_IDs]
 
         self.logger.info(f"got AXIS_IDs: {self.AXIS_IDs}")
 
@@ -87,7 +100,7 @@ class E727_3_USB(Instrument):
             if ax not in self.AXIS_IDs:
                 self.logger.error(f"Unknown Axis ID: {ax}")
                 return False
-            mn, mx = self.limits[ax]
+            mn, mx = self.limit[ax]
             if positions[i] < mn:
                 positions[i] = mn
             if positions[i] > mx:
@@ -109,19 +122,19 @@ class E727_3_USB(Instrument):
     def set_target_Z(self, position) -> bool:
         return self.set_target_pos([position], (self.AXIS_ID_Z,))
 
-    def query_servo(self) -> T.List[bool]:
+    def query_servo(self) -> list[bool]:
         r = self.dev.qSVO(self.AXIS_IDs)
         return [r[ax] for ax in self.AXIS_IDs]
 
-    def query_pos(self) -> T.List[float]:
+    def query_pos(self) -> list[float]:
         r = self.dev.qPOS(axes=self.AXIS_IDs)
         return [r[ax] for ax in self.AXIS_IDs]
 
-    def query_on_target(self) -> T.List[bool]:
+    def query_on_target(self) -> list[bool]:
         r = self.dev.qONT(axes=self.AXIS_IDs)
         return [r[ax] for ax in self.AXIS_IDs]
 
-    def query_target_pos(self) -> T.List[float]:
+    def query_target_pos(self) -> list[float]:
         r = self.dev.qMOV(axes=self.AXIS_IDs)
         return [r[ax] for ax in self.AXIS_IDs]
 
@@ -132,7 +145,7 @@ class E727_3_USB(Instrument):
         for ax, p in zip(self.AXIS_IDs, pos):
             self.target[ax] = p
 
-    def set_target(self, value: T.Union[dict, T.Sequence[float]]):
+    def set_target(self, value: dict | list[float]):
         if isinstance(value, dict) and "ax" in value and "pos" in value:
             ax, p = value["ax"], value["pos"]
             if all([isinstance(v, (tuple, list)) for v in (ax, p)]) and len(ax) == len(p):
@@ -168,7 +181,7 @@ class E727_3_USB(Instrument):
         return [self.target[ax] for ax in self.AXIS_IDs]
 
     def get_range(self):
-        return self._range
+        return self.range
 
     # Standard API
 
@@ -213,6 +226,44 @@ class E727_3_USB(Instrument):
 
 
 class E727_3_USB_AO(E727_3_USB):
+    """E727.3 driver using USB connection of PIPython and DAQ AnalogOut.
+
+    :param start_servo: (default: True) if True, start servo on init.
+    :type start_servo: bool
+    :param lines: list of strings to designate DAQ AnalogOut physical channels.
+    :type lines: list[str]
+    :param scale_volt_per_um: the AnalogOut voltage scale in V / um.
+        the output voltage is determined by: (pos_um - offset_um) * scale_volt_per_um.
+    :type scale_volt_per_um: float
+    :param offset_um: the AnalogOut voltage offset in um. see scale_volt_per_um too.
+    :type offset_um: float
+    :param transform: (default: identity matrix) a 3x3 linear transformation matrix
+        from (real) target coordinate to command-value coordinate.
+        This is usable for tilt correction to compensate the cross-talks in piezo axes.
+    :type transform: list[list[float]]
+    :param limit_um: (default: [[0.0, 100.0], [0.0, 100.0], [0.0, 100.0)]) limits of positions
+        in command coordinate in the following format:
+        [[xmin, xmax], [ymin, ymax], [zmin, zmax]].
+    :param range_um: travel ranges in target coordinate in the following format:
+        [[xmin, xmax], [ymin, ymax], [zmin, zmax]].
+        This should be identical to limit_um if transform is default (identity matrix), i.e.,
+        the target corrdinate and the command-value coordinate are identical.
+    :type range_um: list[tuple[float, float]]
+    :param axes_order: (default: [0, 1, 2]) permutation for piezo axes IDs and (x, y, z).
+        When axes_order is [1, 2, 0], the x axis is piezo axis of index 1,
+        and the y (z) axis is index 2 (0).
+    :type axes_order: tuple[int, int, int]
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+    :param write_and_start: (default: False) if False, DAQ Task is started and then
+        scan data is written in start_scan(). True reverses this order.
+        Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)
+    :type write_and_start: bool
+
+    """
+
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
         self.init_device()
@@ -224,17 +275,18 @@ class E727_3_USB_AO(E727_3_USB):
             raise ValueError("length of AO lines and number of axis don't match.")
         self._scale_volt_per_um = self.conf["scale_volt_per_um"]
         self._offset_um = self.conf["offset_um"]
+        self._write_and_start = self.conf.get("write_and_start", False)
 
         # linear transformation from target space (x, y, z) to command space (X, Y, Z)
         if "transform" in self.conf:
             self.T = np.array(self.conf["transform"], dtype=np.float64)
             self.Tinv = np.linalg.inv(self.T)
-            self.check_required_conf(("range",))
-            # self._range is cubic-range in command space:
-            # [self.limits[ax] for ax in self.AXIS_IDs]
-            low, high = np.array(self._range).T
-            # self.conf["range"] defines cubic-range in target space
-            for corner_point in product(*self.conf["range"]):
+            self.check_required_conf(("range_um",))
+            # self.range is cubic-range in command space:
+            # [self.limit[ax] for ax in self.AXIS_IDs]
+            low, high = np.array(self.range).T
+            # self.conf["range_um"] defines cubic-range in target space
+            for corner_point in product(*self.conf["range_um"]):
                 p = self.T @ np.array(corner_point)
                 if any(p < low) or any(high < p):
                     msg = f"range corner point {p} goes outside command space limit {low}, {high}."
@@ -243,14 +295,18 @@ class E727_3_USB_AO(E727_3_USB):
                 else:
                     self.logger.debug("corner point: {:.4f}, {:.4f}, {:.4f}".format(*p))
             # overwrite with range in target space.
-            self._range = self.conf["range"]
+            self.range = self.conf["range_um"]
         else:
             self.T = self.Tinv = np.eye(3)
 
         ao_name = name + "_ao"
         # bounds in volts converted from command space range
-        bounds = [[self.um_to_volt_raw(v) for v in self.limits[ax]] for ax in self.AXIS_IDs]
-        ao_param = {"lines": lines, "bounds": bounds}
+        bounds = [[self.um_to_volt_raw(v) for v in self.limit[ax]] for ax in self.AXIS_IDs]
+        ao_param = {
+            "lines": lines,
+            "bounds": bounds,
+            "samples_margin": self.conf.get("samples_margin", 1),
+        }
         self._ao = AnalogOut(ao_name, ao_param, prefix=prefix)
 
         if self.conf.get("start_servo", True):
@@ -261,6 +317,14 @@ class E727_3_USB_AO(E727_3_USB):
         # Transpose to 3 x N, convert, and transpose again to N x 3.
         volts = self.um_to_volt(scan_array.T).T
         return self._ao.set_output(volts, auto_start=False)
+
+    def start_scan(self, scan_array: np.ndarray) -> bool:
+        """start the configured scan with scan_array."""
+
+        if self._write_and_start:
+            return self.write_scan_array(scan_array) and self.start()
+        else:
+            return self.start() and self.write_scan_array(scan_array)
 
     def join(self, timeout_sec: float):
         return self._ao.join(timeout_sec)

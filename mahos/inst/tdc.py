@@ -17,6 +17,9 @@ import numpy as np
 
 from .instrument import Instrument
 
+from ..msgs.inst_tdc_msgs import RawEvents
+from ..util.io import save_h5
+
 
 def c_str(s: str) -> C.c_char_p:
     """Convert Python string to C Constant String (pointer to NULL terminated of chars)"""
@@ -28,13 +31,15 @@ class MCS(Instrument):
     """Wrapper Class of DMCSX.dll for Fast ComTec MCS6 / MCS8 Series.
 
     :param base_configs: Mapping from base config name to actual file name.
-        Used in configure_base_range_bin() etc.
+        Used in configure_base_range_bin() etc. See load_config() for details.
     :type base_configs: dict[str, str]
-    :param home: (default: "C:\\mcs8x64") Home directory for mcs8 software.
-    :type home: str
     :param ext_ref_clock: use external reference clock source.
     :type ext_ref_clock: bool
-    :param remove_lst: (default: True) Remove *.lst file after loading it.
+    :param mcs_dir: (default: "C:\\mcs8x64") The directory containing mcs8 software.
+    :type mcs_dir: str
+    :param raw_events_dir: (default: mcs_dir) The directory to save RawEvents data.
+    :type raw_events_dir: str
+    :param remove_lst: (default: True) Remove .lst file after loading it.
     :type remove_lst: bool
     :param lst_channels: (default: [8, 9]) Collected channels for lst file.
         Under a setting, default value [8, 9] corresponds to STOP1 and STOP2.
@@ -151,11 +156,12 @@ class MCS(Instrument):
         self.logger.info(f"Loaded {fn}")
 
         self._base_configs = self.conf.get("base_configs", {})
-        self._home = self.conf.get("home", "C:\\mcs8x64")
-        self._save_file_name = None
+        self._mcs_dir = os.path.expanduser(self.conf.get("mcs_dir", "C:\\mcs8x64"))
+        self._raw_events_dir = os.path.expanduser(self.conf.get("raw_events_dir", self._mcs_dir))
         self._remove_lst = self.conf.get("remove_lst", True)
         self._lst_channels = self.conf.get("lst_channels", [8, 9])
         self.logger.debug(f"available base config files: {self._base_configs}")
+        self._save_file_name = None
 
         # Ref. clock setting is not affected by load_config() and
         # persistent during MCS software is alive.
@@ -173,9 +179,27 @@ class MCS(Instrument):
             return True
 
     def load_config(self, fn: str) -> bool:
-        """Load config (*.set) file for MCS."""
+        """Load configuration file for MCS.
 
-        return self.run_command(f"loadcnf {fn}")
+        Setting file (.set) is loaded by loadcnf command.
+        Control (.ctl) is executed by run command.
+
+        Setting file is logically proper,
+        however, loadcnf command can cause hang-up in some cases.
+        (depending on MCS software versions or config content, details unknown.)
+        This problem can be avoided sometimes using run command instead of loadcnf.
+        The .set file can be just renamed to .ctl for this use case.
+
+        """
+
+        if fn.lower().endswith(".set"):
+            self.logger.info(f"loading config by loadcnf {fn}")
+            return self.run_command(f"loadcnf {fn}")
+        elif fn.lower().endswith(".ctl"):
+            self.logger.info(f"loading config by run {fn}")
+            return self.run_command(f"run {fn}")
+        else:
+            return self.fail_with(f"Unknown file type: {fn}")
 
     def clear(self) -> bool:
         """Clear all spectra data."""
@@ -261,7 +285,7 @@ class MCS(Instrument):
         return True
 
     def remove_saved_file(self, name: str) -> bool:
-        f = os.path.join(self._home, name)
+        f = os.path.join(self._mcs_dir, name)
         if not os.path.exists(f):
             return self.fail_with(f"File doesn't exist: {f}")
         os.remove(f)
@@ -331,24 +355,41 @@ class MCS(Instrument):
         self.dll.StoreMCSSetting(C.byref(setting), self.nDev)
         self.dll.NewSetting(self.nDev)
 
-    def load_raw_events(self) -> list[np.ndarray] | None:
+    def get_raw_events(self) -> str | None:
         if not self._save_file_name:
             self.logger.error("save file name has not been set.")
             return None
 
-        file_name = os.path.splitext(self._save_file_name)[0] + ".lst"
-        file_name = os.path.join(self._home, file_name)
+        lst_name = os.path.splitext(self._save_file_name)[0] + ".lst"
+        lst_path = os.path.join(self._mcs_dir, lst_name)
 
-        ret = self.load_lst_file(file_name)
+        ret = self.load_lst_file(lst_path)
+        self.logger.debug(f"Loaded lst file {lst_path}")
 
         if self._remove_lst:
-            self.remove_saved_file(file_name)
+            self.remove_saved_file(lst_path)
 
         if ret is None:
             return None
 
         _, format_info, data = ret
-        return self.convert_raw_events(format_info, data)
+        events = self.convert_raw_events(format_info, data)
+
+        self.logger.debug("Start sorting raw events")
+        data = np.concatenate(events)
+        # in-place sort to reduce memory consumption? (effect not confirmed)
+        data.sort()
+        self.logger.debug("Finished sorting raw events")
+
+        h5_name = os.path.splitext(self._save_file_name)[0] + ".h5"
+        h5_path = os.path.join(self._raw_events_dir, h5_name)
+
+        self.logger.info(f"Saving converted raw events to {h5_path}")
+        success = save_h5(h5_path, RawEvents(data), RawEvents, self.logger, compression="lzf")
+        if success:
+            return h5_name
+        else:
+            return None
 
     def convert_raw_events(self, format_info, data) -> list[np.ndarray]:
         cl, ch = format_info["channel"]
@@ -539,7 +580,7 @@ class MCS(Instrument):
                 self.logger.error('get("status", args): args must be int (channel).')
             return self.get_status(args)
         elif key == "raw_events":
-            return self.load_raw_events()
+            return self.get_raw_events()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

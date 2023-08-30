@@ -1,0 +1,28 @@
+﻿mahos.inst.daq\_interface.BufferedEdgeCounterInterface
+======================================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.daq_interface
+
+.. autoclass:: BufferedEdgeCounterInterface
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BufferedEdgeCounterInterface.pop_all_block
+      ~BufferedEdgeCounterInterface.pop_all_opt
+      ~BufferedEdgeCounterInterface.pop_block
+      ~BufferedEdgeCounterInterface.pop_opt
+   
+   
+
+   
+   
+   

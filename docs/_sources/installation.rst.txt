@@ -3,18 +3,35 @@ Installation
 
 Steps to install mahos:
 
-#. You need Python >= 3.8, < 3.11.
-#. `Create Virtualenv`_ (this is optional, but recommended).
+#. Check the `System requirements`_.
+#. `Create virtualenv`_ (this is optional, but recommended).
 #. `Clone the repository`_.
 #. Install `Requirements`_.
 #. Install `The mahos package`_.
 
-.. _virtualenv-sec:
+System requirements
+-------------------
 
-Create Virtualenv
+You need Python (>= 3.8, < 3.11) on Windows or Linux, and a C++ compiler (see below).
+
+C++ compiler
+^^^^^^^^^^^^
+
+On Windows, you have to download and install the C++ compiler `Microsoft C++ Build Tools <https://visualstudio.microsoft.com/ja/visual-cpp-build-tools/>`_ in order to build the C extensions.
+You can skip this if you have already installed Visual Studio on your computer.
+
+On most of Linux, there's nothing to do here because you should have ``gcc`` already.
+
+Create virtualenv
 -----------------
 
-`Virtualenv <https://virtualenv.pypa.io/en/latest/>`_ is the recommended tool for virtual environment management. It's installable via ``pip``. ::
+`Virtualenv <https://virtualenv.pypa.io/en/latest/>`_ is the recommended tool for virtual environment management.
+Skip this section if you prefer one of the following alternatives.
+
+- You could install the requirements and the mahos package with your system Python.
+- You could use ``conda`` or other virtual environment management tools too.
+
+``virtualenv`` is installable via ``pip``. ::
 
   pip install virtualenv
 
@@ -27,8 +44,8 @@ we recommend to enable system-site-packages.
 
 Small notes on virtualenv usage:
 
-* activate: ``source <mahos env directory>/bin/activate`` or ``source <mahos env directory>/Scripts/activate``
-* deactivate: ``deactivate``
+- activate: ``source <mahos env directory>/bin/activate`` or ``source <mahos env directory>/Scripts/activate``
+- deactivate: ``deactivate``
 
 Following contents assume that the virtualenv has already been activated.
 
@@ -59,8 +76,7 @@ You can skip this if you don't need :ref:`mahos graph` command.
 Windows
 .......
 
-You have to install C++ compiler `Microsoft C++ Build Tools <https://visualstudio.microsoft.com/ja/visual-cpp-build-tools/>`_ and
-graphviz binary (version 2).
+You have to install the `C++ compiler`_ and the `graphviz binary <https://graphviz.org/download/#windows>`_ (version 2).
 And then, use following command to install pygraphviz.
 
 .. code-block:: bash
