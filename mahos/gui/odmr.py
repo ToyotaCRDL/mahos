@@ -556,7 +556,9 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 ("num", self.numBox),
                 ("start", self.startBox, 1e-6),
                 ("stop", self.stopBox, 1e-6),
+                ("delay", self.delayBox, 1e3),
                 ("background_delay", self.bgdelayBox, 1e3),
+                ("sg_modulation", self.sgmodBox),
             ],
         )
         self._analog = "pd_rate" in params
@@ -611,6 +613,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.powerBox.setValue(data.params["power"])
         bg = data.params.get("background", False)
         self.backgroundBox.setChecked(bg)
+        if "delay" in data.params:
+            self.delayBox.setValue(data.params["delay"] * 1e3)
         if bg and "background_delay" in data.params:
             self.bgdelayBox.setValue(data.params["background_delay"] * 1e3)
         if self._analog and "pd_rate" in data.params:
@@ -697,6 +701,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params["power"] = self.powerBox.value()
         params["sweeps"] = self.sweepsBox.value()
         params["background"] = self.backgroundBox.isChecked()
+        params["delay"] = self.delayBox.value() * 1e-3  # ms to s
         params["background_delay"] = self.bgdelayBox.value() * 1e-3  # ms to s
         params["sg_modulation"] = self.sgmodBox.isChecked()
 
@@ -776,6 +781,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.pulseButton,
             self.sweepsBox,
             self.backgroundBox,
+            self.delayBox,
             self.sgmodBox,
         ):
             w.setEnabled(state == BinaryState.IDLE)

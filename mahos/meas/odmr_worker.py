@@ -102,6 +102,14 @@ class Sweeper(Worker):
             sweeps=P.IntParam(0, 0, 1_000_000_000),
             timing=timing,
             background=P.BoolParam(False, doc="take background data"),
+            delay=P.FloatParam(
+                0.0,
+                0.0,
+                1.0,
+                unit="s",
+                SI_prefix=True,
+                doc="delay after PG trigger before the measurement",
+            ),
             background_delay=P.FloatParam(
                 0.0,
                 0.0,
@@ -110,7 +118,9 @@ class Sweeper(Worker):
                 SI_prefix=True,
                 doc="delay between normal and background (reference) measurements",
             ),
-            sg_modulation=P.BoolParam(False, doc="enable external IQ modulation for SG"),
+            sg_modulation=P.BoolParam(
+                self._conf.get("sg_modulation", False), doc="enable external IQ modulation for SG"
+            ),
             resume=P.BoolParam(False),
             continue_mw=P.BoolParam(False),
             ident=P.UUIDParam(optional=True, enable=False),
@@ -155,6 +165,7 @@ class Sweeper(Worker):
     def configure_pg_CW_analog(self, params: dict) -> bool:
         freq = 10.0e6
         period = round(freq / params["pd_rate"])
+        delay = round(freq * params.get("delay", 0.0))
         bg_delay = round(freq * params.get("background_delay", 0.0))
         samples = self._get_oversamp_CW_analog(params)
         w = 1  # 0.1 us
@@ -163,13 +174,17 @@ class Sweeper(Worker):
         if params.get("background", False):
             b = Block(
                 "CW-ODMR",
-                [(None, 8)] + pat_laser_mw + [(None, 8 + bg_delay)] + pat_laser + [("trigger", 1)],
+                [(None, max(8, delay))]
+                + pat_laser_mw
+                + [(None, max(8, bg_delay))]
+                + pat_laser
+                + [("trigger", 1)],
                 trigger=True,
             )
         else:
             b = Block(
                 "CW-ODMR",
-                [(None, 8)] + pat_laser_mw + [("trigger", 1)],
+                [(None, max(8, delay))] + pat_laser_mw + [("trigger", 1)],
                 trigger=True,
             )
         blocks = Blocks([b]).simplify()
@@ -178,16 +193,17 @@ class Sweeper(Worker):
     def configure_pg_CW_apd(self, params: dict) -> bool:
         freq = 1.0e6
         window = round(freq * params["timing"]["time_window"])
+        delay = round(freq * params.get("delay", 0.0))
         bg_delay = round(freq * params.get("background_delay", 0.0))
         if params.get("background", False):
             b = Block(
                 "CW-ODMR",
                 [
-                    (None, 6),
+                    (None, max(6, delay)),
                     ("gate", 1),
                     (("laser", "mw"), window),
                     ("gate", 1),
-                    (None, 6 + bg_delay),
+                    (None, max(6, bg_delay)),
                     ("gate", 1),
                     ("laser", window),
                     (("gate", "trigger"), 1),
@@ -197,21 +213,26 @@ class Sweeper(Worker):
         else:
             b = Block(
                 "CW-ODMR",
-                [(None, 6), ("gate", 1), (("laser", "mw"), window), (("gate", "trigger"), 1)],
+                [
+                    (None, max(6, delay)),
+                    ("gate", 1),
+                    (("laser", "mw"), window),
+                    (("gate", "trigger"), 1),
+                ],
                 trigger=True,
             )
         blocks = Blocks([b]).simplify()
         return self.pg.configure({"blocks": blocks, "freq": freq})
 
     def _make_blocks_pulse_apd_nobg(
-        self, laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
+        self, delay, laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
     ):
         min_len = self._minimum_block_length
 
         init = Block(
             "INIT",
             [
-                (None, max(0, min_len - laser_width - mw_delay)),
+                (None, max(delay, min_len - laser_width - mw_delay)),
                 ("laser", laser_width),
                 ("gate", trigger_width),
                 (None, mw_delay - trigger_width),
@@ -241,14 +262,22 @@ class Sweeper(Worker):
         return Blocks([init, main, final]).simplify()
 
     def _make_blocks_pulse_apd_bg(
-        self, laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
+        self,
+        delay,
+        bg_delay,
+        laser_delay,
+        laser_width,
+        mw_delay,
+        mw_width,
+        trigger_width,
+        burst_num,
     ):
         min_len = self._minimum_block_length
 
         init = Block(
             "INIT",
             [
-                (None, max(0, min_len - laser_width - mw_delay)),
+                (None, max(delay, min_len - laser_width - mw_delay)),
                 ("laser", laser_width),
                 ("gate", trigger_width),
                 (None, mw_delay - trigger_width),
@@ -278,7 +307,7 @@ class Sweeper(Worker):
         init_bg = Block(
             "INIT-BG",
             [
-                (None, max(0, min_len - laser_width - mw_delay)),
+                (None, max(bg_delay, min_len - laser_width - mw_delay)),
                 ("laser", laser_width),
                 ("gate", trigger_width),
                 (None, mw_delay - trigger_width),
@@ -308,6 +337,8 @@ class Sweeper(Worker):
 
     def configure_pg_pulse_apd(self, params: dict) -> bool:
         freq = 1.0e9
+        delay = round(freq * params.get("delay", 0.0))
+        bg_delay = round(freq * params.get("background_delay", 0.0))
         laser_delay, laser_width, mw_delay, mw_width, trigger_width = [
             round(params["timing"][k] * freq)
             for k in ("laser_delay", "laser_width", "mw_delay", "mw_width", "trigger_width")
@@ -320,11 +351,18 @@ class Sweeper(Worker):
 
         if params.get("background", False):
             blocks = self._make_blocks_pulse_apd_bg(
-                laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
+                delay,
+                bg_delay,
+                laser_delay,
+                laser_width,
+                mw_delay,
+                mw_width,
+                trigger_width,
+                burst_num,
             )
         else:
             blocks = self._make_blocks_pulse_apd_nobg(
-                laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
+                delay, laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
             )
 
         return self.pg.configure({"blocks": blocks, "freq": freq})

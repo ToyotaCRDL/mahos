@@ -97,147 +97,6 @@
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="0" column="2">
-          <widget class="QDoubleSpinBox" name="startBox">
-           <property name="prefix">
-            <string>start: </string>
-           </property>
-           <property name="suffix">
-            <string> MHz</string>
-           </property>
-           <property name="decimals">
-            <number>2</number>
-           </property>
-           <property name="minimum">
-            <double>10.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>3000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>100.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>2740.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Micro Wave</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QSpinBox" name="bnumBox">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string>burst num: </string>
-           </property>
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>999999</number>
-           </property>
-           <property name="singleStep">
-            <number>100</number>
-           </property>
-           <property name="value">
-            <number>1000</number>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="3">
-          <widget class="QDoubleSpinBox" name="mwdelayBox">
-           <property name="prefix">
-            <string>mw delay: </string>
-           </property>
-           <property name="suffix">
-            <string> ns</string>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="singleStep">
-            <double>10.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="powerBox">
-           <property name="prefix">
-            <string>power: </string>
-           </property>
-           <property name="suffix">
-            <string> dBm</string>
-           </property>
-           <property name="minimum">
-            <double>-65.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>54.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QRadioButton" name="cwButton">
-           <property name="text">
-            <string>CW</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QDoubleSpinBox" name="laserdelayBox">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="prefix">
-            <string>laser delay: </string>
-           </property>
-           <property name="suffix">
-            <string> ns</string>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="singleStep">
-            <double>10.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="4">
-          <widget class="QSpinBox" name="numBox">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string>num: </string>
-           </property>
-           <property name="minimum">
-            <number>2</number>
-           </property>
-           <property name="maximum">
-            <number>99999</number>
-           </property>
-           <property name="value">
-            <number>101</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QCheckBox" name="mwcontBox">
-           <property name="text">
-            <string>Continue MW irradiation after stop</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="1">
           <widget class="QSpinBox" name="sweepsBox">
            <property name="suffix">
@@ -260,81 +119,10 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="2">
-          <widget class="QDoubleSpinBox" name="triggerwidthBox">
-           <property name="prefix">
-            <string>trigger width: </string>
-           </property>
-           <property name="suffix">
-            <string> ns</string>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="singleStep">
-            <double>10.000000000000000</double>
-           </property>
-          </widget>
-         </item>
          <item row="4" column="2">
           <widget class="QDoubleSpinBox" name="laserwidthBox">
            <property name="prefix">
             <string>laser width: </string>
-           </property>
-           <property name="suffix">
-            <string> ns</string>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="singleStep">
-            <double>10.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QDoubleSpinBox" name="stopBox">
-           <property name="prefix">
-            <string>stop: </string>
-           </property>
-           <property name="suffix">
-            <string> MHz</string>
-           </property>
-           <property name="decimals">
-            <number>2</number>
-           </property>
-           <property name="minimum">
-            <double>10.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>3000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>100.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>3000.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLabel" name="stepLabel">
-           <property name="text">
-            <string>step: </string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QRadioButton" name="pulseButton">
-           <property name="text">
-            <string>Pulse</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="4">
-          <widget class="QDoubleSpinBox" name="mwwidthBox">
-           <property name="prefix">
-            <string>mw width: </string>
            </property>
            <property name="suffix">
             <string> ns</string>
@@ -369,21 +157,36 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QCheckBox" name="backgroundBox">
+         <item row="4" column="0">
+          <widget class="QRadioButton" name="pulseButton">
            <property name="text">
-            <string>Measure Background Data</string>
+            <string>Pulse</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Detection</string>
+         <item row="5" column="1">
+          <widget class="QSpinBox" name="bnumBox">
+           <property name="suffix">
+            <string/>
+           </property>
+           <property name="prefix">
+            <string>burst num: </string>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>999999</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>1000</number>
            </property>
           </widget>
          </item>
-         <item row="2" column="3">
+         <item row="2" column="4">
           <widget class="QSpinBox" name="pdrateBox">
            <property name="suffix">
             <string> kHz</string>
@@ -399,7 +202,211 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
+         <item row="0" column="4">
+          <widget class="QSpinBox" name="numBox">
+           <property name="suffix">
+            <string/>
+           </property>
+           <property name="prefix">
+            <string>num: </string>
+           </property>
+           <property name="minimum">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <number>99999</number>
+           </property>
+           <property name="value">
+            <number>101</number>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="4">
+          <widget class="QDoubleSpinBox" name="mwwidthBox">
+           <property name="prefix">
+            <string>mw width: </string>
+           </property>
+           <property name="suffix">
+            <string> ns</string>
+           </property>
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="singleStep">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QCheckBox" name="sgmodBox">
+           <property name="text">
+            <string>IQ modulation</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QCheckBox" name="mwcontBox">
+           <property name="text">
+            <string>Continue MW irradiation after stop</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Micro Wave</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QDoubleSpinBox" name="laserdelayBox">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="prefix">
+            <string>laser delay: </string>
+           </property>
+           <property name="suffix">
+            <string> ns</string>
+           </property>
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="singleStep">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="stepLabel">
+           <property name="text">
+            <string>step: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3">
+          <widget class="QDoubleSpinBox" name="mwdelayBox">
+           <property name="prefix">
+            <string>mw delay: </string>
+           </property>
+           <property name="suffix">
+            <string> ns</string>
+           </property>
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="singleStep">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QRadioButton" name="cwButton">
+           <property name="text">
+            <string>CW</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="powerBox">
+           <property name="prefix">
+            <string>power: </string>
+           </property>
+           <property name="suffix">
+            <string> dBm</string>
+           </property>
+           <property name="minimum">
+            <double>-65.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>54.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QDoubleSpinBox" name="triggerwidthBox">
+           <property name="prefix">
+            <string>trigger width: </string>
+           </property>
+           <property name="suffix">
+            <string> ns</string>
+           </property>
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="singleStep">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QDoubleSpinBox" name="startBox">
+           <property name="prefix">
+            <string>start: </string>
+           </property>
+           <property name="suffix">
+            <string> MHz</string>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="minimum">
+            <double>10.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>3000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>2740.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QCheckBox" name="backgroundBox">
+           <property name="text">
+            <string>Measure Background Data</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Detection</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QDoubleSpinBox" name="stopBox">
+           <property name="prefix">
+            <string>stop: </string>
+           </property>
+           <property name="suffix">
+            <string> MHz</string>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="minimum">
+            <double>10.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>3000.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>3000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
           <widget class="QDoubleSpinBox" name="bgdelayBox">
            <property name="prefix">
             <string>bg delay: </string>
@@ -415,10 +422,19 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QCheckBox" name="sgmodBox">
-           <property name="text">
-            <string>IQ modulation</string>
+         <item row="2" column="2">
+          <widget class="QDoubleSpinBox" name="delayBox">
+           <property name="prefix">
+            <string>delay: </string>
+           </property>
+           <property name="suffix">
+            <string> ms</string>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -482,6 +498,7 @@
   <tabstop>sgmodBox</tabstop>
   <tabstop>mwcontBox</tabstop>
   <tabstop>backgroundBox</tabstop>
+  <tabstop>delayBox</tabstop>
   <tabstop>bgdelayBox</tabstop>
   <tabstop>pdrateBox</tabstop>
   <tabstop>cwButton</tabstop>

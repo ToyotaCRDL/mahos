@@ -50,6 +50,23 @@ class ODMR(BasicMeasNode):
         :type sweeper.drop_first: int
         :param sweeper.sg_first: if True, turn on SG first and PG second. (default: False)
         :type sweeper.sg_first: bool
+        :param sweeper.pd_analog: set True if PD is AnalogIn-based.
+        :type sweeper.pd_analog: bool
+
+        :param sweeper.start: (default param) start frequency in Hz.
+        :type sweeper.start: float
+        :param sweeper.stop: (default param) stop frequency in Hz.
+        :type sweeper.stop: float
+        :param sweeper.num: (default param) number of frequency points.
+        :type sweeper.num: int
+        :param sweeper.power: (default param) SG output power in dBm.
+        :type sweeper.power: float
+        :param sweeper.time_window: (default param) time window for cw mode.
+        :type sweeper.time_window: float
+        :param sweeper.pd_rate: (default param) analog PD sampling rate.
+        :type sweeper.pd_rate: float
+        :param sweeper.sg_modulation: (default param) enable external IQ modulation for SG.
+        :type sweeper.sg_modulation: bool
 
         """
 

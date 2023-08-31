@@ -39,6 +39,8 @@ def apply_widgets(
             widget.setMinimum(mn)
             widget.setMaximum(mx)
             widget.setValue(v)
+        if isinstance(p, P.BoolParam):
+            widget.setChecked(p.value())
 
 
 def set_enabled(params: dict, name_widgets: list[tuple[str, QtWidgets.QWidget]]):
