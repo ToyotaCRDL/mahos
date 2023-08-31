@@ -57,7 +57,7 @@ class ODMRData(BasicMeasData):
         return self.bg_data is not None and (self.bg_data > 0).all()
 
     def is_complex(self) -> bool:
-        return self.has_data() and issubclass(self.data.dtype, np.complexfloating)
+        return self.has_data() and np.issubdtype(self.data.dtype, np.complexfloating)
 
     _complex_converters = {
         "real": np.real,
@@ -127,6 +127,9 @@ class ODMRData(BasicMeasData):
             return self._get_ydata_bg(last_n, normalize_n, complex_conv)
         else:
             return self._get_ydata_nobg(last_n, normalize_n, complex_conv)
+
+    def get_image(self, complex_conv: str = "real") -> NDArray:
+        return self.conv_complex(self.data, complex_conv)
 
     def get_fit_xdata(self):
         return self.fit_xdata

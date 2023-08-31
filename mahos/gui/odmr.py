@@ -135,9 +135,10 @@ class PlotWidget(QtWidgets.QWidget):
         self.update_plot(data_list)
 
     def update_image(self, data: ODMRData, setlevel=True):
-        self.img.updateImage(data.data)
+        img = data.get_image(self.complexBox.currentText())
+        self.img.updateImage(img)
         if setlevel:
-            mn, mx = np.nanmin(data.data), np.nanmax(data.data)
+            mn, mx = np.nanmin(img), np.nanmax(img)
             if mn == mx:
                 mn, mx = mn - 0.1, mx + 0.1
             self.histo.setLevels(mn, mx)
