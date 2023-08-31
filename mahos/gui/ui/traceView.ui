@@ -208,6 +208,30 @@
       </widget>
      </item>
      <item>
+      <widget class="QComboBox" name="complexBox">
+       <item>
+        <property name="text">
+         <string>real</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>imag</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>abs</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>angle</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -245,6 +269,21 @@
    <header>pyqtgraph</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>graphicsView</tabstop>
+  <tabstop>pauseButton</tabstop>
+  <tabstop>resumeButton</tabstop>
+  <tabstop>saveButton</tabstop>
+  <tabstop>timestampBox</tabstop>
+  <tabstop>showtotalBox</tabstop>
+  <tabstop>show0Box</tabstop>
+  <tabstop>show1Box</tabstop>
+  <tabstop>showrawBox</tabstop>
+  <tabstop>smaBox</tabstop>
+  <tabstop>fontsizeBox</tabstop>
+  <tabstop>complexBox</tabstop>
+  <tabstop>clearButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

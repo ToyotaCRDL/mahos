@@ -14,6 +14,7 @@ from numpy.typing import NDArray
 import msgpack
 
 from .common_msgs import Request
+from .data_msgs import ComplexDataMixin
 from .common_meas_msgs import BasicMeasData
 from .fit_msgs import PeakType
 from ..util import conv
@@ -26,7 +27,7 @@ class ValidateReq(Request):
         self.params = params
 
 
-class ODMRData(BasicMeasData):
+class ODMRData(BasicMeasData, ComplexDataMixin):
     """Data type for ODMR measurement."""
 
     def __init__(self, params: dict | None = None):
@@ -58,23 +59,6 @@ class ODMRData(BasicMeasData):
 
     def is_complex(self) -> bool:
         return self.has_data() and np.issubdtype(self.data.dtype, np.complexfloating)
-
-    _complex_converters = {
-        "real": np.real,
-        "imag": np.imag,
-        "abs": np.absolute,
-        "absolute": np.absolute,
-        "angle": np.angle,
-    }
-
-    def conv_complex(self, data, conv: str) -> np.ndarray | None:
-        if not self.is_complex():
-            return data
-
-        if conv in self._complex_converters:
-            return self._complex_converters[conv](data)
-        else:
-            return None
 
     def get_xdata(self):
         return np.linspace(self.params["start"], self.params["stop"], self.params["num"])

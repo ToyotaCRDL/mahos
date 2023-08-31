@@ -665,13 +665,13 @@ class subImage(pg.ImageItem):
 class mainImage(pg.ImageItem):
     """pg.ImageItem with a bit of additonal properties to express pseudo-color scan image."""
 
-    def __init__(self, image: Image, **kargs):
+    def __init__(self, image: Image, complex_conv: str, **kargs):
         pg.ImageItem.__init__(self, image=None, **kargs)
 
         self.direction = image.direction
         self.params = image.params
         self.ident = image.ident
-        self.data = image.image
+        self.data = image.get_image(complex_conv)
 
         self.convert_param_types()
 
@@ -737,12 +737,14 @@ class scanItem(QtCore.QObject):
         histo,
         pos,
         style: dict,
+        complex_conv: str,
         roi_size=(20.0, 20.0),
     ):
         QtCore.QObject.__init__(self)
         self.xmin, self.xmax = xbound
         self.ymin, self.ymax = ybound
         self.histo = histo
+        self.complex_conv = complex_conv
 
         self.direction = direction
         self.pi = pi
@@ -803,7 +805,7 @@ class scanItem(QtCore.QObject):
         im.finalize(False)
         im.image = bg_data
 
-        self.img_bg = mainImage(im)
+        self.img_bg = mainImage(im, self.complex_conv)
         self.img_bg.setZValue(-1.0)
 
         self.img = self.img_bg
@@ -908,6 +910,9 @@ class scanItem(QtCore.QObject):
         self.move_crosshair_Y(y)
         self.sigYChanged.emit(y)
 
+    def set_complex_conv(self, conv: str):
+        self.complex_conv = conv
+
     def move_crosshair(self, point):
         if hasattr(point, "x") and hasattr(point, "y"):
             x, y = point.x(), point.y()
@@ -1002,7 +1007,7 @@ class scanItem(QtCore.QObject):
         self._update_image()
 
     def _append(self, image: Image):
-        self.img = mainImage(image)
+        self.img = mainImage(image, self.complex_conv)
 
         self.img_list.append(self.img)
         self.img.setZValue(float(self.img_list.index(self.img)))
@@ -1015,7 +1020,7 @@ class scanItem(QtCore.QObject):
             self._append(image)
             self.fit_roi()
         else:
-            self.img.data = image.image
+            self.img.data = image.get_image(self.complex_conv)
         self._update_image()
 
     def _set_levels(self):
@@ -1224,6 +1229,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.histo_XY,
             (x, y),
             self._style,
+            self.complexBox.currentText(),
         )
         self.XZ = scanItem(
             ScanDirection.XZ,
@@ -1234,6 +1240,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.histo_XZ,
             (x, z),
             self._style,
+            self.complexBox.currentText(),
         )
         self.YZ = scanItem(
             ScanDirection.YZ,
@@ -1244,6 +1251,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.histo_YZ,
             (y, z),
             self._style,
+            self.complexBox.currentText(),
         )
 
     def init_splitter(self):
@@ -1343,6 +1351,10 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
 
         self.exportviewButton.clicked.connect(self.export_view)
         self.loadButton.clicked.connect(self.load_image)
+
+        self.complexBox.currentTextChanged.connect(self.XY.set_complex_conv)
+        self.complexBox.currentTextChanged.connect(self.XZ.set_complex_conv)
+        self.complexBox.currentTextChanged.connect(self.YZ.set_complex_conv)
 
         # Home pos functions
         self.sethomeButton.clicked.connect(self.set_home)
@@ -1610,7 +1622,9 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         for d in (ScanDirection.XY, ScanDirection.XZ, ScanDirection.YZ):
             p = {}
             p["invX"], p["invY"] = self.direction_to_scanitem(d).get_inverted()
+            p["complex_conv"] = self.complexBox.currentText()
             params.append(p)
+
         self.cli.export_view(fn, params=params)
 
     def get_export_params(self):
@@ -1625,6 +1639,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
 
         params = d.get_params()
         params["invX"], params["invY"] = si.get_inverted()
+        params["complex_conv"] = self.complexBox.currentText()
 
         return params
 
@@ -2058,10 +2073,11 @@ class traceView(ClientWidget, Ui_traceView):
                 self.curve0.setData(x=s0, y=t0)
             self.curve0_sma.setData(x=simple_moving_average(s0, N), y=tsma0)
         else:
-            tsma0 = simple_moving_average(trace.traces[0], N)
+            tr = trace.get_trace(0, complex_conv=self.complexBox.currentText())
+            tsma0 = simple_moving_average(tr, N)
             mean0 = tsma0[-1] if len(tsma0) else 0.0
             if raw:
-                self.curve0.setData(trace.traces[0])
+                self.curve0.setData(tr)
             self.curve0_sma.setData(tsma0)
 
         self.label0.setText("PD0: {:.2e}".format(mean0))
@@ -2096,22 +2112,24 @@ class traceView(ClientWidget, Ui_traceView):
                     self.curve1.setData(x=s1, y=t1)
                 self.curve1_sma.setData(x=simple_moving_average(s1, N), y=tsma1)
         else:
-            tsma0 = simple_moving_average(trace.traces[0], N)
+            tr0 = trace.get_trace(0, complex_conv=self.complexBox.currentText())
+            tr1 = trace.get_trace(1, complex_conv=self.complexBox.currentText())
+            tsma0 = simple_moving_average(tr0, N)
             mean0 = tsma0[-1] if len(tsma0) else 0.0
-            tsma1 = simple_moving_average(trace.traces[1], N)
+            tsma1 = simple_moving_average(tr1, N)
             mean1 = tsma1[-1] if len(tsma1) else 0.0
             if self.showtotalBox.isChecked():
-                t = trace.traces[0] + trace.traces[1]
+                t = tr0 + tr1
                 if raw:
                     self.curve_total.setData(t)
                 self.curve_total_sma.setData(simple_moving_average(t, N))
             if self.show0Box.isChecked():
                 if raw:
-                    self.curve0.setData(trace.traces[0])
+                    self.curve0.setData(tr0)
                 self.curve0_sma.setData(tsma0)
             if self.show1Box.isChecked():
                 if raw:
-                    self.curve1.setData(trace.traces[1])
+                    self.curve1.setData(tr1)
                 self.curve1_sma.setData(tsma1)
 
         self.labeltotal.setText("Total: {:.2e}".format(mean0 + mean1))
@@ -2154,7 +2172,13 @@ class traceView(ClientWidget, Ui_traceView):
         note = self.param_cli.get_param("note", "")
         self.cli.save_trace(fn, note=note)
         image_fn = os.path.splitext(fn)[0] + ".png"
-        self.cli.export_trace(image_fn, params={"timestamp": self.timestampBox.isChecked()})
+        self.cli.export_trace(
+            image_fn,
+            params={
+                "timestamp": self.timestampBox.isChecked(),
+                "complex_conv": self.complexBox.currentText(),
+            },
+        )
 
 
 class ConfocalMainWindow(QtWidgets.QMainWindow):

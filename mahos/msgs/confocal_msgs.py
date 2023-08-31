@@ -18,7 +18,7 @@ import pandas as pd
 import msgpack
 
 from .common_msgs import Message, Request, State, Status
-from .data_msgs import Data
+from .data_msgs import Data, ComplexDataMixin
 
 from .common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 
@@ -179,7 +179,7 @@ class PiezoPos(Message):
         return self.has_range() and self.has_target()
 
 
-class Image(Data):
+class Image(Data, ComplexDataMixin):
     def __init__(self, params: dict | None = None):
         self.set_version(1)
         self.init_params(params)
@@ -202,6 +202,12 @@ class Image(Data):
         """return True if data is ready and valid data could be read out."""
 
         return self.image is not None
+
+    def is_complex(self) -> bool:
+        return self.has_data() and np.issubdtype(self.image.dtype, np.complexfloating)
+
+    def get_image(self, complex_conv: str = "real"):
+        return self.conv_complex(self.image, complex_conv)
 
     def finalize(self, aborted: bool) -> float:
         """set attributes to finalize the data.
@@ -267,7 +273,7 @@ def update_image(image: Image):
     return image
 
 
-class Trace(Data):
+class Trace(Data, ComplexDataMixin):
     def __init__(self, size=0, channels=2):
         self.set_version(1)
 
@@ -292,9 +298,15 @@ class Trace(Data):
             self.traces[ch] = np.zeros(size)
             self.stamps[ch] = np.zeros(size, dtype="datetime64[ns]")
 
-    def valid_trace(self, ch=0):
+    def is_complex(self) -> bool:
+        return np.issubdtype(self.traces[0].dtype, np.complexfloating)
+
+    def get_trace(self, ch=0, complex_conv: str = "real"):
+        return self.conv_complex(self.traces[ch], complex_conv)
+
+    def valid_trace(self, ch=0, complex_conv: str = "real"):
         idx = self.stamps[ch].view(np.int64) > 0.0
-        return self.stamps[ch][idx], self.traces[ch][idx]
+        return self.stamps[ch][idx], self.conv_complex(self.traces[ch][idx], complex_conv)
 
     def as_dataframe(self, ch=0):
         s, t = self.valid_trace(ch)

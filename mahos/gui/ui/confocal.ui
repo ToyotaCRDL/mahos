@@ -149,6 +149,30 @@
       </widget>
      </item>
      <item>
+      <widget class="QComboBox" name="complexBox">
+       <item>
+        <property name="text">
+         <string>real</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>imag</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>abs</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>angle</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -444,9 +468,11 @@
   <tabstop>xzscanButton</tabstop>
   <tabstop>yzscanButton</tabstop>
   <tabstop>loadButton</tabstop>
+  <tabstop>exportviewButton</tabstop>
   <tabstop>sethomeButton</tabstop>
   <tabstop>gohomeButton</tabstop>
   <tabstop>centerButton</tabstop>
+  <tabstop>complexBox</tabstop>
   <tabstop>trackstartButton</tabstop>
   <tabstop>trackstopButton</tabstop>
   <tabstop>tracknowButton</tabstop>
@@ -454,14 +480,20 @@
   <tabstop>xymaxButton</tabstop>
   <tabstop>xypopButton</tabstop>
   <tabstop>xyclearButton</tabstop>
+  <tabstop>xysaveButton</tabstop>
+  <tabstop>xyexportButton</tabstop>
   <tabstop>xzfitButton</tabstop>
   <tabstop>xzmaxButton</tabstop>
   <tabstop>xzclearButton</tabstop>
   <tabstop>xzpopButton</tabstop>
+  <tabstop>xzsaveButton</tabstop>
+  <tabstop>xzexportButton</tabstop>
   <tabstop>yzfitButton</tabstop>
   <tabstop>yzclearButton</tabstop>
   <tabstop>yzmaxButton</tabstop>
   <tabstop>yzpopButton</tabstop>
+  <tabstop>yzsaveButton</tabstop>
+  <tabstop>yzexportButton</tabstop>
   <tabstop>XTgtBox</tabstop>
   <tabstop>YTgtBox</tabstop>
   <tabstop>ZTgtBox</tabstop>

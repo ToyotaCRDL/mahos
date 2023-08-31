@@ -114,7 +114,7 @@ class ConfocalIO(object):
 
         def plot(image, param, pos, fig, ax):
             _x, _y = self.get_xylabel(image)
-            df = self.create_dataframe(image)
+            df = self.create_dataframe(image, param.get("complex_conv", "real"))
             fn_head, ext = path.splitext(filename)
             units = {_x: "um", _y: "um", "I": image.cunit}
             plot_map(
@@ -203,11 +203,12 @@ class ConfocalIO(object):
         else:
             raise ValueError("invalid direction {} is given.".format(image.direction))
 
-    def create_dataframe(self, image: Image):
-        xs, ys = image.image.shape
+    def create_dataframe(self, image: Image, complex_conv: str = "real"):
+        im = image.get_image(complex_conv)
+        xs, ys = im.shape
         xar = self.get_xarray(image)[:xs]
         yar = self.get_yarray(image)[:ys]
-        df = pd.DataFrame(data=image.image.T, index=yar, columns=xar)
+        df = pd.DataFrame(data=im.T, index=yar, columns=xar)
 
         return df
 
@@ -232,7 +233,7 @@ class ConfocalIO(object):
 
     def _export_image_image(self, fn, image: Image, params: dict) -> bool:
         _x, _y = self.get_xylabel(image)
-        df = self.create_dataframe(image)
+        df = self.create_dataframe(image, params.get("complex_conv", "real"))
 
         fn_head, ext = path.splitext(fn)
         units = {_x: "um", _y: "um", "I": image.cunit}
@@ -295,14 +296,15 @@ class ConfocalIO(object):
 
     def _export_trace_image(self, fn, trace: Trace, params: dict):
         plt.figure()
+        complex_conv = params.get("complex_conv", "real")
         if params.get("timestamp", False):
             for ch in range(len(trace.traces)):
-                s, t = trace.valid_trace(ch)
+                s, t = trace.valid_trace(ch, complex_conv)
                 x = [datetime.fromtimestamp(s) for s in s.astype(np.float64) * 1e-9]
                 plt.plot(x, t, label=f"PD{ch}")
         else:
             for ch in range(len(trace.traces)):
-                plt.plot(trace.traces[ch], label=f"PD{ch}")
+                plt.plot(trace.get_trace(ch, complex_conv), label=f"PD{ch}")
             plt.xlabel("Data points")
 
         plt.legend()
