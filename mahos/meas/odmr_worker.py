@@ -41,10 +41,6 @@ class Sweeper(Worker):
         self._pd_analog = conf.get("pd_analog", False)
         self._continue_mw = False
         self._conf = conf
-        self._post_process = conf.get("post_process", "sum").lower()
-
-        if self._post_process not in ("sum", "aux"):
-            raise ValueError(f"Unknown post_process {self._post_process}.")
 
         self.data = ODMRData()
 
@@ -428,18 +424,7 @@ class Sweeper(Worker):
         else:
             # TODO: check ident if resume?
             self.data.update_params(params)
-        if self._post_process == "sum":
-            self.data.yunit = self.pds[0].get_unit()
-        elif self._post_process == "aux":
-            if len(self.pds) == 1:
-                unit = self.pds[0].get_unit()
-                if isinstance(unit, str):
-                    self.data.yunit = self.data.aux_unit = unit
-                else:  # assume list[str]
-                    self.data.yunit, self.data.aux_unit = unit
-            else:  # assume len(self.pds) == 2
-                self.data.yunit = self.pds[0].get_unit()
-                self.data.aux_unit = self.pds[1].get_unit()
+        self.data.yunit = self.pds[0].get_unit()
 
         if not self.configure_sg(self.data.params):
             return self.fail_with_release("Failed to configure SG.")
@@ -499,14 +484,6 @@ class Sweeper(Worker):
                 self.data.data, self.data.bg_data, line
             )
 
-    def append_aux_line(self, line):
-        if not self.data.measure_background():
-            self.data.aux_data = self._append_line_nobg(self.data.aux_data, line)
-        else:
-            self.data.aux_data, self.data.aux_bg_data = self._append_line_bg(
-                self.data.aux_data, self.data.aux_bg_data, line
-            )
-
     def work(self):
         if not self.data.running:
             return  # or raise Error?
@@ -518,19 +495,11 @@ class Sweeper(Worker):
                 # PD has multi channel
                 lines.extend(ls)
             else:
-                # single channel, assert ls is np.ndarray
+                # single channel, assume ls is np.ndarray
                 lines.append(ls)
 
-        if self._post_process == "sum":
-            line = np.sum(lines, axis=0)
-            self.append_line(line)
-        elif self._post_process == "aux":
-            if len(lines) != 2:
-                raise ValueError("Number of data must be 2 when post_process is 'aux'.")
-            self.append_line(lines[0])
-            self.append_aux_line(lines[1])
-        else:
-            raise ValueError(f"Unknown post_process {self._post_process}")
+        line = np.sum(lines, axis=0)
+        self.append_line(line)
 
     def is_finished(self) -> bool:
         if not self.data.has_params() or not self.data.has_data():

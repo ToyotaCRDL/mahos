@@ -85,6 +85,9 @@ class Fitter(BaseFitter):
             n_guess_bg=P.IntParam(
                 40, 5, 1000, doc="number of histogram bins in background guess."
             ),
+            complex_conv=P.StrChoiceParam(
+                "real", ("real", "imag", "abs", "angle"), doc="conversion method for complex data."
+            ),
         )
         params.update(self.common_param_dict())
         return params
@@ -93,11 +96,13 @@ class Fitter(BaseFitter):
         self, data: ODMRData, raw_params: dict[str, P.RawPDValue]
     ) -> tuple[NDArray, NDArray]:
         xdata = data.get_xdata()
+        complex_conv = raw_params.get("complex_conv", "real")
+        data.fit_complex_conv = complex_conv
         if data.has_background():
             # use background-normalized data when background is available
-            ydata = data.get_ydata(normalize_n=1)[0]
+            ydata = data.get_ydata(normalize_n=1, complex_conv=complex_conv)[0]
         else:
-            ydata = data.get_ydata()[0]
+            ydata = data.get_ydata(complex_conv=complex_conv)[0]
         # scale xdata to MHz, normalize ydata into [0, 1]
         return 1e-6 * xdata, normalize(ydata)
 

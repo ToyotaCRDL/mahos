@@ -61,7 +61,7 @@ class PlotWidget(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent)
 
         self._normalize_updated = False
-        self._yunit = ""
+        self._yunit: str = ""
         self.init_ui()
         self.init_view()
 
@@ -83,10 +83,14 @@ class PlotWidget(QtWidgets.QWidget):
         for w in (self.lastnBox, self.normalizenBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
+        self.complexBox = QtWidgets.QComboBox(parent=self)
+        self.complexBox.addItems(["real", "imag", "abs", "angle"])
+        self.complexBox.setCurrentIndex(0)
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
         hl0.addWidget(self.showimgBox)
         hl0.addWidget(self.lastnBox)
         hl0.addWidget(self.normalizenBox)
+        hl0.addWidget(self.complexBox)
         hl0.addItem(spacer)
 
         hl = QtWidgets.QHBoxLayout()
@@ -122,7 +126,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.normalizenBox.valueChanged.connect(self.update_normalize)
 
     def refresh(self, data_list: list[tuple[ODMRData, bool, str]], data: ODMRData):
-        if not self._yunit:
+        if self._yunit != data.yunit:
             self._yunit = data.yunit
             self.update_ylabel(self.normalizenBox.value())
 
@@ -147,7 +151,9 @@ class PlotWidget(QtWidgets.QWidget):
         for data, show_fit, c in data_list:
             x = data.get_xdata()
             y, y_bg = data.get_ydata(
-                last_n=self.lastnBox.value(), normalize_n=self.normalizenBox.value()
+                last_n=self.lastnBox.value(),
+                normalize_n=self.normalizenBox.value(),
+                complex_conv=self.complexBox.currentText(),
             )
             xfit = data.get_fit_xdata()
             yfit = data.get_fit_ydata(
@@ -634,7 +640,10 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         note = self.param_cli.get_param("note", "")
         self.cli.save_data(fn, note=note)
         n = os.path.splitext(fn)[0] + ".png"
-        self.cli.export_data(n)
+        params = {}
+        params["normalize_n"] = self.plot.normalizenBox.value()
+        params["complex_conv"] = self.plot.complexBox.currentText()
+        self.cli.export_data(n, params=params)
 
         if self.confocal_cli is not None and self.saveconfocalBox.isChecked():
             n = os.path.splitext(fn)[0] + ".pos.png"
@@ -673,6 +682,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params["color"] = params["color_fit"] = [c.color for (_, _, c) in data_list]
         params["color_bg"] = [c.color_bg for (_, _, c) in data_list]
         params["normalize_n"] = self.plot.normalizenBox.value()
+        params["complex_conv"] = self.plot.complexBox.currentText()
         self.cli.export_data(fn, data=data, params=params)
 
     # State managements

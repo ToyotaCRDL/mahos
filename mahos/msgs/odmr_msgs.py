@@ -37,8 +37,8 @@ class ODMRData(BasicMeasData):
         self.data = None
         self.bg_data = None
 
-        self.aux_data = None
-        self.aux_bg_data = None
+        #: complex_conv used for loading data fit
+        self.fit_complex_conv: str = ""
 
     def init_axes(self):
         self.xlabel: str = "Frequency"
@@ -48,8 +48,6 @@ class ODMRData(BasicMeasData):
         self.xscale: str = "linear"
         self.yscale: str = "linear"
 
-        self.aux_unit: str | None = None
-
     def has_data(self) -> bool:
         """return True if data is ready and valid data could be read out."""
 
@@ -58,11 +56,31 @@ class ODMRData(BasicMeasData):
     def has_background(self) -> bool:
         return self.bg_data is not None and (self.bg_data > 0).all()
 
+    def is_complex(self) -> bool:
+        return self.has_data() and issubclass(self.data.dtype, np.complexfloating)
+
+    _complex_converters = {
+        "real": np.real,
+        "imag": np.imag,
+        "abs": np.absolute,
+        "absolute": np.absolute,
+        "angle": np.angle,
+    }
+
+    def conv_complex(self, data, conv: str) -> np.ndarray | None:
+        if not self.is_complex():
+            return data
+
+        if conv in self._complex_converters:
+            return self._complex_converters[conv](data)
+        else:
+            return None
+
     def get_xdata(self):
         return np.linspace(self.params["start"], self.params["stop"], self.params["num"])
 
-    def _get_ydata_nobg(self, last_n, normalize_n):
-        ydata = np.mean(self.data[:, -last_n:], axis=1)
+    def _get_ydata_nobg(self, last_n, normalize_n, complex_conv):
+        ydata = np.mean(self.conv_complex(self.data, complex_conv)[:, -last_n:], axis=1)
         if normalize_n:
             if normalize_n > 0:
                 coeff = np.mean(np.sort(ydata)[-normalize_n:])
@@ -72,15 +90,18 @@ class ODMRData(BasicMeasData):
                 ydata /= coeff
         return ydata, None
 
-    def _get_ydata_bg(self, last_n, normalize_n):
-        ydata = np.mean(self.data[:, -last_n:], axis=1)
-        bg_ydata = np.mean(self.bg_data[:, -last_n:], axis=1)
+    def _get_ydata_bg(self, last_n, normalize_n, complex_conv):
+        ydata = np.mean(self.conv_complex(self.data, complex_conv)[:, -last_n:], axis=1)
+        bg_ydata = np.mean(self.conv_complex(self.bg_data, complex_conv)[:, -last_n:], axis=1)
         if normalize_n:
             return ydata / bg_ydata, None
         return ydata, bg_ydata
 
     def get_ydata(
-        self, last_n: int = 0, normalize_n: int = 0
+        self,
+        last_n: int = 0,
+        normalize_n: int = 0,
+        complex_conv: str = "real",
     ) -> tuple[NDArray | None, NDArray | None]:
         """get ydata.
 
@@ -90,6 +111,8 @@ class ODMRData(BasicMeasData):
             using background data. if background data is not available and normalize_n is
             positive (negative), top (bottom) normalize_n data points are used to determine
             the baseline.
+        :param complex_conv: (real | imag | abs[olute] | angle) conversion method for complex data.
+            unused if data is not complex.
         :returns: (raw_ydata, background_ydata) if normalize_n is 0 and background is available.
                   (raw_ydata, None) if normalize_n is 0 and background is not available.
                   (normalized_ydata, None) if normalize_n is non-zero.
@@ -101,9 +124,9 @@ class ODMRData(BasicMeasData):
             return None, None
 
         if self.has_background():
-            return self._get_ydata_bg(last_n, normalize_n)
+            return self._get_ydata_bg(last_n, normalize_n, complex_conv)
         else:
-            return self._get_ydata_nobg(last_n, normalize_n)
+            return self._get_ydata_nobg(last_n, normalize_n, complex_conv)
 
     def get_fit_xdata(self):
         return self.fit_xdata
@@ -127,7 +150,7 @@ class ODMRData(BasicMeasData):
             return self.fit_data
 
         ## normalize by measured ydata.
-        ydata = np.mean(self.data[:, -last_n:], axis=1)
+        ydata = np.mean(self.conv_complex(self.data, self.fit_complex_conv)[:, -last_n:], axis=1)
         if normalize_n > 0:
             coeff = np.mean(np.sort(ydata)[-normalize_n:])
         else:

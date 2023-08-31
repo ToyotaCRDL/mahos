@@ -48,6 +48,9 @@ class ODMRIO(object):
             self.logger.error("Undefined: params['fit']['method']")
             return False
 
+        if "complex_conv" not in params["fit"] and "complex_conv" in params["fit"]:
+            params["fit"]["complex_conv"] = params["complex_conv"]
+
         fitter = ODMRFitter(self.logger)
         success = bool(fitter.fitd(data, params["fit"]))
         if not success:
@@ -63,6 +66,9 @@ class ODMRIO(object):
         :param data: single data or list of data
         :param params.normalize_n: number of points for normalization. (0 for no-normalization)
         :type params.normalize_n: int
+        :param params.complex_conv: (real | imag | abs[olute] | angle)
+            conversion method for complex data.
+        :type params.complex_conv: str
         :param params.offset: offset along y-axis
         :type params.offset: list[float]
         :param params.base_line: set True to draw base lines
@@ -157,10 +163,14 @@ class ODMRIO(object):
 
         ax.set_xlim(x_min * coeff, x_max * coeff)
         plt.xlabel(f"Frequency ({unit})")
-        if normalize_n:
-            plt.ylabel("Normalized Intensity")
+        if data_list[0].is_complex():
+            suffix = " [" + params.get("complex_conv", "real") + "]"
         else:
-            plt.ylabel(f"Intensity ({data_list[0].yunit})")
+            suffix = ""
+        if normalize_n:
+            plt.ylabel("Normalized Intensity" + suffix)
+        else:
+            plt.ylabel(f"Intensity ({data_list[0].yunit})" + suffix)
 
         label = params.get("label") or [f"data{i}" for i in range(len(data_list))]
         offset = params.get("offset") or [0.0] * len(data_list)
@@ -176,7 +186,9 @@ class ODMRIO(object):
             data_list, label, offset, color_fit, color, color_bg, marker, marker_bg
         ):
             x = data.get_xdata()
-            y, y_bg = data.get_ydata(normalize_n=normalize_n)
+            y, y_bg = data.get_ydata(
+                normalize_n=normalize_n, complex_conv=params.get("complex_conv", "real")
+            )
             xfit = data.get_fit_xdata()
             yfit = data.get_fit_ydata(normalize_n=normalize_n)
             if normalize_n and params.get("base_line", False):

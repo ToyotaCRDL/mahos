@@ -723,10 +723,10 @@ class AnalogIn(ConfigurableTask):
 
         return True
 
-    def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
+    def read_on_demand(self, oversample: int = 1) -> np.float64 | np.ndarray:
         """Read out analog voltages on demand.
 
-        if len(self.lines) is 1, the value is returned in float.
+        if len(self.lines) is 1, the value is returned in np.float64.
         Otherwise values are returned in ndarray (size: len(self.lines), type: float64).
 
         :param oversample: number of samples per channels, which is used for averaging.
@@ -751,7 +751,7 @@ class AnalogIn(ConfigurableTask):
         if line_num == 1:
             return ret[0]
         else:
-            return ret
+            return np.array(ret)
 
     # Standard API
 

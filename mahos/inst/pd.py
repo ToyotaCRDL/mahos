@@ -410,6 +410,99 @@ class AnalogPD(AnalogIn):
     def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
         return self._convert(AnalogIn.read_on_demand(self, oversample))
 
+    def set(self, key: str, value=None) -> bool:
+        key = key.lower()
+        if key == "gain":
+            if isinstance(value, (float, int, np.floating, np.integer)):
+                self.gain = float(value)
+                return True
+            else:
+                return self.fail_with("gain must be a number (float or int)")
+        elif key == "unit":
+            self.unit = str(value)
+            return True
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def get(self, key: str, args=None):
+        if key in ("data", "all_data"):
+            return AnalogIn.get(self, key, args)
+        elif key == "unit":
+            return self.unit
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+
+class LockinAnalogPD(AnalogIn):
+    """Generic Photo Detector with Lockin Amp read by DAQ AnalogIn.
+
+    :param lines: two DAQ's physical channels (X, Y) for AnalogIn.
+    :type lines: list[str]
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+
+    :param unit: (default: V) unit after conversion.
+    :type unit: str
+    :param gain: (default: 1.0) the fixed gain in [unit] / V.
+        Example) when a transimpedance amp with 1000 V / A is used for a photo diode and
+        the unit is 'A', gain should be set 1000.
+    :type gain: float
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        AnalogIn.__init__(self, name, conf=conf, prefix=prefix)
+        if len(self.conf["lines"]) != 2:
+            raise ValueError("len(lines) must be 2.")
+
+        self.gain = self.conf.get("gain", 1.0)
+        self.unit = self.conf.get("unit", "V")
+
+    def _convert(self, data: list[np.ndarray] | np.ndarray) -> np.ndarray | np.cdouble:
+        """Convert raw reading (V, double) to self.unit, and merge as cdouble."""
+
+        if len(data) != 2:
+            raise ValueError(f"data has unexpected length {len(data)}: {data}")
+
+        if isinstance(data, list):
+            # buffered read (append_data) returns list of two double arrays
+            out = np.empty(len(data[0]), dtype=np.cdouble)
+            out.real = data[0] / self.gain
+            out.imag = data[1] / self.gain
+            return out
+        else:
+            # read_on_demand returns double array of length two
+            return np.cdouble(data[0] + 1.0j * data[1])
+
+    # override AnalogIn methods to convert readings.
+
+    def _append_data(self, data: list[np.ndarray]):
+        AnalogIn._append_data(self, self._convert(data))
+
+    def read_on_demand(self, oversample: int = 1) -> np.cdouble:
+        return self._convert(AnalogIn.read_on_demand(self, oversample))
+
+    def set(self, key: str, value=None) -> bool:
+        key = key.lower()
+        if key == "gain":
+            if isinstance(value, (float, int, np.floating, np.integer)):
+                self.gain = float(value)
+                return True
+            else:
+                return self.fail_with("gain must be a number (float or int)")
+        elif key == "unit":
+            self.unit = str(value)
+            return True
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
     def get(self, key: str, args=None):
         if key in ("data", "all_data"):
             return AnalogIn.get(self, key, args)

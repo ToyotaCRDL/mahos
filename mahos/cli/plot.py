@@ -71,11 +71,14 @@ def plot_odmr(args):
                 fit_params["n_peaks"] = args.n_peaks
             if "n_guess" not in fit_params:
                 fit_params["n_guess"] = args.n_guess
+            if "complex_conv" not in fit_params:
+                fit_params["complex_conv"] = args.complex_conv
         else:
             fit_params = {
                 "method": args.method,
                 "peak_type": str_to_peak_type(args.peak_type),
                 "n_guess": args.n_guess,
+                "complex_conv": args.complex_conv,
             }
             if fit_params["method"] == "multi":
                 fit_params["n_peaks"] = args.n_peaks
@@ -86,6 +89,7 @@ def plot_odmr(args):
         "fit": fit_params,
         "show_fit": args.show_fit,
         "normalize_n": args.normalize_n,
+        "complex_conv": args.complex_conv,
         "color": args.color,
         "color_bg": args.color_bg,
         "color_fit": args.color_fit,
@@ -388,7 +392,10 @@ def add_odmr_parser(sub_parsers):
         "-F", "--no-fit", dest="show_fit", action="store_false", help="Don't show fitting result"
     )
     p.add_argument(
-        "-n", "--normalize-n", type=int, default=0, help="Normalize data using top n intensities."
+        "-n", "--normalize-n", type=int, default=0, help="Normalize data using top n intensities"
+    )
+    p.add_argument(
+        "-C", "--complex-conv", type=str, default="real", help="Conversion method for complex data"
     )
     p.add_argument(
         "-m",
