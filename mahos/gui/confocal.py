@@ -2065,7 +2065,7 @@ class traceView(ClientWidget, Ui_traceView):
         N = self.smaBox.value()
         raw = self.showrawBox.isChecked()
         if self.timestampBox.isChecked():
-            s0, t0 = trace.valid_trace(0)
+            s0, t0 = trace.valid_trace(0, complex_conv=self.complexBox.currentText())
             s0 = s0.astype(np.float64) * 1e-9
             tsma0 = simple_moving_average(t0, N)
             mean0 = tsma0[-1] if len(tsma0) else 0.0
@@ -2087,11 +2087,11 @@ class traceView(ClientWidget, Ui_traceView):
         N = self.smaBox.value()
         raw = self.showrawBox.isChecked()
         if self.timestampBox.isChecked():
-            s0, t0 = trace.valid_trace(0)
+            s0, t0 = trace.valid_trace(0, complex_conv=self.complexBox.currentText())
             s0 = s0.astype(np.float64) * 1e-9
             tsma0 = simple_moving_average(t0, N)
             mean0 = tsma0[-1] if len(tsma0) else 0.0
-            s1, t1 = trace.valid_trace(1)
+            s1, t1 = trace.valid_trace(1, complex_conv=self.complexBox.currentText())
             s1 = s1.astype(np.float64) * 1e-9
             tsma1 = simple_moving_average(t1, N)
             mean1 = tsma1[-1] if len(tsma1) else 0.0

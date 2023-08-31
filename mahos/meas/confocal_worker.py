@@ -142,7 +142,9 @@ class Tracer(Worker):
         self.oversample = conf.get("oversample", 1)
         self.time_window_sec = conf.get("time_window_sec", 0.01)
 
-        self.trace = Trace(size=self.size, channels=len(self.pds))
+        self.trace = Trace(
+            size=self.size, channels=len(self.pds), _complex=conf.get("complex", False)
+        )
         self.paused_trace: Trace | None = None
 
         self.running = False

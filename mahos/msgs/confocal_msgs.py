@@ -274,11 +274,13 @@ def update_image(image: Image):
 
 
 class Trace(Data, ComplexDataMixin):
-    def __init__(self, size=0, channels=2):
+    def __init__(self, size: int = 0, channels: int = 2, _complex: bool = False):
         self.set_version(1)
 
+        self._complex = _complex
+
         # trace data
-        self.traces = [np.zeros(size) for _ in range(channels)]
+        self.traces = [np.zeros(size, self.dtype()) for _ in range(channels)]
         # time stamps
         self.stamps = [np.zeros(size, dtype="datetime64[ns]") for _ in range(channels)]
 
@@ -291,11 +293,14 @@ class Trace(Data, ComplexDataMixin):
     def size(self) -> int:
         return len(self.traces[0])
 
+    def dtype(self):
+        return np.cdouble if self._complex else np.double
+
     def clear(self):
         channels = self.channels()
         size = self.size()
         for ch in range(channels):
-            self.traces[ch] = np.zeros(size)
+            self.traces[ch] = np.zeros(size, self.dtype())
             self.stamps[ch] = np.zeros(size, dtype="datetime64[ns]")
 
     def is_complex(self) -> bool:
