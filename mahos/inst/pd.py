@@ -16,6 +16,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 from .instrument import Instrument
 from .daq import AnalogIn, BufferedEdgeCounter
+from ..msgs import param_msgs as P
 
 
 class APDCounter(BufferedEdgeCounter):
@@ -67,7 +68,7 @@ class APDCounter(BufferedEdgeCounter):
 
         return cps * cf - self._dark_count
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         if "time_window" not in params:
             self.logger.error("config must be given: time_window.")
             return False
@@ -362,6 +363,29 @@ class OE200(AnalogIn):
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
+
+    def get_param_dict_names(self, group: str) -> list[str]:
+        return ["gain_coupling"]
+
+    def get_param_dict(
+        self, name: str = "", group: str = ""
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `name` in `group`."""
+
+        if name == "gain_coupling":
+            return P.ParamDict(
+                low_noise=P.BoolParam(False),
+                gain_exponent=P.IntChoiceParam(3, list(range(3, 12))),
+                DC_coupling=P.BoolParam(True),
+            )
+
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+        if name == "gain_coupling":
+            return self.set_gain_coupling(
+                params["low_noise"], params["gain_exponent"], params["DC_coupling"]
+            )
+        else:
+            return AnalogIn.configure(params, name, group)
 
 
 class AnalogPD(AnalogIn):

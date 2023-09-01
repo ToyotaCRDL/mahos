@@ -22,7 +22,7 @@ class Clock_mock(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         return True
 
     def start(self) -> bool:
@@ -147,7 +147,7 @@ class SG_mock(Instrument):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         return True
 
     def start(self) -> bool:
@@ -198,7 +198,7 @@ class FG_mock(Instrument):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         return True
 
 
@@ -272,7 +272,7 @@ class Piezo_mock(Instrument):
     def stop(self) -> bool:
         return True
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         return True
 
     def set(self, key: str, value=None):
@@ -309,7 +309,7 @@ class Counter_mock(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         self.samples = params["cb_samples"]
         self.stamp = params.get("stamp", False)
         return True
@@ -363,7 +363,7 @@ class MCS_mock(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         self.logger.info(f"Dummy conf for MCS: {params}")
         if "range" in params and "bin" in params:
             tbin = params["bin"] or self.resolution_sec
@@ -515,7 +515,7 @@ class Spectrometer_mock(Instrument):
         else:
             return self.fail_with(f"Unknown set() key: {key}.")
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         success = True
         if params.get("base_config"):
             success &= self.set_base_config(params["base_config"])
@@ -582,7 +582,7 @@ class Camera_mock(Instrument):
             self.logger.error("get_frame() is called but not running.")
             return FrameResult(frame=None)
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         if not self.check_required_params(params, ("mode",)):
             return False
 

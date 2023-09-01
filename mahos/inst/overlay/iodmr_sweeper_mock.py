@@ -32,7 +32,7 @@ class IODMRSweeperCommand_mock(IODMRSweeperCommand):
                 frames.append(res.frame * c)  # add artificial ODMR contrast
             self._queue.append(np.array(frames))
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         success = IODMRSweeperCommand.configure(self, params)
 
         x = np.linspace(0, 1.0, self.num)

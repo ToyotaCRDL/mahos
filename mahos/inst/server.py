@@ -14,9 +14,11 @@ from inspect import signature, getdoc, getfile
 
 from ..msgs.common_msgs import Request, Resp
 from ..msgs import inst_server_msgs
+from ..msgs import param_msgs as P
 from ..msgs.inst_server_msgs import Ident, ServerStatus, LockReq, ReleaseReq, CheckLockReq, CallReq
 from ..msgs.inst_server_msgs import ShutdownReq, StartReq, StopReq, PauseReq, ResumeReq
 from ..msgs.inst_server_msgs import ResetReq, ConfigureReq, SetReq, GetReq, HelpReq
+from ..msgs.inst_server_msgs import GetParamDictReq, GetParamDictNamesReq
 from ..node.node import Node, split_name
 from ..node.client import StatusClient
 from .instrument import Instrument
@@ -193,10 +195,10 @@ class InstrumentClient(StatusClient):
 
         return self._noarg_call(name, ResetReq)
 
-    def configure(self, name: str, params: dict) -> bool:
+    def configure(self, name: str, params: dict, pd_name: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        resp = self.req.request(ConfigureReq(self.ident, name, params))
+        resp = self.req.request(ConfigureReq(self.ident, name, params, pd_name, group))
         return resp.success
 
     def set(self, name: str, key: str, value=None) -> bool:
@@ -224,6 +226,41 @@ class InstrumentClient(StatusClient):
 
         resp = self.req.request(HelpReq(name, func))
         return resp.message
+
+    def get_param_dict(
+        self, name: str, pd_name: str = "", group: str = ""
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `pd_name` in `group`.
+
+        :param name: ParamDict name.
+                     can be empty if target inst provides only one ParamDict.
+        :param pd_name: param dict name.
+                        can be empty if target inst provides only one ParamDict.
+        :param group: param dict group name.
+                      can be empty if target inst provides only one group.
+
+        """
+
+        resp = self.req.request(GetParamDictReq(self.ident, name, pd_name, group))
+        if resp.success:
+            return resp.ret
+        else:
+            return None
+
+    def get_param_dict_names(self, name: str, group: str = "") -> list[str]:
+        """Get list of names of available ParamDicts pertaining to `group`.
+
+        :param group: ParamDict group name.
+                      can be empty if target inst provides only one group.
+
+
+        """
+
+        resp = self.req.request(GetParamDictNamesReq(self.ident, name, group))
+        if resp.success:
+            return resp.ret
+        else:
+            return []
 
 
 class MultiInstrumentClient(object):
@@ -309,7 +346,7 @@ class MultiInstrumentClient(object):
 
         return self.get_client(name).reset(name)
 
-    def configure(self, name: str, params: dict) -> bool:
+    def configure(self, name: str, params: dict, pd_name: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
         return self.get_client(name).configure(name, params)
@@ -323,6 +360,42 @@ class MultiInstrumentClient(object):
         """Get an instrument setting or commanding value."""
 
         return self.get_client(name).get(name, key, args)
+
+    def help(self, name: str, func: T.Optional[str] = None) -> str:
+        """Get help of instrument `name`.
+
+        If function name `func` is given, get docstring of that function.
+        Otherwise, get docstring of the class.
+
+        """
+
+        return self.get_client(name).help(name, func)
+
+    def get_param_dict(
+        self, name: str, pd_name: str = "", group: str = ""
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `pd_name` in `group`.
+
+        :param name: ParamDict name.
+                     can be empty if target inst provides only one ParamDict.
+        :param pd_name: param dict name.
+                        can be empty if target inst provides only one ParamDict.
+        :param group: param dict group name.
+                      can be empty if target inst provides only one group.
+
+        """
+
+        return self.get_client(name).get_param_dict(name, pd_name, group)
+
+    def get_param_dict_names(self, name: str, group: str = "") -> list[str]:
+        """Get list of names of available ParamDicts pertaining to `group`.
+
+        :param group: ParamDict group name.
+                      can be empty if target inst provides only one group.
+
+        """
+
+        return self.get_client(name).get_param_dict_names(name, group)
 
 
 class InstrumentServer(Node):
@@ -354,6 +427,8 @@ class InstrumentServer(Node):
         "configure",
         "set",
         "get",
+        "get_param_dict",
+        "get_param_dict_names",
     )
     _bool_funcs = (
         "start",
@@ -464,6 +539,10 @@ class InstrumentServer(Node):
             return self._handle_set(msg)
         elif isinstance(msg, GetReq):
             return self._handle_get(msg)
+        elif isinstance(msg, GetParamDictReq):
+            return self._handle_get_param_dict(msg)
+        elif isinstance(msg, GetParamDictNamesReq):
+            return self._handle_get_param_dict_names(msg)
         elif isinstance(msg, HelpReq):
             return self._handle_help(msg)
         elif isinstance(msg, LockReq):
@@ -507,7 +586,8 @@ class InstrumentServer(Node):
         return self._call(msg.name, msg.ident, func, None)
 
     def _handle_configure(self, msg: ConfigureReq) -> Resp:
-        return self._call(msg.name, msg.ident, "configure", {"params": msg.params})
+        args = {"params": msg.params, "name": msg.pd_name, "group": msg.group}
+        return self._call(msg.name, msg.ident, "configure", args)
 
     def _handle_set(self, msg: SetReq) -> Resp:
         return self._call(msg.name, msg.ident, "set", {"key": msg.key, "value": msg.value})
@@ -518,6 +598,14 @@ class InstrumentServer(Node):
         else:
             args = {"key": msg.key, "args": msg.args}
         return self._call(msg.name, msg.ident, "get", args)
+
+    def _handle_get_param_dict(self, msg: GetParamDictReq) -> Resp:
+        args = {"name": msg.pd_name, "group": msg.group}
+        return self._call(msg.name, msg.ident, "get_param_dict", args)
+
+    def _handle_get_param_dict_names(self, msg: GetParamDictNamesReq) -> Resp:
+        args = {"group": msg.group}
+        return self._call(msg.name, msg.ident, "get_param_dict_names", args)
 
     def _handle_help(self, msg: HelpReq) -> Resp:
         inst = self._get(msg.name)

@@ -89,7 +89,7 @@ class ThorlabsCamera(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         if not self.check_required_params(params, ("mode",)):
             return False
 
@@ -608,7 +608,7 @@ class BaslerPylonCamera(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         if not self.check_required_params(params, ("mode",)):
             return False
 

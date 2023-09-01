@@ -121,10 +121,12 @@ class ResetReq(NoArgReq):
 class ConfigureReq(Request):
     """call configure() of instrument `name`."""
 
-    def __init__(self, ident: Ident, name: str, params: dict):
+    def __init__(self, ident: Ident, name: str, params: dict, pd_name: str, group: str):
         self.ident = ident
         self.name = name
         self.params = copy.copy(params)
+        self.pd_name = pd_name
+        self.group = group
 
 
 class SetReq(Request):
@@ -153,3 +155,22 @@ class HelpReq(Request):
     def __init__(self, name: str, func: Optional[str] = None):
         self.name = name
         self.func = func
+
+
+class GetParamDictReq(Request):
+    """get ParamDict `pd_name` in `group` for instrument `name`."""
+
+    def __init__(self, ident: Ident, name: str, pd_name: str = "", group: str = ""):
+        self.ident = Ident
+        self.name = name
+        self.pd_name = pd_name
+        self.group = group
+
+
+class GetParamDictNamesReq(Request):
+    """Request to get list of param dict names for instrument `name`."""
+
+    def __init__(self, ident: Ident, name: str, group: str = ""):
+        self.ident = Ident
+        self.name = name
+        self.group = group

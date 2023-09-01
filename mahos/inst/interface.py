@@ -83,7 +83,7 @@ class InstrumentInterface(object):
 
         return self.cli.reset(self.name)
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
         return self.cli.configure(self.name, params)
