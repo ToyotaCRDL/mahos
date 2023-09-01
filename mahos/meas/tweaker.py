@@ -19,6 +19,9 @@ from ..node.client import StatusClient
 from ..inst.server import MultiInstrumentClient
 
 
+PARAM_DICT_ID_DELIM = "."
+
+
 class TweakerClient(StatusClient):
     """Simple Tweaker Client."""
 
@@ -29,13 +32,13 @@ class TweakerClient(StatusClient):
         if resp.success:
             return resp.ret
 
-    def read(self, pd_name: str) -> P.ParamDict[str, P.PDValue] | None:
-        resp = self.req.request(ReadReq(pd_name))
+    def read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
+        resp = self.req.request(ReadReq(param_dict_id))
         if resp.success:
             return resp.ret
 
-    def write(self, pd_name: str, params: P.ParamDict[str, P.PDValue]) -> bool:
-        resp = self.req.request(WriteReq(pd_name, params))
+    def write(self, param_dict_id: str, params: P.ParamDict[str, P.PDValue]) -> bool:
+        resp = self.req.request(WriteReq(param_dict_id, params))
         return resp.success
 
     def save(self, filename: str) -> bool:
@@ -60,45 +63,54 @@ class Tweaker(Node):
             gconf, self.conf["target"]["servers"], context=self.ctx, prefix=self.joined_name()
         )
 
-        self._pd_targets = self.conf["param_dicts"]
-        self._param_dicts = {k: None for k in self._pd_targets}
+        self._param_dict_ids = self.conf["param_dicts"]
+        self._param_dicts = {pd: None for pd in self._param_dict_ids}
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
+
+    def _parse_param_dict_id(self, param_dict_id: str) -> tuple[str, str, str]:
+        ids = param_dict_id.split(PARAM_DICT_ID_DELIM)
+        if len(ids) == 1:
+            return (ids[0], "", "")
+        elif len(ids) == 2:
+            return (ids[0], ids[1], "")
+        elif len(ids) == 3:
+            return (ids[0], ids[2], ids[1])
+        else:
+            raise ValueError(f"Invalid param_dict_id: {param_dict_id}")
 
     def wait(self):
         for inst_name in self.conf["target"]["servers"]:
             self.cli.wait(inst_name)
 
     def read_all(self, msg: ReadAllReq) -> Resp:
-        param_dicts = {pd: self._read(pd) for pd in self._pd_targets}
+        param_dicts = {pd: self._read(pd) for pd in self._param_dict_ids}
         return Resp(all([d is not None for d in param_dicts.values()]), ret=param_dicts)
 
     def read(self, msg: ReadReq) -> Resp:
-        ret = self._read(msg.pd_name)
+        ret = self._read(msg.param_dict_id)
         return Resp(ret is not None, ret=ret)
 
-    def _read(self, pd_name) -> P.ParamDict[str, P.PDValue] | None:
-        if pd_name not in self._pd_targets:
-            return self.fail_with(f"Unknown ParamDict name: {pd_name}")
-        tgt = self._pd_targets[pd_name]
-        d = self.cli.get_param_dict(tgt["inst_name"], tgt.get("pd_name", ""), tgt.get("group", ""))
+    def _read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
+        if param_dict_id not in self._param_dict_ids:
+            return self.fail_with(f"Unknown ParamDict id: {param_dict_id}")
+        inst, name, group = self._parse_param_dict_id(param_dict_id)
+        d = self.cli.get_param_dict(inst, name, group)
         if d is None:
-            self.logger.error(f"Failed to read ParamDict {pd_name}")
+            self.logger.error(f"Failed to read ParamDict {param_dict_id}")
         return d
 
     def write(self, msg: WriteReq) -> Resp:
-        if msg.pd_name not in self._pd_targets:
-            return self.fail_with(f"Unknown ParamDict name: {msg.pd_name}")
-        tgt = self._pd_targets[msg.pd_name]
-        success = self.cli.configure(
-            tgt["inst_name"], P.unwrap(msg.params), tgt.get("pd_name", ""), tgt.get("group", "")
-        )
+        if msg.param_dict_id not in self._param_dict_ids:
+            return self.fail_with(f"Unknown ParamDict name: {msg.param_dict_id}")
+        inst, name, group = self._parse_param_dict_id(msg.param_dict_id)
+        success = self.cli.configure(inst, P.unwrap(msg.params), name, group)
         if success:
-            self._param_dicts[msg.pd_name] = msg.params
+            self._param_dicts[msg.param_dict_id] = msg.params
             return Resp(True)
         else:
-            msg = f"Failed to read ParamDict {msg.pd_name}"
+            msg = f"Failed to read ParamDict {msg.param_dict_id}"
             self.logger.error(msg)
             return Resp(False, msg)
 
@@ -123,18 +135,18 @@ class Tweaker(Node):
 
         with open(msg.file_name, "rb") as f:
             param_dicts = pickle.load(f)
-        for pd_name, pd in param_dicts.items():
+        for param_dict_id, pd in param_dicts.items():
             if (
                 pd is None
-                or pd_name not in self._param_dicts
-                or self._param_dicts[pd_name] is None
+                or param_dict_id not in self._param_dicts
+                or self._param_dicts[param_dict_id] is None
             ):
                 continue
             for key, param in self._param_dicts:
                 if key not in pd:
                     continue
                 if not param.set(pd[key]):
-                    self.logger.error(f"Cannot set {pd_name}[{key}] to {pd[key]}")
+                    self.logger.error(f"Cannot set {param_dict_id}[{key}] to {pd[key]}")
 
         return Resp(True, ret=self._param_dicts)
 

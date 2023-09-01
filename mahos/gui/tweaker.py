@@ -43,13 +43,13 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         self.cli.statusUpdated.disconnect(self.init_with_status)
 
         self.tabWidget.clear()
-        self.param_dict_names = status.param_dict_names
+        self.param_dict_ids = status.param_dict_ids
 
-        for pd_name in status.param_dict_names:
+        for param_dict_id in status.param_dict_ids:
             pt = ParamTable(parent=self)
-            self.tabWidget.addTab(pt, pd_name)
+            self.tabWidget.addTab(pt, param_dict_id)
 
-            d = self.cli.read(pd_name)
+            d = self.cli.read(param_dict_id)
             if d is not None:
                 pt.update_contents(d)
 
@@ -67,7 +67,7 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
     def update_all(self, param_dicts):
         if param_dicts is None:
             return
-        for i, name in enumerate(self.param_dict_names):
+        for i, name in enumerate(self.param_dict_ids):
             if name in param_dicts and param_dicts[name] is not None:
                 self.tabWidget.widget(i).update_contents(param_dicts[name])
 
@@ -76,15 +76,15 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
 
     def request_read(self):
         i = self.tabWidget.currentIndex()
-        d = self.cli.read(self.param_dict_names[i])
+        d = self.cli.read(self.param_dict_ids[i])
         if d is not None:
             self.tabWidget.currentWidget().update_contents(d)
 
     def request_write(self):
         i = self.tabWidget.currentIndex()
-        pd_name = self.param_dict_names[i]
+        param_dict_id = self.param_dict_ids[i]
         params = self.tabWidget.currentWidget().params()
-        self.cli.write(pd_name, params)
+        self.cli.write(param_dict_id, params)
 
     def request_save(self):
         default_path = str(self.param_cli.get_param("work_dir"))

@@ -34,13 +34,13 @@ class QTweakerClient(QStatusSubscriber):
         if resp.success:
             return resp.ret
 
-    def read(self, pd_name: str) -> P.ParamDict[str, P.PDValue] | None:
-        resp = self.req.request(ReadReq(pd_name))
+    def read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
+        resp = self.req.request(ReadReq(param_dict_id))
         if resp.success:
             return resp.ret
 
-    def write(self, pd_name: str, params: P.ParamDict[str, P.PDValue]) -> bool:
-        resp = self.req.request(WriteReq(pd_name, params))
+    def write(self, param_dict_id: str, params: P.ParamDict[str, P.PDValue]) -> bool:
+        resp = self.req.request(WriteReq(param_dict_id, params))
         return resp.success
 
     def save(self, filename: str) -> bool:

@@ -7,10 +7,10 @@ Message Types for Instrument RPC.
 
 """
 
+from __future__ import annotations
 import copy
 import uuid
 from pprint import pformat
-from typing import Optional
 
 from .common_msgs import Message, Request, Status
 
@@ -34,7 +34,7 @@ class ServerStatus(Status):
 
 
 class Ident(Message):
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.uuid = uuid.uuid4()
 
@@ -49,128 +49,128 @@ class Ident(Message):
 
 
 class NoArgReq(Request):
-    def __init__(self, ident: Ident, name: str):
+    def __init__(self, ident: Ident, inst: str):
         self.ident = ident
-        self.name = name
+        self.inst = inst
 
 
 class LockReq(NoArgReq):
-    """acquire the lock of instrument `name`."""
+    """acquire the lock of instrument `inst`."""
 
     pass
 
 
 class ReleaseReq(NoArgReq):
-    """release the lock of instrument `name`."""
+    """release the lock of instrument `inst`."""
 
     pass
 
 
 class CheckLockReq(NoArgReq):
-    """check if instrument `name` is locked."""
+    """check if instrument `inst` is locked."""
 
     pass
 
 
 class CallReq(Request):
-    """call method `func` of instrument `name` with `args`."""
+    """call method `func` of instrument `inst` with `args`."""
 
-    def __init__(self, ident: Ident, name: str, func: str, args=None):
+    def __init__(self, ident: Ident, inst: str, func: str, args=None):
         self.ident = ident
-        self.name = name
+        self.inst = inst
         self.func = func
         self.args = copy.copy(args)
 
 
 class ShutdownReq(NoArgReq):
-    """call shutdown() of instrument `name`."""
+    """call shutdown() of instrument `inst`."""
 
     pass
 
 
 class StartReq(NoArgReq):
-    """call start() of instrument `name`."""
+    """call start() of instrument `inst`."""
 
     pass
 
 
 class StopReq(NoArgReq):
-    """call stop() of instrument `name`."""
+    """call stop() of instrument `inst`."""
 
     pass
 
 
 class PauseReq(NoArgReq):
-    """call pause() of instrument `name`."""
+    """call pause() of instrument `inst`."""
 
     pass
 
 
 class ResumeReq(NoArgReq):
-    """call resume() of instrument `name`."""
+    """call resume() of instrument `inst`."""
 
     pass
 
 
 class ResetReq(NoArgReq):
-    """call reset() of instrument `name`."""
+    """call reset() of instrument `inst`."""
 
     pass
 
 
 class ConfigureReq(Request):
-    """call configure() of instrument `name`."""
+    """call configure() of instrument `inst`."""
 
-    def __init__(self, ident: Ident, name: str, params: dict, pd_name: str, group: str):
+    def __init__(self, ident: Ident, inst: str, params: dict, name: str, group: str):
         self.ident = ident
-        self.name = name
+        self.inst = inst
         self.params = copy.copy(params)
-        self.pd_name = pd_name
+        self.name = name
         self.group = group
 
 
 class SetReq(Request):
-    """call set() of instrument `name`."""
+    """call set() of instrument `inst`."""
 
-    def __init__(self, ident: Ident, name: str, key: str, value=None):
+    def __init__(self, ident: Ident, inst: str, key: str, value=None):
         self.ident = ident
-        self.name = name
+        self.inst = inst
         self.key = key
         self.value = value
 
 
 class GetReq(Request):
-    """call get() of instrument `name`."""
+    """call get() of instrument `inst`."""
 
-    def __init__(self, ident: Ident, name: str, key: str, args=None):
+    def __init__(self, ident: Ident, inst: str, key: str, args=None):
         self.ident = ident
-        self.name = name
+        self.inst = inst
         self.key = key
         self.args = args
 
 
 class HelpReq(Request):
-    """get help of instrument `name`."""
+    """get help of instrument `inst`."""
 
-    def __init__(self, name: str, func: Optional[str] = None):
-        self.name = name
+    def __init__(self, inst: str, func: str | None = None):
+        self.inst = inst
         self.func = func
 
 
 class GetParamDictReq(Request):
-    """get ParamDict `pd_name` in `group` for instrument `name`."""
+    """get ParamDict `name` in `group` for instrument `inst`."""
 
-    def __init__(self, ident: Ident, name: str, pd_name: str = "", group: str = ""):
+    def __init__(self, ident: Ident, inst: str, name: str = "", group: str = ""):
         self.ident = Ident
+        self.inst = inst
         self.name = name
-        self.pd_name = pd_name
         self.group = group
 
 
 class GetParamDictNamesReq(Request):
-    """Request to get list of param dict names for instrument `name`."""
+    """Request to get list of param dict names for instrument `inst`."""
 
-    def __init__(self, ident: Ident, name: str, group: str = ""):
+    def __init__(self, ident: Ident, inst: str, group: str = ""):
         self.ident = Ident
-        self.name = name
+        self.inst = inst
         self.group = group

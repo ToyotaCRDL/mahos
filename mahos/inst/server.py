@@ -48,47 +48,47 @@ class OverlayConf(object):
 
 
 class Locks(object):
-    def __init__(self, insts):
+    def __init__(self, insts: list[str]):
         self.insts = insts
         self.locks = {}
         self.overlay_deps = {}
 
-        for name in insts:
-            self.locks[name] = None
+        for inst in insts:
+            self.locks[inst] = None
 
-    def add_overlay(self, name: str, inst_names: tuple):
-        self.overlay_deps[name] = inst_names
+    def add_overlay(self, inst: str, inst_names: tuple):
+        self.overlay_deps[inst] = inst_names
 
-    def is_locked(self, name: str, ident=None, reduce_=any) -> bool:
+    def is_locked(self, inst: str, ident=None, reduce_=any) -> bool:
         def inst_is_locked(n):
             if ident is not None:
                 return self.locks[n] is not None and self.locks[n] != ident
             else:
                 return self.locks[n] is not None
 
-        if name in self.insts:
-            return inst_is_locked(name)
-        else:  # assert name in self.overlay
-            return reduce_([inst_is_locked(n) for n in self.overlay_deps[name]])
+        if inst in self.insts:
+            return inst_is_locked(inst)
+        else:  # assert inst in self.overlay
+            return reduce_([inst_is_locked(n) for n in self.overlay_deps[inst]])
 
-    def locked_by(self, name):
-        if name in self.insts:
-            return self.locks[name]
-        else:  # assert name in self.overlay
-            return tuple((self.locks[n] for n in self.overlay_deps[name]))
+    def locked_by(self, inst: str):
+        if inst in self.insts:
+            return self.locks[inst]
+        else:  # assert inst in self.overlay
+            return tuple((self.locks[n] for n in self.overlay_deps[inst]))
 
-    def lock(self, name: str, ident: Ident):
-        if name in self.insts:
-            self.locks[name] = ident
-        else:  # assert name in self.overlay
-            for n in self.overlay_deps[name]:
+    def lock(self, inst: str, ident: Ident):
+        if inst in self.insts:
+            self.locks[inst] = ident
+        else:  # assert inst in self.overlay
+            for n in self.overlay_deps[inst]:
                 self.locks[n] = ident
 
-    def release(self, name: str, ident: Ident):
-        if name in self.insts:
-            self.locks[name] = None
-        else:  # assert name in self.overlay
-            for n in self.overlay_deps[name]:
+    def release(self, inst: str, ident: Ident):
+        if inst in self.insts:
+            self.locks[inst] = None
+        else:  # assert inst in self.overlay
+            for n in self.overlay_deps[inst]:
                 self.locks[n] = None
 
 
@@ -118,35 +118,35 @@ class InstrumentClient(StatusClient):
         lay = self.conf["instrument_overlay"] if "instrument_overlay" in self.conf else {}
         self.inst_names = tuple(inst.keys()) + tuple(lay.keys())
 
-    def lock(self, name: str) -> bool:
+    def lock(self, inst: str) -> bool:
         """Acquire lock of an instrument."""
 
-        resp = self.req.request(LockReq(self.ident, name))
+        resp = self.req.request(LockReq(self.ident, inst))
 
         if not resp.success:
             self.logger.error(resp.message)
         return resp.success
 
-    def is_locked(self, name: str) -> T.Optional[bool]:
+    def is_locked(self, inst: str) -> T.Optional[bool]:
         """Check if an instrument is locked."""
 
-        resp = self.req.request(CheckLockReq(self.ident, name))
+        resp = self.req.request(CheckLockReq(self.ident, inst))
 
         if not resp.success:
             self.logger.error(resp.message)
             return None
         return resp.ret
 
-    def release(self, name: str) -> bool:
+    def release(self, inst: str) -> bool:
         """Release lock of an instrument."""
 
-        resp = self.req.request(ReleaseReq(self.ident, name))
+        resp = self.req.request(ReleaseReq(self.ident, inst))
 
         if not resp.success:
             self.logger.error(resp.message)
         return resp.success
 
-    def call(self, name: str, func: str, **args) -> Resp:
+    def call(self, inst: str, func: str, **args) -> Resp:
         """Call arbitrary function of an instrument.
 
         Note that this is not quite a safe API (left for debug purpose).
@@ -155,108 +155,108 @@ class InstrumentClient(StatusClient):
 
         """
 
-        resp = self.req.request(CallReq(self.ident, name, func, args))
+        resp = self.req.request(CallReq(self.ident, inst, func, args))
         return resp
 
-    def __call__(self, name: str, func: str, **args) -> Resp:
-        return self.call(name, func, **args)
+    def __call__(self, inst: str, func: str, **args) -> Resp:
+        return self.call(inst, func, **args)
 
-    def _noarg_call(self, name: str, Req_T):
-        resp = self.req.request(Req_T(self.ident, name))
+    def _noarg_call(self, inst: str, Req_T):
+        resp = self.req.request(Req_T(self.ident, inst))
         return resp.success
 
-    def shutdown(self, name: str) -> bool:
+    def shutdown(self, inst: str) -> bool:
         """Shutdown the instrument and get ready to power-off. Returns True on success."""
 
-        return self._noarg_call(name, ShutdownReq)
+        return self._noarg_call(inst, ShutdownReq)
 
-    def start(self, name: str) -> bool:
+    def start(self, inst: str) -> bool:
         """Start the instrument operation. Returns True on success."""
 
-        return self._noarg_call(name, StartReq)
+        return self._noarg_call(inst, StartReq)
 
-    def stop(self, name: str) -> bool:
+    def stop(self, inst: str) -> bool:
         """Stop the instrument operation. Returns True on success."""
 
-        return self._noarg_call(name, StopReq)
+        return self._noarg_call(inst, StopReq)
 
-    def pause(self, name: str) -> bool:
+    def pause(self, inst: str) -> bool:
         """Pause the instrument operation. Returns True on success."""
 
-        return self._noarg_call(name, PauseReq)
+        return self._noarg_call(inst, PauseReq)
 
-    def resume(self, name: str) -> bool:
+    def resume(self, inst: str) -> bool:
         """Resume the instrument operation. Returns True on success."""
 
-        return self._noarg_call(name, ResumeReq)
+        return self._noarg_call(inst, ResumeReq)
 
-    def reset(self, name: str) -> bool:
+    def reset(self, inst: str) -> bool:
         """Reset the instrument settings. Returns True on success."""
 
-        return self._noarg_call(name, ResetReq)
+        return self._noarg_call(inst, ResetReq)
 
-    def configure(self, name: str, params: dict, pd_name: str = "", group: str = "") -> bool:
+    def configure(self, inst: str, params: dict, name: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        resp = self.req.request(ConfigureReq(self.ident, name, params, pd_name, group))
+        resp = self.req.request(ConfigureReq(self.ident, inst, params, name, group))
         return resp.success
 
-    def set(self, name: str, key: str, value=None) -> bool:
+    def set(self, inst: str, key: str, value=None) -> bool:
         """Set an instrument setting or commanding value. Returns True on success."""
 
-        resp = self.req.request(SetReq(self.ident, name, key, value))
+        resp = self.req.request(SetReq(self.ident, inst, key, value))
         return resp.success
 
-    def get(self, name: str, key: str, args=None):
+    def get(self, inst: str, key: str, args=None):
         """Get an instrument setting or commanding value."""
 
-        resp = self.req.request(GetReq(self.ident, name, key, args=args))
+        resp = self.req.request(GetReq(self.ident, inst, key, args=args))
         if resp.success:
             return resp.ret
         else:
             return None
 
-    def help(self, name: str, func: T.Optional[str] = None) -> str:
-        """Get help of instrument `name`.
+    def help(self, inst: str, func: T.Optional[str] = None) -> str:
+        """Get help of instrument `inst`.
 
-        If function name `func` is given, get docstring of that function.
+        If function inst `func` is given, get docstring of that function.
         Otherwise, get docstring of the class.
 
         """
 
-        resp = self.req.request(HelpReq(name, func))
+        resp = self.req.request(HelpReq(inst, func))
         return resp.message
 
     def get_param_dict(
-        self, name: str, pd_name: str = "", group: str = ""
+        self, inst: str, name: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `pd_name` in `group`.
+        """Get ParamDict for `name` in `group`.
 
-        :param name: ParamDict name.
+        :param inst: instrument name.
+        :param name: param dict name.
                      can be empty if target inst provides only one ParamDict.
-        :param pd_name: param dict name.
-                        can be empty if target inst provides only one ParamDict.
         :param group: param dict group name.
                       can be empty if target inst provides only one group.
 
         """
 
-        resp = self.req.request(GetParamDictReq(self.ident, name, pd_name, group))
+        resp = self.req.request(GetParamDictReq(self.ident, inst, name, group))
         if resp.success:
             return resp.ret
         else:
             return None
 
-    def get_param_dict_names(self, name: str, group: str = "") -> list[str]:
+    def get_param_dict_names(self, inst: str, group: str = "") -> list[str]:
         """Get list of names of available ParamDicts pertaining to `group`.
 
+        :param inst: instrument name.
         :param group: ParamDict group name.
                       can be empty if target inst provides only one group.
 
 
         """
 
-        resp = self.req.request(GetParamDictNamesReq(self.ident, name, group))
+        resp = self.req.request(GetParamDictNamesReq(self.ident, inst, group))
         if resp.success:
             return resp.ret
         else:
@@ -279,30 +279,30 @@ class MultiInstrumentClient(object):
         for cli in self.name_to_client.values():
             cli.close(close_ctx=close_ctx)
 
-    def get_client(self, name: str) -> InstrumentClient:
-        return self.name_to_client[self.inst_to_name[name]]
+    def get_client(self, inst: str) -> InstrumentClient:
+        return self.name_to_client[self.inst_to_name[inst]]
 
-    def is_locked(self, name: str) -> bool:
+    def is_locked(self, inst: str) -> bool:
         """Check if an instrument is locked."""
 
-        return self.get_client(name).is_locked(name)
+        return self.get_client(inst).is_locked(inst)
 
-    def wait(self, name: str) -> bool:
+    def wait(self, inst: str) -> bool:
         """wait until the server is ready."""
 
-        return self.get_client(name).wait()
+        return self.get_client(inst).wait()
 
-    def lock(self, name: str) -> bool:
+    def lock(self, inst: str) -> bool:
         """Acquire lock of an instrument."""
 
-        return self.get_client(name).lock(name)
+        return self.get_client(inst).lock(inst)
 
-    def release(self, name: str) -> bool:
+    def release(self, inst: str) -> bool:
         """Release lock of an instrument."""
 
-        return self.get_client(name).release(name)
+        return self.get_client(inst).release(inst)
 
-    def call(self, name: str, func: str, **args) -> Resp:
+    def call(self, inst: str, func: str, **args) -> Resp:
         """Call arbitrary function of an instrument.
 
         Note that this is not quite a safe API (left for debug purpose).
@@ -311,83 +311,82 @@ class MultiInstrumentClient(object):
 
         """
 
-        return self.get_client(name).call(name, func, **args)
+        return self.get_client(inst).call(inst, func, **args)
 
-    def __call__(self, name: str, func: str, **args) -> Resp:
-        return self.call(name, func, **args)
+    def __call__(self, inst: str, func: str, **args) -> Resp:
+        return self.call(inst, func, **args)
 
-    def shutdown(self, name: str) -> bool:
+    def shutdown(self, inst: str) -> bool:
         """Shutdown the instrument and get ready to power-off. Returns True on success."""
 
-        return self.get_client(name).shutdown(name)
+        return self.get_client(inst).shutdown(inst)
 
-    def start(self, name: str) -> bool:
+    def start(self, inst: str) -> bool:
         """Start the instrument operation. Returns True on success."""
 
-        return self.get_client(name).start(name)
+        return self.get_client(inst).start(inst)
 
-    def stop(self, name: str) -> bool:
+    def stop(self, inst: str) -> bool:
         """Stop the instrument operation. Returns True on success."""
 
-        return self.get_client(name).stop(name)
+        return self.get_client(inst).stop(inst)
 
-    def pause(self, name: str) -> bool:
+    def pause(self, inst: str) -> bool:
         """Pause the instrument operation. Returns True on success."""
 
-        return self.get_client(name).pause(name)
+        return self.get_client(inst).pause(inst)
 
-    def resume(self, name: str) -> bool:
+    def resume(self, inst: str) -> bool:
         """Resume the instrument operation. Returns True on success."""
 
-        return self.get_client(name).resume(name)
+        return self.get_client(inst).resume(inst)
 
-    def reset(self, name: str) -> bool:
+    def reset(self, inst: str) -> bool:
         """Reset the instrument settings. Returns True on success."""
 
-        return self.get_client(name).reset(name)
+        return self.get_client(inst).reset(inst)
 
-    def configure(self, name: str, params: dict, pd_name: str = "", group: str = "") -> bool:
+    def configure(self, inst: str, params: dict, name: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        return self.get_client(name).configure(name, params, pd_name, group)
+        return self.get_client(inst).configure(inst, params, name, group)
 
-    def set(self, name: str, key: str, value=None) -> bool:
+    def set(self, inst: str, key: str, value=None) -> bool:
         """Set an instrument setting or commanding value. Returns True on success."""
 
-        return self.get_client(name).set(name, key, value)
+        return self.get_client(inst).set(inst, key, value)
 
-    def get(self, name: str, key: str, args=None):
+    def get(self, inst: str, key: str, args=None):
         """Get an instrument setting or commanding value."""
 
-        return self.get_client(name).get(name, key, args)
+        return self.get_client(inst).get(inst, key, args)
 
-    def help(self, name: str, func: T.Optional[str] = None) -> str:
-        """Get help of instrument `name`.
+    def help(self, inst: str, func: T.Optional[str] = None) -> str:
+        """Get help of instrument `inst`.
 
         If function name `func` is given, get docstring of that function.
         Otherwise, get docstring of the class.
 
         """
 
-        return self.get_client(name).help(name, func)
+        return self.get_client(inst).help(inst, func)
 
     def get_param_dict(
-        self, name: str, pd_name: str = "", group: str = ""
+        self, inst: str, name: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `pd_name` in `group`.
+        """Get ParamDict for `name` in `group` of instrument `inst`.
 
-        :param name: ParamDict name.
+        :param inst: instrument name.
+        :param name: param dict name.
                      can be empty if target inst provides only one ParamDict.
-        :param pd_name: param dict name.
-                        can be empty if target inst provides only one ParamDict.
         :param group: param dict group name.
                       can be empty if target inst provides only one group.
 
         """
 
-        return self.get_client(name).get_param_dict(name, pd_name, group)
+        return self.get_client(inst).get_param_dict(inst, name, group)
 
-    def get_param_dict_names(self, name: str, group: str = "") -> list[str]:
+    def get_param_dict_names(self, inst: str, group: str = "") -> list[str]:
         """Get list of names of available ParamDicts pertaining to `group`.
 
         :param group: ParamDict group name.
@@ -395,7 +394,7 @@ class MultiInstrumentClient(object):
 
         """
 
-        return self.get_client(name).get_param_dict_names(name, group)
+        return self.get_client(inst).get_param_dict_names(inst, group)
 
 
 class InstrumentServer(Node):
@@ -443,39 +442,39 @@ class InstrumentServer(Node):
 
     CLIENT = InstrumentClient
 
-    def __init__(self, gconf: dict, name, context=None):
-        Node.__init__(self, gconf, name, context=context)
+    def __init__(self, gconf: dict, inst, context=None):
+        Node.__init__(self, gconf, inst, context=context)
 
         self._insts: dict[str, Instrument | None] = {}
         self._overlays: dict[str, InstrumentOverlay] = {}
-        self.locks = Locks(self.conf["instrument"])
+        self.locks = Locks(list(self.conf["instrument"].keys()))
 
-        for name, inst in self.conf["instrument"].items():
+        for inst, idict in self.conf["instrument"].items():
             C = self._get_class(
-                ["mahos.inst." + inst["module"], inst["module"]], inst["class"], Instrument
+                ["mahos.inst." + idict["module"], idict["module"]], idict["class"], Instrument
             )
             prefix = self.joined_name()
 
             try:
-                if "conf" in inst:
-                    self._insts[name]: Instrument = C(name, conf=inst["conf"], prefix=prefix)
+                if "conf" in idict:
+                    self._insts[inst]: Instrument = C(inst, conf=idict["conf"], prefix=prefix)
                 else:
-                    self._insts[name]: Instrument = C(name, prefix=prefix)
+                    self._insts[inst]: Instrument = C(inst, prefix=prefix)
             except Exception:
-                self.logger.exception(f"Failed to initialize {name}.")
-                self._insts[name] = None
+                self.logger.exception(f"Failed to initialize {inst}.")
+                self._insts[inst] = None
 
         if "instrument_overlay" in self.conf:
-            for name, lay in self.conf["instrument_overlay"].items():
+            for inst, odict in self.conf["instrument_overlay"].items():
                 C = self._get_class(
-                    ["mahos.inst.overlay." + lay["module"], lay["module"]],
-                    lay["class"],
+                    ["mahos.inst.overlay." + odict["module"], odict["module"]],
+                    odict["class"],
                     InstrumentOverlay,
                 )
                 prefix = self.joined_name()
-                conf = OverlayConf(lay.get("conf", {}))
-                self._overlays[name] = C(name, conf=conf.resolve_ref(self._insts), prefix=prefix)
-                self.locks.add_overlay(name, conf.inst_names())
+                conf = OverlayConf(odict.get("conf", {}))
+                self._overlays[inst] = C(inst, conf=conf.resolve_ref(self._insts), prefix=prefix)
+                self.locks.add_overlay(inst, conf.inst_names())
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
@@ -519,15 +518,15 @@ class InstrumentServer(Node):
             if inst is not None:
                 inst.close_once()
 
-    def _get(self, name) -> Instrument | InstrumentOverlay:
-        if name in self._insts:
-            return self._insts[name]
+    def _get(self, inst: str) -> Instrument | InstrumentOverlay:
+        if inst in self._insts:
+            return self._insts[inst]
         else:
-            return self._overlays[name]
+            return self._overlays[inst]
 
     def handle_req(self, msg: Request) -> Resp:
-        if not (msg.name in self._insts or msg.name in self._overlays):
-            return Resp(False, "Unknown instrument {}".format(msg.name))
+        if not (msg.inst in self._insts or msg.inst in self._overlays):
+            return Resp(False, "Unknown instrument {}".format(msg.inst))
 
         if isinstance(msg, CallReq):
             return self._handle_call(msg)
@@ -554,16 +553,16 @@ class InstrumentServer(Node):
         else:
             return Resp(False, "Unknown message type")
 
-    def _call(self, name, ident, func, args):
-        if self.locks.is_locked(name, ident):
+    def _call(self, inst, ident, func, args):
+        if self.locks.is_locked(inst, ident):
             return Resp(
-                False, "Instrument {} is locked by {}".format(name, self.locks.locked_by(name))
+                False, "Instrument {} is locked by {}".format(inst, self.locks.locked_by(inst))
             )
-        inst = self._get(name)
+        inst = self._get(inst)
         if not hasattr(inst, func):
-            return Resp(False, f"Unknown function name {func} for instrument {name}")
+            return Resp(False, f"Unknown function name {func} for instrument {inst}")
         if func in self._std_funcs and inst.is_closed():
-            return Resp(False, f"Instrument {name} is already closed")
+            return Resp(False, f"Instrument {inst} is already closed")
 
         f = getattr(inst, func)
         try:
@@ -579,36 +578,36 @@ class InstrumentServer(Node):
             return Resp(True, ret=r)
 
     def _handle_call(self, msg: CallReq) -> Resp:
-        return self._call(msg.name, msg.ident, msg.func, msg.args)
+        return self._call(msg.inst, msg.ident, msg.func, msg.args)
 
     def _handle_noarg_calls(self, msg) -> Resp:
         func = self._noarg_func_names[msg.__class__.__name__]
-        return self._call(msg.name, msg.ident, func, None)
+        return self._call(msg.inst, msg.ident, func, None)
 
     def _handle_configure(self, msg: ConfigureReq) -> Resp:
-        args = {"params": msg.params, "name": msg.pd_name, "group": msg.group}
-        return self._call(msg.name, msg.ident, "configure", args)
+        args = {"params": msg.params, "name": msg.name, "group": msg.group}
+        return self._call(msg.inst, msg.ident, "configure", args)
 
     def _handle_set(self, msg: SetReq) -> Resp:
-        return self._call(msg.name, msg.ident, "set", {"key": msg.key, "value": msg.value})
+        return self._call(msg.inst, msg.ident, "set", {"key": msg.key, "value": msg.value})
 
     def _handle_get(self, msg: GetReq) -> Resp:
         if msg.args is None:
             args = {"key": msg.key}
         else:
             args = {"key": msg.key, "args": msg.args}
-        return self._call(msg.name, msg.ident, "get", args)
+        return self._call(msg.inst, msg.ident, "get", args)
 
     def _handle_get_param_dict(self, msg: GetParamDictReq) -> Resp:
-        args = {"name": msg.pd_name, "group": msg.group}
-        return self._call(msg.name, msg.ident, "get_param_dict", args)
+        args = {"name": msg.name, "group": msg.group}
+        return self._call(msg.inst, msg.ident, "get_param_dict", args)
 
     def _handle_get_param_dict_names(self, msg: GetParamDictNamesReq) -> Resp:
         args = {"group": msg.group}
-        return self._call(msg.name, msg.ident, "get_param_dict_names", args)
+        return self._call(msg.inst, msg.ident, "get_param_dict_names", args)
 
     def _handle_help(self, msg: HelpReq) -> Resp:
-        inst = self._get(msg.name)
+        inst = self._get(msg.inst)
         if msg.func is None:
             sig = inst.__class__.__name__ + str(signature(inst.__class__))
             doc = getdoc(inst) or "<No docstring>"
@@ -626,27 +625,27 @@ class InstrumentServer(Node):
         return Resp(True, "\n".join((sig, doc, file)).strip())
 
     def _handle_lock(self, msg: LockReq) -> Resp:
-        if self.locks.is_locked(msg.name, msg.ident, any):
-            return Resp(False, "Already locked by: {}".format(self.locks.locked_by(msg.name)))
+        if self.locks.is_locked(msg.inst, msg.ident, any):
+            return Resp(False, "Already locked by: {}".format(self.locks.locked_by(msg.inst)))
 
-        self.locks.lock(msg.name, msg.ident)
+        self.locks.lock(msg.inst, msg.ident)
         return Resp(True)
 
     def _handle_release(self, msg: ReleaseReq) -> Resp:
-        if not self.locks.is_locked(msg.name):
+        if not self.locks.is_locked(msg.inst):
             # Do not report double-release as error
             return Resp(True, "Already released")
-        if self.locks.is_locked(msg.name, msg.ident, all):
+        if self.locks.is_locked(msg.inst, msg.ident, all):
             return Resp(
                 False,
                 "Lock ident is not matching: {} != {}".format(
-                    self.locks.locked_by(msg.name), msg.ident
+                    self.locks.locked_by(msg.inst), msg.ident
                 ),
             )
 
-        self.locks.release(msg.name, msg.ident)
+        self.locks.release(msg.inst, msg.ident)
         return Resp(True)
 
     def _handle_check_lock(self, msg: CheckLockReq) -> Resp:
-        locked = self.locks.is_locked(msg.name)
+        locked = self.locks.is_locked(msg.inst)
         return Resp(True, ret=locked)

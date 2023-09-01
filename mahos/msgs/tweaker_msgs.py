@@ -8,34 +8,34 @@ from . import param_msgs as P
 
 
 class TweakerStatus(Status):
-    def __init__(self, param_dict_names: list[str]):
-        self.param_dict_names = param_dict_names
+    def __init__(self, param_dict_ids: list[str]):
+        self.param_dict_ids = param_dict_ids
 
     def __repr__(self):
-        return f"TweakerStatus({self.param_dict_names})"
+        return f"TweakerStatus({self.param_dict_ids})"
 
     def __str__(self):
-        return "Tweaker->param_dict_names:\n" + pformat(self.param_dict_names)
+        return "Tweaker->param_dict_ids:\n" + pformat(self.param_dict_ids)
 
 
 class ReadAllReq(Request):
-    """Read current parameters for all the targets."""
+    """Read current parameters for all the registered ParamDicts."""
 
     pass
 
 
 class ReadReq(Request):
-    """Read current parameters of a target."""
+    """Read current parameters of a ParamDict."""
 
-    def __init__(self, pd_name: str):
-        self.pd_name = pd_name
+    def __init__(self, param_dict_id: str):
+        self.param_dict_id = param_dict_id
 
 
 class WriteReq(Request):
-    """Write parameter to a target."""
+    """Write parameter to a ParamDict."""
 
-    def __init__(self, pd_name: str, params: P.ParamDict[str, P.PDValue]):
-        self.pd_name = pd_name
+    def __init__(self, param_dict_id: str, params: P.ParamDict[str, P.PDValue]):
+        self.param_dict_id = param_dict_id
         self.params = params
 
 
