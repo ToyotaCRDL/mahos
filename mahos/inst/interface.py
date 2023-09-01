@@ -10,6 +10,7 @@ Typed Interface for InstrumentClient.
 from typing import Union, Optional
 
 from ..msgs.common_msgs import Resp
+from ..msgs import param_msgs as P
 from .server import InstrumentClient, MultiInstrumentClient
 
 
@@ -86,7 +87,7 @@ class InstrumentInterface(object):
     def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        return self.cli.configure(self.name, params)
+        return self.cli.configure(self.name, params, name, group)
 
     def set(self, key: str, value=None) -> bool:
         """Set an instrument setting or commanding value. Returns True on success."""
@@ -107,3 +108,15 @@ class InstrumentInterface(object):
         """
 
         return self.cli.help(self.name, func)
+
+    def get_param_dict(
+        self, name: str = "", group: str = ""
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `name` in `group`."""
+
+        return self.cli.get_param_dict(self.name, name, group)
+
+    def get_param_dict_names(self, group: str) -> list[str]:
+        """Get list of names of available ParamDicts pertaining to `group`."""
+
+        return self.cli.get_param_dict_names(self.name, group)

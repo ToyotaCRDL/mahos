@@ -66,7 +66,7 @@ class OE200Widget(ClientTopWidget, Ui_OE200Widget):
         d = self.pds[0].get_param_dict("gain_coupling")
         if d is None:
             print("[ERROR] Failed to get current setting.")
-        low_noise = d["low_noise"]
+        low_noise = d["low_noise"].value()
         self.lowButton.setChecked(low_noise)
         self.highButton.setChecked(not low_noise)
         gain_exponent = d["gain_exponent"].value()
