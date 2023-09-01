@@ -67,11 +67,10 @@ class OE200Interface(PDInterface):
     def set_coupling(self, DC_coupling: bool) -> bool:
         return self.set("coupling", DC_coupling)
 
-    def set_gain_coupling(self, low_noise: bool, gain_exponent: int, DC_coupling: bool) -> bool:
-        return self.set(
-            "gain_coupling",
+    def configure_gain_coupling(
+        self, low_noise: bool, gain_exponent: int, DC_coupling: bool
+    ) -> bool:
+        return self.configure(
             {"low_noise": low_noise, "gain_exponent": gain_exponent, "DC_coupling": DC_coupling},
+            "gain_coupling",
         )
-
-    def get_gain_coupling(self) -> dict:
-        return self.get("gain_coupling")

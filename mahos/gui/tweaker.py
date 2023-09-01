@@ -47,13 +47,13 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
 
         for pd_name in status.param_dict_names:
             pt = ParamTable(parent=self)
-            self.tabWidget.addTab(widget=pt, label=pd_name)
+            self.tabWidget.addTab(pt, pd_name)
 
             d = self.cli.read(pd_name)
             if d is not None:
                 pt.update_contents(d)
 
-        self.init_connections(self)
+        self.init_connections()
 
         self.setEnabled(True)
 

@@ -7,6 +7,9 @@ Tweaker for manually-tuned instrument parameters.
 
 """
 
+from __future__ import annotations
+import pickle
+
 from ..msgs.common_msgs import Resp
 from ..msgs import param_msgs as P
 from ..msgs import tweaker_msgs
@@ -32,7 +35,7 @@ class TweakerClient(StatusClient):
             return resp.ret
 
     def write(self, pd_name: str, params: P.ParamDict[str, P.PDValue]) -> bool:
-        resp = self.req.request(WriteReq(pd_name))
+        resp = self.req.request(WriteReq(pd_name, params))
         return resp.success
 
     def save(self, filename: str) -> bool:
@@ -64,7 +67,7 @@ class Tweaker(Node):
         self.status_pub = self.add_pub(b"status")
 
     def wait(self):
-        for inst_name in self.conf["target"]:
+        for inst_name in self.conf["target"]["servers"]:
             self.cli.wait(inst_name)
 
     def read_all(self, msg: ReadAllReq) -> Resp:
@@ -100,10 +103,40 @@ class Tweaker(Node):
             return Resp(False, msg)
 
     def save(self, msg: SaveReq) -> Resp:
-        return Resp(False, "not implemented")
+        """Tweaker state is saved using pickle, not h5.
+
+        This is because the tweaker param_dicts is primarily a memo of experiment condition.
+
+        """
+
+        with open(msg.file_name, "wb") as f:
+            pickle.dump(P.unwrap(self._param_dicts), f)
+
+        return Resp(True)
 
     def load(self, msg: LoadReq) -> Resp:
-        return Resp(False, "not implemented")
+        """Load the tweaker state (param_dicts).
+
+        Load is done defensively, checking the existence and validity in current setup.
+
+        """
+
+        with open(msg.file_name, "rb") as f:
+            param_dicts = pickle.load(f)
+        for pd_name, pd in param_dicts.items():
+            if (
+                pd is None
+                or pd_name not in self._param_dicts
+                or self._param_dicts[pd_name] is None
+            ):
+                continue
+            for key, param in self._param_dicts:
+                if key not in pd:
+                    continue
+                if not param.set(pd[key]):
+                    self.logger.error(f"Cannot set {pd_name}[{key}] to {pd[key]}")
+
+        return Resp(True, ret=self._param_dicts)
 
     def handle_req(self, msg):
         if isinstance(msg, ReadReq):

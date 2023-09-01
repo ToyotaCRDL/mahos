@@ -349,7 +349,7 @@ class MultiInstrumentClient(object):
     def configure(self, name: str, params: dict, pd_name: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        return self.get_client(name).configure(name, params)
+        return self.get_client(name).configure(name, params, pd_name, group)
 
     def set(self, name: str, key: str, value=None) -> bool:
         """Set an instrument setting or commanding value. Returns True on success."""

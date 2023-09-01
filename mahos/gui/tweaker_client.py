@@ -40,7 +40,7 @@ class QTweakerClient(QStatusSubscriber):
             return resp.ret
 
     def write(self, pd_name: str, params: P.ParamDict[str, P.PDValue]) -> bool:
-        resp = self.req.request(WriteReq(pd_name))
+        resp = self.req.request(WriteReq(pd_name, params))
         return resp.success
 
     def save(self, filename: str) -> bool:

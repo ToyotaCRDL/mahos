@@ -227,8 +227,123 @@ class LUCI10(Instrument):
             return None
 
 
-class OE200(AnalogIn):
-    """FEMTO Messtechnik OE-200 Variable Gain Photoreceiver.
+class LUCI_OE200(LUCI10):
+    """LUCI-10 for FEMTO Messtechnik OE-200 Variable Gain Photoreceiver.
+
+    This class requires LUCI-10 installation (see LUCI10 class).
+
+    :param dll_dir: The directory path containing LUCI-10 DLL.
+    :type dll_dir: str
+    :param index: (default: 1) Index of LUCI-10 device.
+    :type index: int
+
+    :param DC_coupling: (default: True) Init setting. True (False) for DC (AC) coupling.
+    :type DC_coupling: bool
+    :param low_noise: (default: True) Init setting. True (False) for low_noise (high_speed) mode.
+    :type low_noise: bool
+    :param gain_exponent: (default: 3) Init setting. The gain exponent.
+    :type gain_exponent: int
+
+    """
+
+    GAINS = {
+        True: {3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6},
+        False: {5: 0, 6: 1, 7: 2, 8: 3, 9: 4, 10: 5, 11: 6},
+    }
+
+    def __init__(self, name, conf, prefix=None):
+        LUCI10.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.DC_coupling = self.conf.get("DC_coupling", True)
+        low_noise = self.conf.get("low_noise", True)
+        gain_exponent = self.conf.get("gain_exponent", 3)
+        if not self.set_gain(low_noise, gain_exponent):
+            raise ValueError("Initial setting failed.")
+
+    def _write_settings(self) -> bool:
+        if self.DC_coupling:
+            to_write = self.gain_value | 0b1000
+        else:
+            to_write = self.gain_value
+
+        self.logger.debug(f"Writing LUCI-10 setting: 0b{to_write:b}")
+        return self.write_data(to_write)
+
+    def _update_gain(self, low_noise: bool, gain_exponent: int) -> bool:
+        self.low_noise = low_noise
+        self.gain_exponent = gain_exponent
+
+        try:
+            self.gain_value = self.GAINS[low_noise][gain_exponent]
+        except KeyError:
+            return self.fail_with(f"Invalid arguments: {low_noise}, {gain_exponent}")
+
+        if low_noise:
+            self.gain_value |= 0b1_0000
+
+        self.gain = 10**gain_exponent
+        return True
+
+    def set_gain(self, low_noise: bool, gain_exponent: int) -> bool:
+        return self._update_gain(low_noise, gain_exponent) and self._write_settings()
+
+    def set_coupling(self, DC_coupling: bool) -> bool:
+        self.DC_coupling = DC_coupling
+        return self._write_settings()
+
+    def configure_gain_coupling(
+        self, low_noise: bool, gain_exponent: int, DC_coupling: bool
+    ) -> bool:
+        self.DC_coupling = DC_coupling
+        return self._update_gain(low_noise, gain_exponent) and self._write_settings()
+
+    def set(self, key: str, value=None) -> bool:
+        key = key.lower()
+        if key == "led":
+            return self.set_led(value)
+        elif key == "gain":
+            try:
+                return self.set_gain(value["low_noise"], value["gain_exponent"])
+            except (KeyError, TypeError):
+                return self.fail_with("value must be a dict with low_noise and gain_exponent.")
+        elif key == "coupling":
+            return self.set_coupling(bool(value))
+        else:
+            return self.fail_with(f"Unknown set() key: {key}.")
+
+    def get(self, key: str, args=None):
+        if key in ("devices", "id", "pin", "product"):
+            return LUCI10.get(self, key, args)
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def get_param_dict_names(self, group: str) -> list[str]:
+        return ["gain_coupling"]
+
+    def get_param_dict(
+        self, name: str = "", group: str = ""
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `name` in `group`."""
+
+        if name == "gain_coupling":
+            return P.ParamDict(
+                low_noise=P.BoolParam(self.low_noise),
+                gain_exponent=P.IntChoiceParam(self.gain_exponent, list(range(3, 12))),
+                DC_coupling=P.BoolParam(self.DC_coupling),
+            )
+
+    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+        if name == "gain_coupling":
+            return self.configure_gain_coupling(
+                params["low_noise"], params["gain_exponent"], params["DC_coupling"]
+            )
+        else:
+            return self.fail_with(f"Unknown configure name: {name}")
+
+
+class OE200_AI(AnalogIn):
+    """FEMTO Messtechnik OE-200 Variable Gain Photoreceiver with DAQ AnalogIn.
 
     This class requires LUCI-10 installation (see LUCI10 class),
     and a NI-DAQ Analog Input port (see daq.AnalogIn class).
@@ -256,37 +371,17 @@ class OE200(AnalogIn):
 
     """
 
-    GAINS = {
-        True: {3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6},
-        False: {5: 0, 6: 1, 7: 2, 8: 3, 9: 4, 10: 5, 11: 6},
-    }
-
     def __init__(self, name, conf, prefix=None):
         if "line" in conf and "lines" not in conf:
             conf["lines"] = [conf["line"]]
         AnalogIn.__init__(self, name, conf=conf, prefix=prefix)
 
-        self.luci = LUCI10(name + "_luci", self.conf, prefix=prefix)
-
-        self.DC_coupling = self.conf.get("DC_coupling", True)
-        low_noise = self.conf.get("low_noise", True)
-        gain_exponent = self.conf.get("gain_exponent", 3)
-        if not self.set_gain(low_noise, gain_exponent):
-            raise ValueError("Initial setting failed.")
-
-    def _write_settings(self) -> bool:
-        if self.DC_coupling:
-            to_write = self.gain_value | 0b1000
-        else:
-            to_write = self.gain_value
-
-        self.logger.debug(f"Writing LUCI-10 setting: 0b{to_write:b}")
-        return self.luci.write_data(to_write)
+        self.luci = LUCI_OE200(name + "_luci", self.conf, prefix=prefix)
 
     def _convert(self, data: np.ndarray | float) -> np.ndarray | float:
         """Convert raw reading (V) to power (W)."""
 
-        return data / self.gain
+        return data / self.luci.gain
 
     # override AnalogIn methods to convert readings.
 
@@ -296,70 +391,20 @@ class OE200(AnalogIn):
     def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
         return self._convert(AnalogIn.read_on_demand(self, oversample))
 
-    def _update_gain(self, low_noise: bool, gain_exponent: int) -> bool:
-        self.low_noise = low_noise
-        self.gain_exponent = gain_exponent
-
-        try:
-            self.gain_value = self.GAINS[low_noise][gain_exponent]
-        except KeyError:
-            return self.fail_with(f"Invalid arguments: {low_noise}, {gain_exponent}")
-
-        if low_noise:
-            self.gain_value |= 0b1_0000
-
-        self.gain = 10**gain_exponent
-        return True
-
-    def set_gain(self, low_noise: bool, gain_exponent: int) -> bool:
-        return self._update_gain(low_noise, gain_exponent) and self._write_settings()
-
-    def set_coupling(self, DC_coupling: bool) -> bool:
-        self.DC_coupling = DC_coupling
-        return self._write_settings()
-
-    def set_gain_coupling(self, low_noise: bool, gain_exponent: int, DC_coupling: bool) -> bool:
-        self.DC_coupling = DC_coupling
-        return self._update_gain(low_noise, gain_exponent) and self._write_settings()
-
-    def get_gain_coupling(self) -> dict:
-        return {
-            "low_noise": self.low_noise,
-            "gain_exponent": self.gain_exponent,
-            "DC_coupling": self.DC_coupling,
-        }
-
     def set(self, key: str, value=None) -> bool:
         key = key.lower()
-        if key == "led":
-            return self.luci.set_led(value)
-        elif key == "gain":
-            try:
-                return self.set_gain(value["low_noise"], value["gain_exponent"])
-            except (KeyError, TypeError):
-                return self.fail_with("value must be a dict with low_noise and gain_exponent.")
-        elif key == "coupling":
-            return self.set_coupling(bool(value))
-        elif key == "gain_coupling":
-            try:
-                return self.set_gain_coupling(
-                    value["low_noise"], value["gain_exponent"], value["DC_coupling"]
-                )
-            except (KeyError, TypeError):
-                msg = "value must be a dict with low_noise, gain_exponent, and DC_coupling."
-                return self.fail_with(msg)
+        if key in ("led", "gain", "coupling"):
+            return self.luci.set(key, value)
         else:
             return self.fail_with(f"Unknown set() key: {key}.")
 
     def get(self, key: str, args=None):
-        if key in ("devices", "id", "pin", "product"):
+        if key in ("devices", "id", "pin", "product", "unit"):
             return self.luci.get(key, args)
-        if key in ("data", "all_data"):
+        elif key in ("data", "all_data"):
             return AnalogIn.get(self, key, args)
-        if key == "unit":
+        elif key == "unit":
             return "W"
-        elif key == "gain_coupling":
-            return self.get_gain_coupling()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
@@ -373,19 +418,13 @@ class OE200(AnalogIn):
         """Get ParamDict for `name` in `group`."""
 
         if name == "gain_coupling":
-            return P.ParamDict(
-                low_noise=P.BoolParam(False),
-                gain_exponent=P.IntChoiceParam(3, list(range(3, 12))),
-                DC_coupling=P.BoolParam(True),
-            )
+            return self.luci.get_param_dict(name, group)
 
     def configure(self, params: dict, name: str = "", group: str = "") -> bool:
         if name == "gain_coupling":
-            return self.set_gain_coupling(
-                params["low_noise"], params["gain_exponent"], params["DC_coupling"]
-            )
+            return self.luci.configure(params, name, group)
         else:
-            return AnalogIn.configure(params, name, group)
+            return AnalogIn.configure(self, params, name, group)
 
 
 class AnalogPD(AnalogIn):

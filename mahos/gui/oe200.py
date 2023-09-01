@@ -63,16 +63,18 @@ class OE200Widget(ClientTopWidget, Ui_OE200Widget):
         self.get_initialize()
 
     def get_initialize(self):
-        d = self.pds[0].get_gain_coupling()
+        d = self.pds[0].get_param_dict("gain_coupling")
         if d is None:
             print("[ERROR] Failed to get current setting.")
-        self.lowButton.setChecked(d["low_noise"])
-        self.highButton.setChecked(not d["low_noise"])
-        if d["low_noise"]:
-            self.lowBox.setCurrentIndex(self.lowBox.findText(str(d["gain_exponent"])))
+        low_noise = d["low_noise"]
+        self.lowButton.setChecked(low_noise)
+        self.highButton.setChecked(not low_noise)
+        gain_exponent = d["gain_exponent"].value()
+        if low_noise:
+            self.lowBox.setCurrentIndex(self.lowBox.findText(str(gain_exponent)))
         else:
-            self.highBox.setCurrentIndex(self.highBox.findText(str(d["gain_exponent"])))
-        self.dcButton.setChecked(d["DC_coupling"])
+            self.highBox.setCurrentIndex(self.highBox.findText(str(gain_exponent)))
+        self.dcButton.setChecked(d["DC_coupling"].value())
 
     def update_box(self):
         low = self.lowButton.isChecked()
@@ -87,7 +89,7 @@ class OE200Widget(ClientTopWidget, Ui_OE200Widget):
             gain_exponent = int(self.highBox.currentText())
         DC_coupling = self.dcButton.isChecked()
 
-        self.pds[0].set_gain_coupling(low_noise, gain_exponent, DC_coupling)
+        self.pds[0].configure_gain_coupling(low_noise, gain_exponent, DC_coupling)
 
 
 class OE200GUI(GUINode):
