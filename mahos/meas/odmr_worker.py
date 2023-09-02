@@ -45,15 +45,15 @@ class Sweeper(Worker):
 
         self.data = ODMRData()
 
-    def get_param_dict_names(self) -> list:
+    def get_param_dict_labels(self) -> list:
         return ["cw", "pulse"]
 
-    def get_param_dict(self, method: str) -> P.ParamDict[str, P.PDValue] | None:
-        if method == "cw":
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
+        if label == "cw":
             timing = P.ParamDict(
                 time_window=P.FloatParam(self._conf.get("time_window", 10e-3), 0.1e-3, 1.0)
             )
-        elif method == "pulse":
+        elif label == "pulse":
             timing = P.ParamDict(
                 laser_delay=P.FloatParam(
                     100e-9, 0.0, 1e-3, unit="s", SI_prefix=True, doc="delay before laser"
@@ -83,7 +83,7 @@ class Sweeper(Worker):
                 burst_num=P.IntParam(100, 1, 100_000, doc="number of bursts at each freq."),
             )
         else:
-            self.logger.error(f"Unknown param dict name: {method}")
+            self.logger.error(f"Unknown param dict label: {label}")
             return None
 
         bounds = self.sg.get_bounds()
@@ -95,7 +95,7 @@ class Sweeper(Worker):
         f_start = max(min(self._conf.get("start", 2.74e9), f_max), f_min)
         f_stop = max(min(self._conf.get("stop", 3.00e9), f_max), f_min)
         d = P.ParamDict(
-            method=P.StrChoiceParam(method, ("cw", "pulse")),
+            method=P.StrChoiceParam(label, ("cw", "pulse")),
             start=P.FloatParam(f_start, f_min, f_max),
             stop=P.FloatParam(f_stop, f_min, f_max),
             num=P.IntParam(self._conf.get("num", 101), 2, 10000),

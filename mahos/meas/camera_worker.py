@@ -31,7 +31,7 @@ class Poller(Worker):
         self.image = Image()
         self.result = FrameResult()
 
-    def get_param_dict(self, name: str) -> P.ParamDict[str, P.PDValue] | None:
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         # TODO query bounds from camera ?
         d = P.ParamDict(
             exposure_time=P.FloatParam(10e-3, 1e-6, 10.0, unit="s", SI_prefix=True),

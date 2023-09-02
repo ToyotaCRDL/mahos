@@ -42,12 +42,12 @@ class WriteReq(Request):
 class SaveReq(Request):
     """Save current parameters to a file"""
 
-    def __init__(self, file_name: str):
-        self.file_name = file_name
+    def __init__(self, filename: str):
+        self.filename = filename
 
 
 class LoadReq(Request):
     """Load parameters from a file"""
 
-    def __init__(self, file_name: str):
-        self.file_name = file_name
+    def __init__(self, filename: str):
+        self.filename = filename

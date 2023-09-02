@@ -10,7 +10,7 @@ Logic and instrument control part of ODMR.
 from ..msgs.common_msgs import Request, Resp, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
-from ..msgs.param_msgs import GetParamDictReq, GetParamDictNamesReq
+from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..msgs import odmr_msgs
 from ..msgs.odmr_msgs import ODMRData, ValidateReq
 from ..util.timer import IntervalTimer
@@ -107,17 +107,17 @@ class ODMR(BasicMeasNode):
         self.state = msg.state
         return Resp(True)
 
-    def get_param_dict_names(self, msg: GetParamDictNamesReq) -> Resp:
+    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:
         if msg.group == "fit":
-            return Resp(True, ret=self.fitter.get_param_dict_names())
+            return Resp(True, ret=self.fitter.get_param_dict_labels())
         else:
-            return Resp(True, ret=self.worker.get_param_dict_names())
+            return Resp(True, ret=self.worker.get_param_dict_labels())
 
     def get_param_dict(self, msg: GetParamDictReq) -> Resp:
         if msg.group == "fit":
-            d = self.fitter.get_param_dict(msg.name)
+            d = self.fitter.get_param_dict(msg.label)
         else:
-            d = self.worker.get_param_dict(msg.name)
+            d = self.worker.get_param_dict(msg.label)
 
         if d is None:
             return Resp(False, "Failed to generate param dict.")

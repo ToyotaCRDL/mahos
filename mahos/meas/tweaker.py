@@ -95,17 +95,17 @@ class Tweaker(Node):
     def _read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
         if param_dict_id not in self._param_dict_ids:
             return self.fail_with(f"Unknown ParamDict id: {param_dict_id}")
-        inst, name, group = self._parse_param_dict_id(param_dict_id)
-        d = self.cli.get_param_dict(inst, name, group)
+        inst, label, group = self._parse_param_dict_id(param_dict_id)
+        d = self.cli.get_param_dict(inst, label, group)
         if d is None:
             self.logger.error(f"Failed to read ParamDict {param_dict_id}")
         return d
 
     def write(self, msg: WriteReq) -> Resp:
         if msg.param_dict_id not in self._param_dict_ids:
-            return self.fail_with(f"Unknown ParamDict name: {msg.param_dict_id}")
-        inst, name, group = self._parse_param_dict_id(msg.param_dict_id)
-        success = self.cli.configure(inst, P.unwrap(msg.params), name, group)
+            return self.fail_with(f"Unknown ParamDict id: {msg.param_dict_id}")
+        inst, label, group = self._parse_param_dict_id(msg.param_dict_id)
+        success = self.cli.configure(inst, P.unwrap(msg.params), label, group)
         if success:
             self._param_dicts[msg.param_dict_id] = msg.params
             return Resp(True)
@@ -121,7 +121,7 @@ class Tweaker(Node):
 
         """
 
-        with open(msg.file_name, "wb") as f:
+        with open(msg.filename, "wb") as f:
             pickle.dump(P.unwrap(self._param_dicts), f)
 
         return Resp(True)
@@ -133,7 +133,7 @@ class Tweaker(Node):
 
         """
 
-        with open(msg.file_name, "rb") as f:
+        with open(msg.filename, "rb") as f:
             param_dicts = pickle.load(f)
         for param_dict_id, pd in param_dicts.items():
             if (
@@ -165,7 +165,7 @@ class Tweaker(Node):
             return self.fail_with("Invalid message type")
 
     def _publish(self):
-        s = TweakerStatus(param_dict_names=list(self._param_dicts.keys()))
+        s = TweakerStatus(param_dict_ids=list(self._param_dicts.keys()))
         self.status_pub.publish(s)
 
     def main(self):

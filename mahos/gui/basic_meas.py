@@ -128,10 +128,10 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         # only once.
         self.cli.statusUpdated.disconnect(self.init_with_status)
 
-        names = self.cli.get_param_dict_names()
-        self.methodBox.addItems(names)
-        self.methodBox.currentIndexChanged.connect(self.update_param_table)
-        if names:
+        labels = self.cli.get_param_dict_labels()
+        self.labelBox.addItems(labels)
+        self.labelBox.currentIndexChanged.connect(self.update_param_table)
+        if labels:
             self.update_param_table()
 
         self.init_connection()
@@ -194,7 +194,7 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         self.refresh_plot()
 
     def update_param_table(self):
-        method = self.methodBox.currentText()
+        method = self.labelBox.currentText()
         d = self.cli.get_param_dict(method)
         self.paramTable.update_contents(d)
 
@@ -238,7 +238,7 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
 
     def update_state(self, state: BinaryState, last_state: BinaryState):
         for w in (
-            self.methodBox,
+            self.labelBox,
             self.startButton,
             self.saveButton,
             self.exportButton,

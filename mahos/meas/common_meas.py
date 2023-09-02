@@ -50,35 +50,35 @@ class BasicMeasClientBase(NodeClient):
 
 
 class ParamDictReqMixin(object):
-    """Implements get_param_dict_names() and get_param_dict()."""
+    """Implements get_param_dict_labels() and get_param_dict()."""
 
-    def get_param_dict_names(self, group: str = "") -> list[str]:
-        """Get list of names of available ParamDicts pertaining to `group`.
+    def get_param_dict_labels(self, group: str = "") -> list[str]:
+        """Get list of available ParamDict labels pertaining to `group`.
 
         :param group: measurement method group name.
                       can be empty if target node provides only one group.
 
         """
 
-        resp = self.req.request(P.GetParamDictNamesReq(group))
+        resp = self.req.request(P.GetParamDictLabelsReq(group))
         if resp.success:
             return resp.ret
         else:
             return []
 
     def get_param_dict(
-        self, name: str = "", group: str = ""
+        self, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for a measurement method `name`.
+        """Get ParamDict for a measurement with `label`.
 
-        :param name: measurement method name.
-                     can be empty if target node provides only one method.
-        :param group: measurement method group name.
+        :param label: param dict label (measurement method etc.).
+                      can be empty if target node provides only one label.
+        :param group: param dict group name.
                       can be empty if target node provides only one group.
 
         """
 
-        resp = self.req.request(P.GetParamDictReq(name, group))
+        resp = self.req.request(P.GetParamDictReq(label, group))
         if resp.success:
             return resp.ret
         else:
@@ -86,7 +86,7 @@ class ParamDictReqMixin(object):
 
 
 class BaseMeasClientMixin(StateClientMixin, ParamDictReqMixin):
-    """Implements change_state(), get_state(), get_param_dict_names(), and get_param_dict()."""
+    """Implements change_state(), get_state(), get_param_dict_labels(), and get_param_dict()."""
 
     pass
 
@@ -204,10 +204,10 @@ class BasicMeasNode(Node):
 
         return Resp(False, "change_state() is not implemented.")
 
-    def get_param_dict_names(self, msg: P.GetParamDictNamesReq) -> Resp:
-        """Get parameter dict names. Inherited class must implement this."""
+    def get_param_dict_labels(self, msg: P.GetParamDictLabelsReq) -> Resp:
+        """Get parameter dict labels. Inherited class must implement this."""
 
-        return Resp(False, "get_param_dict_names() is not implemented.")
+        return Resp(False, "get_param_dict_labels() is not implemented.")
 
     def get_param_dict(self, msg: P.GetParamDictReq) -> Resp:
         """Get parameter dict. Inherited class must implement this."""
@@ -282,7 +282,7 @@ class BasicMeasNode(Node):
 
         Handles following:
         - change_state()
-        - get_param_dict(), get_param_dict_names()
+        - get_param_dict(), get_param_dict_labels()
         - save_data() ,export_data(), load_data()
         - pop_buffer(), clear_buffer()
         - fit(), clear_fit()
@@ -294,8 +294,8 @@ class BasicMeasNode(Node):
                 return self.change_state(msg)
             elif isinstance(msg, P.GetParamDictReq):
                 return self.get_param_dict(msg)
-            elif isinstance(msg, P.GetParamDictNamesReq):
-                return self.get_param_dict_names(msg)
+            elif isinstance(msg, P.GetParamDictLabelsReq):
+                return self.get_param_dict_labels(msg)
             elif isinstance(msg, SaveDataReq):
                 return self.save_data(msg)
             elif isinstance(msg, ExportDataReq):

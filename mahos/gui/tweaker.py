@@ -67,9 +67,9 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
     def update_all(self, param_dicts):
         if param_dicts is None:
             return
-        for i, name in enumerate(self.param_dict_ids):
-            if name in param_dicts and param_dicts[name] is not None:
-                self.tabWidget.widget(i).update_contents(param_dicts[name])
+        for i, pid in enumerate(self.param_dict_ids):
+            if pid in param_dicts and param_dicts[pid] is not None:
+                self.tabWidget.widget(i).update_contents(param_dicts[pid])
 
     def request_read_all(self):
         self.update_all(self.cli.read_all())

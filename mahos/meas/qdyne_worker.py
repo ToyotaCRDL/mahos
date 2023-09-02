@@ -525,12 +525,12 @@ class Pulser(Worker):
 
         return d
 
-    def get_param_dict_names(self) -> list:
+    def get_param_dict_labels(self) -> list:
         return list(self.generators.keys())
 
-    def get_param_dict(self, method: str) -> P.ParamDict[str, P.PDValue] | None:
-        if method not in self.generators:
-            self.logger.error(f"Unknown method {method}")
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
+        if label not in self.generators:
+            self.logger.error(f"Unknown method {label}")
             return None
 
         if self.bounds.has_sg():
@@ -547,7 +547,7 @@ class Pulser(Worker):
 
         # fundamentals
         d = P.ParamDict(
-            method=P.StrChoiceParam(method, ["cp", "cpmg", "xy4", "xy8", "xy16"]),
+            method=P.StrChoiceParam(label, ["cp", "cpmg", "xy4", "xy8", "xy16"]),
             resume=P.BoolParam(False),
             freq=P.FloatParam(2.80e9, f_min, f_max, unit="Hz", SI_prefix=True),
             power=P.FloatParam(p_min, p_min, p_max, unit="dBm"),
@@ -561,8 +561,8 @@ class Pulser(Worker):
             ),
         )
 
-        self._get_param_dict_pulse(method, d)
-        self._get_param_dict_pulse_opt(method, d)
+        self._get_param_dict_pulse(label, d)
+        self._get_param_dict_pulse_opt(label, d)
 
         if self.fg is not None:
             if self.bounds.has_fg():

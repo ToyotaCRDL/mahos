@@ -10,7 +10,7 @@ Logic and instrument control part of Spectroscopy.
 from ..msgs.common_msgs import Resp, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
-from ..msgs.param_msgs import GetParamDictReq, GetParamDictNamesReq
+from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..msgs import spectroscopy_msgs
 from ..msgs.spectroscopy_msgs import SpectroscopyData
 from ..util.timer import IntervalTimer
@@ -80,15 +80,15 @@ class Spectroscopy(BasicMeasNode):
         self.state = msg.state
         return Resp(True)
 
-    def get_param_dict_names(self, msg: GetParamDictNamesReq) -> Resp:
+    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:
         if msg.group == "fit":
-            return Resp(True, ret=self.fitter.get_param_dict_names())
+            return Resp(True, ret=self.fitter.get_param_dict_labels())
         else:
             return Resp(True, ret=["spectroscopy"])
 
     def get_param_dict(self, msg: GetParamDictReq) -> Resp:
         if msg.group == "fit":
-            d = self.fitter.get_param_dict(msg.name)
+            d = self.fitter.get_param_dict(msg.label)
         else:
             d = self.worker.get_param_dict()
 

@@ -534,12 +534,12 @@ def isclose(
 class GetParamDictReq(Request):
     """Request to get ParamDict."""
 
-    def __init__(self, name: str = "", group: str = ""):
-        self.name = name
+    def __init__(self, label: str = "", group: str = ""):
+        self.label = label
         self.group = group
 
 
-class GetParamDictNamesReq(Request):
+class GetParamDictLabelsReq(Request):
     """Request to get list names of available ParamDicts."""
 
     def __init__(self, group: str = ""):

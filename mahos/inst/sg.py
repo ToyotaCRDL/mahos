@@ -430,7 +430,7 @@ class N5182B(VisaInstrument):
             self.logger.error("Unknown set() key.")
             return False
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         if not self.check_required_params(params, ("mode",)):
             return False
 
@@ -885,7 +885,7 @@ class MG3710E(VisaInstrument):
             self.logger.error("Unknown set() key.")
             return False
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         if not self.check_required_params(params, ("mode",)):
             return False
 
@@ -1130,7 +1130,7 @@ class DS_SG(VisaInstrument):
             self.logger.error("Unknown set() key.")
             return False
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         if not self.check_required_params(params, ("mode",)):
             return False
 

@@ -10,7 +10,7 @@ Logic and instrument control part of HBT Interferometer.
 from ..msgs.common_msgs import Request, Resp, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
-from ..msgs.param_msgs import GetParamDictReq, GetParamDictNamesReq
+from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..msgs import hbt_msgs
 from ..msgs.hbt_msgs import HBTData, UpdatePlotParamsReq
 from ..util.timer import IntervalTimer
@@ -102,15 +102,15 @@ class HBT(BasicMeasNode):
             data.clear_fit_data()
         return Resp(success)
 
-    def get_param_dict_names(self, msg: GetParamDictNamesReq) -> Resp:
+    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:
         if msg.group == "fit":
-            return Resp(True, ret=self.fitter.get_param_dict_names())
+            return Resp(True, ret=self.fitter.get_param_dict_labels())
         else:
             return Resp(True, ret=["hbt"])
 
     def get_param_dict(self, msg: GetParamDictReq) -> Resp:
         if msg.group == "fit":
-            d = self.fitter.get_param_dict(msg.name)
+            d = self.fitter.get_param_dict(msg.label)
         else:
             d = self.worker.get_param_dict()
 

@@ -60,7 +60,7 @@ class Multimeter_mock(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         mode = params.get("mode")
         if mode == "current":
             return self.configure_current_meas(params.get("range", 0), params.get("navg", 1))

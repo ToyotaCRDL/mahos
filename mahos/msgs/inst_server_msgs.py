@@ -121,11 +121,11 @@ class ResetReq(NoArgReq):
 class ConfigureReq(Request):
     """call configure() of instrument `inst`."""
 
-    def __init__(self, ident: Ident, inst: str, params: dict, name: str, group: str):
+    def __init__(self, ident: Ident, inst: str, params: dict, label: str, group: str):
         self.ident = ident
         self.inst = inst
         self.params = copy.copy(params)
-        self.name = name
+        self.label = label
         self.group = group
 
 
@@ -158,17 +158,17 @@ class HelpReq(Request):
 
 
 class GetParamDictReq(Request):
-    """get ParamDict `name` in `group` for instrument `inst`."""
+    """get ParamDict with `label` in a `group` for instrument `inst`."""
 
-    def __init__(self, ident: Ident, inst: str, name: str = "", group: str = ""):
+    def __init__(self, ident: Ident, inst: str, label: str = "", group: str = ""):
         self.ident = Ident
         self.inst = inst
-        self.name = name
+        self.label = label
         self.group = group
 
 
-class GetParamDictNamesReq(Request):
-    """Request to get list of param dict names for instrument `inst`."""
+class GetParamDictLabelsReq(Request):
+    """Request to get list of param dict labels in a `group` for instrument `inst`."""
 
     def __init__(self, ident: Ident, inst: str, group: str = ""):
         self.ident = Ident

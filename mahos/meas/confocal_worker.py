@@ -274,7 +274,7 @@ class Scanner(Worker):
 
         self.image = Image()
 
-    def get_param_dict(self, name: str) -> P.ParamDict[str, P.PDValue] | None:
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         capability = self.scanner.get_capability()
         range_ = self.scanner.get_range()
         if capability is None or range_ is None:
@@ -298,13 +298,13 @@ class Scanner(Worker):
         if ScanMode.COM_DIPOLL in capability:
             d["poll_samples"] = P.IntParam(self._conf.get("poll_samples", 1), 1, 1000)
 
-        if name.startswith("xy"):
+        if label.startswith("xy"):
             xrange, yrange, zrange = range_[0], range_[1], range_[2]
             d["direction"].set(ScanDirection.XY)
-        elif name.startswith("xz"):
+        elif label.startswith("xz"):
             xrange, yrange, zrange = range_[0], range_[2], range_[1]
             d["direction"].set(ScanDirection.XZ)
-        elif name.startswith("yz"):
+        elif label.startswith("yz"):
             xrange, yrange, zrange = range_[1], range_[2], range_[0]
             d["direction"].set(ScanDirection.YZ)
         else:

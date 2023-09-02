@@ -68,7 +68,7 @@ class APDCounter(BufferedEdgeCounter):
 
         return cps * cf - self._dark_count
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         if "time_window" not in params:
             self.logger.error("config must be given: time_window.")
             return False
@@ -318,28 +318,28 @@ class LUCI_OE200(LUCI10):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def get_param_dict_names(self, group: str) -> list[str]:
+    def get_param_dict_labels(self, group: str) -> list[str]:
         return ["gain_coupling"]
 
     def get_param_dict(
-        self, name: str = "", group: str = ""
+        self, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `name` in `group`."""
+        """Get ParamDict for `label` in `group`."""
 
-        if name == "gain_coupling":
+        if label == "gain_coupling":
             return P.ParamDict(
                 low_noise=P.BoolParam(self.low_noise),
                 gain_exponent=P.IntChoiceParam(self.gain_exponent, list(range(3, 12))),
                 DC_coupling=P.BoolParam(self.DC_coupling),
             )
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
-        if name == "gain_coupling":
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+        if label == "gain_coupling":
             return self.configure_gain_coupling(
                 params["low_noise"], params["gain_exponent"], params["DC_coupling"]
             )
         else:
-            return self.fail_with(f"Unknown configure name: {name}")
+            return self.fail_with(f"Unknown configure label: {label}")
 
 
 class OE200_AI(AnalogIn):
@@ -409,22 +409,22 @@ class OE200_AI(AnalogIn):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def get_param_dict_names(self, group: str) -> list[str]:
+    def get_param_dict_labels(self, group: str) -> list[str]:
         return ["gain_coupling"]
 
     def get_param_dict(
-        self, name: str = "", group: str = ""
+        self, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `name` in `group`."""
+        """Get ParamDict for `label` in `group`."""
 
-        if name == "gain_coupling":
-            return self.luci.get_param_dict(name, group)
+        if label == "gain_coupling":
+            return self.luci.get_param_dict(label, group)
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
-        if name == "gain_coupling":
-            return self.luci.configure(params, name, group)
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+        if label == "gain_coupling":
+            return self.luci.configure(params, label, group)
         else:
-            return AnalogIn.configure(self, params, name, group)
+            return AnalogIn.configure(self, params, label, group)
 
 
 class AnalogPD(AnalogIn):

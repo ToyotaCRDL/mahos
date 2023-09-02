@@ -540,7 +540,7 @@ class MCS(Instrument):
 
         return self.run_command("cont")
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         if all([k in params for k in ("base_config", "range", "bin", "save_file")]):
             return self.configure_base_range_bin_save(
                 params["base_config"], params["range"], params["bin"], params["save_file"]

@@ -18,7 +18,7 @@ from ..msgs import param_msgs as P
 from ..msgs.inst_server_msgs import Ident, ServerStatus, LockReq, ReleaseReq, CheckLockReq, CallReq
 from ..msgs.inst_server_msgs import ShutdownReq, StartReq, StopReq, PauseReq, ResumeReq
 from ..msgs.inst_server_msgs import ResetReq, ConfigureReq, SetReq, GetReq, HelpReq
-from ..msgs.inst_server_msgs import GetParamDictReq, GetParamDictNamesReq
+from ..msgs.inst_server_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..node.node import Node, split_name
 from ..node.client import StatusClient
 from .instrument import Instrument
@@ -44,6 +44,8 @@ class OverlayConf(object):
         return {k: conv(av) for k, av in self.conf.items()}
 
     def inst_names(self) -> tuple:
+        """Make tuple of dependent instrument names."""
+
         return tuple((v[1:] for v in self.conf.values() if self.is_ref(v)))
 
 
@@ -56,8 +58,10 @@ class Locks(object):
         for inst in insts:
             self.locks[inst] = None
 
-    def add_overlay(self, inst: str, inst_names: tuple):
-        self.overlay_deps[inst] = inst_names
+    def add_overlay(self, lay: str, inst_names: tuple):
+        """Add InstrumentOverlay named `lay` that's dependent on `inst_names`."""
+
+        self.overlay_deps[lay] = inst_names
 
     def is_locked(self, inst: str, ident=None, reduce_=any) -> bool:
         def inst_is_locked(n):
@@ -195,10 +199,10 @@ class InstrumentClient(StatusClient):
 
         return self._noarg_call(inst, ResetReq)
 
-    def configure(self, inst: str, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, inst: str, params: dict, label: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        resp = self.req.request(ConfigureReq(self.ident, inst, params, name, group))
+        resp = self.req.request(ConfigureReq(self.ident, inst, params, label, group))
         return resp.success
 
     def set(self, inst: str, key: str, value=None) -> bool:
@@ -216,7 +220,7 @@ class InstrumentClient(StatusClient):
         else:
             return None
 
-    def help(self, inst: str, func: T.Optional[str] = None) -> str:
+    def help(self, inst: str, func: str | None = None) -> str:
         """Get help of instrument `inst`.
 
         If function inst `func` is given, get docstring of that function.
@@ -228,26 +232,26 @@ class InstrumentClient(StatusClient):
         return resp.message
 
     def get_param_dict(
-        self, inst: str, name: str = "", group: str = ""
+        self, inst: str, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `name` in `group`.
+        """Get ParamDict for `label` in `group`.
 
         :param inst: instrument name.
-        :param name: param dict name.
-                     can be empty if target inst provides only one ParamDict.
-        :param group: param dict group name.
+        :param label: param dict label.
+                      can be empty if target inst provides only one ParamDict.
+        :param group: param dict group.
                       can be empty if target inst provides only one group.
 
         """
 
-        resp = self.req.request(GetParamDictReq(self.ident, inst, name, group))
+        resp = self.req.request(GetParamDictReq(self.ident, inst, label, group))
         if resp.success:
             return resp.ret
         else:
             return None
 
-    def get_param_dict_names(self, inst: str, group: str = "") -> list[str]:
-        """Get list of names of available ParamDicts pertaining to `group`.
+    def get_param_dict_labels(self, inst: str, group: str = "") -> list[str]:
+        """Get list of available ParamDict labels pertaining to `group`.
 
         :param inst: instrument name.
         :param group: ParamDict group name.
@@ -256,7 +260,7 @@ class InstrumentClient(StatusClient):
 
         """
 
-        resp = self.req.request(GetParamDictNamesReq(self.ident, inst, group))
+        resp = self.req.request(GetParamDictLabelsReq(self.ident, inst, group))
         if resp.success:
             return resp.ret
         else:
@@ -346,10 +350,10 @@ class MultiInstrumentClient(object):
 
         return self.get_client(inst).reset(inst)
 
-    def configure(self, inst: str, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, inst: str, params: dict, label: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        return self.get_client(inst).configure(inst, params, name, group)
+        return self.get_client(inst).configure(inst, params, label, group)
 
     def set(self, inst: str, key: str, value=None) -> bool:
         """Set an instrument setting or commanding value. Returns True on success."""
@@ -372,29 +376,29 @@ class MultiInstrumentClient(object):
         return self.get_client(inst).help(inst, func)
 
     def get_param_dict(
-        self, inst: str, name: str = "", group: str = ""
+        self, inst: str, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `name` in `group` of instrument `inst`.
+        """Get ParamDict for `label` in `group` of instrument `inst`.
 
         :param inst: instrument name.
-        :param name: param dict name.
-                     can be empty if target inst provides only one ParamDict.
-        :param group: param dict group name.
+        :param label: param dict label.
+                      can be empty if target inst provides only one ParamDict.
+        :param group: param dict group.
                       can be empty if target inst provides only one group.
 
         """
 
-        return self.get_client(inst).get_param_dict(inst, name, group)
+        return self.get_client(inst).get_param_dict(inst, label, group)
 
-    def get_param_dict_names(self, inst: str, group: str = "") -> list[str]:
-        """Get list of names of available ParamDicts pertaining to `group`.
+    def get_param_dict_labels(self, inst: str, group: str = "") -> list[str]:
+        """Get list of available ParamDict labels pertaining to `group`.
 
         :param group: ParamDict group name.
                       can be empty if target inst provides only one group.
 
         """
 
-        return self.get_client(inst).get_param_dict_names(inst, group)
+        return self.get_client(inst).get_param_dict_labels(inst, group)
 
 
 class InstrumentServer(Node):
@@ -427,7 +431,7 @@ class InstrumentServer(Node):
         "set",
         "get",
         "get_param_dict",
-        "get_param_dict_names",
+        "get_param_dict_labels",
     )
     _bool_funcs = (
         "start",
@@ -442,8 +446,8 @@ class InstrumentServer(Node):
 
     CLIENT = InstrumentClient
 
-    def __init__(self, gconf: dict, inst, context=None):
-        Node.__init__(self, gconf, inst, context=context)
+    def __init__(self, gconf: dict, name, context=None):
+        Node.__init__(self, gconf, name, context=context)
 
         self._insts: dict[str, Instrument | None] = {}
         self._overlays: dict[str, InstrumentOverlay] = {}
@@ -465,16 +469,16 @@ class InstrumentServer(Node):
                 self._insts[inst] = None
 
         if "instrument_overlay" in self.conf:
-            for inst, odict in self.conf["instrument_overlay"].items():
+            for lay, ldict in self.conf["instrument_overlay"].items():
                 C = self._get_class(
-                    ["mahos.inst.overlay." + odict["module"], odict["module"]],
-                    odict["class"],
+                    ["mahos.inst.overlay." + ldict["module"], ldict["module"]],
+                    ldict["class"],
                     InstrumentOverlay,
                 )
                 prefix = self.joined_name()
-                conf = OverlayConf(odict.get("conf", {}))
-                self._overlays[inst] = C(inst, conf=conf.resolve_ref(self._insts), prefix=prefix)
-                self.locks.add_overlay(inst, conf.inst_names())
+                conf = OverlayConf(ldict.get("conf", {}))
+                self._overlays[lay] = C(lay, conf=conf.resolve_ref(self._insts), prefix=prefix)
+                self.locks.add_overlay(lay, conf.inst_names())
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
@@ -540,8 +544,8 @@ class InstrumentServer(Node):
             return self._handle_get(msg)
         elif isinstance(msg, GetParamDictReq):
             return self._handle_get_param_dict(msg)
-        elif isinstance(msg, GetParamDictNamesReq):
-            return self._handle_get_param_dict_names(msg)
+        elif isinstance(msg, GetParamDictLabelsReq):
+            return self._handle_get_param_dict_labels(msg)
         elif isinstance(msg, HelpReq):
             return self._handle_help(msg)
         elif isinstance(msg, LockReq):
@@ -585,7 +589,7 @@ class InstrumentServer(Node):
         return self._call(msg.inst, msg.ident, func, None)
 
     def _handle_configure(self, msg: ConfigureReq) -> Resp:
-        args = {"params": msg.params, "name": msg.name, "group": msg.group}
+        args = {"params": msg.params, "label": msg.label, "group": msg.group}
         return self._call(msg.inst, msg.ident, "configure", args)
 
     def _handle_set(self, msg: SetReq) -> Resp:
@@ -599,12 +603,12 @@ class InstrumentServer(Node):
         return self._call(msg.inst, msg.ident, "get", args)
 
     def _handle_get_param_dict(self, msg: GetParamDictReq) -> Resp:
-        args = {"name": msg.name, "group": msg.group}
+        args = {"label": msg.label, "group": msg.group}
         return self._call(msg.inst, msg.ident, "get_param_dict", args)
 
-    def _handle_get_param_dict_names(self, msg: GetParamDictNamesReq) -> Resp:
+    def _handle_get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:
         args = {"group": msg.group}
-        return self._call(msg.inst, msg.ident, "get_param_dict_names", args)
+        return self._call(msg.inst, msg.ident, "get_param_dict_labels", args)
 
     def _handle_help(self, msg: HelpReq) -> Resp:
         inst = self._get(msg.inst)

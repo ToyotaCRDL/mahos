@@ -143,7 +143,7 @@ class Instrument(object):
         self.logger.error("reset() is called but not implemented.")
         return False
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
         self.logger.error("configure() is called but not implemented.")
@@ -162,15 +162,15 @@ class Instrument(object):
         return None
 
     def get_param_dict(
-        self, name: str = "", group: str = ""
+        self, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `name` in `group`."""
+        """Get ParamDict for `label` in `group`."""
 
         self.logger.error("get_param_dict() is called but not implemented.")
         return None
 
-    def get_param_dict_names(self, group: str) -> list[str]:
-        """Get list of names of available ParamDicts pertaining to `group`."""
+    def get_param_dict_labels(self, group: str = "") -> list[str]:
+        """Get list of available ParamDict labels pertaining to `group`."""
 
-        self.logger.error("get_param_dict_names() is called but not implemented.")
+        self.logger.error("get_param_dict_labels() is called but not implemented.")
         return []

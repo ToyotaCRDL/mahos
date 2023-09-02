@@ -12,7 +12,7 @@ from __future__ import annotations
 from ..msgs.common_msgs import Resp, Request, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
-from ..msgs.param_msgs import GetParamDictNamesReq, GetParamDictReq
+from ..msgs.param_msgs import GetParamDictLabelsReq, GetParamDictReq
 from ..msgs import qdyne_msgs
 from ..msgs.qdyne_msgs import QdyneData, ValidateReq, DiscardReq
 from .qdyne_io import QdyneIO
@@ -119,17 +119,17 @@ class Qdyne(BasicMeasNode):
         self.state = msg.state
         return Resp(True)
 
-    def get_param_dict_names(self, msg: GetParamDictNamesReq) -> Resp:
+    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:
         if msg.group == "fit":
             return Resp(False, "fit is not implemented.")
         else:
-            return Resp(True, ret=self.worker.get_param_dict_names())
+            return Resp(True, ret=self.worker.get_param_dict_labels())
 
     def get_param_dict(self, msg: GetParamDictReq) -> Resp:
         if msg.group == "fit":
             return Resp(False, "fit is not implemented.")
         else:
-            d = self.worker.get_param_dict(msg.name)
+            d = self.worker.get_param_dict(msg.label)
 
         if d is None:
             return Resp(False, "Failed to generate param dict.")

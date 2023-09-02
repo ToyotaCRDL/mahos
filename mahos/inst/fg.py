@@ -281,7 +281,7 @@ class DG2000(VisaInstrument):
         else:
             return self.fail_with("Unknown set() key.")
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         if not self.check_required_params(params, ("mode",)):
             return False
 

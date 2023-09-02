@@ -93,8 +93,8 @@ class QConfocalClient(QStateReqClient):
         resp = self.req.request(MoveReq(ax, pos))
         return resp.success
 
-    def get_param_dict(self, name: str):
-        resp = self.req.request(GetParamDictReq(name))
+    def get_param_dict(self, label: str):
+        resp = self.req.request(GetParamDictReq(label))
         if resp.success:
             return resp.ret
         else:

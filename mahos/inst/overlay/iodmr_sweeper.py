@@ -61,7 +61,7 @@ class IODMRSweeperCommand(InstrumentOverlay):
 
     # Standard API
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         if not self.check_required_params(
             params, ("start", "stop", "num", "power", "exposure_delay", "exposure_time")
         ):

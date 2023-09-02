@@ -84,10 +84,10 @@ class InstrumentInterface(object):
 
         return self.cli.reset(self.inst)
 
-    def configure(self, params: dict, name: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        return self.cli.configure(self.inst, params, name, group)
+        return self.cli.configure(self.inst, params, label, group)
 
     def set(self, key: str, value=None) -> bool:
         """Set an instrument setting or commanding value. Returns True on success."""
@@ -110,13 +110,13 @@ class InstrumentInterface(object):
         return self.cli.help(self.inst, func)
 
     def get_param_dict(
-        self, name: str = "", group: str = ""
+        self, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `name` in `group`."""
+        """Get ParamDict for `label` in `group`."""
 
-        return self.cli.get_param_dict(self.inst, name, group)
+        return self.cli.get_param_dict(self.inst, label, group)
 
-    def get_param_dict_names(self, group: str) -> list[str]:
-        """Get list of names of available ParamDicts pertaining to `group`."""
+    def get_param_dict_labels(self, group: str) -> list[str]:
+        """Get list of available ParamDict labels pertaining to `group`."""
 
-        return self.cli.get_param_dict_names(self.inst, group)
+        return self.cli.get_param_dict_labels(self.inst, group)

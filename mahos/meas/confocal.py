@@ -386,19 +386,19 @@ class Confocal(Node):
 
         return Resp(True)
 
-    def _get_scan_param_dict(self, name: str) -> Resp:
-        params = self.scanner.get_param_dict(name)
+    def _get_scan_param_dict(self, label: str) -> Resp:
+        params = self.scanner.get_param_dict(label)
         if params is None:
             return self.fail_with("Cannot generate param dict.")
         else:
             return Resp(True, ret=params)
 
     def get_param_dict(self, msg: GetParamDictReq) -> Resp:
-        n = msg.name.lower()
+        n = msg.label.lower()
         if n.endswith("scan"):
             return self._get_scan_param_dict(n)
         else:
-            return Resp(False, "Unknown param dict name " + n)
+            return Resp(False, "Unknown param dict label " + n)
 
     def direction_to_target_pos(self, direction: ScanDirection):
         p = self.piezo.pos

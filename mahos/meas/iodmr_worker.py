@@ -64,7 +64,7 @@ class ISweeperOverlay(ISweeperBase):
 
         self.data = IODMRData()
 
-    def get_param_dict(self, name: str) -> P.ParamDict[str, P.PDValue] | None:
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         bounds = self.sweeper.get_bounds()
         if bounds is None:
             self.logger.error("Failed to get bounds.")
@@ -161,7 +161,7 @@ class ISweeperDirect(ISweeperBase):
         self.data = IODMRData()
         self._frames = []
 
-    def get_param_dict(self, name: str) -> dict | None:
+    def get_param_dict(self, label: str) -> dict | None:
         bounds = self.sg.get_bounds()
         if bounds is None:
             self.logger.error("Failed to get bounds.")

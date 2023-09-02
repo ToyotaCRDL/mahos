@@ -55,10 +55,10 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
         self.clearbufButton.clicked.connect(self.request_clear_buf)
         self.bufferTable.cellClicked.connect(self.update_index)
 
-        names = self.cli.get_param_dict_names("fit")
-        self.methodBox.addItems(names)
-        self.methodBox.currentIndexChanged.connect(self.update_param_table)
-        if names:
+        labels = self.cli.get_param_dict_labels("fit")
+        self.labelBox.addItems(labels)
+        self.labelBox.currentIndexChanged.connect(self.update_param_table)
+        if labels:
             self.update_param_table()
 
     def init_widgets(self):
@@ -137,7 +137,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
                 item.setBackground(QtGui.QColor(color))
 
     def update_param_table(self):
-        method = self.methodBox.currentText()
+        method = self.labelBox.currentText()
         d = self.cli.get_param_dict(method, "fit")
         self.paramTable.update_contents(d)
 
@@ -174,7 +174,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
             self.apply_widgets(data)
 
     def request_fit(self):
-        m = self.methodBox.currentText()
+        m = self.labelBox.currentText()
         params = self.paramTable.params()
         params["method"] = m
         index = self.indexBox.value()
@@ -214,7 +214,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
             data.fit_params is None
             or data.fit_result is None
             or not self.applyloadBox.isChecked()
-            or data.fit_params["method"] != self.methodBox.currentText()
+            or data.fit_params["method"] != self.labelBox.currentText()
             or "popt" not in data.fit_result
         ):
             return

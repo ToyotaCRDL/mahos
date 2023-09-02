@@ -139,7 +139,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="methodBox">
+          <widget class="QComboBox" name="labelBox">
            <property name="sizePolicy">
             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
              <horstretch>0</horstretch>

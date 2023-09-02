@@ -98,15 +98,15 @@ class HBTFitter(object):
     def print_null(self, msg):
         pass
 
-    def get_param_dict_names(self) -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         return list(self.fitters.keys())
 
-    def get_param_dict(self, method: str) -> P.ParamDict[str, P.PDValue]:
-        """Get param dict for given method."""
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue]:
+        """Get param dict for given label."""
 
-        if method not in self.fitters:
+        if label not in self.fitters:
             return P.ParamDict()
-        return self.fitters[method].param_dict()
+        return self.fitters[label].param_dict()
 
     def fit(self, data: HBTData, params: dict) -> F.model.ModelResult | None:
         """Perform fitting. returns lmfit.model.ModelResult."""

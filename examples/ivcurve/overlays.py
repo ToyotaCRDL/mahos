@@ -36,7 +36,7 @@ class IVSweeper(InstrumentOverlay):
 
     # Standard API
 
-    def configure(self, params: dict) -> bool:
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         if not self.check_required_params(params, ("start", "stop", "num")):
             return False
         self._voltages = np.linspace(params["start"], params["stop"], params["num"])

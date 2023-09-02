@@ -69,7 +69,7 @@ class IODMR(BasicMeasNode):
         return Resp(True)
 
     def get_param_dict(self, msg: GetParamDictReq) -> Resp:
-        b = self.isweeper.get_param_dict(msg.name)
+        b = self.isweeper.get_param_dict(msg.label)
         if b is None:
             return Resp(False, "Failed to generate param dict.")
         else:

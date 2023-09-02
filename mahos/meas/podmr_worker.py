@@ -534,12 +534,12 @@ class Pulser(Worker):
 
         return d
 
-    def get_param_dict_names(self) -> list:
+    def get_param_dict_labels(self) -> list:
         return list(self.generators.keys())
 
-    def get_param_dict(self, method: str) -> P.ParamDict[str, P.PDValue] | None:
-        if method not in self.generators:
-            self.logger.error(f"Unknown method {method}")
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
+        if label not in self.generators:
+            self.logger.error(f"Unknown method {label}")
             return None
 
         if self.bounds.has_sg():
@@ -556,7 +556,7 @@ class Pulser(Worker):
 
         # fundamentals
         d = P.ParamDict(
-            method=P.StrChoiceParam(method, list(self.generators.keys())),
+            method=P.StrChoiceParam(label, list(self.generators.keys())),
             resume=P.BoolParam(False),
             freq=P.FloatParam(2.80e9, f_min, f_max),
             power=P.FloatParam(p_min, p_min, p_max),
@@ -566,8 +566,8 @@ class Pulser(Worker):
             ident=P.UUIDParam(optional=True, enable=False),
         )
 
-        self._get_param_dict_pulse(method, d)
-        self._get_param_dict_pulse_opt(method, d)
+        self._get_param_dict_pulse(label, d)
+        self._get_param_dict_pulse_opt(label, d)
 
         if self.fg is not None:
             if self.bounds.has_fg():
@@ -590,9 +590,9 @@ class Pulser(Worker):
             }
 
         taumodes = ["raw", "total", "freq", "index", "head"]
-        if not (is_CPlike(method) or is_correlation(method) or method in ("spinecho", "trse")):
+        if not (is_CPlike(label) or is_correlation(label) or label in ("spinecho", "trse")):
             taumodes.remove("total")
-        if not ((is_CPlike(method) and not is_sweepN(method)) or method == "spinecho"):
+        if not ((is_CPlike(label) and not is_sweepN(label)) or label == "spinecho"):
             taumodes.remove("freq")
 
         d["plot"] = {

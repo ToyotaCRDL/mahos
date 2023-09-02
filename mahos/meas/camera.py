@@ -9,7 +9,7 @@ Logic and instrument control part of Camera stream.
 
 from ..msgs.common_msgs import Resp, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
-from ..msgs.param_msgs import GetParamDictReq, GetParamDictNamesReq
+from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..msgs import camera_msgs
 from .common_meas import BasicMeasClient, BasicMeasNode
 from .common_worker import DummyWorker, PulseGen_CW, Switch
@@ -81,11 +81,11 @@ class Camera(BasicMeasNode):
         else:
             return Resp(True, ret=image)
 
-    def get_param_dict_names(self, msg: GetParamDictNamesReq) -> Resp:
+    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:
         return Resp(True, ret=["camera"])
 
     def get_param_dict(self, msg: GetParamDictReq) -> Resp:
-        d = self.worker.get_param_dict(msg.name)
+        d = self.worker.get_param_dict(msg.label)
 
         if d is None:
             return Resp(False, "Failed to generate param dict.")
