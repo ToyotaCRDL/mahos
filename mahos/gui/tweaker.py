@@ -60,6 +60,7 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
     def init_connections(self):
         self.readallButton.clicked.connect(self.request_read_all)
         self.readButton.clicked.connect(self.request_read)
+        self.writeallButton.clicked.connect(self.request_write_all)
         self.writeButton.clicked.connect(self.request_write)
         self.saveButton.clicked.connect(self.request_save)
         self.loadButton.clicked.connect(self.request_load)
@@ -80,6 +81,12 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         if d is not None:
             self.tabWidget.currentWidget().update_contents(d)
 
+    def request_write_all(self):
+        param_dict = {
+            pid: self.tabWidget.widget(i).params() for i, pid in enumerate(self.param_dict_ids)
+        }
+        self.cli.write_all(param_dict)
+
     def request_write(self):
         i = self.tabWidget.currentIndex()
         param_dict_id = self.param_dict_ids[i]
@@ -96,11 +103,17 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
 
     def request_load(self):
         default_path = str(self.param_cli.get_param("work_dir"))
-        fn = load_dialog(self, default_path, "Tweaker", ".tweak")
+        fn = load_dialog(self, default_path, "Tweaker or measurement", "")
         if not fn:
             return
+        if fn.endswith(".tweak.h5"):
+            # ParamDicts in individual file for Tweaker
+            group = ""
+        else:
+            # ParamDicts written within measurement Data
+            group = "_inst_params"
 
-        self.update_all(self.cli.load(fn))
+        self.update_all(self.cli.load(fn, group))
 
 
 class TweakerGUI(GUINode):

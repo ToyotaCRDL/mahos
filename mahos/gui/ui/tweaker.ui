@@ -31,6 +31,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="writeallButton">
+       <property name="text">
+        <string>Write All</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="writeButton">
        <property name="text">
         <string>Write</string>
@@ -80,6 +87,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>readallButton</tabstop>
+  <tabstop>readButton</tabstop>
+  <tabstop>writeallButton</tabstop>
+  <tabstop>writeButton</tabstop>
+  <tabstop>saveButton</tabstop>
+  <tabstop>loadButton</tabstop>
+  <tabstop>tabWidget</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

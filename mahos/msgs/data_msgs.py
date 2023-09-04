@@ -18,7 +18,7 @@ import msgpack
 from .common_msgs import Message
 
 
-_H5_RESERVED_ATTRS = ("_description", "_type", "_save_time", "_version_h5_base")
+_H5_RESERVED_ATTRS = ("_description", "_type", "_save_time", "_version_h5_base", "_inst_params")
 
 
 class Data(Message):
@@ -144,6 +144,7 @@ class Data(Message):
         # 4. _version_h5_base is the version of base HDF5 IO (Data.to_h5() and Data.of_h5()).
         #    In other words, the version of how the Data attribute is converted to / from h5
         #    by default, not through custom h5_writers / h5_readers.
+        # 5. _inst_params is a reserved group name for inst ParamDicts managed by Tweaker.
 
         if any((hasattr(self, s) for s in _H5_RESERVED_ATTRS)):
             raise RuntimeError("Attributes are not allowed: " + ", ".join(_H5_RESERVED_ATTRS))
@@ -243,7 +244,7 @@ class Data(Message):
             # because key name may be changed by version update of Data.
 
             if isinstance(val, h5py.Group):
-                # unlikely (unintended usage), but this group may not be a leaf.
+                # _inst_params Group is contained if inst ParamDicts are attached by Tweaker.
                 pass
             elif key in readers:
                 setattr(data, key, readers[key](val))

@@ -17,6 +17,7 @@ from ..msgs import qdyne_msgs
 from ..msgs.qdyne_msgs import QdyneData, ValidateReq, DiscardReq
 from .qdyne_io import QdyneIO
 from ..util.timer import IntervalTimer
+from .tweaker import TweakerClient
 from .common_meas import BasicMeasClient, BasicMeasNode
 from .common_worker import DummyWorker, Switch
 from .qdyne_worker import Pulser
@@ -83,6 +84,12 @@ class Qdyne(BasicMeasNode):
             self.switch = Switch(self.cli, self.logger, "podmr")
         else:
             self.switch = DummyWorker()
+        if "tweaker" in self.conf["target"]:
+            self.tweaker_cli = TweakerClient(
+                gconf, self.conf["target"]["tweaker"], context=self.ctx, prefix=self.joined_name()
+            )
+        else:
+            self.tweaker_cli = None
 
         has_fg = "fg" in self.conf["target"]["servers"]
         self.worker = Pulser(self.cli, self.logger, has_fg, self.conf.get("pulser", {}))
@@ -138,6 +145,8 @@ class Qdyne(BasicMeasNode):
 
     def save_data(self, msg: SaveDataReq) -> Resp:
         success = self.io.save_data(msg.file_name, self.worker.data, msg.params, msg.note)
+        if success and self.tweaker_cli is not None:
+            success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
         return Resp(success)
 
     def export_data(self, msg: ExportDataReq) -> Resp:

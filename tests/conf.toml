@@ -25,6 +25,14 @@ log_level = "DEBUG"
 rep_endpoint = "tcp://127.0.0.1:5559"
 pub_endpoint = "tcp://127.0.0.1:5560"
 
+[localhost.server.instrument.paramX]
+module = "mock"
+class = "Params_mock"
+
+[localhost.server.instrument.paramY]
+module = "mock"
+class = "Params_mock"
+
 [localhost.server.instrument.sg]
 module = "mock"
 class = "SG_mock"
@@ -133,6 +141,7 @@ interval_sec = 0.01
 interval_sec = 0.2
 [localhost.confocal.target]
 log = "localhost::log_broker"
+tweaker = "localhost::tweaker"
 [localhost.confocal.target.servers]
 clock = "localhost::server"
 scanner = "localhost::server"
@@ -161,6 +170,7 @@ pub_endpoint = "tcp://127.0.0.1:5575"
 pd_clock = "/Dummy"
 [localhost.odmr.target]
 log = "localhost::log_broker"
+tweaker = "localhost::tweaker"
 [localhost.odmr.target.servers]
 sg = "localhost::server"
 pg = "localhost::server"
@@ -174,6 +184,7 @@ rep_endpoint = "tcp://127.0.0.1:5576"
 pub_endpoint = "tcp://127.0.0.1:5577"
 [localhost.hbt.target]
 log = "localhost::log_broker"
+tweaker = "localhost::tweaker"
 [localhost.hbt.target.servers]
 tdc = "localhost::server"
 
@@ -185,6 +196,7 @@ rep_endpoint = "tcp://127.0.0.1:5578"
 pub_endpoint = "tcp://127.0.0.1:5579"
 [localhost.podmr.target]
 log = "localhost::log_broker"
+tweaker = "localhost::tweaker"
 [localhost.podmr.target.servers]
 tdc = "localhost::server"
 sg = "localhost::server"
@@ -208,6 +220,7 @@ rep_endpoint = "tcp://127.0.0.1:5582"
 pub_endpoint = "tcp://127.0.0.1:5583"
 [localhost.spectroscopy.target]
 log = "localhost::log_broker"
+tweaker = "localhost::tweaker"
 [localhost.spectroscopy.target.servers]
 spectrometer = "localhost::server"
 
@@ -218,6 +231,7 @@ rep_endpoint = "tcp://127.0.0.1:5584"
 pub_endpoint = "tcp://127.0.0.1:5585"
 [localhost.camera.target]
 log = "localhost::log_broker"
+tweaker = "localhost::tweaker"
 [localhost.camera.target.servers]
 camera = "localhost::server"
 
@@ -229,6 +243,7 @@ rep_endpoint = "tcp://127.0.0.1:5586"
 pub_endpoint = "tcp://127.0.0.1:5587"
 [localhost.qdyne.target]
 log = "localhost::log_broker"
+tweaker = "localhost::tweaker"
 [localhost.qdyne.target.servers]
 tdc = "localhost::server"
 sg = "localhost::server"
@@ -251,6 +266,17 @@ pub_endpoint = "tcp://127.0.0.1:5589"
 
 [localhost.manager.command]
 prepare_scan = { "localhost::odmr" = "IDLE" , "localhost::hbt" = "IDLE", "localhost::podmr" = "IDLE" }
+
+[localhost.tweaker]
+module = "mahos.meas.tweaker"
+class = "Tweaker"
+target = { log = "localhost::log_broker" }
+rep_endpoint = "tcp://127.0.0.1:5590"
+pub_endpoint = "tcp://127.0.0.1:5591"
+param_dicts = ["paramX::labelA", "paramY::labelB"]
+[localhost.tweaker.target.servers]
+paramX = "localhost::server"
+paramY = "localhost::server"
 
 [localhost.confocal_gui]
 module = "mahos.gui.confocal"
@@ -303,6 +329,13 @@ module = "mahos.gui.camera"
 class = "CameraGUI"
 [localhost.camera_gui.target]
 camera = "localhost::camera"
+param_server = "localhost::param_server"
+
+[localhost.tweaker_gui]
+module = "mahos.gui.tweaker"
+class = "TweakerGUI"
+[localhost.tweaker_gui.target]
+tweaker = "localhost::tweaker"
 param_server = "localhost::param_server"
 
 [localhost.pulse_monitor]

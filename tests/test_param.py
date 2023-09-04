@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 
-import pytest
+from io import BytesIO
+import enum
 
-from mahos.msgs.param_msgs import FloatParam, IntParam, StrParam
+import pytest
+import h5py
+
+from mahos.msgs.param_msgs import FloatParam, IntParam, StrParam, EnumParam
 from mahos.msgs.param_msgs import ParamDict, isclose
+
+
+class E(enum.Enum):
+    A = 1
+    B = 2
+
 
 valid0 = ParamDict({"a": IntParam(123), "b": FloatParam(2.0), "c": StrParam("aaa")})
 
@@ -14,6 +24,7 @@ valid1 = ParamDict(
         "c": StrParam("aaa"),
         "d": {"d-a": [IntParam(1234), FloatParam(3.0)]},
         "e": [{"e_a": StrParam("bbb"), "e_b": IntParam(2)}, FloatParam(1.0)],
+        "enum": EnumParam(E, E.B),
     }
 )
 
@@ -24,6 +35,7 @@ valid1_nest = ParamDict(
         "c": StrParam("aaa"),
         "d": ParamDict({"d-a": [IntParam(1234), FloatParam(3.0)]}),
         "e": [ParamDict({"e_a": StrParam("bbb"), "e_b": IntParam(2)}), FloatParam(1.0)],
+        "enum": EnumParam(E, E.B),
     }
 )
 
@@ -34,6 +46,7 @@ valid1_close = ParamDict(
         "c": StrParam("aaa"),
         "d": {"d-a": [IntParam(1234), FloatParam(2.9999999999)]},
         "e": [{"e_a": StrParam("bbb"), "e_b": IntParam(2)}, FloatParam(1.0)],
+        "enum": EnumParam(E, E.B),
     }
 )
 valid1_close_more = ParamDict(
@@ -43,6 +56,7 @@ valid1_close_more = ParamDict(
         "c": StrParam("aaa"),
         "d": {"d-a": [IntParam(1234), FloatParam(2.9999999999)]},
         "e": [{"e_a": StrParam("bbb"), "e_b": IntParam(2)}, FloatParam(1.0)],
+        "enum": EnumParam(E, E.B),
         "extra": StrParam("extra"),
     }
 )
@@ -106,3 +120,12 @@ def test_param_dict_flatten():
     assert valid1["d"]["d-a"][1] == valid1.getf("d.d-a[1]")
     assert valid1.flatten()["d.d-a[1]"] == valid1.getf("d.d-a[1]")
     assert valid1.flatten()["e[0].e_a"] == valid1.getf("e[0].e_a")
+
+
+def test_param_dict_io():
+    bio = BytesIO()
+    with h5py.File(bio, "w") as f:
+        valid1.to_h5(f)
+    with h5py.File(bio, "r") as f:
+        loaded = ParamDict.of_h5(f)
+    assert isclose(valid1.flatten().unwrap_enum(), loaded)

@@ -20,6 +20,7 @@ from mahos.meas.hbt import HBT, HBTClient
 from mahos.meas.spectroscopy import Spectroscopy, SpectroscopyClient
 from mahos.meas.camera import Camera, CameraClient
 from mahos.meas.state_manager import StateManager, StateManagerClient
+from mahos.meas.tweaker import Tweaker, TweakerClient
 
 
 script_dir = path.dirname(path.realpath(__file__))
@@ -28,6 +29,7 @@ server_name = "localhost::server"
 param_server_name = "localhost::param_server"
 log_name = "localhost::log_broker"
 manager_name = "localhost::manager"
+tweaker_name = "localhost::tweaker"
 confocal_name = "localhost::confocal"
 tracker_name = "localhost::tracker"
 odmr_name = "localhost::odmr"
@@ -103,6 +105,7 @@ def gconf():
     local_conf(gconf, spectroscopy_name)["poll_timeout_ms"] = 50
     local_conf(gconf, camera_name)["poll_timeout_ms"] = 50
     local_conf(gconf, manager_name)["poll_timeout_ms"] = 50
+    local_conf(gconf, tweaker_name)["poll_timeout_ms"] = 50
 
     # add conf for dummy
     n = split_name(dummy_name)
@@ -129,6 +132,11 @@ def log_conf(gconf):
 @pytest.fixture
 def manager_conf(gconf):
     return local_conf(gconf, manager_name)
+
+
+@pytest.fixture
+def tweaker_conf(gconf):
+    return local_conf(gconf, tweaker_name)
 
 
 @pytest.fixture
@@ -245,6 +253,15 @@ def dummy_logging(ctx, gconf):
 def manager(ctx, gconf):
     proc, shutdown_ev = start_node_proc(ctx, StateManager, gconf, manager_name)
     client = StateManagerClient(gconf, manager_name)
+    yield client
+    client.close()
+    stop_proc(proc, shutdown_ev)
+
+
+@pytest.fixture
+def tweaker(ctx, gconf):
+    proc, shutdown_ev = start_node_proc(ctx, Tweaker, gconf, tweaker_name)
+    client = TweakerClient(gconf, tweaker_name)
     yield client
     client.close()
     stop_proc(proc, shutdown_ev)

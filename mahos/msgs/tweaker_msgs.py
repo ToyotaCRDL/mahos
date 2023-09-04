@@ -39,15 +39,24 @@ class WriteReq(Request):
         self.params = params
 
 
+class WriteAllReq(Request):
+    """Write all the parameters to the ParamDicts."""
+
+    def __init__(self, param_dicts: dict[str, P.ParamDict[str, P.PDValue]]):
+        self.param_dicts = param_dicts
+
+
 class SaveReq(Request):
     """Save current parameters to a file"""
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, group: str = ""):
         self.filename = filename
+        self.group = group
 
 
 class LoadReq(Request):
     """Load parameters from a file"""
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, group: str = ""):
         self.filename = filename
+        self.group = group

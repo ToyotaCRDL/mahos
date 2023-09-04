@@ -10,6 +10,7 @@ from .instrument import Instrument
 from ..msgs.confocal_msgs import Axis
 from ..msgs.inst_camera_msgs import FrameResult
 from ..msgs.inst_tdc_msgs import RawEvents
+from ..msgs import param_msgs as P
 
 
 class Clock_mock(Instrument):
@@ -625,3 +626,46 @@ class Camera_mock(Instrument):
         else:
             self.logger.error(f"Unknown get() key: {key}")
             return None
+
+
+class Params_mock(Instrument):
+    """Mock for instrument with configurable ParamDict."""
+
+    def __init__(self, name, conf=None, prefix=None):
+        Instrument.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.paramA: int = 3
+        self.paramB: float = 0.5
+        self.paramC: str = "aaa"
+        self.paramD: bool = False
+
+    # Standard API
+
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+        if label == "labelA":
+            self.paramA = params["paramA"]
+            self.paramB = params["paramB"]
+            return True
+        elif label == "labelB":
+            self.paramC = params["paramC"]
+            self.paramD = params["paramD"]
+            return True
+        else:
+            self.logger.error(f"Unknown label {label}")
+            return True
+
+    def get_param_dict(
+        self, label: str = "", group: str = ""
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        if label == "labelA":
+            return P.ParamDict(
+                paramA=P.IntParam(self.paramA, 0, 10), paramB=P.FloatParam(self.paramB, 0.0, 1.0)
+            )
+        elif label == "labelB":
+            return P.ParamDict(paramC=P.StrParam(self.paramC), paramD=P.BoolParam(self.paramD))
+        else:
+            self.logger.error(f"Unknown label {label}")
+            return None
+
+    def get_param_dict_labels(self, group: str = "") -> list[str]:
+        return ["labelA", "labelB"]

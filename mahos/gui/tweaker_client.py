@@ -10,7 +10,8 @@ Qt signal-based client of Tweaker.
 from .Qt import QtCore
 
 from ..msgs import param_msgs as P
-from ..msgs.tweaker_msgs import TweakerStatus, ReadReq, ReadAllReq, WriteReq, SaveReq, LoadReq
+from ..msgs.tweaker_msgs import TweakerStatus, ReadReq, ReadAllReq, WriteReq, WriteAllReq
+from ..msgs.tweaker_msgs import SaveReq, LoadReq
 from ..node.node import get_value
 from .client import QStatusSubscriber
 
@@ -39,14 +40,21 @@ class QTweakerClient(QStatusSubscriber):
         if resp.success:
             return resp.ret
 
+    def write_all(self, param_dicts: dict[str, P.ParamDict[str, P.PDValue]]) -> bool:
+        resp = self.req.request(WriteAllReq(param_dicts))
+        return resp.success
+
     def write(self, param_dict_id: str, params: P.ParamDict[str, P.PDValue]) -> bool:
         resp = self.req.request(WriteReq(param_dict_id, params))
         return resp.success
 
-    def save(self, filename: str) -> bool:
-        resp = self.req.request(SaveReq(filename))
+    def save(self, filename: str, group: str = "") -> bool:
+        resp = self.req.request(SaveReq(filename, group))
         return resp.success
 
-    def load(self, filename: str) -> bool:
-        resp = self.req.request(LoadReq(filename))
-        return resp.success
+    def load(
+        self, filename: str, group: str = ""
+    ) -> dict[str, P.ParamDict[str, P.PDValue] | None] | None:
+        resp = self.req.request(LoadReq(filename, group))
+        if resp.success:
+            return resp.ret

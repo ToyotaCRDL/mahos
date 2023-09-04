@@ -26,6 +26,7 @@ from collections import UserDict
 import re
 
 import numpy as np
+import h5py
 
 from .common_msgs import Request
 from ..util.unit import SI_scale
@@ -419,14 +420,16 @@ class ParamDict(UserDict):
 
         return all((validate_key(k) and validate_val(v) for k, v in self.data.items()))
 
-    def _unwrap(self, process_unknown) -> dict[str, RawPDValue]:
+    def _unwrap(self, process_unknown, enum_to_int) -> dict[str, RawPDValue]:
         """Unwrap values of given ParamDict to get RawParamDict."""
 
         def unwrap_val(val):
-            if isinstance(val, Param):
+            if enum_to_int and isinstance(val, EnumParam):
+                return val.value().value
+            elif isinstance(val, Param):
                 return val.value()
             elif isinstance(val, (dict, ParamDict)):
-                return ParamDict(val)._unwrap(process_unknown)
+                return ParamDict(val)._unwrap(process_unknown, enum_to_int)
             elif isinstance(val, (list, tuple)):
                 return [unwrap_val(elem) for elem in val]
             else:
@@ -442,7 +445,16 @@ class ParamDict(UserDict):
 
         """
 
-        return self._unwrap(lambda v: v)
+        return self._unwrap(lambda v: v, False)
+
+    def unwrap_enum(self) -> dict[str, RawPDValue]:
+        """Unwrap this ParamDict to get RawParamDict.
+
+        This function (as opposed to unwrap) unwraps the enum to int too.
+
+        """
+
+        return self._unwrap(lambda v: v, True)
 
     def unwrap_exn(self) -> dict[str, RawPDValue]:
         """Unwrap values of given ParamDict to get RawParamDict.
@@ -457,7 +469,7 @@ class ParamDict(UserDict):
         def _raise_exn(val):
             raise TypeError(f"Encountered value {val} of type {type(val)}")
 
-        return self._unwrap(_raise_exn)
+        return self._unwrap(_raise_exn, False)
 
     def isclose(
         self, other: ParamDict[str, PDValue], rtol: float = 1e-5, atol: float = 1e-8
@@ -488,6 +500,30 @@ class ParamDict(UserDict):
         if len(self.data) != len(other):
             return False
         return all((k in other and isclose_val(v, other[k]) for k, v in self.data.items()))
+
+    def to_h5(self, group: h5py.File | h5py.Group):
+        """Write this ParamDict to hdf5 file (root group) or group.
+
+        We use flatten() to avoid making nested group structure in h5 tree.
+
+        """
+
+        for key, val in self.flatten().unwrap_enum().items():
+            group.attrs[key] = val
+
+    @classmethod
+    def of_h5(cls, group: h5py.File | h5py.Group) -> dict[str, RawPDValue]:
+        """Load a ParamDict from hdf5 file or group.
+
+        Note that the saved ParamDict is flattened and unwrapped.
+        This function doesn't recover the original ParamDict structure.
+
+        """
+
+        d = {}
+        for key, val in group.attrs.items():
+            d[key] = val
+        return d
 
 
 #: Allowed value types for ParamDict
