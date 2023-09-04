@@ -15,142 +15,161 @@ from .visa_instrument import VisaInstrument
 from ..msgs import param_msgs as P
 
 
-class RefSource(enum.Enum):
-    EXT: 0
-    INT: 1
-    SIG: 2
-
-
-class RefEdge(enum.Enum):
-    SIN_POS: 0
-    TTL_POS: 1
-    TTL_NEG: 2
-
-
-class InputSource(enum.Enum):
-    A: 0
-    A_B: 1
-    I_6: 2
-    I_8: 3
-
-
-class LineFilter(enum.Enum):
-    THRU: 0
-    LINE: 1
-    LINEx2: 2
-    LINE_LINEx2: 3
-
-
-class DynamicReserve(enum.Enum):
-    HIGH: 0
-    MEDIUM: 1
-    LOW: 2
-
-
-class VoltageSensitivity(enum.Enum):
-    s2nV: 0
-    s5nV: 1
-    s10nV: 2
-    s20nV: 3
-    s50nV: 4
-    s100nV: 5
-    s200nV: 6
-    s500nV: 7
-    s1uV: 8
-    s2uV: 9
-    s5uV: 10
-    s10uV: 11
-    s20uV: 12
-    s50uV: 13
-    s100uV: 14
-    s200uV: 15
-    s500uV: 16
-    s1mV: 17
-    s2mV: 18
-    s5mV: 19
-    s10mV: 20
-    s20mV: 21
-    s50mV: 22
-    s100mV: 23
-    s200mV: 24
-    s500mV: 25
-    s1V: 26
-
-
-class CurrentSensitivity(enum.Enum):
-    s5fA: 1
-    s10fA: 2
-    s20fA: 3
-    s50fA: 4
-    s100fA: 5
-    s200fA: 6
-    s500fA: 7
-    s1pA: 8
-    s2pA: 9
-    s5pA: 10
-    s10pA: 11
-    s20pA: 12
-    s50pA: 13
-    s100pA: 14
-    s200pA: 15
-    s500pA: 16
-    s1nA: 17
-    s2nA: 18
-    s5nA: 19
-    s10nA: 20
-    s20nA: 21
-    s50nA: 22
-    s100nA: 23
-    s200nA: 24
-    s500nA: 25
-    s1uA: 26
-
-
-class TimeConstant(enum.Enum):
-    c10us: 0
-    c30us: 1
-    c100us: 2
-    c300us: 3
-    c1ms: 4
-    c3ms: 5
-    c10ms: 6
-    c30ms: 7
-    c100ms: 8
-    c300ms: 9
-    c1s: 10
-    c3s: 11
-    c10s: 12
-    c30s: 13
-    c100s: 14
-    c300s: 15
-    c1ks: 16
-    c3ks: 17
-    c10ks: 18
-    c30ks: 19
-
-
-class Data1(enum.Enum):
-    X: 0
-    R: 1
-    NOISE: 2
-    AUX_IN1: 3
-
-
-class Data2(enum.Enum):
-    Y: 0
-    Theta: 1
-    AUX_IN1: 2
-    AUX_IN2: 3
-
-
-class DataNormalization(enum.Enum):
-    OFF: 0
-    dB: 1
-    PERCENT: 2
-
-
 class LI5640(VisaInstrument):
     """NF LI5640 Lockin Amplifier."""
+
+    class RefSource(enum.Enum):
+        EXT: 0
+        INT: 1
+        SIG: 2
+
+    class RefEdge(enum.Enum):
+        SIN_POS: 0
+        TTL_POS: 1
+        TTL_NEG: 2
+
+    class InputSource(enum.Enum):
+        A: 0
+        A_B: 1
+        I_6: 2
+        I_8: 3
+
+    class LineFilter(enum.Enum):
+        THRU: 0
+        LINE: 1
+        LINEx2: 2
+        LINE_LINEx2: 3
+
+    class DynamicReserve(enum.Enum):
+        HIGH: 0
+        MEDIUM: 1
+        LOW: 2
+
+    class VoltageSensitivity(enum.Enum):
+        s2nV: 0
+        s5nV: 1
+        s10nV: 2
+        s20nV: 3
+        s50nV: 4
+        s100nV: 5
+        s200nV: 6
+        s500nV: 7
+        s1uV: 8
+        s2uV: 9
+        s5uV: 10
+        s10uV: 11
+        s20uV: 12
+        s50uV: 13
+        s100uV: 14
+        s200uV: 15
+        s500uV: 16
+        s1mV: 17
+        s2mV: 18
+        s5mV: 19
+        s10mV: 20
+        s20mV: 21
+        s50mV: 22
+        s100mV: 23
+        s200mV: 24
+        s500mV: 25
+        s1V: 26
+
+    VoltSensitivity_to_Float = {
+        VoltageSensitivity.s2nV: 2e-9,
+        VoltageSensitivity.s5nV: 5e-9,
+        VoltageSensitivity.s10nV: 10e-9,
+        VoltageSensitivity.s20nV: 20e-9,
+        VoltageSensitivity.s50nV: 50e-9,
+        VoltageSensitivity.s100nV: 100e-9,
+        VoltageSensitivity.s200nV: 200e-9,
+        VoltageSensitivity.s500nV: 500e-9,
+        VoltageSensitivity.s1uV: 1e-6,
+        VoltageSensitivity.s2uV: 2e-6,
+        VoltageSensitivity.s5uV: 5e-6,
+        VoltageSensitivity.s10uV: 10e-6,
+        VoltageSensitivity.s20uV: 20e-6,
+        VoltageSensitivity.s50uV: 50e-6,
+        VoltageSensitivity.s100uV: 100e-6,
+        VoltageSensitivity.s200uV: 200e-6,
+        VoltageSensitivity.s500uV: 500e-6,
+        VoltageSensitivity.s1mV: 1e-3,
+        VoltageSensitivity.s2mV: 2e03,
+        VoltageSensitivity.s5mV: 5e03,
+        VoltageSensitivity.s10mV: 10e-03,
+        VoltageSensitivity.s20mV: 20e-3,
+        VoltageSensitivity.s50mV: 50e-3,
+        VoltageSensitivity.s100mV: 100e-3,
+        VoltageSensitivity.s200mV: 200e-3,
+        VoltageSensitivity.s500mV: 500e-3,
+        VoltageSensitivity.s1V: 1.0,
+    }
+
+    class CurrentSensitivity(enum.Enum):
+        s5fA: 1
+        s10fA: 2
+        s20fA: 3
+        s50fA: 4
+        s100fA: 5
+        s200fA: 6
+        s500fA: 7
+        s1pA: 8
+        s2pA: 9
+        s5pA: 10
+        s10pA: 11
+        s20pA: 12
+        s50pA: 13
+        s100pA: 14
+        s200pA: 15
+        s500pA: 16
+        s1nA: 17
+        s2nA: 18
+        s5nA: 19
+        s10nA: 20
+        s20nA: 21
+        s50nA: 22
+        s100nA: 23
+        s200nA: 24
+        s500nA: 25
+        s1uA: 26
+
+    class TimeConstant(enum.Enum):
+        c10us: 0
+        c30us: 1
+        c100us: 2
+        c300us: 3
+        c1ms: 4
+        c3ms: 5
+        c10ms: 6
+        c30ms: 7
+        c100ms: 8
+        c300ms: 9
+        c1s: 10
+        c3s: 11
+        c10s: 12
+        c30s: 13
+        c100s: 14
+        c300s: 15
+        c1ks: 16
+        c3ks: 17
+        c10ks: 18
+        c30ks: 19
+
+    class Data1(enum.Enum):
+        X: 0
+        R: 1
+        NOISE: 2
+        AUX_IN1: 3
+
+    class Data2(enum.Enum):
+        Y: 0
+        Theta: 1
+        AUX_IN1: 2
+        AUX_IN2: 3
+
+    class DataNormalization(enum.Enum):
+        OFF: 0
+        dB: 1
+        PERCENT: 2
 
     def __init__(self, name, conf, prefix=None):
         if "write_termination" not in conf:
@@ -158,6 +177,12 @@ class LI5640(VisaInstrument):
         if "read_termination" not in conf:
             conf["read_termination"] = "\n"
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
+
+        # memoise
+        # TODO: this is ad-hoc.
+        self._data1_expand = self.get_data1_expand()
+        self._data2_expand = self.get_data2_expand()
+        self._volt_sensitivity = self.get_volt_sensitivity_float()
 
     def get_phase_offset(self) -> float:
         """get current phase offset in degrees."""
@@ -173,12 +198,6 @@ class LI5640(VisaInstrument):
             phase_deg += 360.0
 
         self.inst.write(f"PHAS {phase_deg:.4f}")
-        return True
-
-    def set_auto_phase_offset(self) -> bool:
-        """set auto phase offset."""
-
-        self.inst.write("APHS")
         return True
 
     def get_harmonics(self) -> int:
@@ -200,7 +219,7 @@ class LI5640(VisaInstrument):
 
         i = int(self.inst.query("RSRC?"))
         if i in (1, 2, 3):
-            return RefSource(i)
+            return self.RefSource(i)
         self.logger.error(f"Unexpected response to RSRC?: {i}")
         return None
 
@@ -215,7 +234,7 @@ class LI5640(VisaInstrument):
 
         i = int(self.inst.query("REDG?"))
         if i in (1, 2, 3):
-            return RefEdge(i)
+            return self.RefEdge(i)
         self.logger.error(f"Unexpected response to REDG?: {i}")
         return None
 
@@ -230,7 +249,7 @@ class LI5640(VisaInstrument):
 
         i = int(self.inst.query("ISRC?"))
         if i in (0, 1, 2, 3):
-            return InputSource(i)
+            return self.InputSource(i)
         self.logger.error(f"Unexpected response to ISRC?: {i}")
         return None
 
@@ -265,7 +284,7 @@ class LI5640(VisaInstrument):
     def get_line_filter(self) -> LineFilter:
         """get line filter."""
 
-        return LineFilter(self.inst.query("ILIN?"))
+        return self.LineFilter(self.inst.query("ILIN?"))
 
     def set_line_filter(self, filt: LineFilter) -> bool:
         """set line filter."""
@@ -298,7 +317,7 @@ class LI5640(VisaInstrument):
     def get_dynamic_reserve(self) -> DynamicReserve:
         """get dynamic reserve."""
 
-        return DynamicReserve(self.inst.query("DRSV?"))
+        return self.DynamicReserve(self.inst.query("DRSV?"))
 
     def set_dynamic_reserve(self, reserve: DynamicReserve) -> bool:
         """set dynamic reserve."""
@@ -309,18 +328,22 @@ class LI5640(VisaInstrument):
     def get_volt_sensitivity(self) -> VoltageSensitivity:
         """get voltage sensitivity."""
 
-        return VoltageSensitivity(self.inst.query("VSEN?"))
+        return self.VoltageSensitivity(self.inst.query("VSEN?"))
+
+    def get_volt_sensitivity_float(self) -> float:
+        return self.VoltSensitivity_to_Float(self.get_volt_sensitivity())
 
     def set_volt_sensitivity(self, sens: VoltageSensitivity) -> bool:
         """set voltage sensitivity."""
 
         self.inst.write(f"VSEN {sens.value}")
+        self._volt_sensitivity = self.VoltSensitivity_to_Float(sens)
         return True
 
     def get_current_sensitivity(self) -> CurrentSensitivity:
         """get current sensitivity."""
 
-        return CurrentSensitivity(self.inst.query("ISEN?"))
+        return self.CurrentSensitivity(self.inst.query("ISEN?"))
 
     def set_current_sensitivity(self, sens: CurrentSensitivity) -> bool:
         """set current sensitivity."""
@@ -331,7 +354,7 @@ class LI5640(VisaInstrument):
     def get_time_constant(self) -> TimeConstant:
         """get time constant."""
 
-        return TimeConstant(self.inst.query("TCON?"))
+        return self.TimeConstant(self.inst.query("TCON?"))
 
     def set_time_constant(self, cons: TimeConstant) -> bool:
         """set time constant."""
@@ -371,7 +394,7 @@ class LI5640(VisaInstrument):
     def get_data1(self) -> Data1:
         """get data1."""
 
-        return Data1(self.inst.query("DDEF? 1"))
+        return self.Data1(self.inst.query("DDEF? 1"))
 
     def set_data1(self, data: Data1) -> bool:
         """set data1."""
@@ -382,7 +405,7 @@ class LI5640(VisaInstrument):
     def get_data2(self) -> Data2:
         """get data2."""
 
-        return Data2(self.inst.query("DDEF? 2"))
+        return self.Data2(self.inst.query("DDEF? 2"))
 
     def set_data2(self, data: Data2) -> bool:
         """set data2."""
@@ -393,7 +416,7 @@ class LI5640(VisaInstrument):
     def get_data_normalization(self) -> DataNormalization:
         """get data normalization."""
 
-        return DataNormalization(self.inst.query("NORM?"))
+        return self.DataNormalization(self.inst.query("NORM?"))
 
     def set_data_normalization(self, norm: DataNormalization) -> bool:
         """set data normalization."""
@@ -441,45 +464,45 @@ class LI5640(VisaInstrument):
         self.inst.write(f"NOIS {i}")
         return True
 
-    def get_xoffset_enable(self) -> bool:
+    def get_Xoffset_enable(self) -> bool:
         """get if offset for X is enabled."""
 
         return bool(self.inst.query("OFSO? 1"))
 
-    def set_xoffset_enable(self, enable: bool) -> bool:
+    def set_Xoffset_enable(self, enable: bool) -> bool:
         """set if offset for X is enabled."""
 
         self.inst.write(f"OFSO 1, {bool(enable):d}")
         return True
 
-    def get_yoffset_enable(self) -> bool:
+    def get_Yoffset_enable(self) -> bool:
         """get if offset for Y is enabled."""
 
         return bool(self.inst.query("OFSO? 2"))
 
-    def set_yoffset_enable(self, enable: bool) -> bool:
+    def set_Yoffset_enable(self, enable: bool) -> bool:
         """set if offset for Y is enabled."""
 
         self.inst.write(f"OFSO 2, {bool(enable):d}")
         return True
 
-    def get_xoffset(self) -> float:
+    def get_Xoffset(self) -> float:
         """get offset value for X."""
 
         return float(self.inst.query("OFFS? 1"))
 
-    def set_xoffset(self, offset_percent: bool) -> bool:
+    def set_Xoffset(self, offset_percent: bool) -> bool:
         """set offset value for X."""
 
         self.inst.write(f"OFFS 1, {offset_percent:.2f}")
         return True
 
-    def get_yoffset(self) -> float:
+    def get_Yoffset(self) -> float:
         """get offset value for Y."""
 
         return float(self.inst.query("OFFS? 2"))
 
-    def set_yoffset(self, offset_percent: bool) -> bool:
+    def set_Yoffset(self, offset_percent: bool) -> bool:
         """set offset value for Y."""
 
         self.inst.write(f"OFFS 2, {offset_percent:.2f}")
@@ -501,6 +524,7 @@ class LI5640(VisaInstrument):
             return self.fail_with(f"Unrecongizable factor: {fac}")
         i = {1: 0, 10: 1, 100: 2}[fac]
         self.inst.write(f"OEXP 1, {i}")
+        self._data1_expand = fac
         return True
 
     def get_data2_expand(self) -> int:
@@ -519,6 +543,7 @@ class LI5640(VisaInstrument):
             return self.fail_with(f"Unrecongizable factor: {fac}")
         i = {1: 0, 10: 1, 100: 2}[fac]
         self.inst.write(f"OEXP 2, {i}")
+        self._data2_expand = fac
         return True
 
     def get_ratio_mode(self) -> bool:
@@ -568,6 +593,12 @@ class LI5640(VisaInstrument):
         self.inst.write("ASET")
         return True
 
+    def set_auto_phase_offset(self) -> bool:
+        """set auto phase offset."""
+
+        self.inst.write("APHS")
+        return True
+
     def set_auto_sensitivity(self) -> bool:
         """execute auto sensitivity setting."""
 
@@ -607,18 +638,91 @@ class LI5640(VisaInstrument):
         elif key == "auto_phase_offset":
             return self.set_auto_phase_offset()
         else:
-            return self.fail_with("Unknown set() key.")
+            setter_name = "set_" + key
+            if hasattr(self, setter_name):
+                getattr(self, setter_name)(value)
+            else:
+                return self.fail_with("Unknown set() key.")
 
     def get_param_dict_labels(self, group: str = "") -> list[str]:
         return [""]
 
     def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
         d = P.ParamDict(
-            phase_offset=P.FloatParam(0.0, -180.0, 180.0, doc="phase offset in degrees"),
+            phase_offset=P.FloatParam(
+                self.get_phase_offset(), -180.0, 180.0, doc="phase offset in degrees"
+            ),
+            harmonics=P.IntParam(self.get_harmonics(), 1, 19999, doc="harmonics degrees"),
+            ref_source=P.EnumParam(self.RefSource, self.get_ref_source(), doc="reference source"),
+            ref_edge=P.EnumParam(self.RefEdge, self.get_ref_edge(), doc="reference source edge"),
+            input_source=P.EnumParam(
+                self.InputSource, self.get_input_source(), doc="signal input source"
+            ),
+            coupling=P.BoolParam(
+                self.get_coupling(), doc="signal input coupling (True-DC, False-AC)"
+            ),
+            ground=P.BoolParam(
+                self.get_ground(), doc="signal input grounding (True-ground, False-float)"
+            ),
+            line_filter=P.EnumParam(self.LineFilter, self.get_line_filter(), doc="line filter"),
+            line_freq=P.BoolParam(self.get_line_freq(), doc="line freq. (True-60, False-50 Hz)"),
+            LPF_through=P.BoolParam(self.get_LPF_through(), doc="True to enable LPF pass-through"),
+            dynamic_reserve=P.EnumParam(
+                self.DynamicReserve, self.get_dynamic_reserve(), doc="dynamic reserve"
+            ),
+            volt_sensitivity=P.EnumParam(
+                self.VoltageSensitivity, self.get_volt_sensitivity(), doc="voltage sensitivity"
+            ),
+            current_sensitivity=P.EnumParam(
+                self.CurrentSensitivity, self.get_current_sensitivity(), doc="current sensitivity"
+            ),
+            time_constant=P.EnumParam(
+                self.TimeConstant, self.get_time_constant(), doc="time constant"
+            ),
+            sync_filter=P.BoolParam(self.get_sync_filter(), doc="True to enable sync filter"),
+            slope=P.IntChoiceParam(self.get_slope(), (6, 12, 18, 24), doc="Slope in dB/oct"),
+            data1=P.EnumParam(self.Data1, self.get_data1(), doc="Data1 output type"),
+            data2=P.EnumParam(self.Data2, self.get_data2(), doc="Data2 output type"),
+            data_normalization=P.BoolParam(
+                self.get_data_normalization(), doc="True to enable data normalization"
+            ),
+            data_normalization_voltage=P.FloatParam(
+                self.get_data_normalization_voltage(),
+                doc="Voltage standard for data normalization",
+            ),
+            data_normalization_current=P.FloatParam(
+                self.get_data_normalization_current(),
+                doc="Current standard for data normalization",
+            ),
+            noise_smooth=P.IntChoiceParam(
+                self.get_noise_smooth(), (1, 4, 16, 64), doc="Noise measurement smoothing factor"
+            ),
+            Xoffset_enable=P.BoolParam(
+                self.get_Xoffset_enable(), doc="True to enable offset for X"
+            ),
+            Yoffset_enable=P.BoolParam(
+                self.get_Yoffset_enable(), doc="True to enable offset for Y"
+            ),
+            Xoffset=P.FloatParam(self.get_Xoffset(), doc="offset value for X"),
+            Yoffset=P.FloatParam(self.get_Yoffset(), doc="offset value for Y"),
+            data1_expand=P.IntChoiceParam(
+                self.get_data1_expand(), (1, 10, 100), doc="Expand factor for data1"
+            ),
+            data2_expand=P.IntChoiceParam(
+                self.get_data2_expand(), (1, 10, 100), doc="Expand factor for data2"
+            ),
+            ratio_mode=P.BoolParam(self.get_ratio_mode(), doc="True to enable ratio output mode"),
+            ratio_k=P.FloatParam(self.get_ratio_k(), doc="k-factor in ratio output mode"),
+            lamp=P.BoolParam(self.get_lamp(), doc="True to enable physical lamp"),
         )
         return d
 
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
-        if "phase_offset" in params:
-            self.set_phase_offset(params["phase_offset"])
+        params = P.unwrap(params)
+        for key, val in params:
+            setter_name = "set_" + key
+            if hasattr(self, setter_name):
+                getattr(self, setter_name)(val)
+            else:
+                return self.fail_with(f"Unknown param: {key}")
         return True

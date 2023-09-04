@@ -319,27 +319,29 @@ class LUCI_OE200(LUCI10):
             return None
 
     def get_param_dict_labels(self, group: str) -> list[str]:
-        return ["gain_coupling"]
+        return [""]
 
     def get_param_dict(
         self, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
         """Get ParamDict for `label` in `group`."""
 
-        if label == "gain_coupling":
-            return P.ParamDict(
-                low_noise=P.BoolParam(self.low_noise),
-                gain_exponent=P.IntChoiceParam(self.gain_exponent, list(range(3, 12))),
-                DC_coupling=P.BoolParam(self.DC_coupling),
-            )
+        return P.ParamDict(
+            low_noise=P.BoolParam(
+                self.low_noise, doc="True for Low-Noise, False for High-Speed mode"
+            ),
+            gain_exponent=P.IntChoiceParam(
+                self.gain_exponent,
+                list(range(3, 12)),
+                doc="3-9 for Low-Noise, 5-11 for High-Speed",
+            ),
+            DC_coupling=P.BoolParam(self.DC_coupling, doc="True for DC, False for AC coupling"),
+        )
 
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
-        if label == "gain_coupling":
-            return self.configure_gain_coupling(
-                params["low_noise"], params["gain_exponent"], params["DC_coupling"]
-            )
-        else:
-            return self.fail_with(f"Unknown configure label: {label}")
+        return self.configure_gain_coupling(
+            params["low_noise"], params["gain_exponent"], params["DC_coupling"]
+        )
 
 
 class OE200_AI(AnalogIn):
@@ -392,36 +394,32 @@ class OE200_AI(AnalogIn):
         return self._convert(AnalogIn.read_on_demand(self, oversample))
 
     def set(self, key: str, value=None) -> bool:
-        key = key.lower()
-        if key in ("led", "gain", "coupling"):
-            return self.luci.set(key, value)
-        else:
-            return self.fail_with(f"Unknown set() key: {key}.")
+        # no set() key for AnalogIn
+        return self.luci.set(key, value)
 
     def get(self, key: str, args=None):
-        if key in ("devices", "id", "pin", "product", "unit"):
-            return self.luci.get(key, args)
-        elif key in ("data", "all_data"):
+        if key in ("data", "all_data"):
             return AnalogIn.get(self, key, args)
         elif key == "unit":
             return "W"
         else:
-            self.logger.error(f"unknown get() key: {key}")
-            return None
+            return self.luci.get(key, args)
 
     def get_param_dict_labels(self, group: str) -> list[str]:
-        return ["gain_coupling"]
+        return ["luci"]
 
     def get_param_dict(
         self, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
         """Get ParamDict for `label` in `group`."""
 
-        if label == "gain_coupling":
+        if label == "luci":
             return self.luci.get_param_dict(label, group)
+        else:
+            return AnalogIn.get_param_dict(self, label, group)
 
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
-        if label == "gain_coupling":
+        if label == "luci":
             return self.luci.configure(params, label, group)
         else:
             return AnalogIn.configure(self, params, label, group)
