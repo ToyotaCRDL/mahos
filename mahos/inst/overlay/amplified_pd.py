@@ -10,7 +10,7 @@ Overlay for Photo Detector + Programmable Amplifier.
 import numpy as np
 
 from .overlay import InstrumentOverlay
-from ..msgs import param_msgs as P
+from ...msgs import param_msgs as P
 from ..lockin import LI5640
 from ..pd import LUCI_OE200, AnalogPD, LockinAnalogPD
 
@@ -26,6 +26,8 @@ class OE200_AI(InstrumentOverlay):
     """
 
     def __init__(self, name, conf, prefix=None):
+        InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
+
         self.luci: LUCI_OE200 = self.conf.get("luci")
         self.pd: AnalogPD = self.conf.get("pd")
         if len(self.pd.lines) != 1:
@@ -107,6 +109,7 @@ class OE200_LI5640_AI(InstrumentOverlay):
 
     def __init__(self, name, conf, prefix=None):
         InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
+
         self.luci: LUCI_OE200 = self.conf.get("luci")
         self.li5640: LI5640 = self.conf.get("li5640")
         self.pd: LockinAnalogPD = self.conf.get("pd")
@@ -121,9 +124,9 @@ class OE200_LI5640_AI(InstrumentOverlay):
     def init_lockin(self):
         self.li5640.set_data1(LI5640.Data1.X)
         self.li5640.set_data2(LI5640.Data2.Y)
-        self.li5650.set_Xoffset_enable(False)
-        self.li5650.set_Yoffset_enable(False)
-        self.li5640.set_data_normalization(False)
+        self.li5640.set_Xoffset_enable(False)
+        self.li5640.set_Yoffset_enable(False)
+        self.li5640.set_data_normalization(LI5640.DataNormalization.OFF)
 
         #  These settings must not be changed afterwards.
         self.li5640.lock_params(

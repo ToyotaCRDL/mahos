@@ -18,60 +18,60 @@ class LI5640(VisaInstrument):
     """NF LI5640 Lockin Amplifier."""
 
     class RefSource(enum.Enum):
-        EXT: 0
-        INT: 1
-        SIG: 2
+        EXT = 0
+        INT = 1
+        SIG = 2
 
     class RefEdge(enum.Enum):
-        SIN_POS: 0
-        TTL_POS: 1
-        TTL_NEG: 2
+        SIN_POS = 0
+        TTL_POS = 1
+        TTL_NEG = 2
 
     class InputSource(enum.Enum):
-        A: 0
-        A_B: 1
-        I_6: 2
-        I_8: 3
+        A = 0
+        A_B = 1
+        I_6 = 2
+        I_8 = 3
 
     class LineFilter(enum.Enum):
-        THRU: 0
-        LINE: 1
-        LINEx2: 2
-        LINE_LINEx2: 3
+        THRU = 0
+        LINE = 1
+        LINEx2 = 2
+        LINE_LINEx2 = 3
 
     class DynamicReserve(enum.Enum):
-        HIGH: 0
-        MEDIUM: 1
-        LOW: 2
+        HIGH = 0
+        MEDIUM = 1
+        LOW = 2
 
     class VoltageSensitivity(enum.Enum):
-        s2nV: 0
-        s5nV: 1
-        s10nV: 2
-        s20nV: 3
-        s50nV: 4
-        s100nV: 5
-        s200nV: 6
-        s500nV: 7
-        s1uV: 8
-        s2uV: 9
-        s5uV: 10
-        s10uV: 11
-        s20uV: 12
-        s50uV: 13
-        s100uV: 14
-        s200uV: 15
-        s500uV: 16
-        s1mV: 17
-        s2mV: 18
-        s5mV: 19
-        s10mV: 20
-        s20mV: 21
-        s50mV: 22
-        s100mV: 23
-        s200mV: 24
-        s500mV: 25
-        s1V: 26
+        s2nV = 0
+        s5nV = 1
+        s10nV = 2
+        s20nV = 3
+        s50nV = 4
+        s100nV = 5
+        s200nV = 6
+        s500nV = 7
+        s1uV = 8
+        s2uV = 9
+        s5uV = 10
+        s10uV = 11
+        s20uV = 12
+        s50uV = 13
+        s100uV = 14
+        s200uV = 15
+        s500uV = 16
+        s1mV = 17
+        s2mV = 18
+        s5mV = 19
+        s10mV = 20
+        s20mV = 21
+        s50mV = 22
+        s100mV = 23
+        s200mV = 24
+        s500mV = 25
+        s1V = 26
 
     VoltSensitivity_to_Float = {
         VoltageSensitivity.s2nV: 2e-9,
@@ -104,71 +104,71 @@ class LI5640(VisaInstrument):
     }
 
     class CurrentSensitivity(enum.Enum):
-        s5fA: 1
-        s10fA: 2
-        s20fA: 3
-        s50fA: 4
-        s100fA: 5
-        s200fA: 6
-        s500fA: 7
-        s1pA: 8
-        s2pA: 9
-        s5pA: 10
-        s10pA: 11
-        s20pA: 12
-        s50pA: 13
-        s100pA: 14
-        s200pA: 15
-        s500pA: 16
-        s1nA: 17
-        s2nA: 18
-        s5nA: 19
-        s10nA: 20
-        s20nA: 21
-        s50nA: 22
-        s100nA: 23
-        s200nA: 24
-        s500nA: 25
-        s1uA: 26
+        s5fA = 1
+        s10fA = 2
+        s20fA = 3
+        s50fA = 4
+        s100fA = 5
+        s200fA = 6
+        s500fA = 7
+        s1pA = 8
+        s2pA = 9
+        s5pA = 10
+        s10pA = 11
+        s20pA = 12
+        s50pA = 13
+        s100pA = 14
+        s200pA = 15
+        s500pA = 16
+        s1nA = 17
+        s2nA = 18
+        s5nA = 19
+        s10nA = 20
+        s20nA = 21
+        s50nA = 22
+        s100nA = 23
+        s200nA = 24
+        s500nA = 25
+        s1uA = 26
 
     class TimeConstant(enum.Enum):
-        c10us: 0
-        c30us: 1
-        c100us: 2
-        c300us: 3
-        c1ms: 4
-        c3ms: 5
-        c10ms: 6
-        c30ms: 7
-        c100ms: 8
-        c300ms: 9
-        c1s: 10
-        c3s: 11
-        c10s: 12
-        c30s: 13
-        c100s: 14
-        c300s: 15
-        c1ks: 16
-        c3ks: 17
-        c10ks: 18
-        c30ks: 19
+        c10us = 0
+        c30us = 1
+        c100us = 2
+        c300us = 3
+        c1ms = 4
+        c3ms = 5
+        c10ms = 6
+        c30ms = 7
+        c100ms = 8
+        c300ms = 9
+        c1s = 10
+        c3s = 11
+        c10s = 12
+        c30s = 13
+        c100s = 14
+        c300s = 15
+        c1ks = 16
+        c3ks = 17
+        c10ks = 18
+        c30ks = 19
 
     class Data1(enum.Enum):
-        X: 0
-        R: 1
-        NOISE: 2
-        AUX_IN1: 3
+        X = 0
+        R = 1
+        NOISE = 2
+        AUX_IN1 = 3
 
     class Data2(enum.Enum):
-        Y: 0
-        Theta: 1
-        AUX_IN1: 2
-        AUX_IN2: 3
+        Y = 0
+        Theta = 1
+        AUX_IN1 = 2
+        AUX_IN2 = 3
 
     class DataNormalization(enum.Enum):
-        OFF: 0
-        dB: 1
-        PERCENT: 2
+        OFF = 0
+        dB = 1
+        PERCENT = 2
 
     PARAM_NAMES = [
         "phase_offset",
