@@ -35,6 +35,8 @@ class OE200_AI(InstrumentOverlay):
 
         self.add_instruments(self.luci, self.pd)
 
+    # AnalogPD wrappers / compatible interfaces
+
     def _convert_data(
         self, data: np.ndarray | np.float64 | tuple[np.ndarray, float] | None
     ) -> np.ndarray | np.float64 | tuple[np.ndarray, float] | None:
@@ -54,6 +56,17 @@ class OE200_AI(InstrumentOverlay):
         if data is None:
             return None
         return [self._convert_data(d) for d in data]
+
+    # Methods used by confocal_scanner
+    def pop_block(
+        self,
+    ) -> np.ndarray | tuple[np.ndarray | float]:
+        return self._convert_data(self.pd.pop_block())
+
+    def get_max_rate(self) -> float | None:
+        return self.pd.get_max_rate()
+
+    # Standard API
 
     def set(self, key: str, value=None) -> bool:
         # no set() key for AnalogIn
@@ -147,20 +160,48 @@ class OE200_LI5640_AI(InstrumentOverlay):
         self.gain = v1_gain * self.luci.gain, v2_gain * self.luci.gain
         return self.gain
 
-    def _convert_data(self, data: np.ndarray | np.cdouble) -> np.ndarray | np.cdouble:
+    # LockinAnalogPD wrappers / compatible interfaces
+
+    def _convert_data(
+        self, data: np.ndarray | np.cdouble | tuple[np.ndarray, float] | None
+    ) -> np.ndarray | np.cdouble | tuple[np.ndarray, float] | None:
+        if data is None:
+            return None
+
         gain_r, gain_i = self.gain
 
         if isinstance(data, np.cdouble):
-            # read_on_demand
+            # read-on-demand
             return np.cdouble(data.real / gain_r, data.imag / gain_i)
+        elif isinstance(data, tuple):
+            #  stamped clock-mode
+            data[0].real /= gain_r
+            data[0].imag /= gain_i
+            return data
         else:
-            # buffered read
+            # ndarray, buffered read
             data.real /= gain_r
             data.imag /= gain_i
             return data
 
-    def _convert_all_data(self, data: list[np.ndarray]):
+    def _convert_all_data(
+        self, data: list[np.ndarray | tuple[np.ndarray, float]] | None
+    ) -> list[np.ndarray | tuple[np.ndarray, float]] | None:
+        if data is None:
+            return None
         return [self._convert_data(d) for d in data]
+
+    # Methods used by confocal_scanner
+
+    def pop_block(
+        self,
+    ) -> np.ndarray | tuple[np.ndarray | float]:
+        return self._convert_data(self.pd.pop_block())
+
+    def get_max_rate(self) -> float | None:
+        return self.pd.get_max_rate()
+
+    # Standard API
 
     def set(self, key: str, value=None) -> bool:
         # no set() key for pd

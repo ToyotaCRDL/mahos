@@ -818,8 +818,7 @@ class LI5640(VisaInstrument):
         return d
 
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
-        params = P.unwrap(params)
-        for key, val in params:
+        for key, val in P.unwrap(params).items():
             if key in self.PARAM_NAMES:
                 getattr(self, "set_" + key)(val)
             else:
