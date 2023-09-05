@@ -9,7 +9,7 @@ Instrument RPC.
 
 from __future__ import annotations
 import importlib
-import typing as T
+from collections import ChainMap
 from inspect import signature, getdoc, getfile
 
 from ..msgs.common_msgs import Request, Resp
@@ -21,32 +21,56 @@ from ..msgs.inst_server_msgs import ResetReq, ConfigureReq, SetReq, GetReq, Help
 from ..msgs.inst_server_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..node.node import Node, split_name
 from ..node.client import StatusClient
+from ..util.graph import sort_dependency
 from .instrument import Instrument
 from .overlay.overlay import InstrumentOverlay
 
 
 class OverlayConf(object):
-    def __init__(self, conf: dict):
+    def __init__(self, conf: dict, insts: dict[str, Instrument]):
         self.conf = conf
+        self._insts = insts
+        self._lays = {}
+
+        dep_dict = {lay: self.ref_names(lay) for lay in self.conf}
+        self.sorted_lays = [lay for lay in sort_dependency(dep_dict) if lay not in insts.keys()]
+
+    def get(self, lay: str) -> dict:
+        return self.conf[lay]
 
     def is_ref(self, value):
         return isinstance(value, str) and value.startswith("$")
 
-    def resolve_ref(self, insts: dict) -> dict:
+    def resolved_conf(self, lay: str) -> dict:
         def conv(value):
             if not self.is_ref(value):
                 return value
 
-            if value[1:] not in insts:
-                raise ValueError("instrument is referenced but not found: " + value)
-            return insts[value[1:]]
+            inst_or_lay = ChainMap(self._insts, self._lays)
+            if value[1:] not in inst_or_lay:
+                raise ValueError("instrument / overlay is referenced but not found: " + value)
+            return inst_or_lay[value[1:]]
 
-        return {k: conv(av) for k, av in self.conf.items()}
+        return {k: conv(av) for k, av in self.conf[lay]["conf"].items()}
 
-    def inst_names(self) -> tuple:
-        """Make tuple of dependent instrument names."""
+    def ref_names(self, lay: str) -> list[str]:
+        """Make list of dependent instrument / overlay names."""
 
-        return tuple((v[1:] for v in self.conf.values() if self.is_ref(v)))
+        return [v[1:] for v in self.conf[lay]["conf"].values() if self.is_ref(v)]
+
+    def add_overlay(self, lay: str, overlay: InstrumentOverlay):
+        self._lays[lay] = overlay
+
+    def inst_names(self, lay: str) -> list[str]:
+        """Make list of dependent instrument names."""
+
+        inst_names = []
+        for n in self.ref_names(lay):
+            if n in self._insts.keys():
+                inst_names.append(n)
+            else:  # n is lay name
+                inst_names.extend(self.inst_names(n))
+        return list(set(inst_names))
 
 
 class Locks(object):
@@ -58,7 +82,7 @@ class Locks(object):
         for inst in insts:
             self.locks[inst] = None
 
-    def add_overlay(self, lay: str, inst_names: tuple):
+    def add_overlay(self, lay: str, inst_names: list[str]):
         """Add InstrumentOverlay named `lay` that's dependent on `inst_names`."""
 
         self.overlay_deps[lay] = inst_names
@@ -131,7 +155,7 @@ class InstrumentClient(StatusClient):
             self.logger.error(resp.message)
         return resp.success
 
-    def is_locked(self, inst: str) -> T.Optional[bool]:
+    def is_locked(self, inst: str) -> bool | None:
         """Check if an instrument is locked."""
 
         resp = self.req.request(CheckLockReq(self.ident, inst))
@@ -365,7 +389,7 @@ class MultiInstrumentClient(object):
 
         return self.get_client(inst).get(inst, key, args)
 
-    def help(self, inst: str, func: T.Optional[str] = None) -> str:
+    def help(self, inst: str, func: str | None = None) -> str:
         """Get help of instrument `inst`.
 
         If function name `func` is given, get docstring of that function.
@@ -469,16 +493,20 @@ class InstrumentServer(Node):
                 self._insts[inst] = None
 
         if "instrument_overlay" in self.conf:
-            for lay, ldict in self.conf["instrument_overlay"].items():
+            conf = OverlayConf(self.conf["instrument_overlay"], self._insts)
+            self.logger.debug(f"sorted overlay names: {conf.sorted_lays}")
+
+            for lay in conf.sorted_lays:
+                ldict = conf.get(lay)
                 C = self._get_class(
                     ["mahos.inst.overlay." + ldict["module"], ldict["module"]],
                     ldict["class"],
                     InstrumentOverlay,
                 )
                 prefix = self.joined_name()
-                conf = OverlayConf(ldict.get("conf", {}))
-                self._overlays[lay] = C(lay, conf=conf.resolve_ref(self._insts), prefix=prefix)
-                self.locks.add_overlay(lay, conf.inst_names())
+                self._overlays[lay] = C(lay, conf=conf.resolved_conf(lay), prefix=prefix)
+                conf.add_overlay(lay, self._overlays[lay])
+                self.locks.add_overlay(lay, conf.inst_names(lay))
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
