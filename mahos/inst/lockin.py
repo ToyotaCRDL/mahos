@@ -11,7 +11,6 @@ from __future__ import annotations
 import enum
 
 from .visa_instrument import VisaInstrument
-
 from ..msgs import param_msgs as P
 
 
@@ -93,9 +92,9 @@ class LI5640(VisaInstrument):
         VoltageSensitivity.s200uV: 200e-6,
         VoltageSensitivity.s500uV: 500e-6,
         VoltageSensitivity.s1mV: 1e-3,
-        VoltageSensitivity.s2mV: 2e03,
-        VoltageSensitivity.s5mV: 5e03,
-        VoltageSensitivity.s10mV: 10e-03,
+        VoltageSensitivity.s2mV: 2e-3,
+        VoltageSensitivity.s5mV: 5e-3,
+        VoltageSensitivity.s10mV: 10e-3,
         VoltageSensitivity.s20mV: 20e-3,
         VoltageSensitivity.s50mV: 50e-3,
         VoltageSensitivity.s100mV: 100e-3,
@@ -171,6 +170,42 @@ class LI5640(VisaInstrument):
         dB: 1
         PERCENT: 2
 
+    PARAM_NAMES = [
+        "phase_offset",
+        "freq",
+        "amplitude",
+        "harmonics",
+        "ref_source",
+        "ref_edge",
+        "input_source",
+        "coupling",
+        "ground",
+        "line_filter",
+        "line_freq",
+        "LPF_through",
+        "dynamic_reserve",
+        "volt_sensitivity",
+        "current_sensitivity",
+        "time_constant",
+        "sync_filter",
+        "slope",
+        "data1",
+        "data2",
+        "data_normalization",
+        "data_normalization_voltage",
+        "data_normalization_current",
+        "noise_smooth",
+        "Xoffset_enable",
+        "Yoffset_enable",
+        "Xoffset",
+        "Yoffset",
+        "data1_expand",
+        "data2_expand",
+        "ratio_enable",
+        "ratio_k",
+        "lamp",
+    ]
+
     def __init__(self, name, conf, prefix=None):
         if "write_termination" not in conf:
             conf["write_termination"] = "\n"
@@ -178,11 +213,7 @@ class LI5640(VisaInstrument):
             conf["read_termination"] = "\n"
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
 
-        # memoise
-        # TODO: this is ad-hoc.
-        self._data1_expand = self.get_data1_expand()
-        self._data2_expand = self.get_data2_expand()
-        self._volt_sensitivity = self.get_volt_sensitivity_float()
+        self._locks = {p: False for p in self.PARAM_NAMES}
 
     def get_phase_offset(self) -> float:
         """get current phase offset in degrees."""
@@ -200,6 +231,43 @@ class LI5640(VisaInstrument):
         self.inst.write(f"PHAS {phase_deg:.4f}")
         return True
 
+    def get_freq(self) -> float:
+        """get frequency of `internal oscillator`.
+
+        Note that this is not measured frequency of external reference.
+
+        """
+
+        return float(self.inst.query("FREQ?"))
+
+    def set_freq(self, freq: float) -> bool:
+        """set frequency of `internal oscillator`."""
+
+        self.inst.write(f"FREQ {freq:.4f}")
+        return True
+
+    def get_amplitude(self) -> float:
+        """get amplitude of internal oscillator."""
+
+        #  drop range info (after comma)
+        return float(self.inst.query("AMPL?").split(",")[0])
+
+    def set_amplitude(self, ampl: float) -> bool:
+        """set amplitude of internal oscillator."""
+
+        if not (0.0 <= ampl <= 5.0):
+            return self.fail_with(f"amplitude {ampl} is out of bounds")
+
+        if ampl <= 50e-3:
+            rng = 0
+        elif ampl <= 0.5:
+            rng = 1
+        else:
+            rng = 2
+
+        self.inst.write(f"AMPL {ampl:.5f}, {rng}")
+        return True
+
     def get_harmonics(self) -> int:
         """get current harmonics degree."""
 
@@ -214,14 +282,10 @@ class LI5640(VisaInstrument):
         self.inst.write(f"HARM {harmonics_deg:d}")
         return True
 
-    def get_ref_source(self) -> RefSource | None:
+    def get_ref_source(self) -> RefSource:
         """get current reference source."""
 
-        i = int(self.inst.query("RSRC?"))
-        if i in (1, 2, 3):
-            return self.RefSource(i)
-        self.logger.error(f"Unexpected response to RSRC?: {i}")
-        return None
+        return self.RefSource(int(self.inst.query("RSRC?")))
 
     def set_ref_source(self, src: RefSource) -> bool:
         """set reference source."""
@@ -229,14 +293,10 @@ class LI5640(VisaInstrument):
         self.inst.write(f"RSRC {src.value}")
         return True
 
-    def get_ref_edge(self) -> RefEdge | None:
+    def get_ref_edge(self) -> RefEdge:
         """get current reference source rdge."""
 
-        i = int(self.inst.query("REDG?"))
-        if i in (1, 2, 3):
-            return self.RefEdge(i)
-        self.logger.error(f"Unexpected response to REDG?: {i}")
-        return None
+        return self.RefEdge(int(self.inst.query("REDG?")))
 
     def set_ref_edge(self, edge: RefEdge) -> bool:
         """set reference source edge."""
@@ -244,14 +304,10 @@ class LI5640(VisaInstrument):
         self.inst.write(f"REDG {edge.value}")
         return True
 
-    def get_input_source(self) -> InputSource | None:
+    def get_input_source(self) -> InputSource:
         """get current signal input source."""
 
-        i = int(self.inst.query("ISRC?"))
-        if i in (0, 1, 2, 3):
-            return self.InputSource(i)
-        self.logger.error(f"Unexpected response to ISRC?: {i}")
-        return None
+        return self.InputSource(int(self.inst.query("ISRC?")))
 
     def set_input_source(self, src: InputSource) -> bool:
         """set signal input source."""
@@ -262,7 +318,7 @@ class LI5640(VisaInstrument):
     def get_coupling(self) -> bool:
         """get input coupling. True (False) if DC (AC) coupling."""
 
-        return bool(self.inst.query("ICPL?"))
+        return bool(int(self.inst.query("ICPL?")))
 
     def set_coupling(self, DC_coupling: bool) -> bool:
         """set input coupling."""
@@ -273,7 +329,7 @@ class LI5640(VisaInstrument):
     def get_ground(self) -> bool:
         """get input ground. True (False) if Grounded (Floating) input."""
 
-        return bool(self.inst.query("IGND?"))
+        return bool(int(self.inst.query("IGND?")))
 
     def set_ground(self, ground: bool) -> bool:
         """set input ground."""
@@ -284,7 +340,7 @@ class LI5640(VisaInstrument):
     def get_line_filter(self) -> LineFilter:
         """get line filter."""
 
-        return self.LineFilter(self.inst.query("ILIN?"))
+        return self.LineFilter(int(self.inst.query("ILIN?")))
 
     def set_line_filter(self, filt: LineFilter) -> bool:
         """set line filter."""
@@ -295,7 +351,7 @@ class LI5640(VisaInstrument):
     def get_line_freq(self) -> bool:
         """get line frequency. True (False) if 60 Hz (50 Hz)."""
 
-        return bool(self.inst.query("IFRQ?"))
+        return bool(int(self.inst.query("IFRQ?")))
 
     def set_line_freq(self, is_60Hz: bool) -> bool:
         """set line frequency."""
@@ -306,7 +362,7 @@ class LI5640(VisaInstrument):
     def get_LPF_through(self) -> bool:
         """get LPF pass through. True if LPF is passed through."""
 
-        return bool(self.inst.query("ITHR?"))
+        return bool(int(self.inst.query("ITHR?")))
 
     def set_LPF_through(self, pass_through: bool) -> bool:
         """set LPF pass through."""
@@ -317,7 +373,7 @@ class LI5640(VisaInstrument):
     def get_dynamic_reserve(self) -> DynamicReserve:
         """get dynamic reserve."""
 
-        return self.DynamicReserve(self.inst.query("DRSV?"))
+        return self.DynamicReserve(int(self.inst.query("DRSV?")))
 
     def set_dynamic_reserve(self, reserve: DynamicReserve) -> bool:
         """set dynamic reserve."""
@@ -328,22 +384,21 @@ class LI5640(VisaInstrument):
     def get_volt_sensitivity(self) -> VoltageSensitivity:
         """get voltage sensitivity."""
 
-        return self.VoltageSensitivity(self.inst.query("VSEN?"))
+        return self.VoltageSensitivity(int(self.inst.query("VSEN?")))
 
     def get_volt_sensitivity_float(self) -> float:
-        return self.VoltSensitivity_to_Float(self.get_volt_sensitivity())
+        return self.VoltSensitivity_to_Float[self.get_volt_sensitivity()]
 
     def set_volt_sensitivity(self, sens: VoltageSensitivity) -> bool:
         """set voltage sensitivity."""
 
         self.inst.write(f"VSEN {sens.value}")
-        self._volt_sensitivity = self.VoltSensitivity_to_Float(sens)
         return True
 
     def get_current_sensitivity(self) -> CurrentSensitivity:
         """get current sensitivity."""
 
-        return self.CurrentSensitivity(self.inst.query("ISEN?"))
+        return self.CurrentSensitivity(int(self.inst.query("ISEN?")))
 
     def set_current_sensitivity(self, sens: CurrentSensitivity) -> bool:
         """set current sensitivity."""
@@ -354,7 +409,7 @@ class LI5640(VisaInstrument):
     def get_time_constant(self) -> TimeConstant:
         """get time constant."""
 
-        return self.TimeConstant(self.inst.query("TCON?"))
+        return self.TimeConstant(int(self.inst.query("TCON?")))
 
     def set_time_constant(self, cons: TimeConstant) -> bool:
         """set time constant."""
@@ -365,7 +420,7 @@ class LI5640(VisaInstrument):
     def get_sync_filter(self) -> bool:
         """get sync filter. True if sync filter is enabled."""
 
-        return bool(self.inst.query("SYNC?"))
+        return bool(int(self.inst.query("SYNC?")))
 
     def set_sync_filter(self, enable: bool) -> bool:
         """set sync filter."""
@@ -394,7 +449,7 @@ class LI5640(VisaInstrument):
     def get_data1(self) -> Data1:
         """get data1."""
 
-        return self.Data1(self.inst.query("DDEF? 1"))
+        return self.Data1(int(self.inst.query("DDEF? 1")))
 
     def set_data1(self, data: Data1) -> bool:
         """set data1."""
@@ -405,7 +460,7 @@ class LI5640(VisaInstrument):
     def get_data2(self) -> Data2:
         """get data2."""
 
-        return self.Data2(self.inst.query("DDEF? 2"))
+        return self.Data2(int(self.inst.query("DDEF? 2")))
 
     def set_data2(self, data: Data2) -> bool:
         """set data2."""
@@ -414,12 +469,12 @@ class LI5640(VisaInstrument):
         return True
 
     def get_data_normalization(self) -> DataNormalization:
-        """get data normalization."""
+        """get data normalization enable."""
 
-        return self.DataNormalization(self.inst.query("NORM?"))
+        return self.DataNormalization(int(self.inst.query("NORM?")))
 
     def set_data_normalization(self, norm: DataNormalization) -> bool:
-        """set data normalization."""
+        """set data normalization enable."""
 
         self.inst.write(f"NORM {norm.value}")
         return True
@@ -467,7 +522,7 @@ class LI5640(VisaInstrument):
     def get_Xoffset_enable(self) -> bool:
         """get if offset for X is enabled."""
 
-        return bool(self.inst.query("OFSO? 1"))
+        return bool(int(self.inst.query("OFSO? 1")))
 
     def set_Xoffset_enable(self, enable: bool) -> bool:
         """set if offset for X is enabled."""
@@ -478,7 +533,7 @@ class LI5640(VisaInstrument):
     def get_Yoffset_enable(self) -> bool:
         """get if offset for Y is enabled."""
 
-        return bool(self.inst.query("OFSO? 2"))
+        return bool(int(self.inst.query("OFSO? 2")))
 
     def set_Yoffset_enable(self, enable: bool) -> bool:
         """set if offset for Y is enabled."""
@@ -513,7 +568,7 @@ class LI5640(VisaInstrument):
 
         i = int(self.inst.query("OEXP? 1"))
         if i not in (0, 1, 2):
-            self.logger.error(f"Unexpected response to OEXP?: {i}")
+            self.logger.error(f"Unexpected response to OEXP? 1: {i}")
             return 0
         return {0: 1, 1: 10, 2: 100}[i]
 
@@ -521,7 +576,7 @@ class LI5640(VisaInstrument):
         """set output expand factor for data1."""
 
         if fac not in (1, 10, 100):
-            return self.fail_with(f"Unrecongizable factor: {fac}")
+            return self.fail_with(f"Unrecongizable expand factor: {fac}")
         i = {1: 0, 10: 1, 100: 2}[fac]
         self.inst.write(f"OEXP 1, {i}")
         self._data1_expand = fac
@@ -532,7 +587,7 @@ class LI5640(VisaInstrument):
 
         i = int(self.inst.query("OEXP? 2"))
         if i not in (0, 1, 2):
-            self.logger.error(f"Unexpected response to OEXP?: {i}")
+            self.logger.error(f"Unexpected response to OEXP? 2: {i}")
             return 0
         return {0: 1, 1: 10, 2: 100}[i]
 
@@ -540,18 +595,18 @@ class LI5640(VisaInstrument):
         """set output expand factor for data2."""
 
         if fac not in (1, 10, 100):
-            return self.fail_with(f"Unrecongizable factor: {fac}")
+            return self.fail_with(f"Unrecongizable expand factor: {fac}")
         i = {1: 0, 10: 1, 100: 2}[fac]
         self.inst.write(f"OEXP 2, {i}")
         self._data2_expand = fac
         return True
 
-    def get_ratio_mode(self) -> bool:
+    def get_ratio_enable(self) -> bool:
         """get if ratio mode is enabled."""
 
-        return bool(self.inst.query("RAT?"))
+        return bool(int(self.inst.query("RAT?")))
 
-    def set_ratio_mode(self, enable: bool) -> bool:
+    def set_ratio_enable(self, enable: bool) -> bool:
         """set if ratio mode is enabled."""
 
         self.inst.write(f"RAT {bool(enable):d}")
@@ -571,7 +626,7 @@ class LI5640(VisaInstrument):
     def get_lamp(self) -> bool:
         """get (physical) lamp is enabled."""
 
-        return bool(self.inst.query("LAMP?"))
+        return bool(int(self.inst.query("LAMP?")))
 
     def set_lamp(self, enable: bool) -> bool:
         """set (physical) lamp is enabled."""
@@ -617,6 +672,34 @@ class LI5640(VisaInstrument):
         self.inst.write("AOFS")
         return True
 
+    def _check_and_set(self, key: str, value) -> bool:
+        if key not in self.PARAM_NAMES:
+            return self.fail_with(f"Unknown parameter: {key}")
+        if not self._locks[key]:
+            return getattr(self, "set_" + key)(value)
+
+        # locked. check current value.
+        v = getattr(self, "get_" + key)()
+        if value != v:
+            return self.fail_with(f"{key} is locked as {v}. cannot set to {value}")
+        return True
+
+    def lock_params(self, param_names: str | list[str] | tuple[str]) -> bool:
+        if isinstance(param_names, str):
+            param_names = [param_names]
+        for n in param_names:
+            if n not in self._locks:
+                return self.fail_with(f"Unknown parameter: {n}")
+            self._locks[n] = True
+
+    def release_params(self, param_names: str | list[str] | tuple[str]) -> bool:
+        if isinstance(param_names, str):
+            param_names = [param_names]
+        for n in param_names:
+            if n not in self._locks:
+                return self.fail_with(f"Unknown parameter: {n}")
+            self._locks[n] = False
+
     # Standard API
 
     def get(self, key: str, args=None):
@@ -637,12 +720,14 @@ class LI5640(VisaInstrument):
             return self.set_auto_time_constant()
         elif key == "auto_phase_offset":
             return self.set_auto_phase_offset()
+        elif key == "lock":
+            return self.lock_params(value)
+        elif key == "release":
+            return self.release_params(value)
+        elif key in self.PARAM_NAMES:
+            return getattr(self, "set_" + key)(value)
         else:
-            setter_name = "set_" + key
-            if hasattr(self, setter_name):
-                getattr(self, setter_name)(value)
-            else:
-                return self.fail_with("Unknown set() key.")
+            return self.fail_with("Unknown set() key.")
 
     def get_param_dict_labels(self, group: str = "") -> list[str]:
         return [""]
@@ -650,9 +735,8 @@ class LI5640(VisaInstrument):
     def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
         d = P.ParamDict(
             phase_offset=P.FloatParam(
-                self.get_phase_offset(), -180.0, 180.0, doc="phase offset in degrees"
+                self.get_phase_offset(), -180.0, 180.0, unit="deg", doc="phase offset in degrees"
             ),
-            harmonics=P.IntParam(self.get_harmonics(), 1, 19999, doc="harmonics degrees"),
             ref_source=P.EnumParam(self.RefSource, self.get_ref_source(), doc="reference source"),
             ref_edge=P.EnumParam(self.RefEdge, self.get_ref_edge(), doc="reference source edge"),
             input_source=P.EnumParam(
@@ -681,10 +765,24 @@ class LI5640(VisaInstrument):
             ),
             sync_filter=P.BoolParam(self.get_sync_filter(), doc="True to enable sync filter"),
             slope=P.IntChoiceParam(self.get_slope(), (6, 12, 18, 24), doc="Slope in dB/oct"),
+            freq=P.FloatParam(
+                self.get_freq(),
+                5e-4,
+                105e3,
+                unit="Hz",
+                SI_prefix=True,
+                doc="internal oscillator frequency",
+            ),
+            amplitude=P.FloatParam(
+                self.get_amplitude(), 0.0, 5.0, unit="V", doc="internal oscillator amplitude"
+            ),
+            harmonics=P.IntParam(
+                self.get_harmonics(), 1, 19999, unit="deg", doc="harmonics degrees"
+            ),
             data1=P.EnumParam(self.Data1, self.get_data1(), doc="Data1 output type"),
             data2=P.EnumParam(self.Data2, self.get_data2(), doc="Data2 output type"),
-            data_normalization=P.BoolParam(
-                self.get_data_normalization(), doc="True to enable data normalization"
+            data_normalization=P.EnumParam(
+                self.DataNormalization, self.get_data_normalization(), doc="Data normalization"
             ),
             data_normalization_voltage=P.FloatParam(
                 self.get_data_normalization_voltage(),
@@ -711,7 +809,9 @@ class LI5640(VisaInstrument):
             data2_expand=P.IntChoiceParam(
                 self.get_data2_expand(), (1, 10, 100), doc="Expand factor for data2"
             ),
-            ratio_mode=P.BoolParam(self.get_ratio_mode(), doc="True to enable ratio output mode"),
+            ratio_enable=P.BoolParam(
+                self.get_ratio_enable(), doc="True to enable ratio output mode"
+            ),
             ratio_k=P.FloatParam(self.get_ratio_k(), doc="k-factor in ratio output mode"),
             lamp=P.BoolParam(self.get_lamp(), doc="True to enable physical lamp"),
         )
@@ -720,9 +820,8 @@ class LI5640(VisaInstrument):
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         params = P.unwrap(params)
         for key, val in params:
-            setter_name = "set_" + key
-            if hasattr(self, setter_name):
-                getattr(self, setter_name)(val)
+            if key in self.PARAM_NAMES:
+                getattr(self, "set_" + key)(val)
             else:
                 return self.fail_with(f"Unknown param: {key}")
         return True
