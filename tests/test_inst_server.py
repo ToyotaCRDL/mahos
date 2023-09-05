@@ -1,9 +1,55 @@
 #!/usr/bin/env python3
 
+import pytest
+import networkx as nx
+
 from mahos.msgs.confocal_msgs import Axis
 from mahos.inst.overlay.confocal_scanner_mock import DUMMY_CAPABILITY
+from mahos.inst.server import OverlayConf
 
 from fixtures import ctx, gconf, server_2clients
+
+
+def test_overlay_conf():
+    # dummy instrument dict
+    insts = {"i1": 1, "i2": 2, "i3": 3}
+    # dummy instrument_overlay dict
+    overlay_conf = {
+        "o3": {"conf": {"x": "$o1", "y": "$o2", "z": "$i3"}},
+        "o2": {"conf": {"x": "$o1"}},
+        "o1": {"conf": {"x": "$i1"}},
+    }
+    dummy_instances = {
+        "o1": 10,
+        "o2": 20,
+        "o3": 30,
+    }
+
+    c = OverlayConf(overlay_conf, insts)
+    assert c.sorted_lays == ["o1", "o2", "o3"]
+    lay = "o1"
+    rconf = c.resolved_conf(lay)
+    assert rconf == {"x": 1}
+    c.add_overlay(lay, dummy_instances[lay])
+    assert c.inst_names(lay) == ["i1"]
+    lay = "o2"
+    rconf = c.resolved_conf(lay)
+    assert rconf == {"x": 10}
+    c.add_overlay(lay, dummy_instances[lay])
+    assert c.inst_names(lay) == ["i1"]
+    lay = "o3"
+    rconf = c.resolved_conf(lay)
+    assert rconf == {"x": 10, "y": 20, "z": 3}
+    c.add_overlay(lay, dummy_instances[lay])
+    assert sorted(c.inst_names(lay)) == sorted(["i1", "i3"])
+
+    overlay_conf = {
+        "o1": {"conf": {"x": "$o2"}},
+        "o2": {"conf": {"x": "$o1"}},
+    }
+    #  cyclic dependency. cannot sort.
+    with pytest.raises(nx.NetworkXUnfeasible):
+        OverlayConf(overlay_conf, insts)
 
 
 def test_inst(server_2clients):
