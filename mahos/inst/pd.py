@@ -101,6 +101,155 @@ class APDCounter(BufferedEdgeCounter):
             return BufferedEdgeCounter.get(self, key, args)
 
 
+class AnalogPD(AnalogIn):
+    """Generic Photo Detector based on DAQ AnalogIn with fixed amplifier gain and unit.
+
+    :param line: DAQ's physical channel for AnalogIn.
+    :type line: str
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+
+    :param unit: (default: V) unit after conversion.
+    :type unit: str
+    :param gain: (default: 1.0) the fixed gain in [unit] / V.
+        Example) when a transimpedance amp with 1000 V / A is used for a photo diode and
+        the unit is 'A', gain should be set 1000.
+    :type gain: float
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        if "line" in conf and "lines" not in conf:
+            conf["lines"] = [conf["line"]]
+        AnalogIn.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.gain = self.conf.get("gain", 1.0)
+        self.unit = self.conf.get("unit", "V")
+
+    def _convert(
+        self, data: np.ndarray | list[np.ndarray] | float
+    ) -> np.ndarray | list[np.ndarray] | float:
+        """Convert raw reading (V) to self.unit."""
+
+        if isinstance(data, list):
+            return [d / self.gain for d in data]
+        return data / self.gain
+
+    # override AnalogIn methods to convert readings.
+
+    def _append_data(self, data: np.ndarray | list[np.ndarray]):
+        AnalogIn._append_data(self, self._convert(data))
+
+    def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
+        return self._convert(AnalogIn.read_on_demand(self, oversample))
+
+    def set(self, key: str, value=None) -> bool:
+        key = key.lower()
+        if key == "gain":
+            if isinstance(value, (float, int, np.floating, np.integer)):
+                self.gain = float(value)
+                return True
+            else:
+                return self.fail_with("gain must be a number (float or int)")
+        elif key == "unit":
+            self.unit = str(value)
+            return True
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def get(self, key: str, args=None):
+        if key in ("data", "all_data"):
+            return AnalogIn.get(self, key, args)
+        elif key == "unit":
+            return self.unit
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+
+class LockinAnalogPD(AnalogIn):
+    """Generic Photo Detector with Lockin Amp read by DAQ AnalogIn.
+
+    :param lines: two DAQ's physical channels (X, Y) for AnalogIn.
+    :type lines: list[str]
+    :param buffer_size: (default: 10000) Software buffer (queue) size.
+    :type buffer_size: int
+    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
+        params["samples"] + samples_margin is passed for the argument.
+        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :type samples_margin: int
+
+    :param unit: (default: V) unit after conversion.
+    :type unit: str
+    :param gain: (default: 1.0) the fixed gain in [unit] / V.
+        Example) when a transimpedance amp with 1000 V / A is used for a photo diode and
+        the unit is 'A', gain should be set 1000.
+    :type gain: float
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        AnalogIn.__init__(self, name, conf=conf, prefix=prefix)
+        if len(self.conf["lines"]) != 2:
+            raise ValueError("len(lines) must be 2.")
+
+        self.gain = self.conf.get("gain", 1.0)
+        self.unit = self.conf.get("unit", "V")
+
+    def _convert(self, data: list[np.ndarray] | np.ndarray) -> np.ndarray | np.cdouble:
+        """Convert raw reading (V, double) to self.unit, and merge as cdouble."""
+
+        if len(data) != 2:
+            raise ValueError(f"data has unexpected length {len(data)}: {data}")
+
+        if isinstance(data, list):
+            # buffered read (append_data) returns list of two double arrays
+            out = np.empty(len(data[0]), dtype=np.cdouble)
+            out.real = data[0] / self.gain
+            out.imag = data[1] / self.gain
+            return out
+        else:
+            # read_on_demand returns double array of length two
+            return np.cdouble(data[0] + 1.0j * data[1])
+
+    # override AnalogIn methods to convert readings.
+
+    def _append_data(self, data: list[np.ndarray]):
+        AnalogIn._append_data(self, self._convert(data))
+
+    def read_on_demand(self, oversample: int = 1) -> np.cdouble:
+        return self._convert(AnalogIn.read_on_demand(self, oversample))
+
+    def set(self, key: str, value=None) -> bool:
+        key = key.lower()
+        if key == "gain":
+            if isinstance(value, (float, int, np.floating, np.integer)):
+                self.gain = float(value)
+                return True
+            else:
+                return self.fail_with("gain must be a number (float or int)")
+        elif key == "unit":
+            self.unit = str(value)
+            return True
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def get(self, key: str, args=None):
+        if key in ("data", "all_data"):
+            return AnalogIn.get(self, key, args)
+        elif key == "unit":
+            return self.unit
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+
 class LUCI10(Instrument):
     """Wrapper for FEMTO Messtechnik LUCI-10 DLL.
 
@@ -342,233 +491,3 @@ class LUCI_OE200(LUCI10):
         return self.configure_gain_coupling(
             params["low_noise"], params["gain_exponent"], params["DC_coupling"]
         )
-
-
-class OE200_AI(AnalogIn):
-    """FEMTO Messtechnik OE-200 Variable Gain Photoreceiver with DAQ AnalogIn.
-
-    This class requires LUCI-10 installation (see LUCI10 class),
-    and a NI-DAQ Analog Input port (see daq.AnalogIn class).
-
-    :param line: DAQ's physical channel for AnalogIn.
-    :type line: str
-    :param buffer_size: (default: 10000) Software buffer (queue) size.
-    :type buffer_size: int
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
-    :type samples_margin: int
-
-    :param dll_dir: The directory path containing LUCI-10 DLL.
-    :type dll_dir: str
-    :param index: (default: 1) Index of LUCI-10 device.
-    :type index: int
-
-    :param DC_coupling: (default: True) Init setting. True (False) for DC (AC) coupling.
-    :type DC_coupling: bool
-    :param low_noise: (default: True) Init setting. True (False) for low_noise (high_speed) mode.
-    :type low_noise: bool
-    :param gain_exponent: (default: 3) Init setting. The gain exponent.
-    :type gain_exponent: int
-
-    """
-
-    def __init__(self, name, conf, prefix=None):
-        if "line" in conf and "lines" not in conf:
-            conf["lines"] = [conf["line"]]
-        AnalogIn.__init__(self, name, conf=conf, prefix=prefix)
-
-        self.luci = LUCI_OE200(name + "_luci", self.conf, prefix=prefix)
-
-    def _convert(self, data: np.ndarray | float) -> np.ndarray | float:
-        """Convert raw reading (V) to power (W)."""
-
-        return data / self.luci.gain
-
-    # override AnalogIn methods to convert readings.
-
-    def _append_data(self, data: np.ndarray):
-        AnalogIn._append_data(self, self._convert(data))
-
-    def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
-        return self._convert(AnalogIn.read_on_demand(self, oversample))
-
-    def set(self, key: str, value=None) -> bool:
-        # no set() key for AnalogIn
-        return self.luci.set(key, value)
-
-    def get(self, key: str, args=None):
-        if key in ("data", "all_data"):
-            return AnalogIn.get(self, key, args)
-        elif key == "unit":
-            return "W"
-        else:
-            return self.luci.get(key, args)
-
-    def get_param_dict_labels(self, group: str) -> list[str]:
-        return ["luci"]
-
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group`."""
-
-        if label == "luci":
-            return self.luci.get_param_dict(label, group)
-        else:
-            return AnalogIn.get_param_dict(self, label, group)
-
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
-        if label == "luci":
-            return self.luci.configure(params, label, group)
-        else:
-            return AnalogIn.configure(self, params, label, group)
-
-
-class AnalogPD(AnalogIn):
-    """Generic Photo Detector based on DAQ AnalogIn with fixed amplifier gain and unit.
-
-    :param line: DAQ's physical channel for AnalogIn.
-    :type line: str
-    :param buffer_size: (default: 10000) Software buffer (queue) size.
-    :type buffer_size: int
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
-    :type samples_margin: int
-
-    :param unit: (default: V) unit after conversion.
-    :type unit: str
-    :param gain: (default: 1.0) the fixed gain in [unit] / V.
-        Example) when a transimpedance amp with 1000 V / A is used for a photo diode and
-        the unit is 'A', gain should be set 1000.
-    :type gain: float
-
-    """
-
-    def __init__(self, name, conf, prefix=None):
-        if "line" in conf and "lines" not in conf:
-            conf["lines"] = [conf["line"]]
-        AnalogIn.__init__(self, name, conf=conf, prefix=prefix)
-
-        self.gain = self.conf.get("gain", 1.0)
-        self.unit = self.conf.get("unit", "V")
-
-    def _convert(
-        self, data: np.ndarray | list[np.ndarray] | float
-    ) -> np.ndarray | list[np.ndarray] | float:
-        """Convert raw reading (V) to self.unit."""
-
-        if isinstance(data, list):
-            return [d / self.gain for d in data]
-        return data / self.gain
-
-    # override AnalogIn methods to convert readings.
-
-    def _append_data(self, data: np.ndarray | list[np.ndarray]):
-        AnalogIn._append_data(self, self._convert(data))
-
-    def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
-        return self._convert(AnalogIn.read_on_demand(self, oversample))
-
-    def set(self, key: str, value=None) -> bool:
-        key = key.lower()
-        if key == "gain":
-            if isinstance(value, (float, int, np.floating, np.integer)):
-                self.gain = float(value)
-                return True
-            else:
-                return self.fail_with("gain must be a number (float or int)")
-        elif key == "unit":
-            self.unit = str(value)
-            return True
-        else:
-            self.logger.error(f"unknown get() key: {key}")
-            return None
-
-    def get(self, key: str, args=None):
-        if key in ("data", "all_data"):
-            return AnalogIn.get(self, key, args)
-        elif key == "unit":
-            return self.unit
-        else:
-            self.logger.error(f"unknown get() key: {key}")
-            return None
-
-
-class LockinAnalogPD(AnalogIn):
-    """Generic Photo Detector with Lockin Amp read by DAQ AnalogIn.
-
-    :param lines: two DAQ's physical channels (X, Y) for AnalogIn.
-    :type lines: list[str]
-    :param buffer_size: (default: 10000) Software buffer (queue) size.
-    :type buffer_size: int
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
-    :type samples_margin: int
-
-    :param unit: (default: V) unit after conversion.
-    :type unit: str
-    :param gain: (default: 1.0) the fixed gain in [unit] / V.
-        Example) when a transimpedance amp with 1000 V / A is used for a photo diode and
-        the unit is 'A', gain should be set 1000.
-    :type gain: float
-
-    """
-
-    def __init__(self, name, conf, prefix=None):
-        AnalogIn.__init__(self, name, conf=conf, prefix=prefix)
-        if len(self.conf["lines"]) != 2:
-            raise ValueError("len(lines) must be 2.")
-
-        self.gain = self.conf.get("gain", 1.0)
-        self.unit = self.conf.get("unit", "V")
-
-    def _convert(self, data: list[np.ndarray] | np.ndarray) -> np.ndarray | np.cdouble:
-        """Convert raw reading (V, double) to self.unit, and merge as cdouble."""
-
-        if len(data) != 2:
-            raise ValueError(f"data has unexpected length {len(data)}: {data}")
-
-        if isinstance(data, list):
-            # buffered read (append_data) returns list of two double arrays
-            out = np.empty(len(data[0]), dtype=np.cdouble)
-            out.real = data[0] / self.gain
-            out.imag = data[1] / self.gain
-            return out
-        else:
-            # read_on_demand returns double array of length two
-            return np.cdouble(data[0] + 1.0j * data[1])
-
-    # override AnalogIn methods to convert readings.
-
-    def _append_data(self, data: list[np.ndarray]):
-        AnalogIn._append_data(self, self._convert(data))
-
-    def read_on_demand(self, oversample: int = 1) -> np.cdouble:
-        return self._convert(AnalogIn.read_on_demand(self, oversample))
-
-    def set(self, key: str, value=None) -> bool:
-        key = key.lower()
-        if key == "gain":
-            if isinstance(value, (float, int, np.floating, np.integer)):
-                self.gain = float(value)
-                return True
-            else:
-                return self.fail_with("gain must be a number (float or int)")
-        elif key == "unit":
-            self.unit = str(value)
-            return True
-        else:
-            self.logger.error(f"unknown get() key: {key}")
-            return None
-
-    def get(self, key: str, args=None):
-        if key in ("data", "all_data"):
-            return AnalogIn.get(self, key, args)
-        elif key == "unit":
-            return self.unit
-        else:
-            self.logger.error(f"unknown get() key: {key}")
-            return None

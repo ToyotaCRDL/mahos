@@ -10,6 +10,9 @@ Added
 
 - meas: added new measurement Qdyne.
 - inst/tdc: added raw event recording features for above.
+- meas,gui: added new generic node Tweaker.
+- inst: new module lockin and LI5640 class in it.
+- inst/overlay: new module amplified_pd.
 
 Changed
 ^^^^^^^
@@ -20,9 +23,21 @@ Changed
   - inst/piezo/E727_3: limits_um -> limit_um, range -> range_um
   - inst/camera/ThorlabsCamera: dll_path -> dll_dir
   - inst/dtg/DTG: root_local -> local_dir, root_remote -> remote_dir
-  - inst/pd/LUCI10,OE200: dll_path -> dll_dir
+  - inst/pd/LUCI10,LUCI_OE200: dll_path -> dll_dir
   - inst/tdc/MCS: home -> mcs_dir, home_raw_events -> raw_events_dir
   - meas/qdyne_worker -> home_raw_events -> raw_events_dir
+
+- inst/InstrumentServer, Instrument, InstrumentOverlay
+
+  - overlay can reference other overlays.
+  - new standard API functions get_param_dict() and get_param_dict_labels().
+    Instrument can also use ParamDicts with this.
+  - signature of configure(): new kwargs label and group to make it usable with get_param_dict().
+
+Removed
+^^^^^^^
+
+- gui/oe200: replaced with much more generic tweaker gui.
 
 [0.2.2] - 2023-07-26
 --------------------
