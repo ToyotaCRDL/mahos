@@ -12,16 +12,19 @@ import sys
 import os
 
 import numpy as np
-import clr
 
 from .instrument import Instrument
 
 
 # paths and imports for LightField
-from System import String
-from System import Int64
-from System import Double
-from System.Collections.Generic import List
+try:
+    import clr
+    from System import String
+    from System import Int64
+    from System import Double
+    from System.Collections.Generic import List
+except ImportError:
+    print("mahos.inst.spectrometer: failed to import pythonnet-related modules")
 
 if "LIGHTFIELD_ROOT" in os.environ:
     sys.path.append(os.environ["LIGHTFIELD_ROOT"])
