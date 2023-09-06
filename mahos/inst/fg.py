@@ -7,9 +7,8 @@ Function Generator module.
 
 """
 
-import typing as T
-
 from .visa_instrument import VisaInstrument
+from ..msgs import param_msgs as P
 
 
 class DG2000(VisaInstrument):
@@ -30,11 +29,15 @@ class DG2000(VisaInstrument):
 
     TRIG_SOURCE = ("INT", "EXT", "MAN")
     IDLE_LEVEL = ("FPT", "TOP", "CENTER", "BOTTOM")
+    OUTPUT_HighZ = 11_000
 
     def __init__(self, name, conf, prefix=None):
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
-        self.update_amplitude_bounds()
-        self.update_freq_bounds()
+        self._ampl_bounds = {1: None, 2: None}
+        self._freq_bounds = {1: None, 2: None}
+        for ch in (1, 2):
+            self.update_amplitude_bounds(ch)
+            self.update_freq_bounds(ch)
 
         self.ext_ref_clock = self.conf.get("ext_ref_clock", False)
         self.set_reference_clock(bool(self.ext_ref_clock))
@@ -48,18 +51,18 @@ class DG2000(VisaInstrument):
         }
         self.logger.debug(f"gate configuration: {self.gate_conf}")
 
-    def update_amplitude_bounds(self):
-        mn = float(self.inst.query(":VOLT? MIN"))
-        mx = float(self.inst.query(":VOLT? MAX"))
-        self._ampl_bounds = (mn, mx)
+    def update_amplitude_bounds(self, ch: int):
+        mn = float(self.inst.query(f":SOUR{ch}:VOLT? MIN"))
+        mx = float(self.inst.query(f":SOUR{ch}:VOLT? MAX"))
+        self._ampl_bounds[ch] = (mn, mx)
 
-    def update_freq_bounds(self):
-        mn = float(self.inst.query(":FREQ? MIN"))
-        mx = float(self.inst.query(":FREQ? MAX"))
-        self._freq_bounds = (mn, mx)
+    def update_freq_bounds(self, ch: int):
+        mn = float(self.inst.query(f":SOUR{ch}:FREQ? MIN"))
+        mx = float(self.inst.query(f":SOUR{ch}:FREQ? MAX"))
+        self._freq_bounds[ch] = (mn, mx)
 
-    def get_bounds(self):
-        return {"ampl": self._ampl_bounds, "freq": self._freq_bounds}
+    def get_bounds(self, ch: int = 1):
+        return {"ampl": self._ampl_bounds[ch], "freq": self._freq_bounds[ch]}
 
     def _check_channel(self, ch: int) -> bool:
         if ch not in (1, 2):
@@ -77,10 +80,14 @@ class DG2000(VisaInstrument):
         self.logger.info(f"Output{ch} {on_off}")
         return True
 
-    def set_output_impedance(self, imp_ohm: T.Union[int, str], ch: int = 1) -> bool:
+    def get_output(self, ch: int = 1) -> bool:
+        return self.query(f":OUTP{ch}:STAT?") == "ON"
+
+    def set_output_impedance(self, imp_ohm: int | str, ch: int = 1) -> bool:
         """Set output impedance.
 
         :param imp_ohm: Impedance in Ohm. May be str that's one of (INF|MIN|MAX).
+            Value greater than 10e3 is considered HighZ (INF).
         :param ch: Output channel (1 or 2).
 
         """
@@ -90,21 +97,31 @@ class DG2000(VisaInstrument):
         if isinstance(imp_ohm, str):
             imp_ohm = imp_ohm.upper()[:3]
             if imp_ohm not in ("INF", "MIN", "MAX"):
-                self.logger.error(f"Invalid impedance string {imp_ohm}")
-                return False
+                return self.fail_with(f"Invalid impedance string {imp_ohm}")
         elif isinstance(imp_ohm, int):
-            if not (1 <= imp_ohm <= 10e3):
-                self.logger.error(f"Impedance {imp_ohm} is out of bounds: [1, 10k]")
-                return False
+            if imp_ohm < 1:
+                return self.fail_with(f"Impedance {imp_ohm} must be greaer than 1")
+            if imp_ohm > 10e3:
+                imp_ohm = "INF"
 
         self.inst.write(f":OUTP{ch}:IMP {imp_ohm}")
         self.logger.info(f"Output{ch} impedance: {imp_ohm}")
 
-        # TODO: update amplitude bounds?
+        self.update_amplitude_bounds(ch)
 
         return True
 
-    def _fmt_freq(self, freq: T.Union[str, float, int]) -> str:
+    def get_output_impedance(self, ch: int = 1) -> int:
+        """Get output impedance. OUTPUT_HighZ means highest impedance (INF)."""
+
+        res = self.inst.write(f":OUTP{ch}:IMP?")
+        # result in float repr, but should be treated as int
+        if res >= 9e37:
+            return self.OUTPUT_HighZ
+        else:
+            return int(round(res))
+
+    def _fmt_freq(self, freq: str | float | int) -> str:
         if isinstance(freq, str):
             return freq
         elif isinstance(freq, (float, int)):
@@ -112,7 +129,7 @@ class DG2000(VisaInstrument):
         else:
             raise TypeError("Invalid frequency value type.")
 
-    def _fmt_period(self, t: T.Union[str, float, int]) -> str:
+    def _fmt_period(self, t: str | float | int) -> str:
         if isinstance(t, str):
             return t
         elif isinstance(t, (float, int)):
@@ -172,6 +189,9 @@ class DG2000(VisaInstrument):
         self.inst.write(f":SOUR{ch}:FUNC {func}")
         return True
 
+    def get_function(self, ch: int = 1) -> str:
+        return self.inst.query(f":SOUR{ch}:FUNC?")
+
     def set_square_duty(self, duty_percent: float, ch: int = 1) -> bool:
         self.inst.write(f":SOUR{ch}FUNC:SQU:DCYC {duty_percent:.8E}")
         return True
@@ -179,6 +199,9 @@ class DG2000(VisaInstrument):
     def set_freq(self, freq: float, ch: int = 1) -> bool:
         self.inst.write(":SOUR{}:FREQ {}".format(ch, self._fmt_freq(freq)))
         return True
+
+    def get_freq(self, ch: int = 1) -> float:
+        return float(self.inst.query(f":SOUR{ch}:FREQ?"))
 
     def set_period(self, t: float, ch: int = 1) -> bool:
         self.inst.write(":SOUR{}:FUNC:PULS:PER {}".format(ch, self._fmt_period(t)))
@@ -188,9 +211,36 @@ class DG2000(VisaInstrument):
         self.inst.write(f":SOUR{ch}:PHAS {phase_deg:.3f}")
         return True
 
+    def get_phase(self, ch: int = 1) -> float:
+        return float(self.inst.query(f":SOUR{ch}:PHAS?"))
+
     def set_amplitude(self, ampl_vpp: float, ch: int = 1) -> bool:
         self.inst.write(f":SOUR{ch}:VOLT {ampl_vpp:.5f}")
         return True
+
+    def get_amplitude(self, ch: int = 1) -> float:
+        return float(self.inst.query(f":SOUR{ch}:VOLT?"))
+
+    def set_offset(self, offset_volt: float, ch: int = 1) -> bool:
+        self.inst.write(f":SOUR{ch}:VOLT:OFFS {offset_volt:.5f}")
+        return True
+
+    def get_offset(self, ch: int = 1) -> float:
+        return float(self.inst.query(f":SOUR{ch}:VOLT:OFFS?"))
+
+    def set_high(self, volt: float, ch: int = 1) -> bool:
+        self.inst.write(f":SOUR{ch}:VOLT:HIGH {volt:.5f}")
+        return True
+
+    def get_high(self, ch: int = 1) -> float:
+        return float(self.inst.query(f":SOUR{ch}:VOLT:HIGH?"))
+
+    def set_low(self, volt: float, ch: int = 1) -> bool:
+        self.inst.write(f":SOUR{ch}:VOLT:LOW {volt:.5f}")
+        return True
+
+    def get_low(self, ch: int = 1) -> float:
+        return float(self.inst.query(f":SOUR{ch}:VOLT:LOW?"))
 
     def set_reference_clock(self, external: bool) -> bool:
         source = "EXT" if external else "INT"
@@ -198,18 +248,34 @@ class DG2000(VisaInstrument):
         self.logger.info(f"Reference clock: {source}")
         return True
 
+    def align_phase(self) -> bool:
+        self.inst.write(":PHAS:SYNC")
+        return True
+
     def configure_CW(
-        self, wave: str, freq: float, ampl_vpp: float, ch: int = 1, reset: bool = True
+        self,
+        wave: str | None,
+        freq: float | None,
+        ampl_vpp: float | None,
+        offset_volt: float | None = 0.0,
+        ch: int = 1,
+        reset: bool = True,
     ) -> bool:
         """Configure Continuous Wave output."""
 
-        success = (
-            (self.rst_cls() if reset else True)
-            and self.set_reference_clock(self.ext_ref_clock)
-            and self.set_function(wave, ch=ch)
-            and self.set_freq(freq, ch=ch)
-            and self.set_amplitude(ampl_vpp, ch=ch)
-        )
+        success = True
+        if reset:
+            success &= self.rst_cls()
+            success &= self.set_reference_clock(self.ext_ref_clock)
+
+        if wave is not None:
+            success &= self.set_function(wave, ch=ch)
+        if freq is not None:
+            success &= self.set_freq(freq, ch=ch)
+        if ampl_vpp is not None:
+            success &= self.set_amplitude(ampl_vpp, ch=ch)
+        if offset_volt is not None:
+            success &= self.set_offset(offset_volt, ch=ch)
 
         self.logger.info("Configured for CW.")
         return success
@@ -220,9 +286,10 @@ class DG2000(VisaInstrument):
         freq: float,
         ampl_vpp: float,
         phase_deg: float,
+        offset_volt: float = 0.0,
         source: str = "",
-        slope: T.Optional[bool] = None,
-        polarity: T.Optional[bool] = None,
+        slope: bool | None = None,
+        polarity: bool | None = None,
         idle_level: str = "",
         ch: int = 1,
         reset: bool = True,
@@ -235,6 +302,7 @@ class DG2000(VisaInstrument):
             and self.set_function(wave, ch=ch)
             and self.set_freq(freq, ch=ch)
             and self.set_amplitude(ampl_vpp, ch=ch)
+            and self.set_offset(offset_volt, ch=ch)
             and self.set_phase(phase_deg, ch=ch)
             and self.set_burst(True, ch=ch)
             and self.set_burst_mode("GATED", ch=ch)
@@ -254,13 +322,27 @@ class DG2000(VisaInstrument):
         )
         return success
 
+    def configure_output(self, params: dict):
+        success = True
+        if "ch1_imp" in params:
+            success &= self.set_output_impedance(params["ch1_imp"], 1)
+        if "ch2_imp" in params:
+            success &= self.set_output_impedance(params["ch2_imp"], 2)
+        if "ch1" in params:
+            success &= self.set_output(params["ch1"], 1)
+        if "ch2" in params:
+            success &= self.set_output(params["ch2"], 2)
+        if all([params.get(k) for k in ["ch1", "ch2", "align_phase"]]):
+            success &= self.align_phase()
+        return success
+
     # Standard API
 
     def get(self, key: str, args=None):
         if key == "opc":
             return self.query_opc(delay=args)
         elif key == "bounds":
-            return self.get_bounds()
+            return self.get_bounds(args if args is not None else 1)
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
@@ -281,12 +363,60 @@ class DG2000(VisaInstrument):
         else:
             return self.fail_with("Unknown set() key.")
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
-        if not self.check_required_params(params, ("mode",)):
-            return False
+    def _cw_param_dict(self, ch: int):
+        return P.ParamDict(
+            wave=P.StrChoiceParam(
+                self.get_function(ch),
+                ("SIN", "SQU"),
+                doc="wave form",
+            ),
+            freq=P.FloatParam(
+                self.get_freq(ch),
+                self._freq_bounds[0],
+                self._freq_bounds[1],
+                unit="Hz",
+                SI_prefix=True,
+            ),
+            ampl=P.FloatParam(
+                self.get_amplitude(ch),
+                self._ampl_bounds[ch][0],
+                self._ampl_bounds[ch][1],
+                unit="Vpp",
+            ),
+            offset=P.FloatParam(
+                self.get_offset(ch),
+                self._ampl_bounds[ch][0],
+                self._ampl_bounds[ch][1],
+                unit="Vpp",
+            ),
+        )
 
-        mode = params["mode"].lower()
-        if mode == "gate":
+    def get_param_dict(
+        self, label: str = "", group: str = ""
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label` in `group`."""
+
+        if label == "cw_ch1":
+            return self._cw_param_dict(1)
+        elif label == "cw_ch2":
+            return self._cw_param_dict(2)
+        elif label == "output":
+            return P.ParamDict(
+                ch1_imp=P.IntParam(self.get_output_impedance(1), 1, self.OUTPUT_HighZ, unit="Ω"),
+                ch2_imp=P.IntParam(self.get_output_impedance(2), 1, self.OUTPUT_HighZ, unit="Ω"),
+                ch1=P.BoolParam(self.get_output(1)),
+                ch2=P.BoolParam(self.get_output(2)),
+                align_phase=P.BoolParam(True),
+            )
+
+    def get_param_dict_labels(self, group: str = "") -> list[str]:
+        # "gate" and "cw" doesn't provide ParamDict
+        return ["cw_ch1", "cw_ch2", "output"]
+
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+        params = P.unwrap(params)
+
+        if label == "gate":
             if not self.check_required_params(params, ("wave", "freq", "ampl", "phase")):
                 return False
             return self.configure_gate(
@@ -294,22 +424,42 @@ class DG2000(VisaInstrument):
                 params["freq"],
                 params["ampl"],
                 params["phase"],
+                offset_volt=params.get("offset", 0.0),
                 source=params.get("source", ""),
                 slope=params.get("polarity"),  # this is intentional. slope = polarity.
                 polarity=params.get("polarity"),
                 idle_level=params.get("idle_level", ""),
                 ch=params.get("ch", 1),
-                reset=params.get("reset", True),
+                reset=params.get("reset", False),
             )
-        elif mode == "cw":
-            if not self.check_required_params(params, ("wave", "freq", "ampl")):
-                return False
+        elif label == "cw":
             return self.configure_CW(
-                params["wave"],
-                params["freq"],
-                params["ampl"],
+                params.get("wave"),
+                params.get("freq"),
+                params.get("ampl"),
+                offset_volt=params.get("offset", 0.0),
                 ch=params.get("ch", 1),
-                reset=params.get("reset", True),
+                reset=params.get("reset", False),
             )
+        elif label == "cw_ch1":
+            return self.configure_CW(
+                params.get("wave"),
+                params.get("freq"),
+                params.get("ampl"),
+                offset_volt=params.get("offset", 0.0),
+                ch=1,
+                reset=False,
+            )
+        elif label == "cw_ch2":
+            return self.configure_CW(
+                params.get("wave"),
+                params.get("freq"),
+                params.get("ampl"),
+                offset_volt=params.get("offset", 0.0),
+                ch=2,
+                reset=False,
+            )
+        elif label == "output":
+            return self.configure_output(params)
         else:
-            return self.fail_with("Unknown conf['mode']")
+            return self.fail_with(f"Unknown label: {label}")

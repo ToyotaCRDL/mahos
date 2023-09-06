@@ -292,9 +292,9 @@ class Pulser(Worker):
         c = params["fg"]
         # TODO: let some kwargs loaded from Pulser conf.
         if c["mode"] == "cw":
-            self.fg.configure_cw(c["wave"], c["freq"], c["ampl"])
+            self.fg.configure_cw(c["wave"], c["freq"], c["ampl"], reset=True)
         elif c["mode"] == "gate":
-            self.fg.configure_gate(c["wave"], c["freq"], c["ampl"], c["phase"])
+            self.fg.configure_gate(c["wave"], c["freq"], c["ampl"], c["phase"], reset=True)
         else:
             self.logger.error("Unknown mode {} for fg.".format(c["mode"]))
             return False

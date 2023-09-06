@@ -20,7 +20,7 @@ class FGInterface(InstrumentInterface):
 
         return self.get("opc", delay)
 
-    def get_bounds(self) -> dict:
+    def get_bounds(self, ch: int = 1) -> dict:
         """Get bounds.
 
         :returns: dict[str, tuple[float, float]] with following two keys.
@@ -29,7 +29,7 @@ class FGInterface(InstrumentInterface):
 
         """
 
-        return self.get("bounds")
+        return self.get("bounds", args=ch)
 
     def set_output(self, on: bool, ch: int = 1) -> bool:
         """Set output switch."""
@@ -37,7 +37,7 @@ class FGInterface(InstrumentInterface):
         return self.set("output", {"on": on, "ch": ch})
 
     def configure_cw(
-        self, wave: str, freq: float, ampl_vpp: float, ch: int = 1, reset: bool = True
+        self, wave: str, freq: float, ampl_vpp: float, ch: int = 1, reset: bool = False
     ) -> bool:
         """Configure Continuous Wave output.
 
@@ -50,7 +50,7 @@ class FGInterface(InstrumentInterface):
         """
 
         return self.configure(
-            {"mode": "cw", "wave": wave, "freq": freq, "ampl": ampl_vpp, "ch": ch, "reset": reset}
+            {"wave": wave, "freq": freq, "ampl": ampl_vpp, "ch": ch, "reset": reset}, label="cw"
         )
 
     def configure_gate(
@@ -63,7 +63,7 @@ class FGInterface(InstrumentInterface):
         polarity: bool | None = None,
         idle_level: str = "",
         ch: int = 1,
-        reset: bool = True,
+        reset: bool = False,
     ) -> bool:
         """Configure Gated Burst output.
 
@@ -80,7 +80,6 @@ class FGInterface(InstrumentInterface):
         """
 
         params = {
-            "mode": "gate",
             "wave": wave,
             "freq": freq,
             "ampl": ampl_vpp,
@@ -92,4 +91,4 @@ class FGInterface(InstrumentInterface):
             "reset": reset,
         }
 
-        return self.configure(params)
+        return self.configure(params, label="gate")
