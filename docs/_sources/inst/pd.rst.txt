@@ -13,7 +13,6 @@ Interfaces
 
    PDInterface
    APDCounterInterface
-   OE200Interface
 
 Instruments
 -----------
@@ -27,5 +26,6 @@ Instruments
 
    APDCounter
    AnalogPD
+   LockinAnalogPD
    LUCI10
-   OE200
+   LUCI_OE200

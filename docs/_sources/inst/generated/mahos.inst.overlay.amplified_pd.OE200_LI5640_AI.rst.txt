@@ -1,0 +1,36 @@
+﻿mahos.inst.overlay.amplified\_pd.OE200\_LI5640\_AI
+==================================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.overlay.amplified_pd
+
+.. autoclass:: OE200_LI5640_AI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OE200_LI5640_AI.__init__
+      ~OE200_LI5640_AI.configure
+      ~OE200_LI5640_AI.get
+      ~OE200_LI5640_AI.get_max_rate
+      ~OE200_LI5640_AI.get_param_dict
+      ~OE200_LI5640_AI.get_param_dict_labels
+      ~OE200_LI5640_AI.init_lockin
+      ~OE200_LI5640_AI.pop_block
+      ~OE200_LI5640_AI.set
+      ~OE200_LI5640_AI.start
+      ~OE200_LI5640_AI.stop
+      ~OE200_LI5640_AI.update_gain
+   
+   
+
+   
+   
+   

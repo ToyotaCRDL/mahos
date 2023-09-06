@@ -17,7 +17,9 @@
    .. autosummary::
    
       ~AnalogPD.__init__
+      ~AnalogPD.get
       ~AnalogPD.read_on_demand
+      ~AnalogPD.set
    
    
 

@@ -1,0 +1,28 @@
+﻿mahos.inst.pd.LockinAnalogPD
+============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.pd
+
+.. autoclass:: LockinAnalogPD
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LockinAnalogPD.__init__
+      ~LockinAnalogPD.get
+      ~LockinAnalogPD.read_on_demand
+      ~LockinAnalogPD.set
+   
+   
+
+   
+   
+   

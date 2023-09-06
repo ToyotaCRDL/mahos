@@ -24,6 +24,34 @@ The role is similar to :doc:`arch_meas`; however, overlay works on the same proc
 Thus, core procedures should be implemented as overlay when it needs strictly synchronous behaviour or the best performance (in terms of latency).
 It is also useful to define application-specific parametrization or fundamental modification to single instrument.
 
+Interfacing
+-----------
+
+The :ref:`instrument-api` is a primary interface between Instrument and the user code.
+However, one cannot understand the usage of :meth:`set <mahos.inst.instrument.Instrument.set>`,
+:meth:`get <mahos.inst.instrument.Instrument.get>`, and :meth:`configure <mahos.inst.instrument.Instrument.configure>` from their signatures.
+Though this may be overcomed by the documentations, following two methods are provided for better interfacing.
+
+InstrumentInterface
+^^^^^^^^^^^^^^^^^^^
+
+A "functional" interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
+:class:`InstrumentInterface <mahos.inst.interface.InstrumentInterface>`.
+This is useful for interfacing with the codes (measurement logics in :doc:`arch_meas`), and configuration with small number of parameters.
+
+.. _inst-params-interface:
+
+ParamDict-based interface
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Another interface is "object-oriented" one.
+Instrument can report available parameters by returning a :class:`ParamDict <mahos.msgs.param_msgs.ParamDict>`
+from :meth:`get_param_dict <mahos.inst.instrument.Instrument.get_param_dict>`.
+The users can modify the parameters in it, and send back with :meth:`configure <mahos.inst.instrument.Instrument.configure>`.
+This is useful if the number of parameters is large (so that providing as a method signature is cumbersome).
+Another benefit is that instrument can tell the bounds (minimum or maximum) of numeric parameters.
+:ref:`meas-tweaker` node assumes this interface.
+
 Lock mechanism
 --------------
 
@@ -50,4 +78,3 @@ The lock states are changed by request as follows.
 * (d): client2 sends Lock(inst1), which fails because inst1 has been locked by client1 since (b).
 * (e): client2 sends release request for overlay1 (Release(overlay1)); inst1 and inst2 are released.
 * (f): client2 sends Lock(inst1) again, which succeeds this time.
-

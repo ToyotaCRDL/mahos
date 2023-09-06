@@ -12,6 +12,8 @@ The mahos.gui package implements Qt-based GUI mainly for :ref:`mahos.meas`.
 
    gui_node.GUINode
    client.QBasicMeasClient
+   tweaker.TweakerWidget
+   tweaker.TweakerGUI
    confocal.ConfocalWidget
    confocal.traceView
    confocal.ConfocalMainWindow

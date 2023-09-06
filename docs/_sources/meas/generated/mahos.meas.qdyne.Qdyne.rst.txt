@@ -22,7 +22,7 @@
       ~Qdyne.discard
       ~Qdyne.export_data
       ~Qdyne.get_param_dict
-      ~Qdyne.get_param_dict_names
+      ~Qdyne.get_param_dict_labels
       ~Qdyne.handle_req
       ~Qdyne.load_data
       ~Qdyne.main

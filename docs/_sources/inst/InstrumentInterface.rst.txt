@@ -16,9 +16,11 @@ Below is the list of standard instrument API calls.
    .. automethod:: InstrumentInterface.pause
    .. automethod:: InstrumentInterface.resume
    .. automethod:: InstrumentInterface.reset
-   .. automethod:: InstrumentInterface.configure
    .. automethod:: InstrumentInterface.set
    .. automethod:: InstrumentInterface.get
+   .. automethod:: InstrumentInterface.configure
+   .. automethod:: InstrumentInterface.get_param_dict
+   .. automethod:: InstrumentInterface.get_param_dict_labels
 
 .. rubric:: Other Methods
 

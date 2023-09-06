@@ -18,6 +18,10 @@ Glossary
    params
       Parameters (dict) for something. Difference between conf: params is considered dynamic (will change run time).
 
+   gparams
+   global params
+      A dict with global parameters which is handled by :class:`GlobalParams <node.global_params.GlobalParams>`.
+
    Req-Rep
       Request-Reply communication pattern. The client sends a request and the server sends back a reply.
 

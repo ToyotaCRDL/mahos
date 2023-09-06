@@ -451,6 +451,29 @@ The role is similar to <a class="reference internal" href="arch_meas.html"><span
 Thus, core procedures should be implemented as overlay when it needs strictly synchronous behaviour or the best performance (in terms of latency).
 It is also useful to define application-specific parametrization or fundamental modification to single instrument.</p>
 </section>
+<section id="interfacing">
+<h2>Interfacing<a class="headerlink" href="#interfacing" title="Permalink to this heading">#</a></h2>
+<p>The <a class="reference internal" href="inst/Instrument.html#instrument-api"><span class="std std-ref">Standard Instrument APIs</span></a> is a primary interface between Instrument and the user code.
+However, one cannot understand the usage of <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.set" title="mahos.inst.instrument.Instrument.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set</span></code></a>,
+<a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.get" title="mahos.inst.instrument.Instrument.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get</span></code></a>, and <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.configure" title="mahos.inst.instrument.Instrument.configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure</span></code></a> from their signatures.
+Though this may be overcomed by the documentations, following two methods are provided for better interfacing.</p>
+<section id="instrumentinterface">
+<h3>InstrumentInterface<a class="headerlink" href="#instrumentinterface" title="Permalink to this heading">#</a></h3>
+<p>A “functional” interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
+<a class="reference internal" href="inst/InstrumentInterface.html#mahos.inst.interface.InstrumentInterface" title="mahos.inst.interface.InstrumentInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentInterface</span></code></a>.
+This is useful for interfacing with the codes (measurement logics in <a class="reference internal" href="arch_meas.html"><span class="doc">meas layer</span></a>), and configuration with small number of parameters.</p>
+</section>
+<section id="paramdict-based-interface">
+<span id="inst-params-interface"></span><h3>ParamDict-based interface<a class="headerlink" href="#paramdict-based-interface" title="Permalink to this heading">#</a></h3>
+<p>Another interface is “object-oriented” one.
+Instrument can report available parameters by returning a <a class="reference internal" href="msgs/param_msgs.html#mahos.msgs.param_msgs.ParamDict" title="mahos.msgs.param_msgs.ParamDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParamDict</span></code></a>
+from <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.get_param_dict" title="mahos.inst.instrument.Instrument.get_param_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_param_dict</span></code></a>.
+The users can modify the parameters in it, and send back with <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.configure" title="mahos.inst.instrument.Instrument.configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure</span></code></a>.
+This is useful if the number of parameters is large (so that providing as a method signature is cumbersome).
+Another benefit is that instrument can tell the bounds (minimum or maximum) of numeric parameters.
+<a class="reference internal" href="arch_meas.html#meas-tweaker"><span class="std std-ref">Tweaker</span></a> node assumes this interface.</p>
+</section>
+</section>
 <section id="lock-mechanism">
 <h2>Lock mechanism<a class="headerlink" href="#lock-mechanism" title="Permalink to this heading">#</a></h2>
 <p>It is dangerous if one client can operate an instrument while another client is using it.
@@ -529,6 +552,11 @@ The lock states are changed by request as follows.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentserver">InstrumentServer</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrument">Instrument</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentoverlay">InstrumentOverlay</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interfacing">Interfacing</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentinterface">InstrumentInterface</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paramdict-based-interface">ParamDict-based interface</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lock-mechanism">Lock mechanism</a></li>
 </ul>
   </nav></div>

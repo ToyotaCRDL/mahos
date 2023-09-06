@@ -21,7 +21,7 @@
       ~HBT.close_resources
       ~HBT.export_data
       ~HBT.get_param_dict
-      ~HBT.get_param_dict_names
+      ~HBT.get_param_dict_labels
       ~HBT.handle_req
       ~HBT.load_data
       ~HBT.main

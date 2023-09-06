@@ -20,6 +20,8 @@
       ~InstrumentClient.call
       ~InstrumentClient.configure
       ~InstrumentClient.get
+      ~InstrumentClient.get_param_dict
+      ~InstrumentClient.get_param_dict_labels
       ~InstrumentClient.help
       ~InstrumentClient.is_locked
       ~InstrumentClient.lock

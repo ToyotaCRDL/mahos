@@ -1,0 +1,112 @@
+﻿mahos.inst.lockin.LI5640
+========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.lockin
+
+.. autoclass:: LI5640
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LI5640.__init__
+      ~LI5640.configure
+      ~LI5640.get
+      ~LI5640.get_LPF_through
+      ~LI5640.get_Xoffset
+      ~LI5640.get_Xoffset_enable
+      ~LI5640.get_Yoffset
+      ~LI5640.get_Yoffset_enable
+      ~LI5640.get_amplitude
+      ~LI5640.get_coupling
+      ~LI5640.get_current_sensitivity
+      ~LI5640.get_data1
+      ~LI5640.get_data1_expand
+      ~LI5640.get_data2
+      ~LI5640.get_data2_expand
+      ~LI5640.get_data_normalization
+      ~LI5640.get_data_normalization_current
+      ~LI5640.get_data_normalization_voltage
+      ~LI5640.get_dynamic_reserve
+      ~LI5640.get_freq
+      ~LI5640.get_ground
+      ~LI5640.get_harmonics
+      ~LI5640.get_input_source
+      ~LI5640.get_lamp
+      ~LI5640.get_line_filter
+      ~LI5640.get_line_freq
+      ~LI5640.get_noise_smooth
+      ~LI5640.get_param_dict
+      ~LI5640.get_param_dict_labels
+      ~LI5640.get_phase_offset
+      ~LI5640.get_ratio_enable
+      ~LI5640.get_ratio_k
+      ~LI5640.get_ref_edge
+      ~LI5640.get_ref_source
+      ~LI5640.get_slope
+      ~LI5640.get_sync_filter
+      ~LI5640.get_time_constant
+      ~LI5640.get_volt_sensitivity
+      ~LI5640.get_volt_sensitivity_float
+      ~LI5640.lock_params
+      ~LI5640.release_params
+      ~LI5640.set
+      ~LI5640.set_LPF_through
+      ~LI5640.set_Xoffset
+      ~LI5640.set_Xoffset_enable
+      ~LI5640.set_Yoffset
+      ~LI5640.set_Yoffset_enable
+      ~LI5640.set_amplitude
+      ~LI5640.set_auto
+      ~LI5640.set_auto_offset
+      ~LI5640.set_auto_phase_offset
+      ~LI5640.set_auto_sensitivity
+      ~LI5640.set_auto_time_constant
+      ~LI5640.set_coupling
+      ~LI5640.set_current_sensitivity
+      ~LI5640.set_data1
+      ~LI5640.set_data1_expand
+      ~LI5640.set_data2
+      ~LI5640.set_data2_expand
+      ~LI5640.set_data_normalization
+      ~LI5640.set_data_normalization_current
+      ~LI5640.set_data_normalization_voltage
+      ~LI5640.set_dynamic_reserve
+      ~LI5640.set_freq
+      ~LI5640.set_ground
+      ~LI5640.set_harmonics
+      ~LI5640.set_initialize
+      ~LI5640.set_input_source
+      ~LI5640.set_lamp
+      ~LI5640.set_line_filter
+      ~LI5640.set_line_freq
+      ~LI5640.set_noise_smooth
+      ~LI5640.set_phase_offset
+      ~LI5640.set_ratio_enable
+      ~LI5640.set_ratio_k
+      ~LI5640.set_ref_edge
+      ~LI5640.set_ref_source
+      ~LI5640.set_slope
+      ~LI5640.set_sync_filter
+      ~LI5640.set_time_constant
+      ~LI5640.set_volt_sensitivity
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LI5640.PARAM_NAMES
+      ~LI5640.VoltSensitivity_to_Float
+   
+   

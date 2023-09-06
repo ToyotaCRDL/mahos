@@ -22,7 +22,7 @@
       ~PODMR.discard
       ~PODMR.export_data
       ~PODMR.get_param_dict
-      ~PODMR.get_param_dict_names
+      ~PODMR.get_param_dict_labels
       ~PODMR.handle_req
       ~PODMR.load_data
       ~PODMR.main

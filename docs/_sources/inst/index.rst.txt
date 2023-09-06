@@ -18,6 +18,7 @@ Instrument modules
    camera
    daq
    fg
+   lockin
    pd
    pg
    piezo
@@ -33,6 +34,7 @@ InstrumentOverlay modules
 
    InstrumentOverlay
    confocal_scanner
+   amplified_pd
 
 InstrumentServer
 ----------------

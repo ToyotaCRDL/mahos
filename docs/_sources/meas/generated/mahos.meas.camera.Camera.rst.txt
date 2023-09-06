@@ -21,7 +21,7 @@
       ~Camera.close_resources
       ~Camera.export_data
       ~Camera.get_param_dict
-      ~Camera.get_param_dict_names
+      ~Camera.get_param_dict_labels
       ~Camera.load_data
       ~Camera.main
       ~Camera.save_data

@@ -21,11 +21,13 @@
       ~ODMRData.can_resume
       ~ODMRData.get_fit_xdata
       ~ODMRData.get_fit_ydata
+      ~ODMRData.get_image
       ~ODMRData.get_xdata
       ~ODMRData.get_ydata
       ~ODMRData.has_background
       ~ODMRData.has_data
       ~ODMRData.init_axes
+      ~ODMRData.is_complex
       ~ODMRData.measure_background
       ~ODMRData.step
       ~ODMRData.sweeps
@@ -33,5 +35,11 @@
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ODMRData.fit_complex_conv
    
    

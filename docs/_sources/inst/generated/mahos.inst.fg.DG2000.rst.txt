@@ -17,11 +17,24 @@
    .. autosummary::
    
       ~DG2000.__init__
+      ~DG2000.align_phase
       ~DG2000.configure
       ~DG2000.configure_CW
       ~DG2000.configure_gate
+      ~DG2000.configure_output
       ~DG2000.get
+      ~DG2000.get_amplitude
       ~DG2000.get_bounds
+      ~DG2000.get_freq
+      ~DG2000.get_function
+      ~DG2000.get_high
+      ~DG2000.get_low
+      ~DG2000.get_offset
+      ~DG2000.get_output
+      ~DG2000.get_output_impedance
+      ~DG2000.get_param_dict
+      ~DG2000.get_param_dict_labels
+      ~DG2000.get_phase
       ~DG2000.set
       ~DG2000.set_amplitude
       ~DG2000.set_burst
@@ -32,6 +45,9 @@
       ~DG2000.set_burst_trig_source
       ~DG2000.set_freq
       ~DG2000.set_function
+      ~DG2000.set_high
+      ~DG2000.set_low
+      ~DG2000.set_offset
       ~DG2000.set_output
       ~DG2000.set_output_impedance
       ~DG2000.set_period
@@ -51,6 +67,7 @@
    .. autosummary::
    
       ~DG2000.IDLE_LEVEL
+      ~DG2000.OUTPUT_HighZ
       ~DG2000.TRIG_SOURCE
    
    

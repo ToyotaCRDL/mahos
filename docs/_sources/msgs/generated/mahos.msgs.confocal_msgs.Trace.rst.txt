@@ -21,6 +21,9 @@
       ~Trace.as_dataframes
       ~Trace.channels
       ~Trace.clear
+      ~Trace.dtype
+      ~Trace.get_trace
+      ~Trace.is_complex
       ~Trace.size
       ~Trace.valid_trace
    

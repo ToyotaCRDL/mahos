@@ -19,9 +19,11 @@ Override these methods (with the same signature) to expose the instrument's func
    .. automethod:: Instrument.pause
    .. automethod:: Instrument.resume
    .. automethod:: Instrument.reset
-   .. automethod:: Instrument.configure
    .. automethod:: Instrument.set
    .. automethod:: Instrument.get
+   .. automethod:: Instrument.configure
+   .. automethod:: Instrument.get_param_dict
+   .. automethod:: Instrument.get_param_dict_labels
 
 .. rubric:: Other Methods
 

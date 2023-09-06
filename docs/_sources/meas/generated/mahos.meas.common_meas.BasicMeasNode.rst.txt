@@ -23,7 +23,7 @@
       ~BasicMeasNode.export_data
       ~BasicMeasNode.fit
       ~BasicMeasNode.get_param_dict
-      ~BasicMeasNode.get_param_dict_names
+      ~BasicMeasNode.get_param_dict_labels
       ~BasicMeasNode.handle_req
       ~BasicMeasNode.load_data
       ~BasicMeasNode.pop_buffer

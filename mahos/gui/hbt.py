@@ -200,6 +200,8 @@ class HBTFitWidget(FitWidget):
 
 
 class HBTWidget(ClientWidget, Ui_HBT):
+    """Control widget for HBT."""
+
     def __init__(
         self,
         gconf: dict,

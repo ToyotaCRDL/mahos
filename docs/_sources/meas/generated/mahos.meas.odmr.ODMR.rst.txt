@@ -21,7 +21,7 @@
       ~ODMR.close_resources
       ~ODMR.export_data
       ~ODMR.get_param_dict
-      ~ODMR.get_param_dict_names
+      ~ODMR.get_param_dict_labels
       ~ODMR.handle_req
       ~ODMR.load_data
       ~ODMR.main

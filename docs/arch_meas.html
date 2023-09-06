@@ -442,6 +442,14 @@ If the node has <a class="reference internal" href="glossary.html#term-state"><s
 <p><a class="reference internal" href="meas/generated/mahos.meas.common_meas.BasicMeasNode.html#mahos.meas.common_meas.BasicMeasNode" title="mahos.meas.common_meas.BasicMeasNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicMeasNode</span></code></a> can be utilized as a base class to implement basic measurment nodes.
 This class assumes <a class="reference internal" href="glossary.html#term-state"><span class="xref std std-term">state</span></a> of type <a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.BinaryState" title="mahos.msgs.common_msgs.BinaryState"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryState</span></code></a> and <a class="reference internal" href="glossary.html#term-status"><span class="xref std std-term">status</span></a> of type <a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.BinaryStatus" title="mahos.msgs.common_msgs.BinaryStatus"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryStatus</span></code></a>.</p>
 </section>
+<section id="tweaker">
+<span id="meas-tweaker"></span><h2>Tweaker<a class="headerlink" href="#tweaker" title="Permalink to this heading">#</a></h2>
+<p><a class="reference internal" href="meas/generated/mahos.meas.tweaker.Tweaker.html#mahos.meas.tweaker.Tweaker" title="mahos.meas.tweaker.Tweaker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tweaker</span></code></a> is a generic node for manual-tuning of instrument parameters.
+This is useful for rather “floating” instruments which is not directly tied to specific measurement protocol,
+but its state affects the sample / DUT and measurement result.
+Examples: programmable (variable gain) amplifiers for the sensors, thermostats, or power supply for electromagnet.
+The instrument should have <a class="reference internal" href="arch_inst.html#inst-params-interface"><span class="std std-ref">ParamDict-based interface</span></a> to be managed by the Tweaker.</p>
+</section>
 <section id="statemanager">
 <h2>StateManager<a class="headerlink" href="#statemanager" title="Permalink to this heading">#</a></h2>
 <p><a class="reference internal" href="meas/generated/mahos.meas.state_manager.StateManager.html#mahos.meas.state_manager.StateManager" title="mahos.meas.state_manager.StateManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">StateManager</span></code></a> is used as a manager of meas node states.
@@ -525,6 +533,7 @@ After a <cite>command</cite>, we can use <cite>restore</cite> request to recover
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basicmeasnode">BasicMeasNode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tweaker">Tweaker</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#statemanager">StateManager</a></li>
 </ul>
   </nav></div>

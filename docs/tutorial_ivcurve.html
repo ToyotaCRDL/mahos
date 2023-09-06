@@ -473,17 +473,17 @@ If the same key is defined for a node, the global value is just ignored.
 Otherwise, the global value is used.
 (The behaviour is similar to local and global variable in some programming languages.)</p>
 </section>
-<section id="log-broker">
-<h2>log_broker<a class="headerlink" href="#log-broker" title="Permalink to this heading">#</a></h2>
-<p>The second group is named <cite>localhost.log_broker</cite>.
+<section id="log">
+<h2>log<a class="headerlink" href="#log" title="Permalink to this heading">#</a></h2>
+<p>The second group is named <cite>localhost.log</cite>.
 It is important to observe the log messages for the debugging or monitoring.
 Since mahos adopted a distributed system,
 the sources of logs (i.e., <a class="reference internal" href="glossary.html#term-node"><span class="xref std std-term">nodes</span></a>) are running on multiple processes.
 In order to sort out the distributed logs, it seems good to gather the logs to single node,
 and then redistribute.
 The <a class="reference internal" href="node/generated/mahos.node.log_broker.LogBroker.html#mahos.node.log_broker.LogBroker" title="mahos.node.log_broker.LogBroker"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogBroker</span></code></a> is implemented for this purpose.</p>
-<p>It is highly recommended to define a log_broker in <code class="docutils literal notranslate"><span class="pre">conf.toml</span></code>, as in the file for this tutorial.
-You can see arrows labeled <cite>log</cite> are coming from <cite>server</cite> and <cite>ivcurve</cite> to the <cite>log_broker</cite> in the graph.
+<p>It is highly recommended to define a <cite>log</cite> in <code class="docutils literal notranslate"><span class="pre">conf.toml</span></code>, as in the file for this tutorial.
+You can see arrows labeled <cite>log</cite> are coming from <cite>server</cite> and <cite>ivcurve</cite> to the <cite>log</cite> node in the graph.
 These arrows are corresponding to Line 15 and Line 37-38 in <code class="docutils literal notranslate"><span class="pre">conf.toml</span></code>.</p>
 <p>(In <a class="reference internal" href="tutorial_comm.html"><span class="doc">Tutorial 1: Communication</span></a>, we have omitted this and used dummy loggers.)</p>
 </section>
@@ -495,7 +495,7 @@ These arrows are corresponding to Line 15 and Line 37-38 in <code class="docutil
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="linenos">12</span><span class="k">[localhost.server]</span>
 <span class="linenos">13</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mahos.inst.server&quot;</span>
 <span class="linenos">14</span><span class="n">class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;InstrumentServer&quot;</span>
-<span class="linenos">15</span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">log</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost::log_broker&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="linenos">15</span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">log</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost::log&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="linenos">16</span><span class="n">log_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;DEBUG&quot;</span>
 <span class="linenos">17</span><span class="n">rep_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;tcp://127.0.0.1:5559&quot;</span>
 <span class="linenos">18</span><span class="n">pub_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;tcp://127.0.0.1:5560&quot;</span>
@@ -582,7 +582,7 @@ we can define an explicit interface (which method is exported and which is not, 
 </div>
 </div>
 <p>Let’s interact with the server.
-Launch <cite>server</cite> and <cite>log_broker</cite> with <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">log_broker</span> <span class="pre">server</span></code>.
+Launch <cite>server</cite> and <cite>log</cite> with <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">log</span> <span class="pre">server</span></code>.
 In the second terminal, <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">log</span></code> to print the logs.
 And <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">shell</span> <span class="pre">server</span></code> to start IPython shell for server.</p>
 <p>There are two ways to call the functions:</p>
@@ -610,7 +610,7 @@ We have defined <code class="docutils literal notranslate"><span class="pre">ivc
 <span class="linenos">35</span><span class="n">rep_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;tcp://127.0.0.1:5561&quot;</span>
 <span class="linenos">36</span><span class="n">pub_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;tcp://127.0.0.1:5562&quot;</span>
 <span class="linenos">37</span><span class="k">[localhost.ivcurve.target]</span>
-<span class="linenos">38</span><span class="n">log</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost::log_broker&quot;</span>
+<span class="linenos">38</span><span class="n">log</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost::log&quot;</span>
 <span class="linenos">39</span><span class="k">[localhost.ivcurve.target.servers]</span>
 <span class="linenos">40</span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost::server&quot;</span>
 <span class="linenos">41</span><span class="n">meter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost::server&quot;</span>
@@ -622,7 +622,7 @@ We have defined <code class="docutils literal notranslate"><span class="pre">ivc
 <section id="operating-from-shell-or-script">
 <h3>Operating from shell or script<a class="headerlink" href="#operating-from-shell-or-script" title="Permalink to this heading">#</a></h3>
 <p>Before looking into the code, let’s run and interact with the ivcurve.
-Launch nodes with <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">log_broker</span> <span class="pre">server</span> <span class="pre">ivcurve</span></code>.
+Launch nodes with <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">log</span> <span class="pre">server</span> <span class="pre">ivcurve</span></code>.
 In the second terminal, <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">log</span></code> to print the logs.
 And <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">shell</span> <span class="pre">ivcurve</span></code> to start IPython shell for ivcurve.
 The ivcurve measurement can be performed by following snippet.</p>
@@ -763,7 +763,7 @@ This method is called only once because the signal is disconnect at Line 79.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preparation">Preparation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-mock">Running the mock</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualizing-config">Visualizing config</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#log-broker">log_broker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#log">log</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#server">server</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ivcurve">ivcurve</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#operating-from-shell-or-script">Operating from shell or script</a></li>

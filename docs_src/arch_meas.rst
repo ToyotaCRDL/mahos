@@ -14,6 +14,17 @@ BasicMeasNode
 :class:`BasicMeasNode <mahos.meas.common_meas.BasicMeasNode>` can be utilized as a base class to implement basic measurment nodes.
 This class assumes :term:`state` of type :class:`BinaryState <mahos.msgs.common_msgs.BinaryState>` and :term:`status` of type :class:`BinaryStatus <mahos.msgs.common_msgs.BinaryStatus>`.
 
+.. _meas-tweaker:
+
+Tweaker
+-------
+
+:class:`Tweaker <mahos.meas.tweaker.Tweaker>` is a generic node for manual-tuning of instrument parameters.
+This is useful for rather "floating" instruments which is not directly tied to specific measurement protocol,
+but its state affects the sample / DUT and measurement result.
+Examples: programmable (variable gain) amplifiers for the sensors, thermostats, or power supply for electromagnet.
+The instrument should have :ref:`inst-params-interface` to be managed by the Tweaker.
+
 StateManager
 ------------
 

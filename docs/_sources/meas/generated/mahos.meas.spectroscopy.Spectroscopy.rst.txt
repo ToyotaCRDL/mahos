@@ -21,7 +21,7 @@
       ~Spectroscopy.close_resources
       ~Spectroscopy.export_data
       ~Spectroscopy.get_param_dict
-      ~Spectroscopy.get_param_dict_names
+      ~Spectroscopy.get_param_dict_labels
       ~Spectroscopy.load_data
       ~Spectroscopy.main
       ~Spectroscopy.save_data

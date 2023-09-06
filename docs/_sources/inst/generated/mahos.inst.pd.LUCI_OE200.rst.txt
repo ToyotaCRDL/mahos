@@ -1,0 +1,39 @@
+﻿mahos.inst.pd.LUCI\_OE200
+=========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.pd
+
+.. autoclass:: LUCI_OE200
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LUCI_OE200.__init__
+      ~LUCI_OE200.configure
+      ~LUCI_OE200.configure_gain_coupling
+      ~LUCI_OE200.get
+      ~LUCI_OE200.get_param_dict
+      ~LUCI_OE200.get_param_dict_labels
+      ~LUCI_OE200.set
+      ~LUCI_OE200.set_coupling
+      ~LUCI_OE200.set_gain
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LUCI_OE200.GAINS
+   
+   

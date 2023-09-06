@@ -18,7 +18,9 @@
    
       ~Image.__init__
       ~Image.finalize
+      ~Image.get_image
       ~Image.has_data
+      ~Image.is_complex
       ~Image.is_finalized
    
    

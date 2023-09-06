@@ -56,21 +56,3 @@ class APDCounterInterface(PDInterface):
         """Get the correction factor for given cps values."""
 
         return self.get("correction_factor", xs_cps)
-
-
-class OE200Interface(PDInterface):
-    """Interface for FEMTO Messtechnik OE-200 Variable Gain Photoreceiver."""
-
-    def set_gain(self, low_noise: bool, gain_exponent: int) -> bool:
-        return self.set("gain", {"low_noise": low_noise, "gain_exponent": gain_exponent})
-
-    def set_coupling(self, DC_coupling: bool) -> bool:
-        return self.set("coupling", DC_coupling)
-
-    def configure_gain_coupling(
-        self, low_noise: bool, gain_exponent: int, DC_coupling: bool
-    ) -> bool:
-        return self.configure(
-            {"low_noise": low_noise, "gain_exponent": gain_exponent, "DC_coupling": DC_coupling},
-            "gain_coupling",
-        )
