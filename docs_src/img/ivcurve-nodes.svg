@@ -13,18 +13,18 @@
 <polygon fill="none" stroke="black" points="0,0 0,-336 163,-336 163,0 0,0"/>
 <text text-anchor="middle" x="81.5" y="-320.8" font-family="Times,serif" font-size="14.00">localhost</text>
 </g>
-<!-- localhost::log_broker -->
+<!-- localhost::log -->
 <g id="node1" class="node">
-<title>localhost::log_broker</title>
-<ellipse fill="none" stroke="black" cx="63" cy="-26" rx="49.5" ry="18"/>
-<text text-anchor="middle" x="63" y="-22.3" font-family="Times,serif" font-size="14.00">log_broker</text>
+<title>localhost::log</title>
+<ellipse fill="none" stroke="black" cx="53" cy="-26" rx="27" ry="18"/>
+<text text-anchor="middle" x="53" y="-22.3" font-family="Times,serif" font-size="14.00">log</text>
 </g>
-<!-- localhost::log_broker&#45;&gt;localhost::log_broker -->
+<!-- localhost::log&#45;&gt;localhost::log -->
 <g id="edge1" class="edge">
-<title>localhost::log_broker&#45;&gt;localhost::log_broker</title>
-<path fill="none" stroke="black" d="M107.72,-33.84C120.52,-33.54 130.4,-30.92 130.4,-26 130.4,-22.54 125.51,-20.22 118.17,-19.04"/>
-<polygon fill="black" stroke="black" points="117.98,-15.51 107.72,-18.16 117.39,-22.49 117.98,-15.51"/>
-<text text-anchor="middle" x="139.4" y="-22.3" font-family="Times,serif" font-size="14.00">log</text>
+<title>localhost::log&#45;&gt;localhost::log</title>
+<path fill="none" stroke="black" d="M77.53,-33.75C88.51,-34.49 98,-31.91 98,-26 98,-22.03 93.72,-19.56 87.57,-18.59"/>
+<polygon fill="black" stroke="black" points="87.65,-15.09 77.53,-18.25 87.41,-22.09 87.65,-15.09"/>
+<text text-anchor="middle" x="107" y="-22.3" font-family="Times,serif" font-size="14.00">log</text>
 </g>
 <!-- localhost::server -->
 <g id="node2" class="node">
@@ -32,12 +32,12 @@
 <ellipse fill="none" stroke="black" cx="94" cy="-113" rx="32.5" ry="18"/>
 <text text-anchor="middle" x="94" y="-109.3" font-family="Times,serif" font-size="14.00">server</text>
 </g>
-<!-- localhost::server&#45;&gt;localhost::log_broker -->
+<!-- localhost::server&#45;&gt;localhost::log -->
 <g id="edge2" class="edge">
-<title>localhost::server&#45;&gt;localhost::log_broker</title>
-<path fill="none" stroke="black" d="M87.88,-95.21C83.57,-83.41 77.73,-67.38 72.78,-53.82"/>
-<polygon fill="black" stroke="black" points="75.93,-52.24 69.22,-44.05 69.36,-54.64 75.93,-52.24"/>
-<text text-anchor="middle" x="89" y="-65.8" font-family="Times,serif" font-size="14.00">log</text>
+<title>localhost::server&#45;&gt;localhost::log</title>
+<path fill="none" stroke="black" d="M85.9,-95.21C80.02,-83.02 71.97,-66.32 65.3,-52.49"/>
+<polygon fill="black" stroke="black" points="68.44,-50.96 60.94,-43.47 62.14,-54 68.44,-50.96"/>
+<text text-anchor="middle" x="84" y="-65.8" font-family="Times,serif" font-size="14.00">log</text>
 </g>
 <!-- localhost::ivcurve -->
 <g id="node3" class="node">
@@ -45,11 +45,11 @@
 <ellipse fill="none" stroke="black" cx="45" cy="-200" rx="37.09" ry="18"/>
 <text text-anchor="middle" x="45" y="-196.3" font-family="Times,serif" font-size="14.00">ivcurve</text>
 </g>
-<!-- localhost::ivcurve&#45;&gt;localhost::log_broker -->
+<!-- localhost::ivcurve&#45;&gt;localhost::log -->
 <g id="edge3" class="edge">
-<title>localhost::ivcurve&#45;&gt;localhost::log_broker</title>
-<path fill="none" stroke="black" d="M40.35,-181.92C35.39,-161.19 29.02,-125.25 35,-95 37.85,-80.57 43.81,-65.36 49.5,-52.99"/>
-<polygon fill="black" stroke="black" points="52.76,-54.28 53.94,-43.75 46.45,-51.25 52.76,-54.28"/>
+<title>localhost::ivcurve&#45;&gt;localhost::log</title>
+<path fill="none" stroke="black" d="M41.03,-182.03C36.74,-161.41 31.02,-125.58 35,-95 36.81,-81.09 40.62,-65.98 44.27,-53.54"/>
+<polygon fill="black" stroke="black" points="47.67,-54.39 47.25,-43.8 40.97,-52.34 47.67,-54.39"/>
 <text text-anchor="middle" x="44" y="-109.3" font-family="Times,serif" font-size="14.00">log</text>
 </g>
 <!-- localhost::ivcurve&#45;&gt;localhost::server -->

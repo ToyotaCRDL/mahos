@@ -27,10 +27,8 @@ def parse_args(args):
         "node",
         type=str,
         nargs="?",
-        default="log_broker",
-        help="node name or full name ({}) (default: log_broker)".format(
-            join_name(("host", "node"))
-        ),
+        default="log",
+        help="node name or full name ({}) (default: log)".format(join_name(("host", "node"))),
     )
 
     args = parser.parse_args(args)

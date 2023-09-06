@@ -61,7 +61,7 @@ class Launcher(object):
 
         self.check_interval_sec = 0.5
         self.shutdown_delay_sec = 1.0
-        self.shutdown_order = ["InstrumentServer", "LogBroker"]  # ParamServer?
+        self.shutdown_order = ["InstrumentServer", "LogBroker"]  # GlobalParams?
         self._threaded_node_names = []
 
     def start_node(self, name: str):

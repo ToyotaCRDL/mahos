@@ -8,7 +8,7 @@ import pytest
 
 from mahos.node.node import split_name, load_gconf, local_conf, start_node_proc, Node
 from mahos.node.log_broker import LogBroker, LogClient
-from mahos.node.param_server import ParamServer, ParamClient
+from mahos.node.global_params import GlobalParams, GlobalParamsClient
 from mahos.inst.server import InstrumentServer, InstrumentClient
 from mahos.meas.confocal import Confocal, ConfocalClient
 from mahos.meas.confocal_tracker import ConfocalTracker, ConfocalTrackerClient
@@ -26,8 +26,8 @@ from mahos.meas.tweaker import Tweaker, TweakerClient
 script_dir = path.dirname(path.realpath(__file__))
 
 server_name = "localhost::server"
-param_server_name = "localhost::param_server"
-log_name = "localhost::log_broker"
+gparams_name = "localhost::gparams"
+log_name = "localhost::log"
 manager_name = "localhost::manager"
 tweaker_name = "localhost::tweaker"
 confocal_name = "localhost::confocal"
@@ -90,7 +90,7 @@ def gconf():
     gconf["global"]["req_timeout_ms"] = 3000
     local_conf(gconf, server_name)["poll_timeout_ms"] = 10
     local_conf(gconf, server_name)["instrument"]["pg"]["conf"]["local_dir"] = script_dir
-    local_conf(gconf, param_server_name)["poll_timeout_ms"] = 10
+    local_conf(gconf, gparams_name)["poll_timeout_ms"] = 10
     local_conf(gconf, log_name)["poll_timeout_ms"] = 10
     confocal_conf = local_conf(gconf, confocal_name)
     confocal_conf["poll_timeout_ms"] = 50
@@ -120,8 +120,8 @@ def server_conf(gconf):
 
 
 @pytest.fixture
-def param_server_conf(gconf):
-    return local_conf(gconf, param_server_name)
+def gparams_conf(gconf):
+    return local_conf(gconf, gparams_name)
 
 
 @pytest.fixture
@@ -214,19 +214,19 @@ def server_2clients(ctx, gconf):
 
 
 @pytest.fixture
-def param_server(ctx, gconf):
-    proc, shutdown_ev = start_node_proc(ctx, ParamServer, gconf, param_server_name)
-    client = ParamClient(gconf, param_server_name)
+def global_params(ctx, gconf):
+    proc, shutdown_ev = start_node_proc(ctx, GlobalParams, gconf, gparams_name)
+    client = GlobalParamsClient(gconf, gparams_name)
     yield client
     client.close()
     stop_proc(proc, shutdown_ev)
 
 
 @pytest.fixture
-def param_server_2clients(ctx, gconf):
-    proc, shutdown_ev = start_node_proc(ctx, ParamServer, gconf, param_server_name)
-    client0 = ParamClient(gconf, param_server_name)
-    client1 = ParamClient(gconf, param_server_name)
+def global_params_2clients(ctx, gconf):
+    proc, shutdown_ev = start_node_proc(ctx, GlobalParams, gconf, gparams_name)
+    client0 = GlobalParamsClient(gconf, gparams_name)
+    client1 = GlobalParamsClient(gconf, gparams_name)
     yield client0, client1
     client0.close()
     client1.close()

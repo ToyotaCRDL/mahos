@@ -43,7 +43,7 @@ from ..msgs.confocal_msgs import line_mode_to_str, str_to_line_mode
 from ..msgs.confocal_tracker_msgs import OptMode
 from ..meas.confocal_worker import DEFAULT_TRACER_SIZE
 from .confocal_client import QConfocalClient, QConfocalTrackerClient, QTracerClient
-from ..node.param_server import ParamClient
+from ..node.global_params import GlobalParamsClient
 from ..node.node import local_conf, join_name
 from ..util import conv
 from ..util.plot import colors_tab20_pair
@@ -1103,7 +1103,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         gconf: dict,
         name,
         tracker_name,
-        param_server_name,
+        gparams_name,
         style: dict,
         invert,
         move_interval_ms,
@@ -1130,9 +1130,9 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         )
         self.tracker_cli.stateUpdated.connect(self.update_tracker_state)
 
-        self.param_cli = ParamClient(gconf, param_server_name, context=context)
+        self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
 
-        self.add_clients(self.cli, self.tracker_cli, self.param_cli)
+        self.add_clients(self.cli, self.tracker_cli, self.gparams_cli)
 
         self.setEnabled(False)
 
@@ -1582,18 +1582,18 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self.export_image(ScanDirection.YZ)
 
     def save_image(self, direction: T.Optional[ScanDirection] = None):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "Last Scan", self._scan_file_pre_ext(direction))
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
-        note = self.param_cli.get_param("note", "")
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
+        note = self.gparams_cli.get_param("note", "")
         self.cli.save_image(fn, direction=direction, note=note)
         return fn
 
     def export_image(self, direction: T.Optional[ScanDirection] = None):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = export_dialog(
             self, default_path, "Last Scan", (".png", ".pdf", ".eps", ".csv", ".txt")
         )
@@ -1601,7 +1601,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             return
 
         # don't change work_dir after export.
-        # self.param_cli.set_param("work_dir", os.path.split(fn)[0])
+        # self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
 
         ext = os.path.splitext(fn)[1]
         if ext not in (".csv", ".txt"):
@@ -1613,7 +1613,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self.cli.export_image(fn, direction=direction, params=params)
 
     def export_view(self, fn):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = export_dialog(self, default_path, "View", (".png", ".pdf", ".eps"))
         if not fn:
             return
@@ -1644,17 +1644,17 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         return params
 
     def load_image(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = load_dialog(self, default_path, "Scan", ".scan")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
         image = self.cli.load_image(fn)
         if image is None:
             return
         if image.note():
-            self.param_cli.set_param("loaded_note", image.note())
+            self.gparams_cli.set_param("loaded_note", image.note())
         si = self.direction_to_scanitem(image.direction)
         si.update_image(image)
 
@@ -1682,7 +1682,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.XY.roi.parentBounds(),
             (x, y, z),
             scan_params,
-            str(self.param_cli.get_param("work_dir")),
+            str(self.gparams_cli.get_param("work_dir")),
             parent=self,
         )
 
@@ -1703,7 +1703,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.XZ.roi.parentBounds(),
             (x, z, y),
             scan_params,
-            str(self.param_cli.get_param("work_dir")),
+            str(self.gparams_cli.get_param("work_dir")),
             parent=self,
         )
 
@@ -1724,7 +1724,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.YZ.roi.parentBounds(),
             (y, z, x),
             scan_params,
-            str(self.param_cli.get_param("work_dir")),
+            str(self.gparams_cli.get_param("work_dir")),
             parent=self,
         )
 
@@ -1938,7 +1938,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
 class traceView(ClientWidget, Ui_traceView):
     """Widget for Confocal trace view."""
 
-    def __init__(self, gconf: dict, name, param_server_name, context, parent=None):
+    def __init__(self, gconf: dict, name, gparams_name, context, parent=None):
         ClientWidget.__init__(self, parent)
         self.setupUi(self)
 
@@ -1950,8 +1950,8 @@ class traceView(ClientWidget, Ui_traceView):
         self.graphicsView.setCentralItem(self.pi)
 
         self.cli = QTracerClient(gconf, name, context=context, parent=self)
-        self.param_cli = ParamClient(gconf, param_server_name, context=context)
-        self.add_clients(self.cli, self.param_cli)
+        self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
+        self.add_clients(self.cli, self.gparams_cli)
 
         self.fps_counter = FPSCounter()
 
@@ -2163,13 +2163,13 @@ class traceView(ClientWidget, Ui_traceView):
         self.pi.enableAutoRange()
 
     def save_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "Trace", ".trace")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
-        note = self.param_cli.get_param("note", "")
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
+        note = self.gparams_cli.get_param("note", "")
         self.cli.save_trace(fn, note=note)
         image_fn = os.path.splitext(fn)[0] + ".png"
         self.cli.export_trace(
@@ -2197,7 +2197,7 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
             gconf,
             target["confocal"],
             target["tracker"],
-            target["param_server"],
+            target["gparams"],
             style,
             invert,
             move_interval_ms,
@@ -2205,7 +2205,7 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
             parent=self,
         )
         self.traceView = traceView(
-            gconf, target["confocal"], target["param_server"], context, parent=self
+            gconf, target["confocal"], target["gparams"], context, parent=self
         )
 
         self.setWindowTitle(f"MAHOS.ConfocalGUI ({join_name(target['confocal'])})")

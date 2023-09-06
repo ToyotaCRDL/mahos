@@ -52,10 +52,10 @@ If the same key is defined for a node, the global value is just ignored.
 Otherwise, the global value is used.
 (The behaviour is similar to local and global variable in some programming languages.)
 
-log_broker
-----------
+log
+---
 
-The second group is named `localhost.log_broker`.
+The second group is named `localhost.log`.
 It is important to observe the log messages for the debugging or monitoring.
 Since mahos adopted a distributed system,
 the sources of logs (i.e., :term:`nodes <node>`) are running on multiple processes.
@@ -63,8 +63,8 @@ In order to sort out the distributed logs, it seems good to gather the logs to s
 and then redistribute.
 The :class:`LogBroker <mahos.node.log_broker.LogBroker>` is implemented for this purpose.
 
-It is highly recommended to define a log_broker in ``conf.toml``, as in the file for this tutorial.
-You can see arrows labeled `log` are coming from `server` and `ivcurve` to the `log_broker` in the graph.
+It is highly recommended to define a `log` in ``conf.toml``, as in the file for this tutorial.
+You can see arrows labeled `log` are coming from `server` and `ivcurve` to the `log` node in the graph.
 These arrows are corresponding to Line 15 and Line 37-38 in ``conf.toml``.
 
 (In :doc:`tutorial_comm`, we have omitted this and used dummy loggers.)
@@ -82,7 +82,7 @@ The `server` (:class:`InstrumentServer <mahos.inst.server.InstrumentServer>`) is
    [localhost.server]
    module = "mahos.inst.server"
    class = "InstrumentServer"
-   target = { log = "localhost::log_broker" }
+   target = { log = "localhost::log" }
    log_level = "DEBUG"
    rep_endpoint = "tcp://127.0.0.1:5559"
    pub_endpoint = "tcp://127.0.0.1:5560"
@@ -174,7 +174,7 @@ we can define an explicit interface (which method is exported and which is not, 
            return self.set("volt", volt)
 
 Let's interact with the server.
-Launch `server` and `log_broker` with ``mahos launch log_broker server``.
+Launch `server` and `log` with ``mahos launch log server``.
 In the second terminal, ``mahos log`` to print the logs.
 And ``mahos shell server`` to start IPython shell for server.
 
@@ -209,7 +209,7 @@ We have defined ``ivcurve`` in the config as below.
    rep_endpoint = "tcp://127.0.0.1:5561"
    pub_endpoint = "tcp://127.0.0.1:5562"
    [localhost.ivcurve.target]
-   log = "localhost::log_broker"
+   log = "localhost::log"
    [localhost.ivcurve.target.servers]
    source = "localhost::server"
    meter = "localhost::server"
@@ -221,7 +221,7 @@ Operating from shell or script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before looking into the code, let's run and interact with the ivcurve.
-Launch nodes with ``mahos launch log_broker server ivcurve``.
+Launch nodes with ``mahos launch log server ivcurve``.
 In the second terminal, ``mahos log`` to print the logs.
 And ``mahos shell ivcurve`` to start IPython shell for ivcurve.
 The ivcurve measurement can be performed by following snippet.

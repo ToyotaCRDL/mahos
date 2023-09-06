@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Qt signal-based client of ParamServer.
+Qt signal-based client of GlobalParams.
 
 .. This file is a part of MAHOS project.
 
@@ -9,14 +9,14 @@ Qt signal-based client of ParamServer.
 
 from .Qt import QtCore
 
-from ..msgs.param_server_msgs import ParamServerStatus, SetParamReq
+from ..msgs.global_params_msgs import GlobalParamsStatus, SetParamReq
 from .client import QStatusSubWorker, QReqClient
 
 
-class QParamClient(QReqClient):
-    """Qt-based client of ParamServer."""
+class QGlobalParamsClient(QReqClient):
+    """Qt-based client of GlobalParams."""
 
-    statusUpdated = QtCore.pyqtSignal(ParamServerStatus)
+    statusUpdated = QtCore.pyqtSignal(GlobalParamsStatus)
 
     def __init__(self, gconf: dict, name, context=None, parent=None):
         QReqClient.__init__(self, gconf, name, context=context, parent=parent)
@@ -30,8 +30,8 @@ class QParamClient(QReqClient):
 
         self.add_sub(self.sub)
 
-    def store_params(self, msg: ParamServerStatus):
-        if not isinstance(msg, ParamServerStatus):
+    def store_params(self, msg: GlobalParamsStatus):
+        if not isinstance(msg, GlobalParamsStatus):
             return
         self._params = msg.params
 

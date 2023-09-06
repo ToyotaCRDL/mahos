@@ -2,17 +2,17 @@
 
 from util import expect_value
 
-from fixtures import ctx, gconf, param_server, param_server_2clients, param_server_conf
+from fixtures import ctx, gconf, global_params, global_params_2clients, gparams_conf
 
 
 def expect_param(cli, key, value, poll_timeout_ms):
     return expect_value(lambda: cli.get_param(key), value, poll_timeout_ms, trials=500)
 
 
-def test_param_server(param_server_2clients, param_server_conf):
-    poll_timeout_ms = param_server_conf["poll_timeout_ms"]
+def test_global_params(global_params_2clients, gparams_conf):
+    poll_timeout_ms = gparams_conf["poll_timeout_ms"]
 
-    client, client2 = param_server_2clients
+    client, client2 = global_params_2clients
 
     client.wait()
     client2.wait()

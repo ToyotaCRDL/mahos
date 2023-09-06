@@ -23,7 +23,7 @@ from .iodmr_client import QIODMRClient
 from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.param_msgs import FloatParam, IntParam
 from ..msgs.iodmr_msgs import IODMRData
-from ..node.param_server import ParamClient
+from ..node.global_params import GlobalParamsClient
 from ..util import conv
 from .gui_node import GUINode
 from .common_widget import ClientMainWindow
@@ -325,7 +325,7 @@ class ODMRHistoryImageView(QtWidgets.QWidget):
 class IODMRMainWindow(ClientMainWindow):
     """MainWindow with ConfocalWidget and traceView."""
 
-    def __init__(self, gconf: dict, name, param_server_name, context, parent=None):
+    def __init__(self, gconf: dict, name, gparams_name, context, parent=None):
         ClientMainWindow.__init__(self, parent)
 
         self.conf = local_conf(gconf, name)
@@ -345,9 +345,9 @@ class IODMRMainWindow(ClientMainWindow):
         self.cli = QIODMRClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
 
-        self.param_cli = ParamClient(gconf, param_server_name, context=context)
+        self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
 
-        self.add_clients(self.cli, self.param_cli)
+        self.add_clients(self.cli, self.gparams_cli)
 
         self.setEnabled(False)
 
@@ -436,13 +436,13 @@ class IODMRMainWindow(ClientMainWindow):
         self.cw.loadButton.clicked.connect(self.load_data)
 
     def save_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "IODMR", ".iodmr", enable_bz2=True)
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
-        note = self.param_cli.get_param("note", "")
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
+        note = self.gparams_cli.get_param("note", "")
         params = self.cw.compression.get_params()
         self.cli.save_data(fn, params=params, note=note)
 
@@ -453,17 +453,17 @@ class IODMRMainWindow(ClientMainWindow):
         return fn
 
     def load_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = load_dialog(self, default_path, "IODMR", ".iodmr", enable_bz2=True)
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
         data = self.cli.load_data(fn)
         if data is None:
             return
         if data.note():
-            self.param_cli.set_param("loaded_note", data.note())
+            self.gparams_cli.set_param("loaded_note", data.note())
 
         self.update_data(data)
         self.cw.set_widget_values(data)
@@ -533,4 +533,4 @@ class IODMRGUI(GUINode):
 
     def init_widget(self, gconf: dict, name, context):
         target = local_conf(gconf, name)["target"]
-        return IODMRMainWindow(gconf, target["iodmr"], target["param_server"], context)
+        return IODMRMainWindow(gconf, target["iodmr"], target["gparams"], context)

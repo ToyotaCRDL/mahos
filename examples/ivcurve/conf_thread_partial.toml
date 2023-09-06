@@ -7,17 +7,17 @@ poll_timeout_ms = 100
 [thread.localhost]
 server_ivcurve = ["server", "ivcurve"]
 
-[localhost.log_broker]
+[localhost.log]
 module = "mahos.node.log_broker"
 class = "LogBroker"
-target = { log = "localhost::log_broker" }
+target = { log = "localhost::log" }
 xpub_endpoint = "tcp://127.0.0.1:5555"
 xsub_endpoint = "tcp://127.0.0.1:5556"
 
 [localhost.server]
 module = "mahos.inst.server"
 class = "InstrumentServer"
-target = { log = "localhost::log_broker" }
+target = { log = "localhost::log" }
 log_level = "DEBUG"
 rep_endpoint = "inproc://server_rep"
 pub_endpoint = "inproc://server_pub"
@@ -40,7 +40,7 @@ class = "IVCurve"
 rep_endpoint = "tcp://127.0.0.1:5561"
 pub_endpoint = "tcp://127.0.0.1:5562"
 [localhost.ivcurve.target]
-log = "localhost::log_broker"
+log = "localhost::log"
 [localhost.ivcurve.target.servers]
 source = "localhost::server"
 meter = "localhost::server"

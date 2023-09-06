@@ -16,12 +16,12 @@ from .gui_node import GUINode
 from .common_widget import ClientTopWidget
 from ..node.node import local_conf, join_name
 from ..node.log_broker import format_log_html_color, should_show, LogEntry
-from .param_client import QParamClient
+from .global_params_client import QGlobalParamsClient
 from .log_client import QLogSubscriber
 from .inst_client import QInstrumentSubscriber
 from .manager_client import QManagerSubscriber
 from ..msgs.inst_server_msgs import ServerStatus, Ident
-from ..msgs.param_server_msgs import ParamServerStatus
+from ..msgs.global_params_msgs import GlobalParamsStatus
 
 
 class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
@@ -38,14 +38,14 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
 
         self.init_log()
 
-        if "param_server" in target:
-            self.param_cli = QParamClient(
-                gconf, target["param_server"], context=context, parent=self
+        if "gparams" in target:
+            self.gparams_cli = QGlobalParamsClient(
+                gconf, target["gparams"], context=context, parent=self
             )
-            self.param_cli.statusUpdated.connect(self.init_param)
-            self.add_client(self.param_cli)
+            self.gparams_cli.statusUpdated.connect(self.init_param)
+            self.add_client(self.gparams_cli)
         else:
-            print("[WARN] param_server is not defined for {}.target".format(name))
+            print("[WARN] gparams is not defined for {}.target".format(name))
 
         if "log" in target:
             self.log_cli = QLogSubscriber(gconf, target["log"], context=context, parent=self)
@@ -76,9 +76,9 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
         else:
             print("[WARN] manager is not defined for {}.target".format(name))
 
-    def init_param(self, msg: ParamServerStatus):
+    def init_param(self, msg: GlobalParamsStatus):
         # only once.
-        self.param_cli.statusUpdated.disconnect(self.init_param)
+        self.gparams_cli.statusUpdated.disconnect(self.init_param)
 
         if "work_dir" in self.conf:
             d = os.path.expanduser(self.conf["work_dir"])
@@ -86,10 +86,10 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
             d = os.path.abspath(".")
 
         self.pathEdit.setText(d)
-        self.param_cli.set_param("work_dir", d)
+        self.gparams_cli.set_param("work_dir", d)
 
         self.pathButton.clicked.connect(self.pathDialog)
-        self.param_cli.statusUpdated.connect(self.check_param)
+        self.gparams_cli.statusUpdated.connect(self.check_param)
 
         self.init_note()
 
@@ -106,7 +106,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
         dn = QtWidgets.QFileDialog.getExistingDirectory(self, "Change working directory", current)
         if dn and current != dn:
             self.pathEdit.setText(dn)
-            self.param_cli.set_param("work_dir", dn)
+            self.gparams_cli.set_param("work_dir", dn)
 
     def write_log(self, log: LogEntry):
         if not should_show(self.loglevelBox.currentText(), log):
@@ -114,7 +114,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
         m = format_log_html_color(log)
         self.logEdit.appendHtml(m)
 
-    def check_param(self, msg: ParamServerStatus):
+    def check_param(self, msg: GlobalParamsStatus):
         d = msg.params.get("work_dir")
         if d is not None:
             self.pathEdit.setText(str(d))
@@ -126,7 +126,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
     def commit_note(self):
         note = self.noteEdit.toPlainText()
         self.commitnoteEdit.setPlainText(note)
-        self.param_cli.set_param("note", note)
+        self.gparams_cli.set_param("note", note)
 
     def load_note(self):
         self.noteEdit.setPlainText(self.loadnoteEdit.toPlainText())

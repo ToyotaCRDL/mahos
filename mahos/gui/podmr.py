@@ -30,7 +30,7 @@ from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import FloatParam
 from ..msgs.podmr_msgs import PODMRData, is_CPlike
-from ..node.param_server import ParamClient
+from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientWidget
 from .fit_widget import FitWidget
@@ -396,12 +396,12 @@ class PODMRIndicatorWidget(QtWidgets.QWidget, Ui_PODMRIndicator):
 
 
 class PODMRAutoSaveWidget(QtWidgets.QWidget, Ui_PODMRAutoSave):
-    def __init__(self, cli, param_cli, parent=None):
+    def __init__(self, cli, gparams_cli, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
 
         self.cli = cli
-        self.param_cli = param_cli
+        self.gparams_cli = gparams_cli
 
     def init_connection(self):
         self.browseButton.clicked.connect(self.browse_dir)
@@ -474,7 +474,7 @@ class PODMRAutoSaveWidget(QtWidgets.QWidget, Ui_PODMRAutoSave):
             w.setEnabled(state == BinaryState.IDLE)
 
     def browse_dir(self):
-        current = str(self.param_cli.get_param("work_dir"))
+        current = str(self.gparams_cli.get_param("work_dir"))
         dn = QtWidgets.QFileDialog.getExistingDirectory(self, "Select autosave directory", current)
         if dn and current != dn:
             self.dirEdit.setText(dn)
@@ -487,7 +487,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self,
         gconf: dict,
         name,
-        param_server_name,
+        gparams_name,
         plot: PlotWidget,
         raw_plot: RawPlotWidget,
         context,
@@ -511,16 +511,16 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.cli = QPODMRClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
 
-        self.param_cli = ParamClient(gconf, param_server_name, context=context)
+        self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
 
-        self.add_clients(self.cli, self.param_cli)
+        self.add_clients(self.cli, self.gparams_cli)
 
         self._fiTab_layout = QtWidgets.QVBoxLayout(self.fiTab)
-        self.fit = PODMRFitWidget(self.cli, self.param_cli, parent=self.fiTab)
+        self.fit = PODMRFitWidget(self.cli, self.gparams_cli, parent=self.fiTab)
         self._fiTab_layout.addWidget(self.fit)
 
         self._autosaveTab_layout = QtWidgets.QVBoxLayout(self.autosaveTab)
-        self.autosave = PODMRAutoSaveWidget(self.cli, self.param_cli, parent=self.autosaveTab)
+        self.autosave = PODMRAutoSaveWidget(self.cli, self.gparams_cli, parent=self.autosaveTab)
         self._autosaveTab_layout.addWidget(self.autosave)
         self.autosave.init_connection()
 
@@ -803,13 +803,13 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
     # data managements
 
     def save_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "PODMR", ".podmr")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
-        note = self.param_cli.get_param("note", "")
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
+        note = self.gparams_cli.get_param("note", "")
         self.cli.save_data(fn, note=note)
         self.update_save_button(True)
 
@@ -820,7 +820,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         if not data_list:
             return
 
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = export_dialog(self, default_path, "PODMR", (".png", ".pdf", ".eps", ".txt"))
         if not fn:
             return
@@ -843,17 +843,17 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
                 return
         self.update_save_button(True)
 
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = load_dialog(self, default_path, "PODMR", ".podmr")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
         data = self.cli.load_data(fn)
         if data is None:
             return
         if data.note():
-            self.param_cli.set_param("loaded_note", data.note())
+            self.gparams_cli.set_param("loaded_note", data.note())
 
         self.data = data
         self.apply_meas_widgets()
@@ -1371,7 +1371,7 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
         self.podmr = PODMRWidget(
             gconf,
             target["podmr"],
-            target["param_server"],
+            target["gparams"],
             self.plot,
             self.raw_plot,
             context,

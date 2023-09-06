@@ -25,7 +25,7 @@ from .odmr_client import QODMRClient
 from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.odmr_msgs import ODMRData
-from ..node.param_server import ParamClient
+from ..node.global_params import GlobalParamsClient
 from ..meas.confocal import ConfocalIORequester
 from ..util import conv, nv
 from ..util.plot import colors_tab20_pair
@@ -440,7 +440,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self,
         gconf: dict,
         name,
-        param_server_name,
+        gparams_name,
         confocal_name,
         plot: PlotWidget,
         context,
@@ -457,18 +457,18 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.cli = QODMRClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
 
-        self.param_cli = ParamClient(gconf, param_server_name, context=context)
+        self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
         if confocal_name:
             self.confocal_cli = ConfocalIORequester(gconf, confocal_name, context=context)
         else:
             self.confocal_cli = None
 
-        self.add_clients(self.cli, self.param_cli, self.confocal_cli)
+        self.add_clients(self.cli, self.gparams_cli, self.confocal_cli)
 
         self._finalizing = False
 
         self._fiTab_layout = QtWidgets.QVBoxLayout(self.fiTab)
-        self.fit = ODMRFitWidget(self.cli, self.param_cli, parent=self.fiTab)
+        self.fit = ODMRFitWidget(self.cli, self.gparams_cli, parent=self.fiTab)
         self._fiTab_layout.addWidget(self.fit)
 
         self._peaksTab_layout = QtWidgets.QVBoxLayout(self.peaksTab)
@@ -636,13 +636,13 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.bnumBox.setValue(timing["burst_num"])
 
     def save_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "ODMR", ".odmr")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
-        note = self.param_cli.get_param("note", "")
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
+        note = self.gparams_cli.get_param("note", "")
         self.cli.save_data(fn, note=note)
         n = os.path.splitext(fn)[0] + ".png"
         params = {}
@@ -657,17 +657,17 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         return fn
 
     def load_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = load_dialog(self, default_path, "ODMR", ".odmr")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
         data = self.cli.load_data(fn)
         if data is None:
             return
         if data.note():
-            self.param_cli.set_param("loaded_note", data.note())
+            self.gparams_cli.set_param("loaded_note", data.note())
 
         self.refresh_plot()
         self.apply_widgets(data)
@@ -677,7 +677,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         if not data_list:
             return
 
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = export_dialog(self, default_path, "ODMR", (".png", ".pdf", ".eps", ".txt"))
         if not fn:
             return
@@ -818,7 +818,7 @@ class ODMRMainWindow(QtWidgets.QMainWindow):
         self.odmr = ODMRWidget(
             gconf,
             target["odmr"],
-            target["param_server"],
+            target["gparams"],
             target.get("confocal"),
             self.plot,
             context,

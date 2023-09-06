@@ -18,7 +18,7 @@ from .camera_client import QCameraClient
 
 from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.camera_msgs import Image
-from ..node.param_server import ParamClient
+from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientTopWidget
 from .dialog import save_dialog, load_dialog
@@ -29,7 +29,7 @@ from ..util.timer import FPSCounter
 class CameraWidget(ClientTopWidget, Ui_Camera):
     """Top widget for Camera."""
 
-    def __init__(self, gconf: dict, name, param_server_name, context, parent=None):
+    def __init__(self, gconf: dict, name, gparams_name, context, parent=None):
         ClientTopWidget.__init__(self, parent)
         self.setupUi(self)
         self.setWindowTitle(f"MAHOS.CameraGUI ({join_name(name)})")
@@ -45,9 +45,9 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
         self.cli = QCameraClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
 
-        self.param_cli = ParamClient(gconf, param_server_name, context=context)
+        self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
 
-        self.add_clients(self.cli, self.param_cli)
+        self.add_clients(self.cli, self.gparams_cli)
 
         self.setEnabled(False)
 
@@ -89,13 +89,13 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
             b.setEnabled(self.roiBox.isChecked())
 
     def save_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "Camera", ".camera")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
-        note = self.param_cli.get_param("note", "")
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
+        note = self.gparams_cli.get_param("note", "")
         self.cli.save_data(fn, note=note)
         n = os.path.splitext(fn)[0] + ".png"
         self.cli.export_data(n)
@@ -103,17 +103,17 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
         return fn
 
     def load_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = load_dialog(self, default_path, "Camera", ".camera")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
         image = self.cli.load_data(fn)
         if image is None:
             return
         if image.note():
-            self.param_cli.set_param("loaded_note", image.note())
+            self.gparams_cli.set_param("loaded_note", image.note())
         self.iv.setImage(image.image.T)
         self.set_widget_values(image)
 
@@ -180,4 +180,4 @@ class CameraGUI(GUINode):
 
     def init_widget(self, gconf: dict, name, context):
         target = local_conf(gconf, name)["target"]
-        return CameraWidget(gconf, target["camera"], target["param_server"], context)
+        return CameraWidget(gconf, target["camera"], target["gparams"], context)

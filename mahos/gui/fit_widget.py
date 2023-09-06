@@ -24,12 +24,12 @@ _colors = [mpl.colors.to_hex(c) for c in mpl.colormaps.get("tab10").colors]
 
 
 class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
-    def __init__(self, cli, param_cli, parent=None):
+    def __init__(self, cli, gparams_cli, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
 
         self.cli = cli
-        self.param_cli = param_cli
+        self.gparams_cli = gparams_cli
         self.buffer = Buffer()
 
         self.init_widgets()
@@ -164,7 +164,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
         return data_list
 
     def load(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = self.load_dialog(default_path)
         if not fn:
             return

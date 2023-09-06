@@ -20,7 +20,7 @@ from .client import QBasicMeasClient
 from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.common_meas_msgs import BasicMeasData
-from ..node.param_server import ParamClient
+from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientWidget
 from .fit_widget import FitWidget
@@ -96,9 +96,7 @@ class PlotWidget(QtWidgets.QWidget):
 
 
 class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
-    def __init__(
-        self, gconf: dict, name, param_server_name, plot: PlotWidget, context, parent=None
-    ):
+    def __init__(self, gconf: dict, name, gparams_name, plot: PlotWidget, context, parent=None):
         ClientWidget.__init__(self, parent)
         self.setupUi(self)
 
@@ -110,14 +108,14 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         self.cli = QBasicMeasClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
 
-        self.param_cli = ParamClient(gconf, param_server_name, context=context)
+        self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
 
-        self.add_clients(self.cli, self.param_cli)
+        self.add_clients(self.cli, self.gparams_cli)
 
         self._finalizing = False
 
         self._fiTab_layout = QtWidgets.QVBoxLayout(self.fiTab)
-        self.fit = FitWidget(self.cli, self.param_cli, parent=self.fiTab)
+        self.fit = FitWidget(self.cli, self.gparams_cli, parent=self.fiTab)
         self._fiTab_layout.addWidget(self.fit)
 
         self.setEnabled(False)
@@ -155,13 +153,13 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         self.loadButton.clicked.connect(self.load_data)
 
     def save_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "" "")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
-        note = self.param_cli.get_param("note", "")
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
+        note = self.gparams_cli.get_param("note", "")
         self.cli.save_data(fn, note=note)
         n = os.path.splitext(fn)[0] + ".png"
         self.cli.export_data(n)
@@ -169,17 +167,17 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         return fn
 
     def load_data(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = load_dialog(self, default_path, "", "")
         if not fn:
             return
 
-        self.param_cli.set_param("work_dir", os.path.split(fn)[0])
+        self.gparams_cli.set_param("work_dir", os.path.split(fn)[0])
         data = self.cli.load_data(fn)
         if data is None:
             return
         if data.note():
-            self.param_cli.set_param("loaded_note", data.note())
+            self.gparams_cli.set_param("loaded_note", data.note())
 
         self.refresh_plot()
         self.apply_widgets(data)
@@ -209,7 +207,7 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         if not data_list:
             return
 
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = export_dialog(self, default_path, "", (".png", ".pdf", ".eps"))
         if not fn:
             return
@@ -260,7 +258,7 @@ class BasicMeasMainWindow(QtWidgets.QMainWindow):
 
         self.plot = PlotWidget(parent=self)
         self.meas = BasicMeasWidget(
-            gconf, target["meas"], target["param_server"], self.plot, context, parent=self
+            gconf, target["meas"], target["gparams"], self.plot, context, parent=self
         )
 
         self.setWindowTitle(f"MAHOS.BasicMeasGUI ({join_name(target['meas'])})")

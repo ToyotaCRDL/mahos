@@ -10,7 +10,7 @@ from __future__ import annotations
 from .ui.tweaker import Ui_TweakerWidget
 
 from ..msgs.tweaker_msgs import TweakerStatus
-from ..node.param_server import ParamClient
+from ..node.global_params import GlobalParamsClient
 from .common_widget import ClientTopWidget
 from .tweaker_client import QTweakerClient
 from .param import ParamTable
@@ -22,7 +22,7 @@ from .dialog import save_dialog, load_dialog
 class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
     """Top widget for TweakerGUI."""
 
-    def __init__(self, gconf: dict, name, param_server_name, context, parent=None):
+    def __init__(self, gconf: dict, name, gparams_name, context, parent=None):
         ClientTopWidget.__init__(self, parent)
         self.setupUi(self)
         self.setWindowTitle(f"MAHOS.TweakerGUI ({join_name(name)})")
@@ -30,9 +30,9 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         self.cli = QTweakerClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
 
-        self.param_cli = ParamClient(gconf, param_server_name, context=context)
+        self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
 
-        self.add_clients(self.cli, self.param_cli)
+        self.add_clients(self.cli, self.gparams_cli)
 
         self.setEnabled(False)
 
@@ -94,7 +94,7 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         self.cli.write(param_dict_id, params)
 
     def request_save(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "Tweaker", ".tweak")
         if not fn:
             return
@@ -102,7 +102,7 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         self.cli.save(fn)
 
     def request_load(self):
-        default_path = str(self.param_cli.get_param("work_dir"))
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = load_dialog(self, default_path, "Tweaker or measurement", "")
         if not fn:
             return
@@ -121,4 +121,4 @@ class TweakerGUI(GUINode):
 
     def init_widget(self, gconf: dict, name, context):
         target = local_conf(gconf, name)["target"]
-        return TweakerWidget(gconf, target["tweaker"], target["param_server"], context)
+        return TweakerWidget(gconf, target["tweaker"], target["gparams"], context)

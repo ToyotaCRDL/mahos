@@ -51,7 +51,7 @@ mahos launch
 mahos log
 ^^^^^^^^^
 
-``mahos log [nodename=log_broker]`` subscribes to a :class:`LogBroker <node.log_broker.LogBroker>` to print logs on console.
+``mahos log [nodename=log]`` subscribes to a :class:`LogBroker <node.log_broker.LogBroker>` to print logs on console.
 
 mahos ls
 ^^^^^^^^

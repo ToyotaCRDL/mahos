@@ -2,25 +2,25 @@
 req_timeout_ms = 30_000
 poll_timeout_ms = 100
 
-[localhost.log_broker]
+[localhost.log]
 module = "mahos.node.log_broker"
 class = "LogBroker"
-target = { log = "localhost::log_broker" }
+target = { log = "localhost::log" }
 xpub_endpoint = "tcp://127.0.0.1:5755"
 xsub_endpoint = "tcp://127.0.0.1:5756"
 file = true
 
-[localhost.param_server]
-module = "mahos.node.param_server"
-class = "ParamServer"
-target = { log = "localhost::log_broker" }
+[localhost.gparam]
+module = "mahos.node.global_params"
+class = "GlobalParams"
+target = { log = "localhost::log" }
 rep_endpoint = "tcp://127.0.0.1:5757"
 pub_endpoint = "tcp://127.0.0.1:5758"
 
 [localhost.server]
 module = "mahos.inst.server"
 class = "InstrumentServer"
-target = { log = "localhost::log_broker" }
+target = { log = "localhost::log" }
 log_level = "DEBUG"
 rep_endpoint = "tcp://127.0.0.1:5759"
 pub_endpoint = "tcp://127.0.0.1:5760"
@@ -136,7 +136,7 @@ interval_sec = 0.01 # small enough value to get poll_timeout_ms-limited interval
 [localhost.confocal.piezo]
 interval_sec = 0.2
 [localhost.confocal.target]
-log = "localhost::log_broker"
+log = "localhost::log"
 [localhost.confocal.target.servers]
 clock = "localhost::server"
 scanner = "localhost::server"
@@ -151,7 +151,7 @@ log_level = "DEBUG"
 rep_endpoint = "tcp://127.0.0.1:5772"
 pub_endpoint = "tcp://127.0.0.1:5773"
 [localhost.tracker.target]
-log = "localhost::log_broker"
+log = "localhost::log"
 confocal = "localhost::confocal"
 manager = "localhost::manager"
 
@@ -164,7 +164,7 @@ pub_endpoint = "tcp://127.0.0.1:5779"
 pd_clock = "/Dev1/PFI2"
 start_delay = 2.0
 [localhost.odmr.target]
-log = "localhost::log_broker"
+log = "localhost::log"
 [localhost.odmr.target.servers]
 sg = "localhost::server"
 pg = "localhost::server"
@@ -178,7 +178,7 @@ class = "PODMR"
 rep_endpoint = "tcp://127.0.0.1:5780"
 pub_endpoint = "tcp://127.0.0.1:5781"
 [localhost.podmr.target]
-log = "localhost::log_broker"
+log = "localhost::log"
 [localhost.podmr.target.servers]
 tdc = "localhost::server"
 sg = "localhost::server"
@@ -188,7 +188,7 @@ fg = "localhost::server"
 [localhost.manager]
 module = "mahos.meas.state_manager"
 class = "StateManager"
-target = { log = "localhost::log_broker" }
+target = { log = "localhost::log" }
 rep_endpoint = "tcp://127.0.0.1:5788"
 pub_endpoint = "tcp://127.0.0.1:5789"
 
@@ -210,14 +210,14 @@ move_interval_ms = 20
 [localhost.confocal_gui.target]
 confocal = "localhost::confocal"
 tracker = "localhost::tracker"
-param_server = "localhost::param_server"
+gparam = "localhost::gparam"
 
 [localhost.odmr_gui]
 module = "mahos.gui.odmr"
 class = "ODMRGUI"
 [localhost.odmr_gui.target]
 odmr = "localhost::odmr"
-param_server = "localhost::param_server"
+gparam = "localhost::gparam"
 confocal = "localhost::confocal"
 
 [localhost.podmr_gui]
@@ -225,14 +225,14 @@ module = "mahos.gui.podmr"
 class = "PODMRGUI"
 [localhost.podmr_gui.target]
 podmr = "localhost::podmr"
-param_server = "localhost::param_server"
+gparam = "localhost::gparam"
 
 [localhost.main_monitor]
 module = "mahos.gui.main_monitor"
 class = "MainMonitor"
 work_dir = "~"
 [localhost.main_monitor.target]
-log = "localhost::log_broker"
-param_server = "localhost::param_server"
+log = "localhost::log"
+gparam = "localhost::gparam"
 servers = ["localhost::server"]
 manager = "localhost::manager"

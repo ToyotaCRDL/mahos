@@ -21,7 +21,7 @@ class ThreadedNodes(object):
         self.shutdown_events = {}
         self.check_interval_sec = 0.5
         self.shutdown_delay_sec = 0.5
-        self.shutdown_order = ["InstrumentServer", "LogBroker"]  # ParamServer?
+        self.shutdown_order = ["InstrumentServer", "LogBroker"]  # GlobalParams?
 
     def start(self):
         ctx = Context()
