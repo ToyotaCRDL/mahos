@@ -61,6 +61,7 @@ class HBT(BasicMeasNode):
             self.tweaker_cli = TweakerClient(
                 gconf, self.conf["target"]["tweaker"], context=self.ctx, prefix=self.joined_name()
             )
+            self.add_client(self.tweaker_cli)
         else:
             self.tweaker_cli = None
 

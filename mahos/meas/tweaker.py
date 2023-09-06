@@ -70,6 +70,7 @@ class Tweaker(Node):
         self.cli = MultiInstrumentClient(
             gconf, self.conf["target"]["servers"], context=self.ctx, prefix=self.joined_name()
         )
+        self.add_client(self.cli)
 
         #: dict[param_dict_id, ParamDict | None]
         self._param_dicts = {pd: None for pd in self.conf["param_dicts"]}
