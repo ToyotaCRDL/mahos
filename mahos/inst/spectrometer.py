@@ -16,24 +16,20 @@ import numpy as np
 from .instrument import Instrument
 
 
-# paths and imports for LightField
+# imports for LightField
 try:
     import clr
     from System import String
     from System import Int64
     from System import Double
     from System.Collections.Generic import List
-except ImportError:
-    print("mahos.inst.spectrometer: failed to import pythonnet-related modules")
 
-if "LIGHTFIELD_ROOT" in os.environ:
     sys.path.append(os.environ["LIGHTFIELD_ROOT"])
     sys.path.append(os.environ["LIGHTFIELD_ROOT"] + "\\AddInViews")
     clr.AddReference("PrincetonInstruments.LightFieldViewV5")
     clr.AddReference("PrincetonInstruments.LightField.AutomationV5")
     clr.AddReference("PrincetonInstruments.LightFieldAddInSupportServices")
 
-try:
     from PrincetonInstruments.LightField.Automation import Automation  # noqa: E402
     from PrincetonInstruments.LightField.AddIns import ExperimentSettings  # noqa: E402
     from PrincetonInstruments.LightField.AddIns import CameraSettings  # noqa: E402
@@ -42,7 +38,7 @@ try:
 
     # from PrincetonInstruments.LightField.AddIns import DeviceType
 except ImportError:
-    print("mahos.inst.spectrometer: failed to import PrincetonInstruments")
+    print("mahos.inst.spectrometer: failed to import pythonnet or PrincetonInstruments modules")
 
 
 class LightField(Instrument):
