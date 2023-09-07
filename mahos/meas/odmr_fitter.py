@@ -72,7 +72,7 @@ def guess_multi_peak(xdata, ydata, dip: bool, n_peaks: int, n_samples: int = 10)
     else:
         idx = np.argpartition(ydata, kth=-n_samples)[-n_samples:]
     xs = xdata[idx]
-    km = KMeans(n_clusters=n_peaks).fit(xs.reshape(-1, 1))
+    km = KMeans(n_clusters=n_peaks, init="k-means++", n_init="auto").fit(xs.reshape(-1, 1))
     return sorted(km.cluster_centers_[:, 0])
 
 
