@@ -331,22 +331,23 @@ class Data(Message):
         return res
 
 
+_complex_converters = {
+    "real": np.real,
+    "imag": np.imag,
+    "abs": np.absolute,
+    "absolute": np.absolute,
+    "angle": np.angle,
+}
+
+
 class ComplexDataMixin(object):
     """Mixin for Data which may have complex arrays."""
-
-    _complex_converters = {
-        "real": np.real,
-        "imag": np.imag,
-        "abs": np.absolute,
-        "absolute": np.absolute,
-        "angle": np.angle,
-    }
 
     def conv_complex(self, data: np.ndarray, conv: str) -> np.ndarray | None:
         if not np.issubdtype(data.dtype, np.complexfloating):
             return data
 
-        if conv in self._complex_converters:
-            return self._complex_converters[conv](data)
+        if conv in _complex_converters:
+            return _complex_converters[conv](data)
         else:
             return None

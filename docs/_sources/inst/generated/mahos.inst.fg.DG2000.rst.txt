@@ -35,6 +35,7 @@
       ~DG2000.get_param_dict
       ~DG2000.get_param_dict_labels
       ~DG2000.get_phase
+      ~DG2000.reset
       ~DG2000.set
       ~DG2000.set_amplitude
       ~DG2000.set_burst
@@ -55,8 +56,10 @@
       ~DG2000.set_reference_clock
       ~DG2000.set_square_duty
       ~DG2000.trigger
+      ~DG2000.update_all_bounds
       ~DG2000.update_amplitude_bounds
       ~DG2000.update_freq_bounds
+      ~DG2000.update_offset_bounds
    
    
 
