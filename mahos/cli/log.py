@@ -4,9 +4,17 @@ import time
 import argparse
 from functools import partial
 
-from ..node.node import join_name
-from ..node.log_broker import LogClient, parse_log, format_log, format_log_term_color, should_show
-from .util import init_gconf_host_node
+from ..node.node import join_name, is_threaded
+from ..node.log_broker import (
+    LogClient,
+    parse_log,
+    format_log,
+    format_log_term_color,
+    should_show,
+    log_broker_is_up,
+)
+from .util import init_gconf_host_node, host_is_local
+from .launch import Launcher
 
 
 def parse_args(args):
@@ -47,6 +55,18 @@ def main(args=None):
     args = parse_args(args)
     gconf, host, node = init_gconf_host_node(args.conf, args.host, args.node)
     joined_name = join_name((host, node))
+
+    if (
+        host_is_local(gconf, host)
+        and not is_threaded(gconf, joined_name)
+        and not log_broker_is_up(gconf, joined_name)
+    ):
+        print(f"Automatically starting {joined_name}.")
+        launcher = Launcher(args.conf, args.host, [node], [], shutdown_delay_sec=0.0)
+        launcher.start_all_nodes()
+    else:
+        launcher = None
+
     print("Opening LogClient for {} (config file: {}).".format(joined_name, args.conf))
 
     handler = partial(
@@ -54,10 +74,19 @@ def main(args=None):
     )
     cli = LogClient(gconf, joined_name, log_num=1, log_handler=handler)
 
-    try:
-        while True:
-            time.sleep(0.1)
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt: Exitting.")
-    finally:
-        cli.close()
+    if launcher is not None:
+        try:
+            launcher.check_loop()
+        except KeyboardInterrupt:
+            launcher.shutdown_nodes()
+        finally:
+            launcher.terminate_procs()
+            cli.close()
+    else:
+        try:
+            while True:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            print("KeyboardInterrupt: Exitting.")
+        finally:
+            cli.close()

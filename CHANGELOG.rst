@@ -19,6 +19,7 @@ Added
 - inst.fg: ParamDict-based interface.
 - meas.odmr: new parameters delay and sg_modulation.
 - util: new module graph.
+- cli: auto-start of log (LogBroker) in mahos log and auto-exclude of log in mahos launch
 
 Changed
 ^^^^^^^

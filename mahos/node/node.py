@@ -138,6 +138,16 @@ def threaded_nodes(gconf: dict, host: str) -> dict[str, list[str]]:
         return {}
 
 
+def is_threaded(gconf: dict, name: NodeName) -> bool:
+    """return True if node `name` is threaded."""
+
+    host, node_name = split_name(name)
+    for nodes in threaded_nodes(gconf, host).values():
+        if node_name in nodes:
+            return True
+    return False
+
+
 def get_value(gconf: dict, lconf: dict, key: str, default=None):
     """get a config value from lconf or gconf. return default if there's no config."""
 

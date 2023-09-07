@@ -14,7 +14,7 @@ def check_load_gconf(fn):
     return load_gconf(fn)
 
 
-def infer_hostname(gconf: dict):
+def infer_local_hostname(gconf: dict):
     hostname = platform.uname().node
     if hostname in gconf:
         return hostname
@@ -22,10 +22,14 @@ def infer_hostname(gconf: dict):
         return "localhost"
 
 
+def host_is_local(gconf: dict, host: str) -> bool:
+    return infer_local_hostname(gconf) == host
+
+
 def init_gconf_host(gconf_fn, host):
     gconf = check_load_gconf(gconf_fn)
     if not host:
-        host = infer_hostname(gconf)
+        host = infer_local_hostname(gconf)
     return gconf, host
 
 

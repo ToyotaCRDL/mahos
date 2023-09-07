@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import typing as T
+from __future__ import annotations
 import time
 import importlib
 import argparse
 import multiprocessing as mp
 
-from ..node.node import Node, start_node_proc, join_name, local_conf, threaded_nodes
+from ..node.node import Node, start_node_proc, join_name, local_conf, threaded_nodes, is_threaded
+from ..node.log_broker import log_broker_is_up
 from ..gui.gui_node import GUINode, start_gui_node_proc
 from .util import init_gconf_host
 from .threaded_nodes import start_threaded_nodes_proc
@@ -47,8 +48,9 @@ class Launcher(object):
         self,
         gconf_fn: str,
         host: str,
-        include: T.Optional[T.List[str]],
-        exclude: T.Optional[T.List[str]],
+        include: list[str] | None,
+        exclude: list[str] | None,
+        shutdown_delay_sec: float = 1.0,
     ):
         self.gconf, self.host = init_gconf_host(gconf_fn, host)
         self.include = include or []
@@ -60,9 +62,21 @@ class Launcher(object):
         self.class_names = {}
 
         self.check_interval_sec = 0.5
-        self.shutdown_delay_sec = 1.0
+        self.shutdown_delay_sec = shutdown_delay_sec
         self.shutdown_order = ["InstrumentServer", "LogBroker"]  # GlobalParams?
         self._threaded_node_names = []
+
+        # Auto-exclude host::log if it's already up.
+        # Don't do this if log is threaded because check isn't meaningful.
+        # (though threading log is not very recommended.)
+        log_name = join_name((self.host, "log"))
+        self._exclude_log = (
+            "log" in self.gconf[self.host]
+            and not is_threaded(self.gconf, log_name)
+            and log_broker_is_up(self.gconf, log_name)
+        )
+        if self._exclude_log:
+            print(f"Automatically excluding {log_name} that's already up.")
 
     def start_node(self, name: str):
         conf = local_conf(self.gconf, name)
@@ -81,7 +95,11 @@ class Launcher(object):
             raise ValueError("{} isn't a valid Node class: {}".format(name, NodeClass.__name__))
 
     def is_excluded(self, name: str):
-        return (self.include and name not in self.include) or name in self.exclude
+        return (
+            (self._exclude_log and name == "log")
+            or (self.include and name not in self.include)
+            or name in self.exclude
+        )
 
     def start_threaded_nodes(self):
         for name, node_names in threaded_nodes(self.gconf, self.host).items():
@@ -114,7 +132,6 @@ class Launcher(object):
     def start_all_nodes(self):
         self.start_threaded_nodes()
         self.start_raw_nodes()
-        print("Started all nodes.")
 
     def check_alive(self):
         terminated = []
@@ -171,6 +188,7 @@ def main(args=None):
 
     try:
         launcher.start_all_nodes()
+        print("Started all nodes.")
         launcher.check_loop()
     except KeyboardInterrupt:
         launcher.shutdown_nodes()

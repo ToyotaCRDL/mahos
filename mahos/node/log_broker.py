@@ -14,7 +14,10 @@ import datetime
 import threading
 import logging
 
-from .node import Node, NAME_DELIM, split_name
+import zmq
+
+from .node import NodeBase, Node, NodeName, NAME_DELIM, split_name
+from .comm import Context
 from .client import NodeClient, SubWorker
 from .log import TOPIC_DELIM, TIME_DELIM
 from ..util.term_color import col
@@ -210,6 +213,25 @@ class LogClient(NodeClient):
                 return self._logbuf.pop(0)
             else:
                 return None
+
+
+def log_broker_is_up(gconf: dict, name: NodeName) -> bool:
+    """Check if LogBroker with `name` defined in `gconf` is up.
+
+    Note that this check won't be meaningful if `name` is threaded.
+
+    """
+
+    n = NodeBase(gconf, name)
+    ctx = Context()
+    try:
+        ctx.add_broker(n.conf["xpub_endpoint"], n.conf["xsub_endpoint"])
+        return False
+    except zmq.ZMQError:
+        # fail to bind the endpoints -> it's already up.
+        return True
+    finally:
+        ctx.close()
 
 
 class LogBroker(Node):
