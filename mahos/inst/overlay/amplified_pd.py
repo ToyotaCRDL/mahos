@@ -131,9 +131,6 @@ class OE200_LI5640_AI(InstrumentOverlay):
         self.init_lockin()
         self.update_gain()
 
-        gr, gi = self.gain
-        self.logger.info(f"Current total gain: {gr:.2e}, {gi:.2e} V/W")
-
     def init_lockin(self):
         self.li5640.set_data1(LI5640.Data1.X)
         self.li5640.set_data2(LI5640.Data2.Y)
@@ -158,6 +155,7 @@ class OE200_LI5640_AI(InstrumentOverlay):
         v1_gain = data1_expand * 10.0 / volt_sens
         v2_gain = data2_expand * 10.0 / volt_sens
         self.gain = v1_gain * self.luci.gain, v2_gain * self.luci.gain
+        self.logger.info(f"Current total gain: {self.gain[0]:.2e}, {self.gain[1]:.2e} V/W")
         return self.gain
 
     # LockinAnalogPD wrappers / compatible interfaces

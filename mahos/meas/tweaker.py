@@ -131,7 +131,7 @@ class Tweaker(Node):
             self._param_dicts[param_dict_id] = params
             return True
         else:
-            return self.fail_with(f"Failed to read ParamDict {param_dict_id}")
+            return self.fail_with(f"Failed to write ParamDict {param_dict_id}")
 
     def write(self, msg: WriteReq) -> Resp:
         return Resp(self._write(msg.param_dict_id, msg.params))
