@@ -48,10 +48,16 @@ mahos launch
 
 ``mahos launch -e [nodenames-to-exclude]`` starts all the nodes excluding specified names.
 
+If a node named ``log`` (recommended name of :class:`LogBroker <node.log_broker.LogBroker>` node) is defined to run on the host
+and already up, it's automatically excluded.
+
 mahos log
 ^^^^^^^^^
 
 ``mahos log [nodename=log]`` subscribes to a :class:`LogBroker <node.log_broker.LogBroker>` to print logs on console.
+
+If specified :class:`LogBroker <node.log_broker.LogBroker>` node is configured to run on the same host and not up,
+this command automatically starts the node.
 
 mahos ls
 ^^^^^^^^

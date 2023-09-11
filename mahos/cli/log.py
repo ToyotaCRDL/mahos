@@ -62,7 +62,7 @@ def main(args=None):
         and not log_broker_is_up(gconf, joined_name)
     ):
         print(f"Automatically starting {joined_name}.")
-        launcher = Launcher(args.conf, args.host, [node], [], shutdown_delay_sec=0.0)
+        launcher = Launcher(args.conf, args.host, [node], [], shutdown_delay_sec=0.2)
         launcher.start_all_nodes()
     else:
         launcher = None

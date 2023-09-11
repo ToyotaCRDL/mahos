@@ -445,10 +445,14 @@ Defaults to real hostname (<code class="docutils literal notranslate"><span clas
 <span id="id2"></span><h3>mahos launch<a class="headerlink" href="#mahos-launch" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">[nodenames]</span></code> starts all the nodes (or specified nodes) pertaining to single host.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span> <span class="pre">-e</span> <span class="pre">[nodenames-to-exclude]</span></code> starts all the nodes excluding specified names.</p>
+<p>If a node named <code class="docutils literal notranslate"><span class="pre">log</span></code> (recommended name of <a class="reference internal" href="node/generated/mahos.node.log_broker.LogBroker.html#mahos.node.log_broker.LogBroker" title="mahos.node.log_broker.LogBroker"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogBroker</span></code></a> node) is defined to run on the host
+and already up, it’s automatically excluded.</p>
 </section>
 <section id="mahos-log">
 <h3>mahos log<a class="headerlink" href="#mahos-log" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">log</span> <span class="pre">[nodename=log]</span></code> subscribes to a <a class="reference internal" href="node/generated/mahos.node.log_broker.LogBroker.html#mahos.node.log_broker.LogBroker" title="mahos.node.log_broker.LogBroker"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogBroker</span></code></a> to print logs on console.</p>
+<p>If specified <a class="reference internal" href="node/generated/mahos.node.log_broker.LogBroker.html#mahos.node.log_broker.LogBroker" title="mahos.node.log_broker.LogBroker"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogBroker</span></code></a> node is configured to run on the same host and not up,
+this command automatically starts the node.</p>
 </section>
 <section id="mahos-ls">
 <h3>mahos ls<a class="headerlink" href="#mahos-ls" title="Permalink to this heading">#</a></h3>
