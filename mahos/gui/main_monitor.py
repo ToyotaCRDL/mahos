@@ -88,6 +88,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
         self.pathEdit.setText(d)
         self.gparams_cli.set_param("work_dir", d)
 
+        self.pathEdit.editingFinished.connect(self.update_path)
         self.pathButton.clicked.connect(self.pathDialog)
         self.gparams_cli.statusUpdated.connect(self.check_param)
 
@@ -100,6 +101,11 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
         self.noteEdit.commit.connect(self.commit_note)
         self.commitnoteButton.clicked.connect(self.commit_note)
         self.loadnoteButton.clicked.connect(self.load_note)
+
+    def update_path(self):
+        dn = str(self.pathEdit.text())
+        if os.path.exists(dn):
+            self.gparams_cli.set_param("work_dir", dn)
 
     def pathDialog(self):
         current = str(self.pathEdit.text())
@@ -116,7 +122,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
 
     def check_param(self, msg: GlobalParamsStatus):
         d = msg.params.get("work_dir")
-        if d is not None:
+        if d is not None and not self.pathEdit.hasFocus():
             self.pathEdit.setText(str(d))
 
         n = msg.params.get("loaded_note")
