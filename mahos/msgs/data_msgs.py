@@ -322,8 +322,8 @@ class Data(Message):
         res = []
         for key, val in group.items():
             if isinstance(val, h5py.Group):
-                # unlikely (unintended usage), but this group may not be a leaf.
-                pass
+                # _inst_params Group is contained if inst ParamDicts are attached by Tweaker.
+                continue
             res.append((key, "{:s} {:s}".format(val.dtype.name, str(val.shape))))
 
         for key, val in group.attrs.items():
