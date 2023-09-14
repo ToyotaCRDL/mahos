@@ -452,6 +452,7 @@ class Sweeper(Worker):
             "drop_first": drop,
             "clock_mode": True,
             "oversample": oversamp,
+            "bounds": params.get("pd_bounds", (-10.0, 10.0)),
         }
 
         success = all([pd.configure(params_pd) for pd in self.pds]) and all(
