@@ -96,6 +96,23 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="framerateenableBox">
+       <property name="text">
+        <string>limit fps</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="framerateBox">
+       <property name="suffix">
+        <string> fps</string>
+       </property>
+       <property name="decimals">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="fpsLabel">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -242,6 +259,21 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>startButton</tabstop>
+  <tabstop>stopButton</tabstop>
+  <tabstop>saveButton</tabstop>
+  <tabstop>loadButton</tabstop>
+  <tabstop>exposuretimeBox</tabstop>
+  <tabstop>framerateenableBox</tabstop>
+  <tabstop>framerateBox</tabstop>
+  <tabstop>binningBox</tabstop>
+  <tabstop>roiBox</tabstop>
+  <tabstop>woffsetBox</tabstop>
+  <tabstop>widthBox</tabstop>
+  <tabstop>hoffsetBox</tabstop>
+  <tabstop>heightBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
