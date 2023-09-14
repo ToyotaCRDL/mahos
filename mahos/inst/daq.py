@@ -639,13 +639,13 @@ class AnalogIn(ConfigurableTask):
             return False, []
         return True, bounds
 
-    def _get_ranges(self) -> tuple[float, float] | None:
+    def _get_ranges(self, channel: str) -> tuple[float, float] | None:
         if self.task is None:
             return None
         low = D.float64()
-        self.task.GetAIRngLow(D.byref(low))
+        self.task.GetAIRngLow(channel, D.byref(low))
         high = D.float64()
-        self.task.GetAIRngHigh(D.byref(high))
+        self.task.GetAIRngHigh(channel, D.byref(high))
         return low.value, high.value
 
     def configure_on_demand(self, params: dict) -> bool:
@@ -705,9 +705,15 @@ class AnalogIn(ConfigurableTask):
             done_handler,
         )
 
-        for line, bound in zip(self.lines, bounds):
+        for i, (line, bound) in enumerate(zip(self.lines, bounds)):
             self.task.CreateAIVoltageChan(
-                line, "", D.DAQmx_Val_RSE, bound[0], bound[1], D.DAQmx_Val_Volts, None
+                line,
+                f"AnalogIn{i}",
+                D.DAQmx_Val_RSE,
+                bound[0],
+                bound[1],
+                D.DAQmx_Val_Volts,
+                None,
             )
         self.task.SetSampTimingType(_samp_timing_clock_or_ondemand(True))
 
@@ -720,8 +726,9 @@ class AnalogIn(ConfigurableTask):
         )
 
         self.logger.debug(f"Buffer size: {self.get_buffer_size()}")
-        ranges = self._get_ranges()
-        self.logger.debug(f"Input voltage ranges: {ranges}")
+        for i, line in enumerate(self.lines):
+            ranges = self._get_ranges(f"AnalogIn{i}")
+            self.logger.debug(f"Input voltage ranges of {line}: {ranges}")
 
         if every:
             self.task.AutoRegisterEveryNSamplesEvent(D.DAQmx_Val_Acquired_Into_Buffer, 1, 0)
