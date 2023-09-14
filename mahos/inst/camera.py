@@ -7,8 +7,8 @@ Camera module.
 
 """
 
+from __future__ import annotations
 import os
-import typing as T
 import threading
 import time
 import enum
@@ -62,11 +62,18 @@ class ThorlabsCamera(Instrument):
         if hasattr(self, "sdk"):
             self.sdk.dispose()
 
-    def configure_continuous(self, exposure_time_sec: float) -> bool:
+    def configure_continuous(
+        self, exposure_time_sec: float, frame_rate_Hz: float | None = None
+    ) -> bool:
         self.camera.exposure_time_us = int(round(exposure_time_sec * 1e6))
         self.camera.frames_per_trigger_zero_for_unlimited = 0
         self.camera.image_poll_timeout_ms = 0
         self._mode = "continuous"
+        if frame_rate_Hz is not None:
+            self.camera.frame_rate_control_value = frame_rate_Hz
+            self.camera.is_frame_rate_control_enabled = True
+        else:
+            self.camera.is_frame_rate_control_enabled = False
         self._queue = LockedQueue(self._queue_size)
 
         self.logger.info("Configured for continuous capture.")
@@ -78,7 +85,9 @@ class ThorlabsCamera(Instrument):
             if frame is not None:
                 self._queue.append(
                     FrameResult(
-                        frame=frame.image_buffer, count=frame.frame_count, time=time.time()
+                        frame=frame.image_buffer,
+                        count=frame.frame_count,
+                        time=time.time(),
                     )
                 )
 
@@ -97,7 +106,7 @@ class ThorlabsCamera(Instrument):
         if mode == "continuous":
             if not self.check_required_params(params, ("exposure_time",)):
                 return False
-            return self.configure_continuous(params["exposure_time"])
+            return self.configure_continuous(params["exposure_time"], params.get("frame_rate"))
         else:
             return self.fail_with(f"Unknown mode {mode}.")
 
@@ -250,7 +259,7 @@ class BaslerPylonCamera(Instrument):
             self.logger.error("Cannot set ExposureTime.")
             return False
 
-    def set_frame_rate(self, frame_rate_Hz: T.Optional[float]) -> bool:
+    def set_frame_rate(self, frame_rate_Hz: float | None) -> bool:
         if frame_rate_Hz is None:
             self.camera.AcquisitionFrameRateEnable = False
             self.logger.info("FrameRate limit disabled.")
@@ -341,9 +350,9 @@ class BaslerPylonCamera(Instrument):
     def configure_continuous(
         self,
         exposure_time_sec: float,
-        frame_rate_Hz: T.Optional[float] = None,
+        frame_rate_Hz: float | None = None,
         binning: int = 0,
-        roi: T.Optional[dict] = None,
+        roi: dict | None = None,
     ) -> bool:
         self.load_default()
         self.camera.RegisterConfiguration(
@@ -390,7 +399,7 @@ class BaslerPylonCamera(Instrument):
         exposure_time_sec: float,
         burst_num: int = 1,
         binning: int = 0,
-        roi: T.Optional[dict] = None,
+        roi: dict | None = None,
     ) -> bool:
         self.load_default()
         # self.camera.RegisterConfiguration(pylon.SoftwareTriggerConfiguration(),
@@ -449,11 +458,11 @@ class BaslerPylonCamera(Instrument):
         exposure_time_sec: float,
         burst_num: int = 1,
         binning: int = 0,
-        roi: T.Optional[dict] = None,
-        trigger_source: T.Optional[str] = None,
+        roi: dict | None = None,
+        trigger_source: str | None = None,
         trigger_positive: bool = True,
-        trigger_wait_line: T.Optional[str] = None,
-        trigger_wait_invert: T.Optional[bool] = None,
+        trigger_wait_line: str | None = None,
+        trigger_wait_invert: bool | None = None,
     ) -> bool:
         self.load_default()
         self.camera.Open()
@@ -518,7 +527,11 @@ class BaslerPylonCamera(Instrument):
                 with res:
                     if res.GrabSucceeded():
                         self._queue.append(
-                            FrameResult(frame=res.Array, count=self._frame_count, time=time.time())
+                            FrameResult(
+                                frame=res.Array,
+                                count=self._frame_count,
+                                time=time.time(),
+                            )
                         )
                         self._frame_count += 1
                     else:
@@ -547,14 +560,14 @@ class BaslerPylonCamera(Instrument):
                 FrameResult(frame=self._process_burst_frames(frames), time=time.time())
             )
 
-    def _process_burst_frames(self, frames: T.List[np.array]) -> np.array:
+    def _process_burst_frames(self, frames: list[np.array]) -> np.array:
         if len(frames) == 1:
             return frames[0]
         return np.array(frames).mean(
             axis=0
         )  # TODO: types? this will be float64. option for float32?
 
-    def get_frame_soft_trig_imm(self) -> T.Optional[np.ndarray]:
+    def get_frame_soft_trig_imm(self) -> np.ndarray | None:
         """Issue soft ware trigger and get grab result immediately."""
 
         if self._burst_num == 1:
@@ -585,7 +598,7 @@ class BaslerPylonCamera(Instrument):
             self.logger.error("RetrieveResult() timed out.")
             return None
 
-    def get_frame(self, timeout_sec: T.Optional[float] = None) -> FrameResult:
+    def get_frame(self, timeout_sec: float | None = None) -> FrameResult:
         if not self._running:
             return self.fail_with("get_frame() is called but not running.")
 

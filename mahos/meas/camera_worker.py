@@ -35,6 +35,7 @@ class Poller(Worker):
         # TODO query bounds from camera ?
         d = P.ParamDict(
             exposure_time=P.FloatParam(10e-3, 1e-6, 10.0, unit="s", SI_prefix=True),
+            frame_rate=P.FloatParam(30.0, 0.1, 1e4, unit="Hz", optional=True, enable=False),
             roi=P.ParamDict(
                 width=P.IntParam(100, minimum=0, optional=True, enable=False),
                 height=P.IntParam(100, minimum=0, optional=True, enable=False),

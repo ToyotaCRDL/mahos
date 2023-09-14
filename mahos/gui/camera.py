@@ -22,6 +22,7 @@ from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientTopWidget
 from .dialog import save_dialog, load_dialog
+from .param import apply_widgets
 from ..node.node import local_conf, join_name
 from ..util.timer import FPSCounter
 
@@ -84,6 +85,18 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
         self.roiBox.setChecked(True)
         self.roiBox.setChecked(False)
 
+        params = self.cli.get_param_dict()
+        if params is None:
+            return
+
+        apply_widgets(
+            params,
+            [
+                ("exposure_time", self.exposuretimeBox, 1e3),  # s to ms
+                ("frame_rate", self.framerateBox),
+            ],
+        )
+
     def update_roi_boxes(self):
         for b in (self.woffsetBox, self.widthBox, self.hoffsetBox, self.heightBox):
             b.setEnabled(self.roiBox.isChecked())
@@ -144,6 +157,11 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
 
         params = {}
         params["exposure_time"] = self.exposuretimeBox.value() * 1e-3  # ms to sec
+        if self.framerateenableBox.isChecked():
+            params["frame_rate"] = self.framerateBox.value()
+        else:
+            params["frame_rate"] = None
+        params["exposure_time"] = self.exposuretimeBox.value() * 1e-3  # ms to sec
         if self.roiBox.isChecked():
             params["roi"] = {
                 "width": self.widthBox.value(),
@@ -166,10 +184,19 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
         self._finalizing = False
 
     def update_state(self, state: BinaryState, last_state: BinaryState):
-        for w in (self.startButton, self.saveButton, self.exposuretimeBox):
+        for w in (
+            self.startButton,
+            self.saveButton,
+            self.exposuretimeBox,
+            self.binningBox,
+            self.framerateenableBox,
+        ):
             w.setEnabled(state == BinaryState.IDLE)
 
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
+        self.framerateBox.setEnabled(
+            state == BinaryState.IDLE and self.framerateenableBox.isChecked()
+        )
 
     def update_acquisitions_box(self):
         self.acquisitionsBox.setEnabled(self.stopafterBox.isChecked())
