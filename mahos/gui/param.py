@@ -12,9 +12,25 @@ from .Qt import QtWidgets, QtCore
 from .common_widget import SpinBox
 
 
+def _apply(p: P.Param, widget: QtWidgets.QWidget, coeff: float):
+    if isinstance(p, P.NumberParam):
+        mn = p.minimum() * coeff
+        mx = p.maximum() * coeff
+        v = p.some_value() * coeff
+        if isinstance(widget, QtWidgets.QSpinBox) and isinstance(p, P.FloatParam):
+            mn = round(mn)
+            mx = round(mx)
+            v = round(v)
+        widget.setMinimum(mn)
+        widget.setMaximum(mx)
+        widget.setValue(v)
+    if isinstance(p, P.BoolParam):
+        widget.setChecked(p.value())
+
+
 def apply_widgets(
     params: P.ParamDict[str, P.PDValue],
-    name_widgets: list[tuple[str, QtWidgets.QWidget, float | None]],
+    name_widgets: list[tuple[str, QtWidgets.QWidget | list[QtWidgets.QWidget], float | None]],
 ):
     for nwc in name_widgets:
         if len(nwc) == 3:
@@ -26,21 +42,11 @@ def apply_widgets(
             coeff = 1
         if name not in params:
             continue
-        p: P.Param = params[name]
-        if isinstance(p, P.NumberParam):
-            p: P.NumberParam
-            mn = p.minimum() * coeff
-            mx = p.maximum() * coeff
-            v = p.some_value() * coeff
-            if isinstance(widget, QtWidgets.QSpinBox) and isinstance(p, P.FloatParam):
-                mn = round(mn)
-                mx = round(mx)
-                v = round(v)
-            widget.setMinimum(mn)
-            widget.setMaximum(mx)
-            widget.setValue(v)
-        if isinstance(p, P.BoolParam):
-            widget.setChecked(p.value())
+        if isinstance(params[name], (list, tuple)):
+            for p, w in zip(params[name], widget):
+                _apply(p, w, coeff)
+        else:
+            _apply(params[name], widget, coeff)
 
 
 def set_enabled(params: dict, name_widgets: list[tuple[str, QtWidgets.QWidget]]):

@@ -141,6 +141,7 @@ class Tracer(Worker):
         self.cb_samples = conf.get("samples", 5)
         self.oversample = conf.get("oversample", 1)
         self.time_window_sec = conf.get("time_window_sec", 0.01)
+        self.pd_bounds = conf.get("pd_bounds", (-10.0, 10.0))
 
         self.trace = Trace(
             size=self.size, channels=len(self.pds), _complex=conf.get("complex", False)
@@ -170,6 +171,7 @@ class Tracer(Worker):
             "time_window": self.time_window_sec,  # only for APDCounter
             "clock_mode": True,  # only for AnalogIn
             "oversample": self.oversample,  # only for AnalogIn
+            "bounds": self.pd_bounds,  # only for AnalogIn
         }
         success = (
             self.clock.configure(params_clock)
@@ -295,6 +297,14 @@ class Scanner(Worker):
         if ScanMode.ANALOG in capability:
             d["dummy_samples"] = P.IntParam(self._conf.get("dummy_samples", 10), 1, 1000)
             d["oversample"] = P.IntParam(self._conf.get("oversample", 1), 1, 10_000_000)
+
+        if self._conf.get("pd_analog", False):
+            lb, ub = self._conf.get("pd_bounds", (-10.0, 10.0))
+            d["pd_bounds"] = [
+                P.FloatParam(lb, -10.0, 10.0, unit="V"),
+                P.FloatParam(ub, -10.0, 10.0, unit="V"),
+            ]
+
         if ScanMode.COM_DIPOLL in capability:
             d["poll_samples"] = P.IntParam(self._conf.get("poll_samples", 1), 1, 1000)
 

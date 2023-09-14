@@ -564,9 +564,16 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         )
         self._analog = "pd_rate" in params
         if self._analog:
-            apply_widgets(params, [("pd_rate", self.pdrateBox, 1e-3)])  # Hz to kHz
+            apply_widgets(
+                params,
+                [
+                    ("pd_rate", self.pdrateBox, 1e-3),  # Hz to kHz
+                    ("pd_bounds", [self.pd_lbBox, self.pd_ubBox]),
+                ],
+            )
         else:
-            self.pdrateBox.setEnabled(False)
+            for b in (self.pdrateBox, self.pd_lbBox, self.pd_ubBox):
+                b.setEnabled(False)
 
         self.saveconfocalBox.setEnabled(self.confocal_cli is not None)
         self.saveconfocalBox.setChecked(self.confocal_cli is not None)
@@ -618,8 +625,13 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.delayBox.setValue(data.params["delay"] * 1e3)
         if bg and "background_delay" in data.params:
             self.bgdelayBox.setValue(data.params["background_delay"] * 1e3)
-        if self._analog and "pd_rate" in data.params:
-            self.pdrateBox.setValue(round(data.params["pd_rate"] * 1e-3))
+        if self._analog:
+            if "pd_rate" in data.params:
+                self.pdrateBox.setValue(round(data.params["pd_rate"] * 1e-3))
+            if "pd_bounds" in data.params:
+                lb, ub = data.params["pd_bounds"]
+                self.pd_lbBox.setValue(lb)
+                self.pd_ubBox.setValue(ub)
         if "sg_modulation" in data.params:
             self.sgmodBox.setChecked(data.params["sg_modulation"])
         timing = data.params["timing"]
@@ -722,6 +734,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params["continue_mw"] = self.mwcontBox.isChecked()
         if self._analog:
             params["pd_rate"] = self.pdrateBox.value() * 1e3  # kHz to Hz
+            params["pd_bounds"] = [self.pd_lbBox.value(), self.pd_ubBox.value()]
 
         return params
 
@@ -787,7 +800,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         ):
             w.setEnabled(state == BinaryState.IDLE)
 
-        self.pdrateBox.setEnabled(state == BinaryState.IDLE and self._analog)
+        for b in (self.pdrateBox, self.pd_lbBox, self.pd_ubBox):
+            b.setEnabled(state == BinaryState.IDLE and self._analog)
         self.bgdelayBox.setEnabled(state == BinaryState.IDLE and self.backgroundBox.isChecked())
 
         self.windowBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())

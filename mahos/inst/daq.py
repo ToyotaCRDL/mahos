@@ -639,6 +639,15 @@ class AnalogIn(ConfigurableTask):
             return False, []
         return True, bounds
 
+    def _get_ranges(self) -> tuple[float, float] | None:
+        if self.task is None:
+            return None
+        low = D.float64()
+        self.task.GetAIRngLow(D.byref(low))
+        high = D.float64()
+        self.task.GetAIRngHigh(D.byref(high))
+        return low.value, high.value
+
     def configure_on_demand(self, params: dict) -> bool:
         success, bounds = self._get_bounds(params)
         if not success:
@@ -678,6 +687,7 @@ class AnalogIn(ConfigurableTask):
         success, bounds = self._get_bounds(params)
         if not success:
             return False
+        self.logger.debug(f"Input voltage bounds: {bounds}")
 
         self.queue = LockedQueue(self.buffer_size)
 
@@ -710,6 +720,8 @@ class AnalogIn(ConfigurableTask):
         )
 
         self.logger.debug(f"Buffer size: {self.get_buffer_size()}")
+        ranges = self._get_ranges()
+        self.logger.debug(f"Input voltage ranges: {ranges}")
 
         if every:
             self.task.AutoRegisterEveryNSamplesEvent(D.DAQmx_Val_Acquired_Into_Buffer, 1, 0)

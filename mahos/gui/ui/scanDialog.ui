@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1125</width>
-    <height>264</height>
+    <height>285</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,96 +16,10 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="3" column="4">
+     <item row="4" column="4">
       <widget class="QPushButton" name="loadButton">
        <property name="text">
         <string>Load</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="2">
-      <widget class="QDoubleSpinBox" name="ymaxBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="xLabel">
-       <property name="text">
-        <string>X</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="1">
-      <widget class="QDoubleSpinBox" name="yminBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QDoubleSpinBox" name="xsizeBox">
-       <property name="prefix">
-        <string>X size: </string>
-       </property>
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>10.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="2">
-      <widget class="QDoubleSpinBox" name="ysizeBox">
-       <property name="prefix">
-        <string>Y size: </string>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>10.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="msgLabel">
-       <property name="text">
-        <string>Set XY Scan parameter</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="3">
-      <widget class="QSpinBox" name="ynumBox">
-       <property name="minimum">
-        <number>2</number>
-       </property>
-       <property name="maximum">
-        <number>9999</number>
-       </property>
-       <property name="value">
-        <number>51</number>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="3">
-      <widget class="QPushButton" name="sizeButton">
-       <property name="text">
-        <string>Set with Size</string>
        </property>
       </widget>
      </item>
@@ -122,6 +36,121 @@
        </property>
        <property name="value">
         <number>10</number>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="2">
+      <widget class="QDoubleSpinBox" name="xmaxBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Range</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Line mode</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="2">
+      <widget class="QDoubleSpinBox" name="ysizeBox">
+       <property name="prefix">
+        <string>Y size: </string>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>10.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QPushButton" name="roiButton">
+       <property name="text">
+        <string>ROI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QDoubleSpinBox" name="xminBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="4">
+      <widget class="QLabel" name="ystepLabel">
+       <property name="text">
+        <string>1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="3">
+      <widget class="QPushButton" name="fullButton">
+       <property name="text">
+        <string>Full</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="yLabel">
+       <property name="text">
+        <string>Y</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="5">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>size</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="4">
+      <widget class="QDoubleSpinBox" name="zBox">
+       <property name="prefix">
+        <string>Z: </string>
+       </property>
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="decimals">
+        <number>4</number>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="2">
+      <widget class="QDoubleSpinBox" name="ymaxBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="2">
+      <widget class="QLabel" name="maxLabel">
+       <property name="text">
+        <string>max</string>
        </property>
       </widget>
      </item>
@@ -147,146 +176,61 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label">
+     <item row="7" column="5">
+      <widget class="QLabel" name="xsizeLabel">
        <property name="text">
-        <string>Scan mode</string>
+        <string>1</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="2">
-      <widget class="QDoubleSpinBox" name="xmaxBox">
+     <item row="6" column="3">
+      <widget class="QLabel" name="numLabel">
+       <property name="text">
+        <string>num</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="5">
+      <widget class="QDoubleSpinBox" name="delayBox">
+       <property name="prefix">
+        <string>delay: </string>
+       </property>
+       <property name="suffix">
+        <string> ms</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QDoubleSpinBox" name="xsizeBox">
+       <property name="prefix">
+        <string>X size: </string>
+       </property>
        <property name="decimals">
         <number>4</number>
        </property>
        <property name="singleStep">
         <double>0.100000000000000</double>
        </property>
+       <property name="value">
+        <double>10.000000000000000</double>
+       </property>
       </widget>
      </item>
-     <item row="3" column="2">
+     <item row="4" column="2">
       <widget class="QPushButton" name="roicenterButton">
        <property name="text">
         <string>ROI to Center</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="3">
-      <widget class="QPushButton" name="fullButton">
+     <item row="5" column="3">
+      <widget class="QPushButton" name="sizeButton">
        <property name="text">
-        <string>Full</string>
+        <string>Set with Size</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="4">
-      <widget class="QLabel" name="xstepLabel">
-       <property name="text">
-        <string>1</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Range Setter</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QComboBox" name="linemodeBox">
-       <item>
-        <property name="text">
-         <string>ASCEND</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>DESCEND</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>ZIGZAG</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Line mode</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="yLabel">
-       <property name="text">
-        <string>Y</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="4">
-      <widget class="QLabel" name="stepLabel">
-       <property name="text">
-        <string>step</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QLabel" name="minLabel">
-       <property name="text">
-        <string>min</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="3">
-      <widget class="QSpinBox" name="xnumBox">
-       <property name="minimum">
-        <number>2</number>
-       </property>
-       <property name="maximum">
-        <number>9999</number>
-       </property>
-       <property name="value">
-        <number>51</number>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="4">
-      <widget class="QLabel" name="ystepLabel">
-       <property name="text">
-        <string>1</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QPushButton" name="roiButton">
-       <property name="text">
-        <string>ROI</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QDoubleSpinBox" name="xminBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Timing</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="5">
+     <item row="8" column="5">
       <widget class="QLabel" name="ysizeLabel">
        <property name="text">
         <string>1</string>
@@ -302,61 +246,34 @@
        </item>
       </widget>
      </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_5">
+     <item row="7" column="0">
+      <widget class="QLabel" name="xLabel">
        <property name="text">
-        <string>Range</string>
+        <string>X</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
-     <item row="6" column="5">
-      <widget class="QLabel" name="xsizeLabel">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>1</string>
+        <string>Scan mode</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="3">
-      <widget class="QLabel" name="numLabel">
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>num</string>
+        <string>Range Setter</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="5">
-      <widget class="QLabel" name="label_6">
+     <item row="6" column="1">
+      <widget class="QLabel" name="minLabel">
        <property name="text">
-        <string>size</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="2">
-      <widget class="QLabel" name="maxLabel">
-       <property name="text">
-        <string>max</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="4">
-      <widget class="QDoubleSpinBox" name="zBox">
-       <property name="prefix">
-        <string>Z: </string>
-       </property>
-       <property name="suffix">
-        <string/>
-       </property>
-       <property name="decimals">
-        <number>4</number>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="5">
-      <widget class="QDoubleSpinBox" name="delayBox">
-       <property name="prefix">
-        <string>delay: </string>
-       </property>
-       <property name="suffix">
-        <string> ms</string>
+        <string>min</string>
        </property>
       </widget>
      </item>
@@ -379,6 +296,37 @@
        </property>
       </widget>
      </item>
+     <item row="6" column="4">
+      <widget class="QLabel" name="stepLabel">
+       <property name="text">
+        <string>step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Timing</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QDoubleSpinBox" name="yminBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="4">
+      <widget class="QLabel" name="xstepLabel">
+       <property name="text">
+        <string>1</string>
+       </property>
+      </widget>
+     </item>
      <item row="2" column="3">
       <widget class="QSpinBox" name="oversampleBox">
        <property name="prefix">
@@ -389,6 +337,103 @@
        </property>
        <property name="maximum">
         <number>100000</number>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="3">
+      <widget class="QSpinBox" name="ynumBox">
+       <property name="minimum">
+        <number>2</number>
+       </property>
+       <property name="maximum">
+        <number>9999</number>
+       </property>
+       <property name="value">
+        <number>51</number>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="3">
+      <widget class="QSpinBox" name="xnumBox">
+       <property name="minimum">
+        <number>2</number>
+       </property>
+       <property name="maximum">
+        <number>9999</number>
+       </property>
+       <property name="value">
+        <number>51</number>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="msgLabel">
+       <property name="text">
+        <string>Set XY Scan parameter</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QComboBox" name="linemodeBox">
+       <item>
+        <property name="text">
+         <string>ASCEND</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>DESCEND</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>ZIGZAG</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Analog PD</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="pd_lbBox">
+       <property name="prefix">
+        <string>lower: </string>
+       </property>
+       <property name="suffix">
+        <string> V</string>
+       </property>
+       <property name="minimum">
+        <double>-10.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>-10.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QDoubleSpinBox" name="pd_ubBox">
+       <property name="prefix">
+        <string>upper: </string>
+       </property>
+       <property name="suffix">
+        <string> V</string>
+       </property>
+       <property name="minimum">
+        <double>-10.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>10.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -417,6 +462,8 @@
   <tabstop>oversampleBox</tabstop>
   <tabstop>pollsampleBox</tabstop>
   <tabstop>delayBox</tabstop>
+  <tabstop>pd_lbBox</tabstop>
+  <tabstop>pd_ubBox</tabstop>
   <tabstop>roiButton</tabstop>
   <tabstop>roicenterButton</tabstop>
   <tabstop>fullButton</tabstop>

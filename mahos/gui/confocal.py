@@ -178,6 +178,13 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
                 ("poll_samples", self.pollsampleBox),
             ],
         )
+        if "pd_bounds" in params:
+            apply_widgets(params, [("pd_bounds", [self.pd_lbBox, self.pd_ubBox])])
+            self._pd_analog = True
+        else:
+            self.pd_lbBox.setEnabled(False)
+            self.pd_ubBox.setEnabled(False)
+            self._pd_analog = False
 
         self.update_modal_boxes()
         self.update_xstep_size()
@@ -251,6 +258,10 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
             self.pollsampleBox.setValue(params.get("poll_samples", 1000))
         if mode != ScanMode.ANALOG:
             self.set_delay(params.get("delay", 0.0))
+        if "pd_bounds" in params:
+            lb, ub = params["pd_bounds"]
+            self.pd_lbBox.setValue(lb)
+            self.pd_ubBox.setValue(ub)
 
         if self.direction == ScanDirection.XY:
             _z = "Z"
@@ -338,6 +349,9 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
     def set_delay(self, v):
         self.delayBox.setValue(v * 1e3)  # convert s to ms here
 
+    def get_pd_bounds(self):
+        return [self.pd_lbBox.value(), self.pd_ubBox.value()]
+
     def get_params(self):
         params = {}
         params["xmin"] = self.xminBox.value()
@@ -359,6 +373,8 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
             params["poll_samples"] = self.get_poll_samples()
         if params["mode"] != ScanMode.ANALOG:
             params["delay"] = self.get_delay()
+        if self._pd_analog:
+            params["pd_bounds"] = self.get_pd_bounds()
 
         return params
 
@@ -406,6 +422,13 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
                 ("poll_samples", self.pollsampleBox),
             ],
         )
+        if "pd_bounds" in params:
+            apply_widgets(params, [("pd_bounds"), [self.pd_lbBox, self.pd_ubBox]])
+            self._pd_analog = True
+        else:
+            self.pd_lbBox.setEnabled(False)
+            self.pd_ubBox.setEnabled(False)
+            self._pd_analog = False
 
         self.update_modal_boxes()
 
@@ -550,6 +573,9 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
     def set_delay(self, v):
         self.delayBox.setValue(v * 1e3)  # convert s to ms here
 
+    def get_pd_bounds(self):
+        return [self.pd_lbBox.value(), self.pd_ubBox.value()]
+
     def get_order(self):
         order = [
             str_to_direction(self.orderList.item(i).text()) for i in range(self.orderList.count())
@@ -580,6 +606,8 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
             params["poll_samples"] = self.get_poll_samples()
         if params["mode"] != ScanMode.ANALOG:
             params["delay"] = self.get_delay()
+        if self._pd_analog:
+            params["pd_bounds"] = self.get_pd_bounds()
 
         return params
 
@@ -607,6 +635,10 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
                 self.pollsampleBox.setValue(params.get("poll_samples", 1000))
             if mode != ScanMode.ANALOG:
                 self.set_delay(params.get("delay", 0.0))
+        if "pd_bounds" in params:
+            lb, ub = params["pd_bounds"]
+            self.pd_lbBox.setValue(lb)
+            self.pd_ubBox.setValue(ub)
 
         if ScanDirection.XY in params:
             c = params[ScanDirection.XY]

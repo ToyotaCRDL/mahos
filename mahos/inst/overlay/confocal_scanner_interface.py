@@ -7,7 +7,7 @@ Typed Interface for Confocal Scanner.
 
 """
 
-import typing as T
+from __future__ import annotations
 
 import numpy as np
 
@@ -19,12 +19,12 @@ from ...msgs.confocal_msgs import ScanMode, ScanDirection
 class ConfocalScannerInterface(InstrumentInterface):
     """Interface for Confocal Scanner."""
 
-    def get_line(self) -> T.Optional[np.ndarray]:
+    def get_line(self) -> np.ndarray | None:
         """Get single scan line. None is returned when scan is finished."""
 
         return self.get("line")
 
-    def get_capability(self) -> T.Optional[T.Tuple[ScanMode]]:
+    def get_capability(self) -> list[ScanMode] | None:
         """Get scanner capablities."""
 
         return self.get("capability")

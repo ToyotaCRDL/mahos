@@ -153,6 +153,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             return False
 
         self.line_timeout = params.get("line_timeout", 20.0)
+        self.pd_bounds = params.get("pd_bounds", (-10.0, 10.0))
         if not isinstance(params["direction"], ScanDirection):
             return self.fail_with("direction must be ScanDirection.")
         if params["mode"] != ScanMode.ANALOG:
@@ -248,6 +249,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             "time_window": self.time_window,  # only for APDCounter
             "clock_mode": True,  # only for AnalogIn
             "oversample": self.oversample,  # only for AnalogIn
+            "bounds": self.pd_bounds,  # only for AnalogIn
         }
 
         success = self.piezo.configure(self.params_piezo) and self.piezo.start_scan(

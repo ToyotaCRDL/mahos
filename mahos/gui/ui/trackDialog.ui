@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>850</width>
-    <height>571</height>
+    <height>584</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,59 +16,8 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="7" column="0">
-      <widget class="QLabel" name="yLabel">
-       <property name="text">
-        <string>Y</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="12" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>YZ Track Type</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QCheckBox" name="saveBox">
-       <property name="text">
-        <string>Save data</string>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="1">
-      <widget class="QDoubleSpinBox" name="xzzlenBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="minimum">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>2.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QLabel" name="lenLabel">
-       <property name="text">
-        <string>length</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="4">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>offset</string>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="2">
-      <widget class="QSpinBox" name="yzznumBox">
+     <item row="11" column="2">
+      <widget class="QSpinBox" name="xzxnumBox">
        <property name="minimum">
         <number>2</number>
        </property>
@@ -80,20 +29,25 @@
        </property>
       </widget>
      </item>
-     <item row="9" column="1">
-      <widget class="QLabel" name="lenLabel_2">
-       <property name="text">
-        <string>length</string>
+     <item row="0" column="1">
+      <widget class="QDoubleSpinBox" name="intervalBox">
+       <property name="prefix">
+        <string>interval </string>
        </property>
-      </widget>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="xLabel">
-       <property name="text">
-        <string>X</string>
+       <property name="suffix">
+        <string> s</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       <property name="decimals">
+        <number>1</number>
+       </property>
+       <property name="minimum">
+        <double>-1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>180.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -104,116 +58,79 @@
        </property>
       </widget>
      </item>
-     <item row="13" column="1">
-      <widget class="QLabel" name="lenLabel_3">
+     <item row="0" column="2">
+      <widget class="QCheckBox" name="saveBox">
        <property name="text">
-        <string>length</string>
+        <string>Save data</string>
        </property>
       </widget>
      </item>
      <item row="14" column="2">
-      <widget class="QSpinBox" name="yzynumBox">
-       <property name="minimum">
-        <number>2</number>
-       </property>
-       <property name="maximum">
-        <number>9999</number>
-       </property>
-       <property name="value">
-        <number>21</number>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QDoubleSpinBox" name="xyxlenBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="minimum">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>2.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QLabel" name="label_11">
-       <property name="text">
-        <string>Line mode</string>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="1">
-      <widget class="QDoubleSpinBox" name="xzxlenBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="minimum">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>2.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QComboBox" name="linemodeBox">
-       <item>
-        <property name="text">
-         <string>ASCEND</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>DESCEND</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>ZIGZAG</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>XZ Track Type</string>
-       </property>
-      </widget>
-     </item>
-     <item row="13" column="2">
       <widget class="QLabel" name="numLabel_3">
        <property name="text">
         <string>num</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_9">
+     <item row="11" column="3">
+      <widget class="QLabel" name="xzxstepLabel">
        <property name="text">
-        <string>Timing</string>
+        <string>1</string>
        </property>
       </widget>
      </item>
-     <item row="15" column="4">
-      <widget class="QDoubleSpinBox" name="yzzoffsetBox">
+     <item row="14" column="3">
+      <widget class="QLabel" name="stepLabel_3">
+       <property name="text">
+        <string>step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="3">
+      <widget class="QLabel" name="stepLabel">
+       <property name="text">
+        <string>step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="2">
+      <widget class="QLabel" name="numLabel_2">
+       <property name="text">
+        <string>num</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Y</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="1">
+      <widget class="QDoubleSpinBox" name="yzylenBox">
        <property name="decimals">
         <number>4</number>
        </property>
        <property name="minimum">
-        <double>-10.000000000000000</double>
+        <double>0.100000000000000</double>
        </property>
-       <property name="maximum">
-        <double>10.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.010000000000000</double>
+       <property name="value">
+        <double>2.000000000000000</double>
        </property>
       </widget>
      </item>
-     <item row="9" column="0">
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>XY Track Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
       <widget class="QComboBox" name="xzmodeBox">
        <item>
         <property name="text">
@@ -257,79 +174,8 @@
        </item>
       </widget>
      </item>
-     <item row="5" column="0">
-      <widget class="QComboBox" name="xymodeBox">
-       <item>
-        <property name="text">
-         <string>Disable</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Phase Only Correlation</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>2D Gaussian</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>1D Gaussian (X)</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>1D Gaussian (Y)</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Maximum pixel</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>1D Maximum (X)</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>1D Maximum (Y)</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="10" column="2">
-      <widget class="QSpinBox" name="xzxnumBox">
-       <property name="minimum">
-        <number>2</number>
-       </property>
-       <property name="maximum">
-        <number>9999</number>
-       </property>
-       <property name="value">
-        <number>21</number>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="3">
-      <widget class="QLabel" name="stepLabel">
-       <property name="text">
-        <string>step</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="3">
-      <widget class="QLabel" name="xyxstepLabel">
-       <property name="text">
-        <string>1</string>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="1">
-      <widget class="QDoubleSpinBox" name="yzylenBox">
+     <item row="11" column="1">
+      <widget class="QDoubleSpinBox" name="xzxlenBox">
        <property name="decimals">
         <number>4</number>
        </property>
@@ -341,28 +187,73 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>XY Track Type</string>
+     <item row="12" column="2">
+      <widget class="QSpinBox" name="xzznumBox">
+       <property name="minimum">
+        <number>2</number>
+       </property>
+       <property name="maximum">
+        <number>9999</number>
+       </property>
+       <property name="value">
+        <number>21</number>
        </property>
       </widget>
      </item>
-     <item row="13" column="3">
-      <widget class="QLabel" name="stepLabel_3">
-       <property name="text">
-        <string>step</string>
+     <item row="16" column="2">
+      <widget class="QSpinBox" name="yzznumBox">
+       <property name="minimum">
+        <number>2</number>
+       </property>
+       <property name="maximum">
+        <number>9999</number>
+       </property>
+       <property name="value">
+        <number>21</number>
        </property>
       </widget>
      </item>
-     <item row="11" column="3">
-      <widget class="QLabel" name="xzzstepLabel">
-       <property name="text">
-        <string>1</string>
+     <item row="7" column="1">
+      <widget class="QDoubleSpinBox" name="xyxlenBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="minimum">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>2.000000000000000</double>
        </property>
       </widget>
      </item>
-     <item row="11" column="0">
+     <item row="14" column="1">
+      <widget class="QLabel" name="lenLabel_3">
+       <property name="text">
+        <string>length</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QSpinBox" name="oversampleBox">
+       <property name="prefix">
+        <string>oversamp: </string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>100000</number>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>YZ Track Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Z</string>
@@ -372,7 +263,115 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="2">
+     <item row="15" column="3">
+      <widget class="QLabel" name="yzystepLabel">
+       <property name="text">
+        <string>1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="modeBox">
+       <item>
+        <property name="text">
+         <string>None</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="15" column="4">
+      <widget class="QDoubleSpinBox" name="yzyoffsetBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="minimum">
+        <double>-10.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QSpinBox" name="dummysampleBox">
+       <property name="prefix">
+        <string>dummy samp: </string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>999</number>
+       </property>
+       <property name="value">
+        <number>10</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QComboBox" name="linemodeBox">
+       <item>
+        <property name="text">
+         <string>ASCEND</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>DESCEND</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>ZIGZAG</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="7" column="3">
+      <widget class="QLabel" name="xyxstepLabel">
+       <property name="text">
+        <string>1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Set Tracking parameters</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="4">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>offset</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="2">
+      <widget class="QSpinBox" name="yzynumBox">
+       <property name="minimum">
+        <number>2</number>
+       </property>
+       <property name="maximum">
+        <number>9999</number>
+       </property>
+       <property name="value">
+        <number>21</number>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>XZ Track Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="2">
       <widget class="QSpinBox" name="xyxnumBox">
        <property name="minimum">
         <number>2</number>
@@ -385,14 +384,161 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="2">
+     <item row="8" column="0">
+      <widget class="QLabel" name="yLabel">
+       <property name="text">
+        <string>Y</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="xLabel">
+       <property name="text">
+        <string>X</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Timing</string>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="1">
+      <widget class="QDoubleSpinBox" name="yzzlenBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="minimum">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>2.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QDoubleSpinBox" name="timeBox">
+       <property name="prefix">
+        <string>time window: </string>
+       </property>
+       <property name="suffix">
+        <string> ms</string>
+       </property>
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="minimum">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>1000.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>10.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="1">
+      <widget class="QDoubleSpinBox" name="xzzlenBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="minimum">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>2.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="4">
+      <widget class="QDoubleSpinBox" name="xyxoffsetBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="minimum">
+        <double>-10.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="3">
+      <widget class="QLabel" name="xzzstepLabel">
+       <property name="text">
+        <string>1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="4">
+      <widget class="QDoubleSpinBox" name="xzzoffsetBox">
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="minimum">
+        <double>-10.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="2">
       <widget class="QLabel" name="numLabel">
        <property name="text">
         <string>num</string>
        </property>
       </widget>
      </item>
-     <item row="10" column="4">
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="pollsampleBox">
+       <property name="suffix">
+        <string/>
+       </property>
+       <property name="prefix">
+        <string>poll samp: </string>
+       </property>
+       <property name="minimum">
+        <number>1000</number>
+       </property>
+       <property name="maximum">
+        <number>10000</number>
+       </property>
+       <property name="singleStep">
+        <number>1000</number>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QLabel" name="lenLabel_2">
+       <property name="text">
+        <string>length</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>Line mode</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="4">
       <widget class="QDoubleSpinBox" name="xzxoffsetBox">
        <property name="decimals">
         <number>4</number>
@@ -408,20 +554,14 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
-      <widget class="QDoubleSpinBox" name="xyylenBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="minimum">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>2.000000000000000</double>
+     <item row="8" column="3">
+      <widget class="QLabel" name="xyystepLabel">
+       <property name="text">
+        <string>1</string>
        </property>
       </widget>
      </item>
-     <item row="13" column="0">
+     <item row="14" column="0">
       <widget class="QComboBox" name="yzmodeBox">
        <item>
         <property name="text">
@@ -465,6 +605,50 @@
        </item>
       </widget>
      </item>
+     <item row="6" column="0">
+      <widget class="QComboBox" name="xymodeBox">
+       <item>
+        <property name="text">
+         <string>Disable</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Phase Only Correlation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2D Gaussian</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1D Gaussian (X)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1D Gaussian (Y)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Maximum pixel</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1D Maximum (X)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1D Maximum (Y)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_10">
        <property name="text">
@@ -472,23 +656,21 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="modeBox">
-       <item>
-        <property name="text">
-         <string>None</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="9" column="3">
-      <widget class="QLabel" name="stepLabel_2">
+     <item row="16" column="3">
+      <widget class="QLabel" name="yzzstepLabel">
        <property name="text">
-        <string>step</string>
+        <string>1</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="4">
+     <item row="6" column="1">
+      <widget class="QLabel" name="lenLabel">
+       <property name="text">
+        <string>length</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="4">
       <widget class="QDoubleSpinBox" name="xyyoffsetBox">
        <property name="decimals">
         <number>4</number>
@@ -504,34 +686,7 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="3">
-      <widget class="QLabel" name="xyystepLabel">
-       <property name="text">
-        <string>1</string>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>X</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="0">
-      <widget class="QLabel" name="label_7">
-       <property name="text">
-        <string>Z</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="2">
+     <item row="8" column="2">
       <widget class="QSpinBox" name="xyynumBox">
        <property name="minimum">
         <number>2</number>
@@ -544,145 +699,32 @@
        </property>
       </widget>
      </item>
-     <item row="14" column="0">
-      <widget class="QLabel" name="label_6">
+     <item row="16" column="0">
+      <widget class="QLabel" name="label_7">
        <property name="text">
-        <string>Y</string>
+        <string>Z</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
-     <item row="11" column="4">
-      <widget class="QDoubleSpinBox" name="xzzoffsetBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="minimum">
-        <double>-10.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>10.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.010000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="4">
-      <widget class="QDoubleSpinBox" name="xyxoffsetBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="minimum">
-        <double>-10.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>10.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.010000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="4">
-      <widget class="QDoubleSpinBox" name="yzyoffsetBox">
-       <property name="decimals">
-        <number>4</number>
-       </property>
-       <property name="minimum">
-        <double>-10.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>10.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.010000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="2">
-      <widget class="QSpinBox" name="xzznumBox">
-       <property name="minimum">
-        <number>2</number>
-       </property>
-       <property name="maximum">
-        <number>9999</number>
-       </property>
-       <property name="value">
-        <number>21</number>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="3">
-      <widget class="QLabel" name="yzystepLabel">
-       <property name="text">
-        <string>1</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="2">
-      <widget class="QLabel" name="numLabel_2">
-       <property name="text">
-        <string>num</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QDoubleSpinBox" name="intervalBox">
-       <property name="prefix">
-        <string>interval </string>
-       </property>
-       <property name="suffix">
-        <string> s</string>
-       </property>
-       <property name="decimals">
-        <number>1</number>
-       </property>
-       <property name="minimum">
-        <double>-1.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>10000.000000000000000</double>
-       </property>
-       <property name="value">
-        <double>180.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="2">
-      <widget class="QSpinBox" name="dummysampleBox">
-       <property name="prefix">
-        <string>dummy samp: </string>
-       </property>
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>999</number>
-       </property>
-       <property name="value">
-        <number>10</number>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="3">
-      <widget class="QLabel" name="yzzstepLabel">
-       <property name="text">
-        <string>1</string>
-       </property>
-      </widget>
-     </item>
      <item row="10" column="3">
-      <widget class="QLabel" name="xzxstepLabel">
+      <widget class="QLabel" name="stepLabel_2">
        <property name="text">
-        <string>1</string>
+        <string>step</string>
        </property>
       </widget>
      </item>
-     <item row="15" column="1">
-      <widget class="QDoubleSpinBox" name="yzzlenBox">
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_14">
+       <property name="text">
+        <string>Analog PD</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QDoubleSpinBox" name="xyylenBox">
        <property name="decimals">
         <number>4</number>
        </property>
@@ -694,51 +736,29 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QDoubleSpinBox" name="timeBox">
-       <property name="prefix">
-        <string>time window: </string>
-       </property>
-       <property name="suffix">
-        <string> ms</string>
-       </property>
+     <item row="16" column="4">
+      <widget class="QDoubleSpinBox" name="yzzoffsetBox">
        <property name="decimals">
         <number>4</number>
        </property>
        <property name="minimum">
-        <double>0.100000000000000</double>
+        <double>-10.000000000000000</double>
        </property>
        <property name="maximum">
-        <double>1000.000000000000000</double>
-       </property>
-       <property name="value">
         <double>10.000000000000000</double>
        </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_8">
-       <property name="text">
-        <string>Set Tracking parameters</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QSpinBox" name="pollsampleBox">
-       <property name="suffix">
-        <string/>
-       </property>
-       <property name="prefix">
-        <string>poll samp: </string>
-       </property>
-       <property name="minimum">
-        <number>1000</number>
-       </property>
-       <property name="maximum">
-        <number>10000</number>
-       </property>
        <property name="singleStep">
-        <number>1000</number>
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>X</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -752,16 +772,41 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="3">
-      <widget class="QSpinBox" name="oversampleBox">
+     <item row="4" column="1">
+      <widget class="QDoubleSpinBox" name="pd_lbBox">
        <property name="prefix">
-        <string>oversamp: </string>
+        <string>lower: </string>
+       </property>
+       <property name="suffix">
+        <string> V</string>
        </property>
        <property name="minimum">
-        <number>1</number>
+        <double>-10.000000000000000</double>
        </property>
        <property name="maximum">
-        <number>100000</number>
+        <double>10.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>-10.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QDoubleSpinBox" name="pd_ubBox">
+       <property name="prefix">
+        <string>upper: </string>
+       </property>
+       <property name="suffix">
+        <string> V</string>
+       </property>
+       <property name="minimum">
+        <double>-10.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>10.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -856,6 +901,8 @@
   <tabstop>oversampleBox</tabstop>
   <tabstop>pollsampleBox</tabstop>
   <tabstop>delayBox</tabstop>
+  <tabstop>pd_lbBox</tabstop>
+  <tabstop>pd_ubBox</tabstop>
   <tabstop>xymodeBox</tabstop>
   <tabstop>xyxlenBox</tabstop>
   <tabstop>xyxnumBox</tabstop>

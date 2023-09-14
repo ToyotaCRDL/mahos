@@ -131,6 +131,11 @@ class Sweeper(Worker):
             d["pd_rate"] = P.FloatParam(
                 self._conf.get("pd_rate", 400e3), 1e3, 10000e3, doc="PD sampling rate"
             )
+            lb, ub = self._conf.get("pd_bounds", (-10.0, 10.0))
+            d["pd_bounds"] = [
+                P.FloatParam(lb, -10.0, 10.0, unit="V"),
+                P.FloatParam(ub, -10.0, 10.0, unit="V"),
+            ]
         return d
 
     def validate_params(
