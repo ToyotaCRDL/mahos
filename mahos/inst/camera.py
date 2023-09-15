@@ -70,8 +70,8 @@ class ThorlabsCamera(Instrument):
         self.camera.image_poll_timeout_ms = 0
         self._mode = "continuous"
         if frame_rate_Hz is not None:
-            self.camera.frame_rate_control_value = frame_rate_Hz
             self.camera.is_frame_rate_control_enabled = True
+            self.camera.frame_rate_control_value = frame_rate_Hz
         else:
             self.camera.is_frame_rate_control_enabled = False
         self._queue = LockedQueue(self._queue_size)
