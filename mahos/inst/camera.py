@@ -54,6 +54,7 @@ class ThorlabsCamera(Instrument):
         self._mode = None
         self._queue_size = self.conf.get("queue_size", 8)
         self._queue = LockedQueue(self._queue_size)
+        self._frame_rate_control = self.conf.get("frame_rate_control", True)
         self.running = False
 
     def close(self):
@@ -69,11 +70,16 @@ class ThorlabsCamera(Instrument):
         self.camera.frames_per_trigger_zero_for_unlimited = 0
         self.camera.image_poll_timeout_ms = 0
         self._mode = "continuous"
-        if frame_rate_Hz is not None:
-            self.camera.is_frame_rate_control_enabled = True
-            self.camera.frame_rate_control_value = frame_rate_Hz
-        else:
-            self.camera.is_frame_rate_control_enabled = False
+
+        if self._frame_rate_control:
+            if frame_rate_Hz is not None:
+                self.camera.is_frame_rate_control_enabled = True
+                self.camera.frame_rate_control_value = frame_rate_Hz
+            else:
+                self.camera.is_frame_rate_control_enabled = False
+        elif frame_rate_Hz is not None:
+            self.logger.warn("frame_rate is given but frame rate control is not available.")
+
         self._queue = LockedQueue(self._queue_size)
 
         self.logger.info("Configured for continuous capture.")
