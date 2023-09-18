@@ -58,8 +58,10 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
 
         v1_gain = data1_expand * 10.0 / volt_sens
         v2_gain = data2_expand * 10.0 / volt_sens
-        self.gain = v1_gain * self.pd.gain, v2_gain * self.pd.gain
-        self.logger.info(f"Current total gain: {self.gain[0]:.2e}, {self.gain[1]:.2e} V/W")
+        self.gain = v1_gain, v2_gain
+        self.total_gain = v1_gain * self.pd.gain, v2_gain * self.pd.gain
+        tg = self.total_gain
+        self.logger.info(f"Current total gain: {tg[0]:.2e}, {tg[1]:.2e} V/{self.pd.unit}")
         return self.gain
 
     # LockinAnalogPD wrappers / compatible interfaces
@@ -121,7 +123,7 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
         elif key == "unit":
             return self.pd.unit
         elif key == "gain":
-            return self.gain
+            return self.total_gain
         else:
             return self.li5640.get(key, args)
 
