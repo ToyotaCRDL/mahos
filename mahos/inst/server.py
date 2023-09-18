@@ -11,6 +11,7 @@ from __future__ import annotations
 import importlib
 from collections import ChainMap
 from inspect import signature, getdoc, getfile
+from functools import wraps
 
 from ..msgs.common_msgs import Request, Resp
 from ..msgs import inst_server_msgs
@@ -291,6 +292,18 @@ class InstrumentClient(StatusClient):
             return []
 
 
+def remap_inst(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        remap = args[0].inst_remap
+        inst = args[1]
+        if inst in remap:
+            args[1] = remap[inst]
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
 class MultiInstrumentClient(object):
     """Proxy-interface to multiple InstrumentClients."""
 
@@ -315,31 +328,35 @@ class MultiInstrumentClient(object):
         for cli in self.nodename_to_client.values():
             cli.close(close_ctx=close_ctx)
 
+    @remap_inst
     def get_client(self, inst: str) -> InstrumentClient:
-        if inst in self.inst_remap:
-            inst = self.inst_remap[inst]
         return self.nodename_to_client[self.inst_to_nodename[inst]]
 
+    @remap_inst
     def is_locked(self, inst: str) -> bool:
         """Check if an instrument is locked."""
 
         return self.get_client(inst).is_locked(inst)
 
+    @remap_inst
     def wait(self, inst: str) -> bool:
         """wait until the server is ready."""
 
         return self.get_client(inst).wait()
 
+    @remap_inst
     def lock(self, inst: str) -> bool:
         """Acquire lock of an instrument."""
 
         return self.get_client(inst).lock(inst)
 
+    @remap_inst
     def release(self, inst: str) -> bool:
         """Release lock of an instrument."""
 
         return self.get_client(inst).release(inst)
 
+    @remap_inst
     def call(self, inst: str, func: str, **args) -> Resp:
         """Call arbitrary function of an instrument.
 
@@ -354,51 +371,61 @@ class MultiInstrumentClient(object):
     def __call__(self, inst: str, func: str, **args) -> Resp:
         return self.call(inst, func, **args)
 
+    @remap_inst
     def shutdown(self, inst: str) -> bool:
         """Shutdown the instrument and get ready to power-off. Returns True on success."""
 
         return self.get_client(inst).shutdown(inst)
 
+    @remap_inst
     def start(self, inst: str) -> bool:
         """Start the instrument operation. Returns True on success."""
 
         return self.get_client(inst).start(inst)
 
+    @remap_inst
     def stop(self, inst: str) -> bool:
         """Stop the instrument operation. Returns True on success."""
 
         return self.get_client(inst).stop(inst)
 
+    @remap_inst
     def pause(self, inst: str) -> bool:
         """Pause the instrument operation. Returns True on success."""
 
         return self.get_client(inst).pause(inst)
 
+    @remap_inst
     def resume(self, inst: str) -> bool:
         """Resume the instrument operation. Returns True on success."""
 
         return self.get_client(inst).resume(inst)
 
+    @remap_inst
     def reset(self, inst: str) -> bool:
         """Reset the instrument settings. Returns True on success."""
 
         return self.get_client(inst).reset(inst)
 
+    @remap_inst
     def configure(self, inst: str, params: dict, label: str = "", group: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
         return self.get_client(inst).configure(inst, params, label, group)
 
+    @remap_inst
     def set(self, inst: str, key: str, value=None) -> bool:
         """Set an instrument setting or commanding value. Returns True on success."""
 
         return self.get_client(inst).set(inst, key, value)
 
+    @remap_inst
     def get(self, inst: str, key: str, args=None):
         """Get an instrument setting or commanding value."""
 
         return self.get_client(inst).get(inst, key, args)
 
+    @remap_inst
     def help(self, inst: str, func: str | None = None) -> str:
         """Get help of instrument `inst`.
 
@@ -409,6 +436,7 @@ class MultiInstrumentClient(object):
 
         return self.get_client(inst).help(inst, func)
 
+    @remap_inst
     def get_param_dict(
         self, inst: str, label: str = "", group: str = ""
     ) -> P.ParamDict[str, P.PDValue] | None:
@@ -424,6 +452,7 @@ class MultiInstrumentClient(object):
 
         return self.get_client(inst).get_param_dict(inst, label, group)
 
+    @remap_inst
     def get_param_dict_labels(self, inst: str, group: str = "") -> list[str]:
         """Get list of available ParamDict labels pertaining to `group`.
 
