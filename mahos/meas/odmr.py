@@ -42,6 +42,8 @@ class ODMR(BasicMeasNode):
 
         :param sweeper.pd_clock: (Required) DAQ device name for PD's clock (gate)
         :type sweeper.pd_clock: str
+        :param sweeper.pd_names: (default ["pd0", "pd1"]) PD names in target.servers.
+        :type sweeper.pd_names: list[str]
         :param sweeper.minimum_block_length: minimum block length in generated blocks
                                              (default: 1000)
         :type sweeper.minimum_block_length: int

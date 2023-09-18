@@ -21,7 +21,7 @@ class ConfocalScanner_mock(InstrumentOverlay):
     def __init__(self, name, conf, prefix):
         InstrumentOverlay.__init__(self, name, conf, prefix)
         self.piezo = self.conf["piezo"]
-        self.pds = [self.conf.get(n) for n in self.conf.get("pds", ["pd0", "pd1"])]
+        self.pds = [self.conf.get(n) for n in self.conf.get("pd_names", ["pd0", "pd1"])]
         self.add_instruments(self.piezo, *self.pds)
 
     def get_capability(self):

@@ -133,7 +133,7 @@ class Tracer(Worker):
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger)
         self.clock = ClockSourceInterface(cli, "clock")
-        self.pds = [PDInterface(cli, n) for n in conf.get("pds", ["pd0", "pd1"])]
+        self.pds = [PDInterface(cli, n) for n in conf.get("pd_names", ["pd0", "pd1"])]
         self.add_instruments(self.clock, *self.pds)
 
         self.interval_sec = conf.get("interval_sec", 0.5)

@@ -87,7 +87,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
         self.clock = self.conf.get("clock")
         self.divider = self.conf.get("divider")
         self.piezo = self.conf.get("piezo")
-        self.pds = [self.conf.get(n) for n in self.conf.get("pds", ["pd0", "pd1"])]
+        self.pds = [self.conf.get(n) for n in self.conf.get("pd_names", ["pd0", "pd1"])]
         self.add_instruments(self.clock, self.piezo, *self.pds)
 
         self.line_timeout = None
@@ -336,7 +336,7 @@ class ConfocalScannerCommand(InstrumentOverlay, ConfocalScannerMixin):
         InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
         self.pulser = self.conf.get("pulser")
         self.piezo = self.conf.get("piezo")
-        self.pds = [self.conf.get(n) for n in self.conf.get("pds", ["pd0", "pd1"])]
+        self.pds = [self.conf.get(n) for n in self.conf.get("pd_names", ["pd0", "pd1"])]
         self.add_instruments(self.pulser, self.piezo, *self.pds)
 
         # TODO: remove this message after testing.

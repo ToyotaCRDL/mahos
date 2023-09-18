@@ -28,7 +28,7 @@ class Sweeper(Worker):
         Worker.__init__(self, cli, logger)
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
-        self.pd_names = conf.get("pds", ["pd0", "pd1"])
+        self.pd_names = conf.get("pd_names", ["pd0", "pd1"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
         self.add_instruments(self.sg, self.pg, *self.pds)
 
