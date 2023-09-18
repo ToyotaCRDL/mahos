@@ -19,7 +19,7 @@ from ..msgs.inst_server_msgs import Ident, ServerStatus, LockReq, ReleaseReq, Ch
 from ..msgs.inst_server_msgs import ShutdownReq, StartReq, StopReq, PauseReq, ResumeReq
 from ..msgs.inst_server_msgs import ResetReq, ConfigureReq, SetReq, GetReq, HelpReq
 from ..msgs.inst_server_msgs import GetParamDictReq, GetParamDictLabelsReq
-from ..node.node import Node, split_name
+from ..node.node import Node, NodeName, split_name
 from ..node.client import StatusClient
 from ..util.graph import sort_dependency
 from .instrument import Instrument
@@ -294,21 +294,31 @@ class InstrumentClient(StatusClient):
 class MultiInstrumentClient(object):
     """Proxy-interface to multiple InstrumentClients."""
 
-    def __init__(self, gconf: dict, inst_to_name: dict, context=None, prefix=None):
-        self.inst_to_name = {k: split_name(v) for k, v in inst_to_name.items()}
-        self.name_to_client = {}
-        for name in self.inst_to_name.values():
-            if name not in self.name_to_client:
-                self.name_to_client[name] = InstrumentClient(
+    def __init__(
+        self,
+        gconf: dict,
+        inst_to_nodename: dict[str, NodeName],
+        inst_remap: dict[str, str] | None = None,
+        context=None,
+        prefix=None,
+    ):
+        self.inst_to_nodename = {k: split_name(v) for k, v in inst_to_nodename.items()}
+        self.inst_remap = inst_remap or {}
+        self.nodename_to_client = {}
+        for name in self.inst_to_nodename.values():
+            if name not in self.nodename_to_client:
+                self.nodename_to_client[name] = InstrumentClient(
                     gconf, name, context=context, prefix=prefix
                 )
 
     def close(self, close_ctx=True):
-        for cli in self.name_to_client.values():
+        for cli in self.nodename_to_client.values():
             cli.close(close_ctx=close_ctx)
 
     def get_client(self, inst: str) -> InstrumentClient:
-        return self.name_to_client[self.inst_to_name[inst]]
+        if inst in self.inst_remap:
+            inst = self.inst_remap[inst]
+        return self.nodename_to_client[self.inst_to_nodename[inst]]
 
     def is_locked(self, inst: str) -> bool:
         """Check if an instrument is locked."""

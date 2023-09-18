@@ -237,7 +237,11 @@ class Confocal(Node):
         self.state = ConfocalState.IDLE
 
         self.cli = MultiInstrumentClient(
-            gconf, self.conf["target"]["servers"], context=self.ctx, prefix=self.joined_name()
+            gconf,
+            self.conf["target"]["servers"],
+            inst_remap=self.conf.get("inst_remap"),
+            context=self.ctx,
+            prefix=self.joined_name(),
         )
         self.add_client(self.cli)
         self.add_rep()
