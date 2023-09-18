@@ -298,7 +298,7 @@ def remap_inst(f):
         remap = args[0].inst_remap
         inst = args[1]
         if inst in remap:
-            args[1] = remap[inst]
+            args = (args[0], remap[inst]) + args[2:]
         return f(*args, **kwargs)
 
     return wrapper
