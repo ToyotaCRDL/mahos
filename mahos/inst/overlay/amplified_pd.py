@@ -15,6 +15,148 @@ from ..lockin import LI5640
 from ..pd import LUCI_OE200, AnalogPD, LockinAnalogPD
 
 
+class LockinAnalogPD_LI5640(InstrumentOverlay):
+    """Generic (fixed gain) Photoreceiver and with LI5640 Lockin & DAQ AnalogIn.
+
+    :param li5640: a LI5640 instance
+    :type li5640: LI5640
+    :param pd: a LockinAnalogPD instance.
+    :type pd: LockinAnalogPD
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.li5640: LI5640 = self.conf.get("li5640")
+        self.pd: LockinAnalogPD = self.conf.get("pd")
+        self.add_instruments(self.li5640, self.pd)
+
+        self.init_lockin()
+        self.update_gain()
+
+    def init_lockin(self):
+        self.li5640.set_data1(LI5640.Data1.X)
+        self.li5640.set_data2(LI5640.Data2.Y)
+        self.li5640.set_Xoffset_enable(False)
+        self.li5640.set_Yoffset_enable(False)
+        self.li5640.set_data_normalization(LI5640.DataNormalization.OFF)
+
+        #  These settings must not be changed afterwards.
+        self.li5640.lock_params(
+            ["data1", "data2", "Xoffset_enable", "Yoffset_enable", "data_normalization"]
+        )
+
+    def update_gain(self) -> tuple[float, float]:
+        #  It is not perfect to memoise the param values at LI5640 setters
+        #  due to auto-setting or local operation.
+        #  Fetch the necessary parameters on our timing.
+
+        volt_sens = self.li5640.get_volt_sensitivity_float()
+        data1_expand = self.li5640.get_data1_expand()
+        data2_expand = self.li5640.get_data2_expand()
+
+        v1_gain = data1_expand * 10.0 / volt_sens
+        v2_gain = data2_expand * 10.0 / volt_sens
+        self.gain = v1_gain * self.pd.gain, v2_gain * self.pd.gain
+        self.logger.info(f"Current total gain: {self.gain[0]:.2e}, {self.gain[1]:.2e} V/W")
+        return self.gain
+
+    # LockinAnalogPD wrappers / compatible interfaces
+
+    def _convert_data(
+        self, data: np.ndarray | np.cdouble | tuple[np.ndarray, float] | None
+    ) -> np.ndarray | np.cdouble | tuple[np.ndarray, float] | None:
+        if data is None:
+            return None
+
+        gain_r, gain_i = self.gain
+
+        if isinstance(data, np.cdouble):
+            # read-on-demand
+            return np.cdouble(data.real / gain_r, data.imag / gain_i)
+        elif isinstance(data, tuple):
+            #  stamped clock-mode
+            data[0].real /= gain_r
+            data[0].imag /= gain_i
+            return data
+        else:
+            # ndarray, buffered read
+            data.real /= gain_r
+            data.imag /= gain_i
+            return data
+
+    def _convert_all_data(
+        self, data: list[np.ndarray | tuple[np.ndarray, float]] | None
+    ) -> list[np.ndarray | tuple[np.ndarray, float]] | None:
+        if data is None:
+            return None
+        return [self._convert_data(d) for d in data]
+
+    # Methods used by confocal_scanner
+
+    def pop_block(
+        self,
+    ) -> np.ndarray | tuple[np.ndarray | float]:
+        return self._convert_data(self.pd.pop_block())
+
+    def get_max_rate(self) -> float | None:
+        return self.pd.get_max_rate()
+
+    # Standard API
+
+    def set(self, key: str, value=None) -> bool:
+        # no set() key for pd
+
+        success = self.li5640.set(key, value)
+        #  set() may change the gain.
+        self.update_gain()
+        return success
+
+    def get(self, key: str, args=None):
+        if key == "data":
+            return self._convert_data(self.pd.get(key, args))
+        elif key == "all_data":
+            return self._convert_all_data(self.pd.get(key, args))
+        elif key == "unit":
+            return self.pd.unit
+        elif key == "gain":
+            return self.gain
+        else:
+            return self.li5640.get(key, args)
+
+    def get_param_dict_labels(self, group: str) -> list[str]:
+        return ["li5640"]
+
+    def get_param_dict(
+        self, label: str = "", group: str = ""
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label` in `group`."""
+
+        if label == "li5640":
+            return self.li5640.get_param_dict(label, group)
+        else:
+            return self.pd.get_param_dict(label, group)
+
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+        if label == "li5640":
+            success = self.li5640.configure(params, label, group)
+            #  configure() may change the gain.
+            self.update_gain()
+            return success
+        else:
+            #  update the gain with PD configuration so as to secure the correct gain
+            #  before subsequent (clock_mode) measurement.
+            self.update_gain()
+            return self.pd.configure(params, label, group)
+
+    def start(self) -> bool:
+        return self.pd.start()
+
+    def stop(self) -> bool:
+        return self.pd.stop()
+
+
 class OE200_AI(InstrumentOverlay):
     """FEMTO Messtechnik OE-200 Variable Gain Photoreceiver with DAQ AnalogIn.
 
