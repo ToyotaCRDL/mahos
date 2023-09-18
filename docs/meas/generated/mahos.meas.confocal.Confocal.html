@@ -609,13 +609,37 @@ document.write(`
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="mahos.meas.confocal.Confocal.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gconf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.meas.confocal.Confocal.__init__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Confocal scanner and interactive positioning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>piezo.interval_sec</strong> (<em>float</em>) – (default 0.5) Interval to poll piezo pos.</p></li>
+<li><p><strong>tracer.pd_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – (default [“pd0”, “pd1”]) PD names in target.servers.</p></li>
+<li><p><strong>tracer.interval_sec</strong> (<em>float</em>) – (default 0.5) Interval to poll trace data.</p></li>
+<li><p><strong>tracer.size</strong> (<em>int</em>) – (default 500) Size of trace data.</p></li>
+<li><p><strong>tracer.samples</strong> (<em>int</em>) – (default 5) Number of samples per chunk.</p></li>
+<li><p><strong>tracer.oversample</strong> (<em>int</em>) – (default 1) Oversample factor.</p></li>
+<li><p><strong>tracer.time_window_sec</strong> (<em>float</em>) – (default 0.01) Time window for single data point.</p></li>
+<li><p><strong>tracer.pd_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – (default (-10.0, 10.0)) PD’s voltage bounds.</p></li>
+<li><p><strong>scanner.xnum</strong> (<em>int</em>) – (default 51) Default value of param xnum.</p></li>
+<li><p><strong>scanner.ynum</strong> (<em>int</em>) – (default 51) Default value of param ynum.</p></li>
+<li><p><strong>scanner.delay</strong> (<em>float</em>) – (default 0.0) Default value of param delay.</p></li>
+<li><p><strong>scanner.time_window</strong> (<em>float</em>) – (default 0.01) Default value of param time_window.</p></li>
+<li><p><strong>scanner.pd_analog</strong> (<em>bool</em>) – set True if PD is AnalogIn-based.</p></li>
+<li><p><strong>scanner.pd_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – (default (-10.0, 10.0)) Default value of param pd_bounds.</p></li>
+<li><p><strong>scanner.oversample</strong> (<em>int</em>) – (default 1) Default value of param oversample.</p></li>
+<li><p><strong>scanner.dummy_samples</strong> (<em>int</em>) – (default 10) Default value of param dummy_samples.</p></li>
+<li><p><strong>scanner.poll_samples</strong> (<em>int</em>) – (default 1) Default value of param poll_samples.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mahos.meas.confocal.Confocal.__init__" title="mahos.meas.confocal.Confocal.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(gconf, name[, context])</p></td>
-<td><p></p></td>
+<td><p>Confocal scanner and interactive positioning.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_state</span></code>(msg)</p></td>
 <td><p></p></td>
