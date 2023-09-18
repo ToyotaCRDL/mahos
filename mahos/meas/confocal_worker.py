@@ -65,7 +65,7 @@ class Piezo(Worker):
     def get_target(self):
         tgt = self.piezo.get_target()
         if tgt is None:
-            self.logger.error("Failed to get piezo target pos.")
+            # self.logger.error("Failed to get piezo target pos.")
             return None
         self.pos.x_tgt, self.pos.y_tgt, self.pos.z_tgt = tgt
         return tgt
