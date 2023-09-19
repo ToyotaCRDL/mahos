@@ -23,7 +23,8 @@ def test_tweaker(server, tweaker, tweaker_conf):
     pX_A_new = tweaker.read("paramX::labelA")
     assert P.isclose(pX_A, pX_A_new)
 
-    param_dicts = tweaker.read_all()
+    success, param_dicts = tweaker.read_all()
+    assert success
     pY_B = param_dicts["paramY::labelB"]
     pY_B_C: P.StrParam = pY_B["paramC"]
     pY_B_D: P.BoolParam = pY_B["paramD"]
@@ -31,5 +32,6 @@ def test_tweaker(server, tweaker, tweaker_conf):
     pY_B_D.set(True)
 
     assert tweaker.write_all(param_dicts)
-    param_dicts_new = tweaker.read_all()
+    success, param_dicts_new = tweaker.read_all()
+    assert success
     assert P.isclose(P.ParamDict(param_dicts), P.ParamDict(param_dicts_new))

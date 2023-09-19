@@ -161,7 +161,7 @@ class GetParamDictReq(Request):
     """get ParamDict with `label` in a `group` for instrument `inst`."""
 
     def __init__(self, ident: Ident, inst: str, label: str = "", group: str = ""):
-        self.ident = Ident
+        self.ident = ident
         self.inst = inst
         self.label = label
         self.group = group
@@ -171,6 +171,6 @@ class GetParamDictLabelsReq(Request):
     """Request to get list of param dict labels in a `group` for instrument `inst`."""
 
     def __init__(self, ident: Ident, inst: str, group: str = ""):
-        self.ident = Ident
+        self.ident = ident
         self.inst = inst
         self.group = group

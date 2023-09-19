@@ -419,13 +419,13 @@ class LUCI_OE200(LUCI10):
         return self.write_data(to_write)
 
     def _update_gain(self, low_noise: bool, gain_exponent: int) -> bool:
-        self.low_noise = low_noise
-        self.gain_exponent = gain_exponent
-
         try:
             self.gain_value = self.GAINS[low_noise][gain_exponent]
         except KeyError:
             return self.fail_with(f"Invalid arguments: {low_noise}, {gain_exponent}")
+
+        self.low_noise = low_noise
+        self.gain_exponent = gain_exponent
 
         if low_noise:
             self.gain_value |= 0b1_0000

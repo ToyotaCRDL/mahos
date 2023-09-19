@@ -7,6 +7,8 @@ Qt signal-based client of Tweaker.
 
 """
 
+from __future__ import annotations
+
 from .Qt import QtCore
 
 from ..msgs import param_msgs as P
@@ -30,10 +32,9 @@ class QTweakerClient(QStatusSubscriber):
             logger=self.__class__.__name__,
         )
 
-    def read_all(self) -> dict[str, P.ParamDict[str, P.PDValue] | None] | None:
+    def read_all(self) -> tuple[bool, dict[str, P.ParamDict[str, P.PDValue] | None]]:
         resp = self.req.request(ReadAllReq())
-        if resp.success:
-            return resp.ret
+        return resp.success, resp.ret
 
     def read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
         resp = self.req.request(ReadReq(param_dict_id))

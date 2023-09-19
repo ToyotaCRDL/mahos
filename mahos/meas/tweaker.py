@@ -30,9 +30,9 @@ class TweakerClient(StatusClient):
 
     M = tweaker_msgs
 
-    def read_all(self) -> dict[str, P.ParamDict[str, P.PDValue] | None]:
+    def read_all(self) -> tuple[bool, dict[str, P.ParamDict[str, P.PDValue] | None]]:
         resp = self.req.request(ReadAllReq())
-        return resp.ret
+        return resp.success, resp.ret
 
     def read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
         resp = self.req.request(ReadReq(param_dict_id))
@@ -115,29 +115,32 @@ class Tweaker(Node):
 
     def _read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
         if param_dict_id not in self._param_dicts:
-            return self.fail_with(f"Unknown ParamDict id: {param_dict_id}")
+            self.logger.error(f"Unknown ParamDict id: {param_dict_id}")
+            return None
         inst, group, label = self._parse_param_dict_id(param_dict_id)
         d = self.cli.get_param_dict(inst, label, group)
         if d is None:
             self.logger.error(f"Failed to read ParamDict {param_dict_id}")
         return d
 
-    def _write(self, param_dict_id: dict, params: P.ParamDict[str, P.PDValue]) -> bool:
+    def _write(self, param_dict_id: dict, params: P.ParamDict[str, P.PDValue]) -> Resp:
         if param_dict_id not in self._param_dicts:
             return self.fail_with(f"Unknown ParamDict id: {param_dict_id}")
         inst, group, label = self._parse_param_dict_id(param_dict_id)
         success = self.cli.configure(inst, P.unwrap(params), label, group)
         if success:
             self._param_dicts[param_dict_id] = params
-            return True
+            return Resp(True)
         else:
             return self.fail_with(f"Failed to write ParamDict {param_dict_id}")
 
     def write(self, msg: WriteReq) -> Resp:
-        return Resp(self._write(msg.param_dict_id, msg.params))
+        return self._write(msg.param_dict_id, msg.params)
 
     def write_all(self, msg: WriteAllReq) -> Resp:
-        return Resp(all([self._write(pid, params) for pid, params in msg.param_dicts.items()]))
+        return Resp(
+            all([self._write(pid, params).success for pid, params in msg.param_dicts.items()])
+        )
 
     def save(self, msg: SaveReq) -> Resp:
         """Save tweaker state (param_dicts) to file using h5."""

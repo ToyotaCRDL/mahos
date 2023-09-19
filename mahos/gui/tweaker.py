@@ -17,12 +17,13 @@ from .param import ParamTable
 from ..node.node import local_conf, join_name
 from .gui_node import GUINode
 from .dialog import save_dialog, load_dialog
+from .Qt import QtWidgets
 
 
 class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
     """Top widget for TweakerGUI."""
 
-    def __init__(self, gconf: dict, name, gparams_name, context, parent=None):
+    def __init__(self, gconf: dict, name, gparams_name, verbose, context, parent=None):
         ClientTopWidget.__init__(self, parent)
         self.setupUi(self)
         self.setWindowTitle(f"MAHOS.TweakerGUI ({join_name(name)})")
@@ -33,6 +34,8 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
 
         self.add_clients(self.cli, self.gparams_cli)
+
+        self._verbose = verbose
 
         self.setEnabled(False)
 
@@ -73,25 +76,43 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
                 self.tabWidget.widget(i).update_contents(param_dicts[pid])
 
     def request_read_all(self):
-        self.update_all(self.cli.read_all())
+        success, param_dicts = self.cli.read_all()
+        if self._verbose and not success:
+            QtWidgets.QMessageBox.warning(
+                self, "Failed to read.", "Failed to some of the parameters."
+            )
+        self.update_all(param_dicts)
 
     def request_read(self):
         i = self.tabWidget.currentIndex()
-        d = self.cli.read(self.param_dict_ids[i])
+        param_dict_id = self.param_dict_ids[i]
+        d = self.cli.read(param_dict_id)
         if d is not None:
             self.tabWidget.currentWidget().update_contents(d)
+        elif self._verbose:
+            QtWidgets.QMessageBox.warning(
+                self, "Failed to read.", f"Failed to read {param_dict_id}."
+            )
 
     def request_write_all(self):
         param_dict = {
             pid: self.tabWidget.widget(i).params() for i, pid in enumerate(self.param_dict_ids)
         }
-        self.cli.write_all(param_dict)
+        success = self.cli.write_all(param_dict)
+        if self._verbose and not success:
+            QtWidgets.QMessageBox.warning(
+                self, "Failed to write.", "Failed to write some of the parameters."
+            )
 
     def request_write(self):
         i = self.tabWidget.currentIndex()
         param_dict_id = self.param_dict_ids[i]
         params = self.tabWidget.currentWidget().params()
-        self.cli.write(param_dict_id, params)
+        success = self.cli.write(param_dict_id, params)
+        if self._verbose and not success:
+            QtWidgets.QMessageBox.warning(
+                self, "Failed to write.", f"Failed to write {param_dict_id}."
+            )
 
     def request_save(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
@@ -120,5 +141,7 @@ class TweakerGUI(GUINode):
     """GUINode for BasicMeasNode using BasicMeasWidget."""
 
     def init_widget(self, gconf: dict, name, context):
-        target = local_conf(gconf, name)["target"]
-        return TweakerWidget(gconf, target["tweaker"], target["gparams"], context)
+        lconf = local_conf(gconf, name)
+        target = lconf["target"]
+        verbose = lconf.get("verbose", True)
+        return TweakerWidget(gconf, target["tweaker"], target["gparams"], verbose, context)
