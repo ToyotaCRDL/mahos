@@ -78,7 +78,7 @@ def generate_blocks(
     partial: int = -1,
     nomw: bool = False,
     ignore_basewidth: bool = False,
-):
+) -> Blocks[Block]:
     (
         base_width,
         laser_delay,
@@ -139,7 +139,7 @@ def generate_blocks(
 
 
 def build_blocks(
-    blocks: Blocks[Block],
+    blocks: list[Blocks[Block]],
     common_pulses,
     divide=False,
     merge=True,
@@ -177,7 +177,7 @@ def build_blocks(
     ]
     ptn_final = [(("sync", "mw_x"), final_block_width)]
 
-    # flatten list[list[Block]] to Blocks[Block]
+    # flatten list[Blocks[Block]] to Blocks[Block]
     blocks = Blocks(chain.from_iterable(blocks))
 
     # insert init/final

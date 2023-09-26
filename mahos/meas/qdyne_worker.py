@@ -323,9 +323,10 @@ class Pulser(Worker):
             data = self.data
         generate = self.generators[data.params["method"]].generate_raw_blocks
 
-        # force parameters
+        # fill unused parameters
         xdata = [data.params["tauconst"]]
         params = data.get_pulse_params()
+        params["init_delay"] = params["final_delay"] = 0.0
 
         blocks, freq, common_pulses = generate(xdata, params)
         blocks, laser_timing = self.builder.build_blocks(blocks, common_pulses, params)

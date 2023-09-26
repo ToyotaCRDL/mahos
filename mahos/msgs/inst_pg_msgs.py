@@ -52,19 +52,33 @@ class Block(Message):
         self.Nrep = Nrep
         self.trigger = trigger
 
-    def regularize_pattern(self, pattern: AcceptedPattern) -> Pattern:
-        def regularize(ch):
-            if ch is None:
-                return ()
-            if isinstance(ch, (str, int)):
-                return (ch,)
-            elif isinstance(ch, (tuple, list)):
-                return tuple(ch)
-            else:
-                raise TypeError("channel {} has unrecognizable type {}".format(ch, type(ch)))
+    def regularize_channel(self, ch):
+        if ch is None:
+            return ()
+        if isinstance(ch, (str, int)):
+            return (ch,)
+        elif isinstance(ch, (tuple, list)):
+            return tuple(ch)
+        else:
+            raise TypeError("channel {} has unrecognizable type {}".format(ch, type(ch)))
 
+    def regularize_pattern_elem(self, elem: tuple[AcceptedChannels, int]):
         # cast duration to builtin int because numpy types (like np.int64) may be incorpolated
-        return [(regularize(ch), int(duration)) for ch, duration in pattern]
+        return self.regularize_channel(elem[0]), int(elem[1])
+
+    def regularize_pattern(self, pattern: AcceptedPattern) -> Pattern:
+        return [self.regularize_pattern_elem(p) for p in pattern]
+
+    def insert(self, index: int, elem: T.Tuple[AcceptedChannels, int]):
+        self.pattern.insert(index, self.regularize_pattern_elem(elem))
+
+    def append(self, elem: T.Tuple[AcceptedChannels, int]):
+        self.pattern.append(self.regularize_pattern_elem(elem))
+
+    def extend(self, ptn: Block | AcceptedPattern):
+        if isinstance(ptn, Block):
+            ptn = ptn.total_pattern()
+        self.pattern.extend(self.regularize_pattern(ptn))
 
     def raw_length(self) -> int:
         """Raw block length without considering Nrep."""
@@ -80,6 +94,9 @@ class Block(Message):
         """Total (repeated) pattern considering Nrep."""
 
         return self.Nrep * self.pattern
+
+    def collapse(self) -> Block:
+        return Block(self.name, self.total_pattern(), Nrep=1, trigger=self.trigger)
 
     def channels(self) -> set[str | int]:
         """Get set of channels included in this Block."""
@@ -97,6 +114,35 @@ class Block(Message):
             elem = [True] if channel in ch else [False]
             ptn.extend(elem * duration)
         return ptn
+
+    def decode_all(self) -> tuple[list[str | int], list[list[bool]]]:
+        """Decode the patterns for all included channels."""
+
+        channels = self.channels()
+        try:
+            channels = list(sorted(channels))
+        except TypeError:
+            channels = list(channels)
+        patterns = [self.decode(ch) for ch in channels]
+        return channels, patterns
+
+    def union(self, other: Block) -> Block:
+        ch0 = self.channels()
+        ch1 = other.channels()
+        if ch0.intersection(ch1):
+            raise ValueError(f"Channels have intersection: {ch0}, {ch1}")
+        if self.total_length() != other.total_length():
+            raise ValueError("Length mismatch")
+
+        chs0, ptns0 = self.decode_all()
+        chs1, ptns1 = other.decode_all()
+
+        ptn = []
+        for i in range(self.total_length()):
+            c0 = [ch for j, ch in enumerate(chs0) if ptns0[j][i]]
+            c1 = [ch for j, ch in enumerate(chs1) if ptns1[j][i]]
+            ptn.append((c0 + c1, 1))
+        return Block(self.name, ptn, Nrep=1, trigger=self.trigger).simplify()
 
     def __len__(self) -> int:
         """Total block length considering Nrep."""
@@ -211,6 +257,27 @@ class Block(Message):
 
 class Blocks(UserList):
     """list for Block with convenient functions."""
+
+    def collapse(self) -> Block:
+        blk = self.data[0].collapse()
+        for b in self.data[1:]:
+            blk.extend(b.total_pattern())
+        return blk
+
+    def insert_pattern_elem(
+        self, blk_index: int, ptn_index: int, elem: tuple[AcceptedChannels, int]
+    ):
+        self.data[blk_index].insert(ptn_index, elem)
+
+    def repeat(self, num: int) -> Blocks[Block]:
+        ret = Blocks()
+        for i in range(num):
+            for block in self.data:
+                b = block.copy()
+                if i:
+                    b.name += f"_{i}"
+                ret.append(b)
+        return ret
 
     def channels(self) -> list[str | int]:
         """Get list of included channels.
