@@ -32,7 +32,8 @@ Pattern = T.NewType("Pattern", T.List[T.Tuple[Channels, int]])
 AcceptedChannels = T.NewType(
     "AcceptedChannels", T.Union[None, str, int, T.Tuple[str, ...], T.Tuple[int, ...]]
 )
-AcceptedPattern = T.NewType("AcceptedPattern", T.List[T.Tuple[AcceptedChannels, int]])
+AcceptedPatternElement = T.NewType("AcceptedPatternElement", T.Tuple[AcceptedChannels, int])
+AcceptedPattern = T.NewType("AcceptedPattern", T.List[AcceptedPatternElement])
 
 
 class Block(Message):
@@ -62,23 +63,56 @@ class Block(Message):
         else:
             raise TypeError("channel {} has unrecognizable type {}".format(ch, type(ch)))
 
-    def regularize_pattern_elem(self, elem: tuple[AcceptedChannels, int]):
+    def regularize_pattern_elem(self, elem: AcceptedPatternElement):
         # cast duration to builtin int because numpy types (like np.int64) may be incorpolated
         return self.regularize_channel(elem[0]), int(elem[1])
 
     def regularize_pattern(self, pattern: AcceptedPattern) -> Pattern:
         return [self.regularize_pattern_elem(p) for p in pattern]
 
-    def insert(self, index: int, elem: T.Tuple[AcceptedChannels, int]):
+    # Mutating (list-like) operations
+
+    def insert(self, index: int, elem: AcceptedPatternElement):
+        """Insert a pattern element `elem` to `index`."""
+
         self.pattern.insert(index, self.regularize_pattern_elem(elem))
 
-    def append(self, elem: T.Tuple[AcceptedChannels, int]):
+    def append(self, elem: AcceptedPatternElement):
+        """Append a pattern element `elem` to the tail."""
+
         self.pattern.append(self.regularize_pattern_elem(elem))
 
     def extend(self, ptn: Block | AcceptedPattern):
+        """Extend the pattern or pattern in a Block."""
+
         if isinstance(ptn, Block):
             ptn = ptn.total_pattern()
         self.pattern.extend(self.regularize_pattern(ptn))
+
+    # Non-mutating (copying) operations
+
+    def repeat(self, num: int) -> Block:
+        """Return new Block with `num`-times repeat."""
+
+        ret = self.copy()
+        ret.Nrep *= num
+        return ret
+
+    def collapse(self) -> Block:
+        """Return new Block with collapsed pattern.
+
+        The pattern is physically repeated and Nrep is set 1.
+
+        """
+
+        return Block(self.name, self.total_pattern(), Nrep=1, trigger=self.trigger)
+
+    def concatenate(self, other: Block) -> Block:
+        """Generate a concatenated Block of this and `other`."""
+
+        ret = self.collapse()
+        ret.extend(other)
+        return ret
 
     def raw_length(self) -> int:
         """Raw block length without considering Nrep."""
@@ -94,9 +128,6 @@ class Block(Message):
         """Total (repeated) pattern considering Nrep."""
 
         return self.Nrep * self.pattern
-
-    def collapse(self) -> Block:
-        return Block(self.name, self.total_pattern(), Nrep=1, trigger=self.trigger)
 
     def channels(self) -> set[str | int]:
         """Get set of channels included in this Block."""
@@ -127,6 +158,17 @@ class Block(Message):
         return channels, patterns
 
     def union(self, other: Block) -> Block:
+        """Return new united Block of this and `other`.
+
+        union() operation is used to merge two Blocks generated in independent ways.
+        The channels described in this and `other` must be exclusive, i.e.,
+        if channel named "a" is defined in this Block, "a" cannot be appeared in the `other`.
+        Two Blocks must have same total_length() too.
+
+        The current merging algorithm is not very effective, and can be slow for huge Blocks.
+
+        """
+
         ch0 = self.channels()
         ch1 = other.channels()
         if ch0.intersection(ch1):
@@ -174,7 +216,7 @@ class Block(Message):
 
     def replace(
         self,
-        replace_dict: T.Dict[T.Union[str, int], T.Union[T.Tuple[str, ...], T.Tuple[int, ...]]],
+        replace_dict: dict[str | int, tuple[str, ...] | tuple[int, ...]],
     ) -> Block:
         """Return copy of this Block with replaced channels.
 
@@ -245,7 +287,7 @@ class Block(Message):
         return Block(self.name, pat, Nrep=self.Nrep, trigger=self.trigger)
 
     def pattern_to_strs(self) -> list[str]:
-        def pattern_elem_to_str(pattern_elem: T.Tuple[Channels, int]):
+        def pattern_elem_to_str(pattern_elem: tuple[Channels, int]):
             channels, period = pattern_elem
             n_str = ",".join([str(ch) for ch in channels])
             if not n_str:
@@ -259,17 +301,30 @@ class Blocks(UserList):
     """list for Block with convenient functions."""
 
     def collapse(self) -> Block:
+        """Collapse the contained Blocks to single Block.
+
+        Resultant Block is almost equivalent to the original Blocks[Block], but
+        the trigger attributes of non-first Blocks are silently discarded.
+
+        """
+
         blk = self.data[0].collapse()
         for b in self.data[1:]:
             blk.extend(b.total_pattern())
         return blk
 
-    def insert_pattern_elem(
-        self, blk_index: int, ptn_index: int, elem: tuple[AcceptedChannels, int]
-    ):
+    def insert_pattern_elem(self, blk_index: int, ptn_index: int, elem: AcceptedPatternElement):
         self.data[blk_index].insert(ptn_index, elem)
 
     def repeat(self, num: int) -> Blocks[Block]:
+        """Return new Blocks[Block] with `num`-times repeat.
+
+        Each element of new Blocks is a copy of the original element.
+        (Possibly) unique names are assigned to avoid name collison
+        (that is not allowed for some instruments).
+
+        """
+
         ret = Blocks()
         for i in range(num):
             for block in self.data:
@@ -334,7 +389,7 @@ class Blocks(UserList):
 
     def replace(
         self,
-        replace_dict: T.Dict[T.Union[str, int], T.Union[T.Tuple[str, ...], T.Tuple[int, ...]]],
+        replace_dict: dict[str | int, tuple[str, ...] | tuple[int, ...]],
     ) -> Blocks[Block]:
         """Return copy of the Blocks with replaced channels."""
 

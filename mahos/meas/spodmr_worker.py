@@ -27,6 +27,11 @@ from .podmr_generator import generator_kernel as K
 class SPODMRDataOperator(object):
     """Operations (set / get / analyze) on SPODMRData."""
 
+    def set_laser_duties(self, data: SPODMRData, laser_duties):
+        if data.laser_duties is not None:
+            return
+        data.laser_duties = np.array(laser_duties)
+
     def set_instrument_params(self, data: SPODMRData, pg_freq, offsets):
         if "instrument" in data.params:
             return
@@ -91,8 +96,6 @@ class SPODMRDataOperator(object):
             data.xlabel, data.xunit = "detecting frequency", "Hz"
         elif taumode == "index":
             data.xlabel, data.xunit = "sweep index", "#"
-        elif taumode == "head":
-            data.xlabel, data.xunit = "signal head time", "s"
 
         # transform
         if plot.get("xlogscale"):
@@ -149,14 +152,17 @@ class BlocksBuilder(object):
         )
 
         extended_blks = Blocks()
+        periods = []
         # markers just for PulseMonitor visualization
         markers = [0]
 
         for blks in blocks:
             assert len(blks) == 4
-            blks0, blks1 = blks[:2], blks[2:]
+            blks0: Blocks[Block] = blks[:2]
+            blks1: Blocks[Block] = blks[2:]
             T = blks0.total_length()
             assert T == blks1.total_length()
+            periods.append(T)
             rep, residual = half_flip_period // T, half_flip_period % T
             blk0 = blks0.repeat(rep).collapse()
             blk1 = blks1.repeat(rep).collapse()
@@ -166,7 +172,7 @@ class BlocksBuilder(object):
             extended_blks.extend([blk0.union(gate0_blk), blk1.union(gate1_blk)])
             markers.append(extended_blks.total_length())
 
-        return extended_blks, markers, pd_rep
+        return extended_blks, periods, markers, pd_rep
 
     def build_partial(
         self, blocks: list[Blocks[Block]], freq: float, half_flip_period: int, params: dict
@@ -180,12 +186,14 @@ class BlocksBuilder(object):
         )
 
         extended_blks = Blocks()
+        periods = []
         # markers just for PulseMonitor visualization
         markers = [0]
 
         for blks in blocks:
             assert len(blks) == 2
             T = blks.total_length()
+            periods.append(T)
             rep, residual = half_flip_period // T, half_flip_period % T
             blk = blks.repeat(rep).collapse()
             if residual:
@@ -193,7 +201,7 @@ class BlocksBuilder(object):
             extended_blks.append(blk.union(gate_blks))
             markers.append(extended_blks.total_length())
 
-        return extended_blks, markers, pd_rep
+        return extended_blks, periods, markers, pd_rep
 
     def build_lockin(
         self, blocks: list[Blocks[Block]], freq: float, half_flip_period: int, params: dict
@@ -212,25 +220,28 @@ class BlocksBuilder(object):
         )
 
         extended_blks = Blocks()
+        periods = []
         # markers just for PulseMonitor visualization
         markers = [0]
 
         for blks in blocks:
             assert len(blks) == 4
-            blks0, blks1 = blks[:2], blks[2:]
+            blks0: Blocks[Block] = blks[:2]
+            blks1: Blocks[Block] = blks[2:]
             T = blks0.total_length()
             assert T == blks1.total_length()
+            periods.append(T)
             rep, residual = half_flip_period // T, half_flip_period % T
             blk0 = blks0.repeat(rep).collapse()
             blk1 = blks1.repeat(rep).collapse()
             if residual:
                 blk0.insert(0, (None, residual))
                 blk1.insert(0, (None, residual))
-            blks = Blocks([blk0.union(gate0_blk), blk1.union(gate1_blk)])
-            extended_blks.append(blks.repeat(flip_rep))
+            blk = blk0.union(gate0_blk).concatenate(blk1.union(gate1_blk))
+            extended_blks.append(blk.repeat(flip_rep))
             markers.append(extended_blks.total_length())
 
-        return extended_blks, markers, pd_rep * flip_rep
+        return extended_blks, periods, markers, pd_rep * flip_rep
 
     def build_blocks(self, blocks: list[Blocks[Block]], freq: float, common_pulses, params):
         invertY = params.get("invertY", False)
@@ -253,17 +264,21 @@ class BlocksBuilder(object):
 
         partial = params["partial"]
         if partial == -1:
-            blocks, markers, oversample = self.build_complementary(
+            blocks, periods, markers, oversample = self.build_complementary(
                 blocks, freq, half_flip_period, params
             )
         elif partial in (0, 1):
-            blocks, markers, oversample = self.build_partial(
+            blocks, periods, markers, oversample = self.build_partial(
                 blocks, freq, half_flip_period, params
             )
         elif partial == 2:
-            blocks, markers, oversample = self.build_lockin(blocks, freq, half_flip_period, params)
+            blocks, periods, markers, oversample = self.build_lockin(
+                blocks, freq, half_flip_period, params
+            )
         else:
             raise ValueError(f"Invalid partial {partial}")
+
+        laser_duties = laser_width / np.array(periods, dtype=np.float64)
 
         # shaping blocks
         blocks = blocks.simplify()
@@ -271,7 +286,7 @@ class BlocksBuilder(object):
         if invertY:
             blocks = K.invert_y_phase(blocks)
 
-        return blocks, markers, oversample
+        return blocks, laser_duties, markers, oversample
 
 
 class Pulser(Worker):
@@ -325,6 +340,7 @@ class Pulser(Worker):
             self.logger.error("Error initializing SG.")
             return False
 
+        # FG
         if not self.init_fg(params):
             self.logger.error("Error initializing FG.")
             return False
@@ -389,7 +405,8 @@ class Pulser(Worker):
             self.logger.error("Error stopping PG.")
             return False
 
-        blocks, self.freq, markers, self.oversample = self.generate_blocks()
+        blocks, self.freq, laser_duties, markers, self.oversample = self.generate_blocks()
+        self.op.set_laser_duties(self.data, laser_duties)
         self.pulse_pattern = PulsePattern(blocks, self.freq, markers=markers)
         pg_params = {"blocks": blocks, "freq": self.freq}
 
@@ -412,17 +429,17 @@ class Pulser(Worker):
         params["trigger_width"] = params["init_delay"] = params["final_delay"] = 0.0
 
         blocks, freq, common_pulses = generate(data.xdata, params)
-        blocks, markers, oversample = self.builder.build_blocks(
+        blocks, markers, laser_duties, oversample = self.builder.build_blocks(
             blocks, freq, common_pulses, params
         )
-        return blocks, freq, markers, oversample
+        return blocks, freq, laser_duties, markers, oversample
 
     def validate_params(
         self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]
     ) -> bool:
         params = P.unwrap(params)
         d = SPODMRData(params)
-        blocks, freq, markers, oversample = self.generate_blocks(d)
+        blocks, freq, laser_duties, markers, oversample = self.generate_blocks(d)
         offsets = self.pg.validate_blocks(blocks, freq)
         return offsets is not None
 
@@ -597,8 +614,6 @@ class Pulser(Worker):
             resume=P.BoolParam(False),
             freq=P.FloatParam(2.80e9, f_min, f_max),
             power=P.FloatParam(p_min, p_min, p_max),
-            timebin=P.FloatParam(3.2e-9, 0.1e-9, 100e-9),
-            interval=P.FloatParam(1.0, 0.1, 10.0),
             sweeps=P.IntParam(0, 0, 9999999),
             ident=P.UUIDParam(optional=True, enable=False),
         )
@@ -637,6 +652,8 @@ class Pulser(Worker):
                 "data01",
                 ("data01", "data0", "data1", "diff", "average", "normalize", "concatenate"),
             ),
+            "normalize": P.BoolParam(True, doc="normalize data using laser duties"),
+            "complex_conv": P.StrChoiceParam("real", ("real", "imag", "abs", "angle")),
             "taumode": P.StrChoiceParam("raw", taumodes),
             "xlogscale": P.BoolParam(False),
             "ylogscale": P.BoolParam(False),

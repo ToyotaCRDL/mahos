@@ -67,9 +67,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
 
         self.data0 = None
         self.data1 = None
-
-        #: complex_conv used for loading data fit
-        self.fit_complex_conv: str = ""
+        self.laser_duties = None
 
     def init_xdata(self):
         if not self.has_params():
@@ -213,14 +211,10 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
     def get_fit_ydata(self):
         return self.fit_data
 
-    def get_ydata(
-        self, last_n: int = 0, complex_conv: str = "real"
-    ) -> tuple[NDArray | None, NDArray | None]:
+    def get_ydata(self, last_n: int = 0) -> tuple[NDArray | None, NDArray | None]:
         """get analyzed ydata.
 
         :param last_n: if nonzero, take last_n sweeps to make y data.
-        :param complex_conv: (real | imag | abs[olute] | angle) conversion method for complex data.
-            unused if data is not complex.
 
         :returns: (ydata0, ydata1) if two types of data are available.
                   (ydata, None) if only one type of data is available.
@@ -233,19 +227,35 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
             return None, None
 
         if self.is_partial():
-            return self._get_ydata_partial(last_n, complex_conv)
+            return self._get_ydata_partial(last_n)
         else:
-            return self._get_ydata_complementary(last_n, complex_conv)
+            return self._get_ydata_complementary(last_n)
 
-    def _get_ydata_partial(self, last_n: int, complex_conv: str):
+    def _normalize(self, data):
+        if self.params["plot"].get("normalize", True):
+            return data / self.laser_duties
+        else:
+            return data
+
+    def _conv_complex(self, data):
+        complex_conv = self.params["plot"].get("complex_conv", "real")
+        return self.conv_complex(data, complex_conv)
+
+    def _get_ydata_partial(self, last_n: int):
         if self.partial() == 0:
-            return np.mean(self.conv_complex(self.data0, complex_conv)[:, -last_n:], axis=1), None
+            return (
+                self._normalize(np.mean(self._conv_complex(self.data0)[:, -last_n:], axis=1)),
+                None,
+            )
         else:  # assert self.partial() == 1
-            return np.mean(self.conv_complex(self.data1, complex_conv)[:, -last_n:], axis=1), None
+            return (
+                self._normalize(np.mean(self._conv_complex(self.data1)[:, -last_n:], axis=1)),
+                None,
+            )
 
-    def _get_ydata_complementary(self, last_n: int, complex_conv: str):
-        s0 = np.mean(self.conv_complex(self.data0, complex_conv)[:, -last_n:], axis=1)
-        s1 = np.mean(self.conv_complex(self.data1, complex_conv)[:, -last_n:], axis=1)
+    def _get_ydata_complementary(self, last_n: int):
+        s0 = self._normalize(np.mean(self._conv_complex(self.data0)[:, -last_n:], axis=1))
+        s1 = self._normalize(np.mean(self._conv_complex(self.data1)[:, -last_n:], axis=1))
 
         plotmode = self.params["plot"]["plotmode"]
         if plotmode == "data01":
@@ -312,6 +322,9 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
 
     def is_partial(self) -> bool:
         return self.has_params() and self.params.get("partial") in (0, 1)
+
+    def is_lockin(self) -> bool:
+        return self.has_params() and self.params.get("partial") == 2
 
     def is_sweepN(self):
         return self.has_params() and is_sweepN(self.params["method"])
