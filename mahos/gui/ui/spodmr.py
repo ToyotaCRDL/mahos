@@ -561,17 +561,18 @@ class Ui_SPODMR(object):
         SPODMR.setTabOrder(self.iqdelayBox, self.plotenableBox)
         SPODMR.setTabOrder(self.plotenableBox, self.plotmodeBox)
         SPODMR.setTabOrder(self.plotmodeBox, self.taumodeBox)
-        SPODMR.setTabOrder(self.taumodeBox, self.xlogBox)
+        SPODMR.setTabOrder(self.taumodeBox, self.normalizeBox)
+        SPODMR.setTabOrder(self.normalizeBox, self.xlogBox)
         SPODMR.setTabOrder(self.xlogBox, self.ylogBox)
         SPODMR.setTabOrder(self.ylogBox, self.fftBox)
         SPODMR.setTabOrder(self.fftBox, self.complexBox)
-        SPODMR.setTabOrder(self.complexBox, self.fg_phaseBox)
-        SPODMR.setTabOrder(self.fg_phaseBox, self.fg_freqBox)
+        SPODMR.setTabOrder(self.complexBox, self.fg_freqBox)
         SPODMR.setTabOrder(self.fg_freqBox, self.fg_disableButton)
         SPODMR.setTabOrder(self.fg_disableButton, self.fg_gateButton)
         SPODMR.setTabOrder(self.fg_gateButton, self.fg_waveBox)
         SPODMR.setTabOrder(self.fg_waveBox, self.fg_amplBox)
         SPODMR.setTabOrder(self.fg_amplBox, self.fg_cwButton)
+        SPODMR.setTabOrder(self.fg_cwButton, self.fg_phaseBox)
 
     def retranslateUi(self, SPODMR):
         _translate = QtCore.QCoreApplication.translate

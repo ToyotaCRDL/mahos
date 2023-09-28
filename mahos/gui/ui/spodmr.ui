@@ -1426,17 +1426,18 @@
   <tabstop>plotenableBox</tabstop>
   <tabstop>plotmodeBox</tabstop>
   <tabstop>taumodeBox</tabstop>
+  <tabstop>normalizeBox</tabstop>
   <tabstop>xlogBox</tabstop>
   <tabstop>ylogBox</tabstop>
   <tabstop>fftBox</tabstop>
   <tabstop>complexBox</tabstop>
-  <tabstop>fg_phaseBox</tabstop>
   <tabstop>fg_freqBox</tabstop>
   <tabstop>fg_disableButton</tabstop>
   <tabstop>fg_gateButton</tabstop>
   <tabstop>fg_waveBox</tabstop>
   <tabstop>fg_amplBox</tabstop>
   <tabstop>fg_cwButton</tabstop>
+  <tabstop>fg_phaseBox</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -45,6 +45,13 @@ class PulseMonitorWidget(ClientTopWidget):
         self.downsampleBox.setMaximum(100)
         self.downsampleBox.setValue(10)
 
+        self.maxpointsBox = QtWidgets.QSpinBox()
+        self.maxpointsBox.setPrefix("limit: ")
+        self.maxpointsBox.setSuffix(" kpts")
+        self.maxpointsBox.setMinimum(100)
+        self.maxpointsBox.setMaximum(100_000)
+        self.maxpointsBox.setValue(5_000)
+
         self.realtimeBox = QtWidgets.QCheckBox("Real time")
         self.usemarkerBox = QtWidgets.QCheckBox("Use marker")
         self.usemarkerBox.setChecked(True)
@@ -62,12 +69,13 @@ class PulseMonitorWidget(ClientTopWidget):
         self.numBox.setValue(1)
         self.numBox.setMaximum(9999)
 
-        for w in (self.downsampleBox, self.indexBox, self.numBox):
+        for w in (self.downsampleBox, self.maxpointsBox, self.indexBox, self.numBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
 
         for w in (
             self.downsampleBox,
+            self.maxpointsBox,
             self.realtimeBox,
             self.usemarkerBox,
             self.regionLabel,
@@ -154,7 +162,7 @@ class PulseMonitorWidget(ClientTopWidget):
         if self.pulse is None:
             return
 
-        channels, patterns = self.pulse.blocks.decode_all()
+        channels, patterns = self.pulse.blocks.decode_all(max_len=self.maxpointsBox.value() * 1000)
 
         if not channels:
             print("[ERROR] empty pulse pattern")

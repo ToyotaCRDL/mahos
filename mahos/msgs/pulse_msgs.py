@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from __future__ import annotations
-import typing as T
 import uuid
 
 from .inst_pg_msgs import Block, Blocks
@@ -15,8 +14,8 @@ class PulsePattern(Message):
         self,
         blocks: Blocks[Block],
         freq: float,
-        markers: T.Optional[T.List[int]] = None,
-        ident: T.Optional[uuid.UUID] = None,
+        markers: list[int] | None = None,
+        ident: uuid.UUID | None = None,
     ):
         self.blocks = blocks
         self.freq = freq

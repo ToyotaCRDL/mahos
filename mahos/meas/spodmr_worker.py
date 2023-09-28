@@ -653,7 +653,7 @@ class Pulser(Worker):
                 self.conf.get("pd_rate", 500e3), 1e3, 10000e3, doc="PD sampling rate"
             ),
             accum_window=P.FloatParam(
-                self.conf.get("accum_window", 1e-3), 1e-4, 1.0, doc="accumulation time window"
+                self.conf.get("accum_window", 1e-3), 1e-5, 1.0, doc="accumulation time window"
             ),
             accum_rep=P.IntParam(
                 self.conf.get("accum_rep", 10), 1, 10000, doc="number of accumulation repetitions"
