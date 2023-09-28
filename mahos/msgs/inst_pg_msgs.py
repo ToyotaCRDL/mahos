@@ -27,7 +27,14 @@ class TriggerType(enum.Enum):
 
 
 Channels = T.NewType("Channels", T.Union[T.Tuple[str, ...], T.Tuple[int, ...]])
-Pattern = T.NewType("Pattern", T.List[T.Tuple[Channels, int]])
+
+
+class PatternElement(T.NamedTuple):
+    channels: Channels
+    duration: int
+
+
+Pattern = T.NewType("Pattern", T.List[PatternElement])
 
 AcceptedChannels = T.NewType(
     "AcceptedChannels", T.Union[None, str, int, T.Tuple[str, ...], T.Tuple[int, ...]]
@@ -59,7 +66,7 @@ class Block(Message):
         self.Nrep = Nrep
         self.trigger = trigger
 
-    def regularize_channel(self, ch):
+    def regularize_channels(self, ch: AcceptedChannels) -> Channels:
         if ch is None:
             return ()
         if isinstance(ch, (str, int)):
@@ -69,9 +76,9 @@ class Block(Message):
         else:
             raise TypeError("channel {} has unrecognizable type {}".format(ch, type(ch)))
 
-    def regularize_pattern_elem(self, elem: AcceptedPatternElement):
+    def regularize_pattern_elem(self, elem: AcceptedPatternElement) -> PatternElement:
         # cast duration to builtin int because numpy types (like np.int64) may be incorpolated
-        return self.regularize_channel(elem[0]), int(elem[1])
+        return PatternElement(self.regularize_channels(elem[0]), int(elem[1]))
 
     def regularize_pattern(self, pattern: AcceptedPattern) -> Pattern:
         return [self.regularize_pattern_elem(p) for p in pattern]
@@ -187,21 +194,21 @@ class Block(Message):
         ptn = []
         while t > 0:
             h0, h1 = p0[0], p1[0]
-            if h0[1] == h1[1]:
-                ptn.append((h0[0] + h1[0], h0[1]))
+            if h0.duration == h1.duration:
+                ptn.append((h0.channels + h1.channels, h0.duration))
                 p0.pop(0)
                 p1.pop(0)
-                t -= h0[1]
-            elif h0[1] > h1[1]:
-                ptn.append((h0[0] + h1[0], h1[1]))
-                p0[0] = (h0[0], h0[1] - h1[1])
+                t -= h0.duration
+            elif h0.duration > h1.duration:
+                ptn.append((h0.channels + h1.channels, h1.duration))
+                p0[0] = PatternElement(h0.channels, h0.duration - h1.duration)
                 p1.pop(0)
-                t -= h1[1]
-            else:  # h0[1] < h1[1]
-                ptn.append((h0[0] + h1[0], h0[1]))
-                p1[0] = (h1[0], h1[1] - h0[1])
+                t -= h1.duration
+            else:  # h0.duration < h1.duration
+                ptn.append((h0.channels + h1.channels, h0.duration))
+                p1[0] = PatternElement(h1.channels, h1.duration - h0.duration)
                 p0.pop(0)
-                t -= h0[1]
+                t -= h0.duration
         assert not p0
         assert not p1
         return Block(self.name, ptn, Nrep=1, trigger=self.trigger)
