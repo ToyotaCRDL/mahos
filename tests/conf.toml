@@ -327,6 +327,13 @@ class = "PODMRGUI"
 podmr = "localhost::podmr"
 gparams = "localhost::gparams"
 
+[localhost.spodmr_gui]
+module = "mahos.gui.spodmr"
+class = "SPODMRGUI"
+[localhost.spodmr_gui.target]
+spodmr = "localhost::spodmr"
+gparams = "localhost::gparams"
+
 [localhost.iodmr_gui]
 module = "mahos.gui.iodmr"
 class = "IODMRGUI"
@@ -361,6 +368,12 @@ module = "mahos.gui.pulse_monitor"
 class = "PulseMonitor"
 [localhost.pulse_monitor.target]
 pulse = "localhost::podmr"
+
+[localhost.pulse_monitor_spodmr]
+module = "mahos.gui.pulse_monitor"
+class = "PulseMonitor"
+[localhost.pulse_monitor_spodmr.target]
+pulse = "localhost::spodmr"
 
 [localhost.main_monitor]
 module = "mahos.gui.main_monitor"

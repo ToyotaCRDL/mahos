@@ -142,6 +142,16 @@ class Block(Message):
 
         return self.Nrep * self.pattern
 
+    def total_pattern_num(self) -> int:
+        """Total (repeated) pattern number (instruction size) considering Nrep."""
+
+        return self.Nrep * self.raw_pattern_num()
+
+    def raw_pattern_num(self) -> int:
+        """Raw pattern number (instruction size) without considering Nrep."""
+
+        return len(self.pattern)
+
     def channels(self) -> set[str | int]:
         """Get set of channels included in this Block."""
 
@@ -462,6 +472,11 @@ class Blocks(UserList):
         """Total block length considering Nrep."""
 
         return sum([b.total_length() for b in self.data])
+
+    def total_pattern_num(self) -> int:
+        """Total pattern number (instruction size) considering Nrep."""
+
+        return sum([b.total_pattern_num() for b in self.data])
 
     def scale(self, s: int) -> Blocks[Block]:
         """Scale all the periods in the Blocks."""

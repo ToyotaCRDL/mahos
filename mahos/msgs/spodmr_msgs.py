@@ -112,6 +112,33 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
 
     # getters
 
+    def _normalize_image(self, data):
+        if self.params["plot"].get("normalize", True):
+            return (data.T / self.laser_duties).T
+        else:
+            return data
+
+    def get_image(self) -> NDArray:
+        if self.partial() in (0, 2):
+            return self._normalize_image(self._conv_complex(self.data0))
+        elif self.partial() == 1:
+            return self._normalize_image(self._conv_complex(self.data1))
+        else:  # -1
+            i0 = self._normalize_image(self._conv_complex(self.data0))
+            i1 = self._normalize_image(self._conv_complex(self.data1))
+
+            plotmode = self.params["plot"]["plotmode"]
+            if plotmode == "data0":
+                return i0
+            elif plotmode == "data1":
+                return i1
+            elif plotmode == "average":
+                return (i0 + i1) / 2
+            elif plotmode == "normalize":
+                return (i0 - i1) / (i0 + i1), None
+            else:  # "diff", "data01", ...
+                return i0 - i1
+
     def get_fit_xdata(self) -> NDArray | None:
         return self.get_xdata(fit=True)
 
@@ -242,7 +269,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
         return self.conv_complex(data, complex_conv)
 
     def _get_ydata_partial(self, last_n: int):
-        if self.partial() == 0:
+        if self.partial() in (0, 2):
             return (
                 self._normalize(np.mean(self._conv_complex(self.data0)[:, -last_n:], axis=1)),
                 None,
@@ -308,7 +335,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
     def has_data(self) -> bool:
         partial = self.partial()
 
-        if partial == 0:
+        if partial in (0, 2):
             return self.data0 is not None
         elif partial == 1:
             return self.data1 is not None
@@ -321,10 +348,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
         return self.params.get("partial", -1)
 
     def is_partial(self) -> bool:
-        return self.has_params() and self.params.get("partial") in (0, 1)
-
-    def is_lockin(self) -> bool:
-        return self.has_params() and self.params.get("partial") == 2
+        return self.has_params() and self.params.get("partial") in (0, 1, 2)
 
     def is_sweepN(self):
         return self.has_params() and is_sweepN(self.params["method"])

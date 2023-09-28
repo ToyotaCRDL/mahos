@@ -73,7 +73,7 @@ class PatternGenerator(object):
             params.get("partial", -1),
             params.get("nomw", False),
             reduce_start_divisor,
-            params.get("ignore_basewidth", False),
+            params.get("ignore_base_width", False),
         )
 
         blocks, laser_timing = K.build_blocks(
@@ -101,7 +101,7 @@ class PatternGenerator(object):
             params.get("partial", -1),
             params.get("nomw", False),
             reduce_start_divisor,
-            params.get("ignore_basewidth", False),
+            params.get("ignore_base_width", False),
         )
         return blocks, freq, common_pulses
 
@@ -113,7 +113,7 @@ class PatternGenerator(object):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         raise NotImplementedError("_generate() is not implemented.")
 
@@ -134,7 +134,7 @@ class RabiGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         freq, xdata, common_pulses, p0, p1 = K.round_pulses(
             self.freq, xdata, common_pulses, [], [], reduce_start_divisor, self.print_fn
@@ -160,7 +160,7 @@ class RabiGenerator(PatternGenerator):
                 read_phase1="mw_x",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -189,7 +189,7 @@ class FIDGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90 = pulse_params[0]
 
@@ -222,7 +222,7 @@ class FIDGenerator(PatternGenerator):
                 read_phase1="mw_x_inv",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -255,7 +255,7 @@ class SpinEchoGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, readY = pulse_params
 
@@ -293,7 +293,7 @@ class SpinEchoGenerator(PatternGenerator):
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -321,7 +321,7 @@ class DRamseyGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180 = pulse_params
 
@@ -359,7 +359,7 @@ class DRamseyGenerator(PatternGenerator):
                 read_phase1="mw_x_inv",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -387,7 +387,7 @@ class TEchoGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180 = pulse_params
 
@@ -428,7 +428,7 @@ class TEchoGenerator(PatternGenerator):
                 read_phase1="mw_x_inv",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -461,7 +461,7 @@ class TRSEGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, tauconst = pulse_params
 
@@ -496,7 +496,7 @@ class TRSEGenerator(PatternGenerator):
                 read_phase1="mw_x_inv",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -536,7 +536,7 @@ class DDGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         if self.method in ("xy8", "xy16"):
             supersample = pulse_params[-1]
@@ -551,7 +551,7 @@ class DDGenerator(PatternGenerator):
                 partial,
                 nomw,
                 reduce_start_divisor,
-                ignore_basewidth,
+                ignore_base_width,
             )
         else:
             return self._generate_supersample(
@@ -561,7 +561,7 @@ class DDGenerator(PatternGenerator):
                 partial,
                 nomw,
                 reduce_start_divisor,
-                ignore_basewidth,
+                ignore_base_width,
             )
 
     def _generate_normal(
@@ -572,7 +572,7 @@ class DDGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, Nconst, readY = pulse_params[:4]
         read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
@@ -644,7 +644,7 @@ class DDGenerator(PatternGenerator):
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -658,7 +658,7 @@ class DDGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, Nconst, readY, supersample = pulse_params
         read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
@@ -768,7 +768,7 @@ class DDGenerator(PatternGenerator):
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for (j, k), i in np.ndenumerate(ind)
         ]
@@ -806,7 +806,7 @@ class DDNGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, tauconst, readY = pulse_params
 
@@ -877,7 +877,7 @@ class DDNGenerator(PatternGenerator):
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, n in enumerate(xdata)
         ]
@@ -908,7 +908,7 @@ class PiTrainGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         tauconst, Nconst = pulse_params
 
@@ -946,7 +946,7 @@ class PiTrainGenerator(PatternGenerator):
                 read_phase1="mw_x",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -977,7 +977,7 @@ class SEHalfPiSweepGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p180, tauconst = pulse_params
 
@@ -1016,7 +1016,7 @@ class SEHalfPiSweepGenerator(PatternGenerator):
                 read_phase1="mw_x",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -1051,7 +1051,7 @@ class RecoveryGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p180, invertinit = pulse_params
 
@@ -1085,7 +1085,7 @@ class RecoveryGenerator(PatternGenerator):
                 read_phase1="mw_x",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -1116,7 +1116,7 @@ class SpinLockGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, iq_delay = pulse_params
 
@@ -1149,7 +1149,7 @@ class SpinLockGenerator(PatternGenerator):
                 read_phase1="mw_x",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -1188,7 +1188,7 @@ class XY8CorrelationGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, tauconst, Nconst, reinitX, readY = pulse_params
 
@@ -1256,7 +1256,7 @@ class XY8CorrelationGenerator(PatternGenerator):
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -1298,7 +1298,7 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, tauconst, Nconst, reinitX, readY = pulse_params
 
@@ -1359,7 +1359,7 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, n in enumerate(xdata)
         ]
@@ -1449,7 +1449,7 @@ class DDGateGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, tauconst, Nconst, N2const, N3const, ddphase = pulse_params
 
@@ -1511,7 +1511,7 @@ class DDGateGenerator(PatternGenerator):
                 read_phase1=pih_ch1[-1][0],
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -1553,7 +1553,7 @@ class DDNGateGenerator(DDGateGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         p90, p180, tauconst, tau2const, Nconst, ddphase = pulse_params
 
@@ -1613,7 +1613,7 @@ class DDNGateGenerator(DDGateGenerator):
                 read_phase1=pih_ch1[-1][0],
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]
@@ -1636,7 +1636,7 @@ class CWODMRGenerator(PatternGenerator):
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
-        ignore_basewidth: bool,
+        ignore_base_width: bool,
     ):
         freq, xdata, common_pulses, p0, p1 = K.round_pulses(
             self.freq, xdata, common_pulses, [], [], reduce_start_divisor, self.print_fn
@@ -1662,7 +1662,7 @@ class CWODMRGenerator(PatternGenerator):
                 read_phase1="mw_x",
                 partial=partial,
                 nomw=nomw,
-                ignore_basewidth=ignore_basewidth,
+                ignore_base_width=ignore_base_width,
             )
             for i, v in enumerate(xdata)
         ]

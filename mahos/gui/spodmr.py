@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-GUI frontend of Pulse ODMR.
+GUI frontend of Pulse ODMR with Slow detectors.
 
 .. This file is a part of MAHOS project.
 
@@ -10,9 +10,7 @@ GUI frontend of Pulse ODMR.
 from __future__ import annotations
 import typing as T
 import os
-import time
 import re
-from datetime import datetime
 import uuid
 
 import numpy as np
@@ -21,43 +19,25 @@ import pyqtgraph as pg
 from . import Qt
 from .Qt import QtCore, QtWidgets
 
-from .ui.podmr import Ui_PODMR
-from .ui.podmr_indicator import Ui_PODMRIndicator
-from .ui.podmr_autosave import Ui_PODMRAutoSave
-from .podmr_client import QPODMRClient
+from .ui.spodmr import Ui_SPODMR
+from .spodmr_client import QSPODMRClient
 
 from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import FloatParam
-from ..msgs.podmr_msgs import PODMRData, is_CPlike
+from ..msgs.spodmr_msgs import SPODMRData, is_CPlike
 from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientWidget
 from .fit_widget import FitWidget
-from .param import set_enabled
+from .param import set_enabled, apply_widgets
 from .dialog import save_dialog, load_dialog, export_dialog
 from ..node.node import local_conf, join_name
 from ..util.plot import colors_tab20_pair
-from ..util.timer import seconds_to_hms
 from ..util.math_phys import round_halfint
 
 
 Policy = QtWidgets.QSizePolicy.Policy
-
-
-class QSortingTableWidgetItem(QtWidgets.QTableWidgetItem):
-    """for numerical sorting"""
-
-    def __init__(self, value):
-        super(QSortingTableWidgetItem, self).__init__("%s" % value)
-
-    def __lt__(self, other):
-        if isinstance(other, QSortingTableWidgetItem):
-            selfDataValue = float(self.data(QtCore.Qt.EditRole))
-            otherDataValue = float(other.data(QtCore.Qt.EditRole))
-            return selfDataValue < otherDataValue
-        else:
-            return QtWidgets.QTableWidgetItem.__lt__(self, other)
 
 
 class Colors(T.NamedTuple):
@@ -68,30 +48,72 @@ class Colors(T.NamedTuple):
 _colors = [Colors(c0, c1) for c0, c1 in colors_tab20_pair()]
 
 
-class PODMRFitWidget(FitWidget):
+class SPODMRFitWidget(FitWidget):
     def colors(self) -> list:
         return _colors
 
     def load_dialog(self, default_path: str) -> str:
-        return load_dialog(self, default_path, "PODMR", ".podmr")
+        return load_dialog(self, default_path, "SPODMR", ".spodmr")
 
 
-class PlotWidget(pg.GraphicsLayoutWidget):
+class PlotWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        pg.GraphicsLayoutWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
+        self.init_ui()
         self.init_view()
 
     def sizeHint(self):
         return QtCore.QSize(1400, 1000)
 
+    def init_ui(self):
+        hl0 = QtWidgets.QHBoxLayout()
+        self.showimgBox = QtWidgets.QCheckBox("Show image", parent=self)
+        self.showimgBox.setChecked(True)
+        self.lastnBox = QtWidgets.QSpinBox(parent=self)
+        self.lastnBox.setPrefix("last_n: ")
+        self.lastnBox.setMinimum(0)
+        self.lastnBox.setMaximum(10000)
+        self.lastnBox.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
+        self.lastnBox.setMaximumWidth(200)
+        spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
+        hl0.addWidget(self.showimgBox)
+        hl0.addWidget(self.lastnBox)
+        hl0.addItem(spacer)
+
+        hl = QtWidgets.QHBoxLayout()
+        self.graphicsView = pg.GraphicsView(parent=self)
+        self.histo = pg.HistogramLUTWidget(parent=self)
+        hl.addWidget(self.graphicsView)
+        hl.addWidget(self.histo)
+
+        vl = QtWidgets.QVBoxLayout()
+        vl.addLayout(hl0)
+        vl.addLayout(hl)
+        self.setLayout(vl)
+
     def init_view(self):
-        self.plot = self.addPlot(row=0, col=0, lockAspect=False)
+        self.layout = pg.GraphicsLayout()
+        self.graphicsView.setCentralItem(self.layout)
+        self.histo.gradient.loadPreset("inferno")
+
+        self.plot = self.layout.addPlot(row=0, col=0, lockAspect=False)
+
+        self.img = pg.ImageItem()
+        self.img_plot = self.layout.addPlot(row=1, col=0, lockAspect=False)
+        self.img_plot.addItem(self.img)
+        self.histo.setImageItem(self.img)
+
         self.plot.showGrid(x=True, y=True)
 
-    def plot_analyzed(self, data_list):
+        self.img_plot.setLabel("bottom", "Data point")
+        self.img_plot.setLabel("left", "Number of accumulation")
+
+        self.showimgBox.toggled.connect(self.toggle_image)
+
+    def update_plot(self, data_list: list[tuple[SPODMRData, bool, str]]):
         self.plot.clearPlots()
-        for data, fitdisp, c in data_list:
+        for data, show_fit, c in data_list:
             try:
                 x = data.get_xdata()
                 xfit = data.get_fit_xdata()
@@ -108,7 +130,7 @@ class PlotWidget(pg.GraphicsLayoutWidget):
                 print("Error getting ydata: " + repr(e))
                 continue
 
-            if fitdisp and (xfit is not None) and (yfit is not None):
+            if show_fit and (xfit is not None) and (yfit is not None):
                 self.plot.plot(
                     x, y0, pen=None, symbolPen=None, symbol="o", symbolSize=4, symbolBrush=c.color0
                 )
@@ -147,16 +169,22 @@ class PlotWidget(pg.GraphicsLayoutWidget):
                         symbolBrush=c.color1,
                     )
 
-    def refresh(self, data_list, data: PODMRData):
+    def refresh(self, data_list: list[tuple[SPODMRData, bool, str]], data: SPODMRData):
         try:
-            self.plot_analyzed(data_list)
+            self.update_plot(data_list)
         except TypeError as e:
             # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
             print("Error in plot_analyzed " + repr(e))
 
+        try:
+            self.update_image(data)
+        except TypeError as e:
+            # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
+            print("Error in update_image " + repr(e))
+
         self.update_label(data)
 
-    def update_label(self, data: PODMRData):
+    def update_label(self, data: SPODMRData):
         if not data.has_params():
             return
 
@@ -164,324 +192,36 @@ class PlotWidget(pg.GraphicsLayoutWidget):
         self.plot.setLabel("left", data.ylabel, data.yunit)
         self.plot.setLogMode(x=data.xscale == "log", y=data.yscale == "log")
 
+    def update_image(self, data: SPODMRData, setlevel=True):
+        if not data.has_data():
+            return
+
+        img = data.get_image()
+        self.img.updateImage(img)
+        if setlevel:
+            mn, mx = np.nanmin(img), np.nanmax(img)
+            if mn == mx:
+                mn, mx = mn - 0.1, mx + 0.1
+            self.histo.setLevels(mn, mx)
+        # self.img.resetTransform()
+        # self.img.setPos(0.0, 0.0)
+        # self.img.setTransform(QtGui.QTransform.fromScale(1.0, 1.0))
+
     def update_fft_mode(self, enable):
         self.plot.ctrl.fftCheck.setChecked(enable)
 
     def enable_auto_range(self):
         self.plot.enableAutoRange()
 
-
-class RawPlotWidget(QtWidgets.QWidget):
-    def __init__(self, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
-
-        self.init_widgets()
-
-    def sizeHint(self):
-        return QtCore.QSize(1400, 600)
-
-    def init_widgets(self):
-        glw = pg.GraphicsLayoutWidget(parent=self)
-        self.raw_plot = glw.addPlot(lockAspect=False)
-        self.raw_plot.showGrid(x=True, y=True)
-        self.raw_plot.setLabel("bottom", "Time", "s")
-        self.raw_plot.setLabel("left", "Events")
-
-        self.showBox = QtWidgets.QCheckBox("Show")
-        self.showBox.setChecked(True)
-
-        self.allBox = QtWidgets.QCheckBox("All")
-
-        self.indexBox = QtWidgets.QSpinBox()
-        self.indexBox.setPrefix("laser index: ")
-        self.indexBox.setMinimum(0)
-        self.indexBox.setMaximum(9999)
-
-        self.numBox = QtWidgets.QSpinBox()
-        self.numBox.setPrefix("num: ")
-        self.numBox.setMinimum(1)
-        self.numBox.setMaximum(9999)
-
-        self.marginBox = QtWidgets.QSpinBox()
-        self.marginBox.setPrefix("margin: ")
-        self.marginBox.setMinimum(0)
-        self.marginBox.setMaximum(3000)
-        self.marginBox.setSingleStep(50)
-        self.marginBox.setValue(150)
-
-        for w in (self.indexBox, self.numBox, self.marginBox):
-            w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
-            w.setMaximumWidth(200)
-
-        spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
-
-        hl = QtWidgets.QHBoxLayout()
-        hl.addWidget(self.showBox)
-        hl.addWidget(self.allBox)
-        hl.addWidget(self.indexBox)
-        hl.addWidget(self.numBox)
-        hl.addWidget(self.marginBox)
-        hl.addItem(spacer)
-        vl = QtWidgets.QVBoxLayout()
-        vl.addLayout(hl)
-        vl.addWidget(glw)
-        self.setLayout(vl)
-
-    def plot_raw(self, data: PODMRData):
-        def plot_markers(start, stop):
-            brushes = ((255, 0, 0), (255, 128, 0), (0, 0, 255), (0, 128, 255))
-            for inds, brush in zip(data.marker_indices, brushes):
-                x = np.array([rx[i] for i in inds[start:stop]])
-                y = np.array([ry[i] for i in inds[start:stop]])
-                self.raw_plot.plot(
-                    x, y, pen=None, symbolPen=None, symbol="o", symbolSize=8, symbolBrush=brush
-                )
-
-        if not self.isVisible():
-            return
-
-        self.raw_plot.clear()
-
-        if not data.has_raw_data() or not self.showBox.isChecked():
-            self.raw_plot.plot([0, 1], [0, 0])
-            return
-
-        rx = data.get_raw_xdata()
-        ry = data.raw_data
-        if rx is None or ry is None:
-            return
-
-        laser_pulses = len(data.marker_indices[0])
-        self.indexBox.setMaximum(laser_pulses - 1)
-        self.numBox.setMaximum(laser_pulses)
-
-        if self.allBox.isChecked():
-            # show whole raw data
-            self.raw_plot.plot(rx, ry)
-            plot_markers(0, None)
-            return
-
-        lstart = self.indexBox.value()
-        lstop = min(lstart + self.numBox.value() - 1, laser_pulses - 1)
-        margin = self.marginBox.value()
-        head = data.marker_indices[0][lstart] - margin
-        tail = data.marker_indices[3][lstop] + margin
-        self.raw_plot.plot(rx[head:tail], ry[head:tail])
-        plot_markers(lstart, lstop + 1)
-
-    def refresh(self, data: PODMRData):
-        try:
-            self.plot_raw(data)
-        except TypeError as e:
-            # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
-            print("Error in plot_raw " + repr(e))
-
-
-class PODMRIndicatorWidget(QtWidgets.QWidget, Ui_PODMRIndicator):
-    def __init__(self, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
-        self.setupUi(self)
-
-    def init_connection(self, update_slot):
-        for b in (
-            self.staticfieldBox,
-            self.TiterBox,
-            self.ind1HgammaBox,
-            self.ind13CgammaBox,
-            self.ind14NgammaBox,
-            self.ind15NgammaBox,
-            self.ind19FgammaBox,
-            self.ind31PgammaBox,
-            self.indacfreqBox,
-            self.indac2freqBox,
-        ):
-            b.valueChanged.connect(update_slot)
-        for b in (
-            self.ind1HBox,
-            self.ind13CBox,
-            self.ind14NBox,
-            self.ind15NBox,
-            self.ind19FBox,
-            self.ind31PBox,
-            self.indacBox,
-            self.indac2Box,
-        ):
-            b.toggled.connect(update_slot)
-        for e in (
-            self.ind1HpeakEdit,
-            self.ind13CpeakEdit,
-            self.ind14NpeakEdit,
-            self.ind15NpeakEdit,
-            self.ind19FpeakEdit,
-            self.ind31PpeakEdit,
-            self.indacpeakEdit,
-            self.indac2peakEdit,
-        ):
-            e.textChanged.connect(update_slot)
-
-    def convert_freq(f, TL):
-        """frequency ==> delta, LO"""
-
-        fTL = f * TL
-        m = np.rint(fTL)
-        d = np.abs(fTL - m) / TL
-        f_LO = m / TL
-        return d, f_LO
-
-    def update(self, data: PODMRData):
-        res = []  # No, Nuclei, Harmonics, Larmor freq., 2/(Larmor freq.), corresponding tau
-        nuclei = ["1H", "13C", "14N", "15N", "19F", "31P", "ac", "ac2"]
-        for nuc_label in nuclei:
-            enabled = eval("self.ind%sBox" % nuc_label).isChecked()
-            if not enabled:
-                continue
-
-            peaks, harmonics = self.calc_peak_position(nuc_label)
-            t_pi = data.get_pulse_params()["180pulse"]
-            tau = 1 / 4 / np.array(peaks) - t_pi / 2
-            invfl = 2 / np.array(peaks)
-
-            t_iter = self.TiterBox.value() * 1e-6
-            delta, LO = self.convert_freq(np.array(peaks), t_iter)
-
-            for i in range(len(peaks)):
-                res.append(
-                    (
-                        nuc_label,
-                        harmonics[i],
-                        "%.6f" % (peaks[i] / 1e6),
-                        "%.2f" % (invfl[i] * 1e9),
-                        "%.2f" % (tau[i] * 1e9),
-                        "%.3f" % (delta[i] * 1e-3),
-                    )
-                )
-
-        res = [(str(i),) + r for i, r in enumerate(res)]  # insert the column of No.
-
-        # rebuild table
-        sorting = self.indtableWidget.isSortingEnabled()
-        self.indtableWidget.setSortingEnabled(False)
-        for i in range(self.indtableWidget.rowCount()):
-            self.indtableWidget.removeRow(0)
-        self.indtableWidget.setRowCount(len(res))
-
-        for (i, j), s in np.ndenumerate(res):
-            self.indtableWidget.setItem(i, j, QSortingTableWidgetItem(s))
-
-        self.indtableWidget.resizeColumnsToContents()
-        self.indtableWidget.setSortingEnabled(sorting)
-
-    def calc_peak_position(self, nuc_label):
-        """[(Larmor freq, 'harmonics label'), ...]"""
-        staticfield = self.staticfieldBox.value() * 1e-3  # mT to T
-
-        if nuc_label in ["ac", "ac2"]:
-            lamor_freq = abs(eval("self.ind%sfreqBox" % nuc_label).value() * 1e6)  # MHz to Hz
+    def toggle_image(self, show):
+        if show:
+            self.layout.addItem(self.img_plot, row=1, col=0)
         else:
-            gamma = eval("self.ind%sgammaBox" % nuc_label).value() * 1e6  # MHz/T to Hz/T
-            lamor_freq = abs(staticfield * gamma)  # [Hz]
-
-        peaks_str = eval("self.ind%speakEdit" % nuc_label).text()
-        peaks = []
-        harmonics = peaks_str.replace(" ", "").split(",")
-        for harm in harmonics:
-            if harm.find("/") >= 0:  # rational number
-                a, b = harm.split("/")
-                h = float(a) / float(b)
-            else:  # integer or float
-                h = float(harm)
-
-            peaks.append(lamor_freq * h)
-        return peaks, harmonics
+            self.layout.removeItem(self.img_plot)
 
 
-class PODMRAutoSaveWidget(QtWidgets.QWidget, Ui_PODMRAutoSave):
-    def __init__(self, cli, gparams_cli, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
-        self.setupUi(self)
-
-        self.cli = cli
-        self.gparams_cli = gparams_cli
-
-    def init_connection(self):
-        self.browseButton.clicked.connect(self.browse_dir)
-
-    def check_autosave(self, data: PODMRData):
-        if not self.enableBox.isChecked():
-            return
-        if not data.has_data():
-            # it's taking long for measurement to start actually.
-            # start counting time after the start.
-            self.last_saved_at = datetime.now()
-            return
-
-        t = datetime.now()
-        dt = t - self.last_saved_at
-        h, m, s = seconds_to_hms(dt.seconds)
-        self.agoLabel.setText(f"({h:02d}:{m:02d}:{s:02d} ago)")
-
-        if dt.seconds > self.intervalBox.value():
-            self.request_save()
-            self.last_saved_at = t
-            self.lastLabel.setText("Last saved: " + t.strftime("%F %T"))
-
-    def request_save(self):
-        fn = self.get_filename()
-        self.cli.save_data(fn, params={"tmp": True})
-        self.suffixBox.setValue(self.suffixBox.value() + 1)
-
-    def get_filename(self):
-        dirname = self.dirEdit.text()
-        fname = "{:s}_{:04d}.podmr.pkl".format(self.fnEdit.text(), self.suffixBox.value())
-        return os.path.join(dirname, fname)
-
-    def init_autosave(self):
-        if not self.enableBox.isChecked():
-            self.lastLabel.setText("Last saved: ")
-            self.agoLabel.setText("()")
-            return
-
-        self.last_saved_at = datetime.now()
-        if self.resetBox.isChecked():
-            self.suffixBox.setValue(0)
-
-        if os.path.isfile(self.get_filename()):
-            if not Qt.question_yn(
-                self, "Overwrite filename?", "File name overlap for autosave. Overwrite?"
-            ):
-                self.enableBox.setChecked(False)
-                return
-
-        try:
-            if not os.path.isdir(self.dirEdit.text()):
-                os.makedirs(self.dirEdit.text())
-        except IOError:
-            QtWidgets.QMessageBox.warning(
-                self, "Cannot autosave", "Failed to autosave directory. Cannot perform autosave"
-            )
-            self.enableBox.setChecked(False)
-
-    def update_state(self, state: BinaryState, last_state: BinaryState):
-        for w in (
-            self.dirEdit,
-            self.browseButton,
-            self.fnEdit,
-            self.suffixBox,
-            self.resetBox,
-            self.intervalBox,
-            self.enableBox,
-        ):
-            w.setEnabled(state == BinaryState.IDLE)
-
-    def browse_dir(self):
-        current = str(self.gparams_cli.get_param("work_dir"))
-        dn = QtWidgets.QFileDialog.getExistingDirectory(self, "Select autosave directory", current)
-        if dn and current != dn:
-            self.dirEdit.setText(dn)
-
-
-class PODMRWidget(ClientWidget, Ui_PODMR):
-    """Widget for Pulse ODMR."""
+class SPODMRWidget(ClientWidget, Ui_SPODMR):
+    """Widget for Pulse ODMR with Slow detectors."""
 
     def __init__(
         self,
@@ -489,7 +229,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         name,
         gparams_name,
         plot: PlotWidget,
-        raw_plot: RawPlotWidget,
         context,
         parent=None,
     ):
@@ -504,11 +243,10 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.init_radiobuttons()
         self.init_widgets()
         self.plot = plot
-        self.raw_plot = raw_plot
 
-        self.data = PODMRData()
+        self.data = SPODMRData()
 
-        self.cli = QPODMRClient(gconf, name, context=context, parent=self)
+        self.cli = QSPODMRClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -516,18 +254,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.add_clients(self.cli, self.gparams_cli)
 
         self._fiTab_layout = QtWidgets.QVBoxLayout(self.fiTab)
-        self.fit = PODMRFitWidget(self.cli, self.gparams_cli, parent=self.fiTab)
+        self.fit = SPODMRFitWidget(self.cli, self.gparams_cli, parent=self.fiTab)
         self._fiTab_layout.addWidget(self.fit)
-
-        self._autosaveTab_layout = QtWidgets.QVBoxLayout(self.autosaveTab)
-        self.autosave = PODMRAutoSaveWidget(self.cli, self.gparams_cli, parent=self.autosaveTab)
-        self._autosaveTab_layout.addWidget(self.autosave)
-        self.autosave.init_connection()
-
-        self._indicaTab_layout = QtWidgets.QVBoxLayout(self.indicaTab)
-        self.indicator = PODMRIndicatorWidget(parent=self.indicaTab)
-        self._indicaTab_layout.addWidget(self.indicator)
-        self.indicator.init_connection(self.update_indicator)
 
         self.setEnabled(False)
 
@@ -547,33 +275,21 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         self.startBox.setValue(1)
         self.stepBox.setValue(1)
-        self.numBox.setValue(100)
+        self.numBox.setValue(50)
         self.tauconstBox.setValue(0)
 
         self.NstartBox.setValue(1)
         self.NstepBox.setValue(1)
-        self.NnumBox.setValue(100)
+        self.NnumBox.setValue(50)
         self.NconstBox.setValue(1)
 
-        self.basewidthBox.setValue(320)
         self.ldelayBox.setValue(45)
-        self.lwidthBox.setValue(5000)
+        self.lwidthBox.setValue(3000)
         self.mdelayBox.setValue(1000)
-        self.trigwidthBox.setValue(20)
-        self.initdelayBox.setValue(0)
-        self.finaldelayBox.setValue(5000)
 
         self.tpwidthBox.setValue(10)
         self.tp2widthBox.setValue(-1)
         self.iqdelayBox.setValue(10)
-
-        self.init_delay()
-
-    def init_delay(self):
-        self.sigdelayBox.setValue(190)
-        self.sigwidthBox.setValue(300)
-        self.refdelayBox.setValue(2200)
-        self.refwidthBox.setValue(2400)
 
     def init_with_status(self, status: BinaryStatus):
         """initialize widget after receiving first status."""
@@ -605,8 +321,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.exportButton.clicked.connect(self.export_data)
         self.loadButton.clicked.connect(self.load_data)
 
-        self.discardButton.clicked.connect(self.discard_data)
-
         # main tab
         for w in (self.startBox, self.stepBox, self.numBox):
             w.valueChanged.connect(self.update_stop)
@@ -632,9 +346,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.fg_gateButton.toggled.connect(self.switch_fg)
 
     # Widget status updates
-
-    def update_indicator(self):
-        self.indicator.update(self.data)
 
     def update_inst_bounds(self):
         params = self.cli.get_param_dict("rabi")
@@ -667,20 +378,25 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         else:
             self._has_fg = False
 
+        apply_widgets(
+            params,
+            [
+                ("accum_window", self.accumwindowBox, 1e3),  # sec to ms
+                ("accum_rep", self.accumrepBox),
+                ("pd_rate", self.pdrateBox, 1e-3),  # Hz to kHz
+                ("pd_bounds", [self.pd_lbBox, self.pd_ubBox]),
+            ],
+        )
+
     def update_plot_enable(self, enable: bool):
         for w in (
             self.plotmodeBox,
             self.taumodeBox,
-            self.refmodeBox,
-            self.sigdelayBox,
-            self.sigwidthBox,
-            self.refdelayBox,
-            self.refwidthBox,
-            self.refavgBox,
-            self.autoadjustBox,
             self.xlogBox,
             self.ylogBox,
             self.fftBox,
+            self.normalizeBox,
+            self.complexBox,
         ):
             w.setEnabled(enable)
 
@@ -734,12 +450,9 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
     def switch_partial(self, index):
         # when partial is 0 (index 1), plotmode to data0 (index 1)
         # when partial is 1 (index 2), plotmode to data1 (index 2)
-        # when partial is 2 (index 3), plotmode to data0 (index 1)
 
         if index in (1, 2):
             self.plotmodeBox.setCurrentIndex(index)
-        elif index == 3:
-            self.plotmodeBox.setCurrentIndex(1)
 
     def update_save_button(self, saved):
         if saved:
@@ -747,35 +460,17 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         else:
             self.saveButton.setStyleSheet("background-color: #FF0000")
 
-    def _wire_plot_timing_widgets(self, connect: bool):
-        for b in (self.sigdelayBox, self.sigwidthBox, self.refdelayBox, self.refwidthBox):
-            if connect:
-                b.editingFinished.connect(self.update_plot_params)
-            else:
-                b.editingFinished.disconnect(self.update_plot_params)
-
     def _wire_plot_widgets(self, connect: bool):
-        self._wire_plot_timing_widgets(connect)
-        for cb in (self.plotmodeBox, self.taumodeBox, self.refmodeBox):
+        for cb in (self.plotmodeBox, self.taumodeBox, self.complexBox):
             if connect:
                 cb.currentIndexChanged.connect(self.update_plot_params)
             else:
                 cb.currentIndexChanged.disconnect(self.update_plot_params)
-        for b in (self.refavgBox, self.xlogBox, self.ylogBox, self.fftBox):
+        for b in (self.xlogBox, self.ylogBox, self.fftBox, self.normalizeBox):
             if connect:
                 b.toggled.connect(self.update_plot_params)
             else:
                 b.toggled.disconnect(self.update_plot_params)
-
-    def adjust_analysis_timing(self, tbin_ns: float):
-        tbin = int(round(tbin_ns * 10))
-        self._wire_plot_timing_widgets(False)
-        for b in (self.sigdelayBox, self.sigwidthBox, self.refdelayBox, self.refwidthBox):
-            v = int(round(b.value() * 10))
-            v_ = v - v % tbin
-            b.setValue(v_ / 10)
-            b.setSingleStep(tbin / 10 + 0.01)
-        self._wire_plot_timing_widgets(True)
 
     def check_ddphase(self):
         """Validate input of ddgatephaseEdit. If input is invalid, set background color.
@@ -807,7 +502,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
     def save_data(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = save_dialog(self, default_path, "PODMR", ".podmr")
+        fn = save_dialog(self, default_path, "SPODMR", ".spodmr")
         if not fn:
             return
 
@@ -824,7 +519,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             return
 
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = export_dialog(self, default_path, "PODMR", (".png", ".pdf", ".eps", ".txt"))
+        fn = export_dialog(self, default_path, "SPODMR", (".png", ".pdf", ".eps", ".txt"))
         if not fn:
             return
 
@@ -847,7 +542,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.update_save_button(True)
 
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = load_dialog(self, default_path, "PODMR", ".podmr")
+        fn = load_dialog(self, default_path, "SPODMR", ".spodmr")
         if not fn:
             return
 
@@ -865,7 +560,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.apply_plot_widgets()
         self.switch_method()
         self.refresh_plot()
-        self.update_widgets()
 
         # self.update_data(data)
 
@@ -877,10 +571,14 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             p = params
 
         # pulser
-        self.binBox.setValue(p.get("timebin", 0.0) * 1e9)  # sec to ns
-
-        self.intervalBox.setValue(int(round(p.get("interval", 0.0) * 1e3)))  # sec to ms
         self.sweepsBox.setValue(p.get("sweeps", 0))
+        self.accumwindowBox.setValue(p.get("accum_window", 1e-3), 1e3)  # [sec] ==> [ms]
+        self.accumrepBox.setValue(p.get("accum_rep", 1))
+        self.pdrateBox.setValue(p.get("pd_rate", 1e5) * 1e-3)
+        if "pd_bounds" in p:
+            lb, ub = p["pd_bounds"]
+            self.pd_lbBox.setValue(lb)
+            self.pd_ubBox.setValue(ub)
 
         # method
         method = p.get("method", "rabi")
@@ -916,19 +614,15 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.reduceBox.setChecked(p.get("enable_reduce", False))
         self.divideblockBox.setChecked(p.get("divide_block", True))
         partial = p.get("partial")
-        if partial in (0, 1):
+        if partial in (-1, 0, 1, 2):
             self.partialBox.setCurrentIndex(partial + 1)
         else:
             self.partialBox.setCurrentIndex(0)
 
         # sequence parameters (pulses)  [sec] ==> [ns]
-        self.basewidthBox.setValue(p.get("base_width", 0.0) * 1e9)
         self.ldelayBox.setValue(p.get("laser_delay", 0.0) * 1e9)
         self.lwidthBox.setValue(p.get("laser_width", 0.0) * 1e9)
         self.mdelayBox.setValue(p.get("mw_delay", 0.0) * 1e9)
-        self.trigwidthBox.setValue(p.get("trigger_width", 0.0) * 1e9)
-        self.initdelayBox.setValue(p.get("init_delay", 0.0) * 1e9)
-        self.finaldelayBox.setValue(p.get("final_delay", 0.0) * 1e9)
         self.iqdelayBox.setValue(p.get("iq_delay", 0.0) * 1e9)
         self.tpwidthBox.setValue(p.get("90pulse", 0.0) * 1e9)
         self.tp2widthBox.setValue(p.get("180pulse", 0.0) * 1e9)
@@ -972,12 +666,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.ylogBox.setChecked(p.get("ylogscale", False))
         self.fftBox.setChecked(p.get("fft", False))
 
-        self.sigdelayBox.setValue(p.get("sigdelay", 0.0) * 1e9)
-        self.sigwidthBox.setValue(p.get("sigwidth", 100.0) * 1e9)
-        self.refdelayBox.setValue(p.get("refdelay", 100.0) * 1e9)
-        self.refwidthBox.setValue(p.get("refwidth", 100.0) * 1e9)
-        self.refavgBox.setChecked(p.get("refaverage", False))
-
         self._wire_plot_widgets(True)
 
         self.update_plot_params()
@@ -987,10 +675,12 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["method"] = self.get_method()
         params["freq"] = self.freqBox.value() * 1e6  # [MHz] ==> [Hz]
         params["power"] = self.powerBox.value()
-        params["timebin"] = self.binBox.value() * 1e-9  # [ns] ==> [sec]
 
-        params["interval"] = self.intervalBox.value() * 1e-3  # [ms] ==> [sec]
         params["sweeps"] = self.sweepsBox.value()
+        params["accum_window"] = self.accumwindowBox.value() * 1e-3  # [ms] ==> [sec]
+        params["accum_rep"] = self.accumrepBox.value()
+        params["pd_rate"] = self.pdrateBox.value() * 1e3  # [kHz] ==> [Hz]
+        params["pd_bounds"] = [self.pd_lbBox.value(), self.pd_ubBox.value()]
 
         params["start"] = self.startBox.value() * 1e-9  # [ns] ==> [sec]
         params["num"] = self.numBox.value()
@@ -1022,13 +712,9 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["divide_block"] = self.divideblockBox.isChecked()
 
         # [ns] ==> [sec]
-        params["base_width"] = self.basewidthBox.value() * 1e-9
         params["laser_delay"] = self.ldelayBox.value() * 1e-9
         params["laser_width"] = self.lwidthBox.value() * 1e-9
         params["mw_delay"] = self.mdelayBox.value() * 1e-9
-        params["trigger_width"] = self.trigwidthBox.value() * 1e-9
-        params["init_delay"] = self.initdelayBox.value() * 1e-9
-        params["final_delay"] = self.finaldelayBox.value() * 1e-9
         params["iq_delay"] = self.iqdelayBox.value() * 1e-9
         params["90pulse"] = self.tpwidthBox.value() * 1e-9
         params["180pulse"] = self.tp2widthBox.value() * 1e-9
@@ -1056,19 +742,15 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["ylogscale"] = self.ylogBox.isChecked()
         params["fft"] = self.fftBox.isChecked()
 
-        # [us] or [ns] ==> [sec]
-        params["sigdelay"] = self.sigdelayBox.value() * 1e-9
-        params["sigwidth"] = self.sigwidthBox.value() * 1e-9
-        params["refdelay"] = self.refdelayBox.value() * 1e-9
-        params["refwidth"] = self.refwidthBox.value() * 1e-9
-        params["refmode"] = self.refmodeBox.currentText()
-        params["refaverage"] = self.refavgBox.isChecked()
+        params["complex_conv"] = self.complexBox.currentText()
+        params["normalize"] = self.normalizeBox.isChecked()
+
         return params
 
     def get_fg_mode(self):
         return [m for b, m in self.get_fg_mode_dict() if b.isChecked()][0]
 
-    def get_plottable_data(self) -> T.List[T.Tuple[PODMRData, bool, Colors]]:
+    def get_plottable_data(self) -> T.List[T.Tuple[SPODMRData, bool, Colors]]:
         return self.fit.get_plottable_data(self.data)
 
     # State managements
@@ -1106,76 +788,28 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             ):
                 return
 
-        self.autosave.init_autosave()
-
         self.cli.start(params)
 
         self.update_save_button(True)
 
-    def update_data(self, data: PODMRData):
+    def update_data(self, data: SPODMRData):
         self.data = data
         if not self.data.has_data():
             return  # measurement has not been started yet or data has not been accumulated.
 
         self.refresh_plot()
-        self.update_widgets()
 
-        if self.data.running:
-            self.autosave.check_autosave(self.data)
-
-    def update_buffer(self, buffer: Buffer[tuple[str, PODMRData]]):
+    def update_buffer(self, buffer: Buffer[tuple[str, SPODMRData]]):
         self.fit.update_buffer(buffer)
         self.refresh_plot()
 
-    def _update_elapsed_time(self):
-        if self.data is None:
-            return
-
-        t0 = self.data.start_time
-        if self.data.finish_time is not None:
-            t1 = self.data.finish_time
-        else:
-            t1 = time.time()
-
-        elapsed = t1 - t0
-        h, m, s = seconds_to_hms(elapsed)
-        self.elapsedtimeLabel.setText(f"Elapsed time: {h:02d}:{m:02d}:{s:02d} ({elapsed:.1f} sec)")
-
-    def _update_swept_label(self):
-        if self.data.tdc_status is None:
-            return
-        sweep_num = int(self.data.tdc_status[1])
-        self.sweptLabel.setText(f"{sweep_num} swept")
-
-    def update_widgets(self):
-        self._update_elapsed_time()
-        self._update_swept_label()
-        tbin = self.data.get_bin()
-        trange = self.data.get_range()
-
-        if not self.binBox.isEnabled():
-            # if binBox is disabled, state is ACTIVE
-            # Don't update these when the state is IDLE
-            if tbin is not None:
-                self.binBox.setValue(tbin * 1.0e9)  # sec to ns
-            if trange is not None:
-                self.rangeLabel.setText("range: {:d}".format(int(round(trange))))
-
     def update_plot_params(self):
-        if self.autoadjustBox.isChecked():
-            tbin = self.data.get_bin()
-            if tbin is not None:
-                self.adjust_analysis_timing(self.data.get_bin() * 1e9)
         self.cli.update_plot_params(self.get_plot_params())
-
-    def discard_data(self):
-        self.cli.discard()
 
     def refresh_plot(self):
         self.plot.refresh(self.get_plottable_data(), self.data)
-        self.raw_plot.refresh(self.data)
 
-    def finalize(self, data: PODMRData):
+    def finalize(self, data: SPODMRData):
         if self._finalizing:
             return
         self._finalizing = True
@@ -1188,24 +822,23 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.saveButton,
             self.exportButton,
             self.loadButton,
-            self.binBox,
             self.freqBox,
             self.powerBox,
             self.nomwBox,
             self.methodBox,
             self.partialBox,
-            self.intervalBox,
             self.sweepsBox,
+            self.accumwindowBox,
+            self.accumrepBox,
+            self.pdrateBox,
+            self.pd_lbBox,
+            self.pd_ubBox,
             self.invertsweepBox,
             self.reduceBox,
             self.divideblockBox,
-            self.basewidthBox,
             self.ldelayBox,
             self.lwidthBox,
             self.mdelayBox,
-            self.trigwidthBox,
-            self.initdelayBox,
-            self.finaldelayBox,
         ):
             w.setEnabled(state == BinaryState.IDLE)
 
@@ -1251,12 +884,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
                 for w in (self.fg_waveBox, self.fg_freqBox, self.fg_amplBox, self.fg_phaseBox):
                     w.setEnabled(False)
 
-        self.discardButton.setEnabled(
-            self.enablediscardBox.isChecked() and state == BinaryState.ACTIVE
-        )
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
-
-        self.autosave.update_state(state, last_state)
 
     # helper functions
 
@@ -1270,7 +898,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.startBox,
             self.stepBox,
             self.tauconstBox,
-            self.basewidthBox,
             self.ldelayBox,
             self.lwidthBox,
             self.mdelayBox,
@@ -1293,7 +920,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         "xy16",
         "180train",
         "se90sweep",
-        "recovery",
+        # "recovery",
         "spinlock",
         "xy8cl",
         "xy8cl1flip",
@@ -1360,8 +987,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         ]
 
 
-class PODMRMainWindow(QtWidgets.QMainWindow):
-    """MainWindow with PODMRWidget and PlotWidget."""
+class SPODMRMainWindow(QtWidgets.QMainWindow):
+    """MainWindow with SPODMRWidget and PlotWidget."""
 
     def __init__(self, gconf: dict, name, context, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
@@ -1370,41 +997,35 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
         target = lconf["target"]
 
         self.plot = PlotWidget(parent=self)
-        self.raw_plot = RawPlotWidget(parent=self)
-        self.podmr = PODMRWidget(
+        self.spodmr = SPODMRWidget(
             gconf,
-            target["podmr"],
+            target["spodmr"],
             target["gparams"],
             self.plot,
-            self.raw_plot,
             context,
             parent=self,
         )
 
-        self.setWindowTitle(f"MAHOS.PODMRGUI ({join_name(target['podmr'])})")
+        self.setWindowTitle(f"MAHOS.SPODMRGUI ({join_name(target['spodmr'])})")
         self.setAnimated(False)
-        self.setCentralWidget(self.podmr)
+        self.setCentralWidget(self.spodmr)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)
         self.d_plot.setWidget(self.plot)
-        self.d_raw_plot = QtWidgets.QDockWidget("Raw Plot", parent=self)
-        self.d_raw_plot.setWidget(self.raw_plot)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.d_plot)
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, self.d_raw_plot)
 
         self.view_menu = self.menuBar().addMenu("View")
         self.view_menu.addAction(self.d_plot.toggleViewAction())
-        self.view_menu.addAction(self.d_raw_plot.toggleViewAction())
 
     def closeEvent(self, event):
         """Close the clients on closeEvent."""
 
-        self.podmr.close_clients()
+        self.spodmr.close_clients()
         # self.plot.close_clients()
         QtWidgets.QMainWindow.closeEvent(self, event)
 
 
-class PODMRGUI(GUINode):
-    """GUINode for Pulse ODMR using PODMRWidget."""
+class SPODMRGUI(GUINode):
+    """GUINode for Pulse ODMR with Slow detectors using SPODMRWidget."""
 
     def init_widget(self, gconf: dict, name, context):
-        return PODMRMainWindow(gconf, name, context)
+        return SPODMRMainWindow(gconf, name, context)

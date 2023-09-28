@@ -77,7 +77,7 @@ def generate_blocks(
     read_phase1: str = "mw_x_inv",
     partial: int = -1,
     nomw: bool = False,
-    ignore_basewidth: bool = False,
+    ignore_base_width: bool = False,
 ) -> Blocks[Block]:
     (
         base_width,
@@ -89,7 +89,7 @@ def generate_blocks(
         final_delay,
     ) = common_pulses
 
-    if ignore_basewidth:
+    if ignore_base_width:
         base_width = 1
 
     # base length offset (laser)

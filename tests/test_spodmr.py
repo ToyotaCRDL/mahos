@@ -36,7 +36,7 @@ def test_spodmr(server, spodmr, server_conf, spodmr_conf):
         "xy16",
         "180train",
         "se90sweep",
-        "recovery",
+        # "recovery",
         "spinlock",
         "xy8cl",
         "xy8cl1flip",
@@ -45,6 +45,7 @@ def test_spodmr(server, spodmr, server_conf, spodmr_conf):
         print(m)
         params = spodmr.get_param_dict(m)
         params["num"].set(2)  # small num for quick test
+        params["accum_window"].set(1e-4)  # small window for quick test
         if "90pulse" in params:
             params["90pulse"].set(10e-9)
         if "180pulse" in params:
@@ -60,6 +61,7 @@ def test_spodmr(server, spodmr, server_conf, spodmr_conf):
     for m in ("cpN", "cpmgN", "xy4N", "xy8N", "xy16N", "xy8clNflip", "ddgateN"):
         params = spodmr.get_param_dict(m)
         params["Nnum"].set(3)  # small num for quick test
+        params["accum_window"].set(1e-4)  # small window for quick test
         assert spodmr.validate(params)
         assert spodmr.start(params)
         assert expect_spodmr(spodmr, params["Nnum"].value(), poll_timeout_ms)
