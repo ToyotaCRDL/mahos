@@ -108,9 +108,7 @@ class SPODMR(BasicMeasNode):
 
         if msg.state == BinaryState.IDLE:
             success = self.switch.stop() and self.worker.stop()
-            if success:
-                self.pub_timer = IntervalTimer(self._pub_interval)
-            else:
+            if not success:
                 return Resp(False, "Failed to stop internal worker.", ret=self.state)
         elif msg.state == BinaryState.ACTIVE:
             if not self.switch.start():
@@ -118,7 +116,6 @@ class SPODMR(BasicMeasNode):
             if not self.worker.start(msg.params):
                 self.switch.stop()
                 return Resp(False, "Failed to start worker.", ret=self.state)
-            self.pub_timer = self.worker.timer.clone()
 
         self.state = msg.state
         return Resp(True)

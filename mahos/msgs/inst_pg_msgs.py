@@ -37,7 +37,13 @@ AcceptedPattern = T.NewType("AcceptedPattern", T.List[AcceptedPatternElement])
 
 
 class Block(Message):
-    def __init__(self, name: str, pattern: AcceptedPattern, Nrep: int = 1, trigger: bool = False):
+    def __init__(
+        self,
+        name: str,
+        pattern: AcceptedPattern,
+        Nrep: int = 1,
+        trigger: bool = False,
+    ):
         """The block representation of pulse pattern.
 
         :param pattern: pattern is list of 2-tuple:
@@ -165,8 +171,6 @@ class Block(Message):
         if channel named "a" is defined in this Block, "a" cannot be appeared in the `other`.
         Two Blocks must have same total_length() too.
 
-        The current merging algorithm is not very effective, and can be slow for huge Blocks.
-
         """
 
         ch0 = self.channels()
@@ -176,15 +180,31 @@ class Block(Message):
         if self.total_length() != other.total_length():
             raise ValueError("Length mismatch")
 
-        chs0, ptns0 = self.decode_all()
-        chs1, ptns1 = other.decode_all()
-
+        # copy the blocks
+        p0 = self.simplify().total_pattern()
+        p1 = other.simplify().total_pattern()
+        t = self.total_length()
         ptn = []
-        for i in range(self.total_length()):
-            c0 = [ch for j, ch in enumerate(chs0) if ptns0[j][i]]
-            c1 = [ch for j, ch in enumerate(chs1) if ptns1[j][i]]
-            ptn.append((c0 + c1, 1))
-        return Block(self.name, ptn, Nrep=1, trigger=self.trigger).simplify()
+        while t > 0:
+            h0, h1 = p0[0], p1[0]
+            if h0[1] == h1[1]:
+                ptn.append((h0[0] + h1[0], h0[1]))
+                p0.pop(0)
+                p1.pop(0)
+                t -= h0[1]
+            elif h0[1] > h1[1]:
+                ptn.append((h0[0] + h1[0], h1[1]))
+                p0[0] = (h0[0], h0[1] - h1[1])
+                p1.pop(0)
+                t -= h1[1]
+            else:  # h0[1] < h1[1]
+                ptn.append((h0[0] + h1[0], h0[1]))
+                p1[0] = (h1[0], h1[1] - h0[1])
+                p0.pop(0)
+                t -= h0[1]
+        assert not p0
+        assert not p1
+        return Block(self.name, ptn, Nrep=1, trigger=self.trigger)
 
     def __len__(self) -> int:
         """Total block length considering Nrep."""
@@ -234,6 +254,24 @@ class Block(Message):
                     new_ch.extend(after)
             new_pattern.append((tuple(new_ch), period))
 
+        return Block(self.name, new_pattern, Nrep=self.Nrep, trigger=self.trigger)
+
+    def remove(
+        self,
+        remove_channels: str | int | tuple[str, ...] | tuple[int, ...],
+    ) -> Block:
+        """Return copy of this Block with removed channels.
+
+        :param remove: single channel or tuple of channels to remove.
+
+        """
+
+        if isinstance(remove_channels, (str, int)):
+            remove_channels = (remove_channels,)
+
+        new_pattern = [
+            (tuple((c for c in chs if c not in remove_channels)), t) for chs, t in self.pattern
+        ]
         return Block(self.name, new_pattern, Nrep=self.Nrep, trigger=self.trigger)
 
     def apply(self, func: T.Callable[Channels, Channels]) -> Block:
@@ -384,7 +422,7 @@ class Blocks(UserList):
             return False
 
         return channels == other_channels and all(
-            [(p0 == p1).all() for p0, p1 in zip(patterns, other_patterns)]
+            [len(p0) == len(p1) and (p0 == p1).all() for p0, p1 in zip(patterns, other_patterns)]
         )
 
     def replace(
@@ -394,6 +432,14 @@ class Blocks(UserList):
         """Return copy of the Blocks with replaced channels."""
 
         return Blocks([b.replace(replace_dict) for b in self.data])
+
+    def remove(
+        self,
+        remove_channels: str | int | tuple[str, ...] | tuple[int, ...],
+    ) -> Blocks[Block]:
+        """Return copy of the Blocks with removed channels."""
+
+        return Blocks([b.remove(remove_channels) for b in self.data])
 
     def apply(self, func: T.Callable[Channels, Channels]) -> Blocks[Block]:
         """Return copy of this Blocks applying given function over channels."""

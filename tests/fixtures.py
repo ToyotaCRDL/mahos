@@ -14,6 +14,7 @@ from mahos.meas.confocal import Confocal, ConfocalClient
 from mahos.meas.confocal_tracker import ConfocalTracker, ConfocalTrackerClient
 from mahos.meas.odmr import ODMR, ODMRClient
 from mahos.meas.podmr import PODMR, PODMRClient
+from mahos.meas.spodmr import SPODMR, SPODMRClient
 from mahos.meas.iodmr import IODMR, IODMRClient
 from mahos.meas.qdyne import Qdyne, QdyneClient
 from mahos.meas.hbt import HBT, HBTClient
@@ -34,6 +35,7 @@ confocal_name = "localhost::confocal"
 tracker_name = "localhost::tracker"
 odmr_name = "localhost::odmr"
 podmr_name = "localhost::podmr"
+spodmr_name = "localhost::spodmr"
 iodmr_name = "localhost::iodmr"
 qdyne_name = "localhost::qdyne"
 hbt_name = "localhost::hbt"
@@ -99,6 +101,7 @@ def gconf():
     local_conf(gconf, tracker_name)["poll_timeout_ms"] = 50
     local_conf(gconf, odmr_name)["poll_timeout_ms"] = 50
     local_conf(gconf, podmr_name)["poll_timeout_ms"] = 50
+    local_conf(gconf, spodmr_name)["poll_timeout_ms"] = 50
     local_conf(gconf, iodmr_name)["poll_timeout_ms"] = 50
     local_conf(gconf, qdyne_name)["poll_timeout_ms"] = 50
     local_conf(gconf, hbt_name)["poll_timeout_ms"] = 50
@@ -157,6 +160,11 @@ def odmr_conf(gconf):
 @pytest.fixture
 def podmr_conf(gconf):
     return local_conf(gconf, podmr_name)
+
+
+@pytest.fixture
+def spodmr_conf(gconf):
+    return local_conf(gconf, spodmr_name)
 
 
 @pytest.fixture
@@ -316,6 +324,15 @@ def odmr_ev(ctx, gconf):
 def podmr(ctx, gconf):
     proc, shutdown_ev = start_node_proc(ctx, PODMR, gconf, podmr_name)
     client = PODMRClient(gconf, podmr_name)
+    yield client
+    client.close()
+    stop_proc(proc, shutdown_ev)
+
+
+@pytest.fixture
+def spodmr(ctx, gconf):
+    proc, shutdown_ev = start_node_proc(ctx, SPODMR, gconf, spodmr_name)
+    client = SPODMRClient(gconf, spodmr_name)
     yield client
     client.close()
     stop_proc(proc, shutdown_ev)

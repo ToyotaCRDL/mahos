@@ -203,11 +203,29 @@ sg = "localhost::server"
 pg = "localhost::server"
 fg = "localhost::server"
 
+[localhost.spodmr]
+module = "mahos.meas.spodmr"
+class = "SPODMR"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5580"
+pub_endpoint = "tcp://127.0.0.1:5581"
+[localhost.spodmr.pulser]
+pd_clock = "/Dummy"
+[localhost.spodmr.target]
+log = "localhost::log"
+tweaker = "localhost::tweaker"
+[localhost.spodmr.target.servers]
+tdc = "localhost::server"
+sg = "localhost::server"
+pg = "localhost::server"
+fg = "localhost::server"
+pd0 = "localhost::server"
+
 [localhost.iodmr]
 module = "mahos.meas.iodmr"
 class = "IODMR"
-rep_endpoint = "tcp://127.0.0.1:5580"
-pub_endpoint = "tcp://127.0.0.1:5581"
+rep_endpoint = "tcp://127.0.0.1:5582"
+pub_endpoint = "tcp://127.0.0.1:5583"
 [localhost.iodmr.target]
 log = "localhost::log"
 [localhost.iodmr.target.servers]
@@ -216,8 +234,8 @@ isweeper = "localhost::server"
 [localhost.spectroscopy]
 module = "mahos.meas.spectroscopy"
 class = "Spectroscopy"
-rep_endpoint = "tcp://127.0.0.1:5582"
-pub_endpoint = "tcp://127.0.0.1:5583"
+rep_endpoint = "tcp://127.0.0.1:5584"
+pub_endpoint = "tcp://127.0.0.1:5585"
 [localhost.spectroscopy.target]
 log = "localhost::log"
 tweaker = "localhost::tweaker"
@@ -227,8 +245,8 @@ spectrometer = "localhost::server"
 [localhost.camera]
 module = "mahos.meas.camera"
 class = "Camera"
-rep_endpoint = "tcp://127.0.0.1:5584"
-pub_endpoint = "tcp://127.0.0.1:5585"
+rep_endpoint = "tcp://127.0.0.1:5586"
+pub_endpoint = "tcp://127.0.0.1:5587"
 [localhost.camera.target]
 log = "localhost::log"
 tweaker = "localhost::tweaker"
@@ -239,8 +257,8 @@ camera = "localhost::server"
 module = "mahos.meas.qdyne"
 class = "Qdyne"
 log_level = "DEBUG"
-rep_endpoint = "tcp://127.0.0.1:5586"
-pub_endpoint = "tcp://127.0.0.1:5587"
+rep_endpoint = "tcp://127.0.0.1:5588"
+pub_endpoint = "tcp://127.0.0.1:5589"
 [localhost.qdyne.target]
 log = "localhost::log"
 tweaker = "localhost::tweaker"
@@ -254,8 +272,8 @@ fg = "localhost::server"
 module = "mahos.meas.state_manager"
 class = "StateManager"
 target = { log = "localhost::log" }
-rep_endpoint = "tcp://127.0.0.1:5588"
-pub_endpoint = "tcp://127.0.0.1:5589"
+rep_endpoint = "tcp://127.0.0.1:5590"
+pub_endpoint = "tcp://127.0.0.1:5591"
 
 [localhost.manager.node]
 "localhost::hbt" = ["mahos.msgs.common_msgs", "BinaryState"]
@@ -271,8 +289,8 @@ prepare_scan = { "localhost::odmr" = "IDLE" , "localhost::hbt" = "IDLE", "localh
 module = "mahos.meas.tweaker"
 class = "Tweaker"
 target = { log = "localhost::log" }
-rep_endpoint = "tcp://127.0.0.1:5590"
-pub_endpoint = "tcp://127.0.0.1:5591"
+rep_endpoint = "tcp://127.0.0.1:5592"
+pub_endpoint = "tcp://127.0.0.1:5593"
 param_dicts = ["paramX::labelA", "paramY::labelB"]
 [localhost.tweaker.target.servers]
 paramX = "localhost::server"

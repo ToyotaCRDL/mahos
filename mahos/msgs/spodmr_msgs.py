@@ -329,6 +329,14 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
     def is_sweepN(self):
         return self.has_params() and is_sweepN(self.params["method"])
 
+    def get_num(self):
+        if not self.has_params():
+            return None
+        if self.is_sweepN():
+            return self.params["Nnum"]
+        else:
+            return self.params["num"]
+
     def is_CPlike(self) -> bool:
         return self.has_params() and is_CPlike(self.params["method"])
 

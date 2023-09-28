@@ -58,11 +58,11 @@ class SPODMRDataOperator(object):
 
     def update(self, data: SPODMRData, line):
         if data.partial() in (0, 2):
-            self._append_line_single(data.data0, line)
+            data.data0 = self._append_line_single(data.data0, line)
         elif data.partial() == 1:
-            self._append_line_single(data.data1, line)
+            data.data1 = self._append_line_single(data.data1, line)
         else:  # -1
-            self._append_line_double(data.data0, data.data1, line)
+            data.data0, data.data1 = self._append_line_double(data.data0, data.data1, line)
 
     def update_plot_params(self, data, plot_params: dict[str, P.RawPDValue]) -> bool:
         """update plot_params. returns True if param is actually updated."""
@@ -157,6 +157,7 @@ class BlocksBuilder(object):
         markers = [0]
 
         for blks in blocks:
+            blks = blks.remove("sync")
             assert len(blks) == 4
             blks0: Blocks[Block] = blks[:2]
             blks1: Blocks[Block] = blks[2:]
@@ -191,6 +192,7 @@ class BlocksBuilder(object):
         markers = [0]
 
         for blks in blocks:
+            blks = blks.remove("sync")
             assert len(blks) == 2
             T = blks.total_length()
             periods.append(T)
@@ -225,6 +227,7 @@ class BlocksBuilder(object):
         markers = [0]
 
         for blks in blocks:
+            blks = blks.remove("sync")
             assert len(blks) == 4
             blks0: Blocks[Block] = blks[:2]
             blks1: Blocks[Block] = blks[2:]
@@ -300,7 +303,7 @@ class Pulser(Worker):
         Worker.__init__(self, cli, logger)
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
-        self.pd_names = conf.get("pd_names", ["pd0", "pd1"])
+        self.pd_names = conf.get("pd_names", ["pd0"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
         if has_fg:
             self.fg = FGInterface(cli, "fg")
@@ -309,6 +312,11 @@ class Pulser(Worker):
         self.add_instruments(self.sg, self.pg, self.fg, *self.pds)
 
         self.length = self.offsets = self.freq = self.oversample = None
+
+        if "pd_clock" not in conf:
+            raise KeyError("pulser.pd_clock must be given")
+        self._pd_clock = conf["pd_clock"]
+        self.conf = conf
 
         mbl = conf.get("minimum_block_length", 1000)
         bb = conf.get("block_base", 4)
@@ -354,9 +362,12 @@ class Pulser(Worker):
 
         return True
 
-    def init_start_pds(self, params: dict):
+    def init_start_pds(self):
+        params = self.data.params
         rate = params["pd_rate"]
-        num = params["num"]
+        num = self.data.get_num()
+        if params["partial"] == -1:
+            num *= 2
         samples = num * 10  # large samples to assure enough buffer size
         params_pd = {
             "clock": self._pd_clock,
@@ -364,7 +375,7 @@ class Pulser(Worker):
             "samples": samples,
             "rate": rate,
             "finite": False,
-            "every": self._conf.get("every", False),
+            "every": self.conf.get("every", False),
             "clock_mode": True,
             "oversample": self.oversample,
             "bounds": params.get("pd_bounds", (-10.0, 10.0)),
@@ -467,7 +478,7 @@ class Pulser(Worker):
             return self.fail_with_release("Error initializing instruments.")
 
         # start instruments
-        if not self.init_start_pds(params):
+        if not self.init_start_pds():
             return self.fail_with_release("Error initializing or starting PDs.")
 
         success = self.sg.set_output(not self.data.params.get("nomw", False))
@@ -616,6 +627,18 @@ class Pulser(Worker):
             power=P.FloatParam(p_min, p_min, p_max),
             sweeps=P.IntParam(0, 0, 9999999),
             ident=P.UUIDParam(optional=True, enable=False),
+            pd_rate=P.FloatParam(
+                self.conf.get("pd_rate", 400e3), 1e3, 10000e3, doc="PD sampling rate"
+            ),
+            flip_rate=P.FloatParam(
+                self.conf.get("flip_rate", 10e3),
+                1e3,
+                10000e3,
+                doc="rate of fliping on complementary measurement",
+            ),
+            flip_rep=P.IntParam(
+                self.conf.get("flip_rep", 1), 1, 10000, doc="number of flip repetitions"
+            ),
         )
 
         self._get_param_dict_pulse(label, d)
