@@ -345,7 +345,7 @@ class Pulser(Worker):
         mbl = conf.get("minimum_block_length", 1000)
         bb = conf.get("block_base", 4)
         self.generators = make_generators(
-            freq=conf.get("freq", 2.0e9),
+            freq=conf.get("pg_freq", 2.0e9),
             reduce_start_divisor=conf.get("reduce_start_divisor", 2),
             split_fraction=conf.get("split_fraction", 4),
             minimum_block_length=mbl,
@@ -401,6 +401,7 @@ class Pulser(Worker):
             "clock": self._pd_clock,
             "cb_samples": num,
             "samples": samples,
+            "buffer_size": num * 10,
             "rate": rate,
             "finite": False,
             "every": self.conf.get("every", False),
@@ -551,7 +552,8 @@ class Pulser(Worker):
         success &= all([pd.stop() for pd in self.pds])
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(False)
-        success &= self.fg.release()
+        if self.fg is not None:
+            success &= self.fg.release()
 
         self.data.finalize()
 
@@ -650,12 +652,12 @@ class Pulser(Worker):
 
         f_min, f_max = sg["freq"]
         p_min, p_max = sg["power"]
-
+        sg_freq = max(min(self.conf.get("sg_freq", 2.8e9), f_max), f_min)
         # fundamentals
         d = P.ParamDict(
             method=P.StrChoiceParam(label, list(self.generators.keys())),
             resume=P.BoolParam(False),
-            freq=P.FloatParam(2.80e9, f_min, f_max),
+            freq=P.FloatParam(sg_freq, f_min, f_max),
             power=P.FloatParam(p_min, p_min, p_max),
             sweeps=P.IntParam(0, 0, 9999999),
             ident=P.UUIDParam(optional=True, enable=False),

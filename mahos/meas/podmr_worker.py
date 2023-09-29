@@ -431,7 +431,8 @@ class Pulser(Worker):
         )
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(False)
-        success &= self.fg.release()
+        if self.fg is not None:
+            success &= self.fg.release()
 
         if success:
             self.timer = None

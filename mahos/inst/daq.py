@@ -555,6 +555,11 @@ class AnalogIn(ConfigurableTask):
     def _null_done_handler(self, status: int):
         pass
 
+    def set_buffer_size(self, size: int):
+        if self.task is None:
+            return None
+        self.task.CfgInputBuffer(size)
+
     def get_buffer_size(self) -> int | None:
         if self.task is None:
             return None
@@ -725,7 +730,13 @@ class AnalogIn(ConfigurableTask):
             samples + self.samples_margin,
         )
 
-        self.logger.debug(f"Buffer size: {self.get_buffer_size()}")
+        self.logger.debug(f"Buffer size (auto alloc): {self.get_buffer_size()}")
+
+        bs = params.get("buffer_size")
+        if bs:
+            self.set_buffer_size(bs * oversample)
+            self.logger.debug(f"Buffer size (manual alloc): {self.get_buffer_size()}")
+
         for i, line in enumerate(self.lines):
             ranges = self._get_ranges(f"AnalogIn{i}")
             self.logger.debug(f"Input voltage ranges of {line}: {ranges}")

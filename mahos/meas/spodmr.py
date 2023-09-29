@@ -53,8 +53,8 @@ class SPODMR(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         """Pulse ODMR measurement with Slow detectors.
 
-        :param pulser.freq: pulse generator frequency (default: 2.0E9)
-        :type pulser.freq: float
+        :param pulser.pg_freq: pulse generator frequency (default: 2.0E9)
+        :type pulser.pg_freq: float
         :param pulser.reduce_start_divisor: the divisor on start of reducing frequency (default: 2)
             reduce is done first by this value, and then repeated by 10.
         :type pulser.reduce_start_divisor: int
