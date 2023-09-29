@@ -734,6 +734,7 @@ class AnalogIn(ConfigurableTask):
 
         bs = params.get("buffer_size")
         if bs:
+            self.logger.debug(f"Trying to allocate buffer size: {bs * oversample}")
             self.set_buffer_size(bs * oversample)
             self.logger.debug(f"Buffer size (manual alloc): {self.get_buffer_size()}")
 

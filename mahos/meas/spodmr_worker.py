@@ -396,12 +396,12 @@ class Pulser(Worker):
         num = self.data.get_num()
         if params["partial"] == -1:
             num *= 2
-        samples = num * 10  # large samples to assure enough buffer size
+        buffer_size = num * self.conf.get("buffer_size_coeff", 20)
         params_pd = {
             "clock": self._pd_clock,
             "cb_samples": num,
-            "samples": samples,
-            "buffer_size": num * 10,
+            "samples": buffer_size,
+            "buffer_size": buffer_size,
             "rate": rate,
             "finite": False,
             "every": self.conf.get("every", False),
