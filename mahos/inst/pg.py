@@ -8,7 +8,6 @@ Pulse Generator module.
 """
 
 from __future__ import annotations
-import typing as T
 
 import pulsestreamer
 
@@ -21,6 +20,14 @@ class PulseStreamer(Instrument):
 
     :params channels: mapping from channel names to indices.
     :type channels: dict[str | bytes, int]
+    :params analog.channels: list of channel names to represent analog output
+    :type analog.channels: list[str | bytes]
+    :params analog.values: mapping of analog channel patterns to analog output values
+        {"00": [0.5, 0.5], "01": [-0.5, 0.0]} reads as follows.
+        When analog.channels[0] is L and analog.channels[1] is L, output A0 = 0.5 V, A1 = 0.5 V.
+        When analog.channels[0] is L and analog.channels[1] is H, output A0 = -0.5 V, A1 = 0.0 V.
+        It's also possible to use more than two channels.
+    :type analog.values: dict[str, tuple[float, float]]
 
     """
 
@@ -32,6 +39,12 @@ class PulseStreamer(Instrument):
         self.CHANNELS = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7}
         if "channels" in conf:
             self.CHANNELS.update(conf["channels"])
+        if "analog" in conf:
+            self.analog_channels = conf["analog"]["channels"]
+            self.analog_values = conf["analog"]["values"]
+        else:
+            self.analog_channels = []
+            self.analog_values = {}
 
         self.ps = pulsestreamer.PulseStreamer(self.conf["resource"])
         self.sequence = None
@@ -49,7 +62,9 @@ class PulseStreamer(Instrument):
             )
         )
 
-    def channels_to_ints(self, channels) -> T.List[int]:
+    def channels_to_ints(self, channels) -> list[int]:
+        """NOTE: if channels is a container, channels in analog_channels are excluded."""
+
         def parse(c):
             if isinstance(c, (bytes, str)):
                 return self.CHANNELS[c]
@@ -63,16 +78,16 @@ class PulseStreamer(Instrument):
         elif isinstance(channels, (bytes, str, int)):
             return [parse(channels)]
         else:  # container (list or tuple) of (bytes, str, int)
-            return [parse(c) for c in channels]
+            return [parse(c) for c in channels if c not in self.analog_channels]
 
-    def _included_channels_blocks(self, blocks: Blocks[Block]) -> T.List[int]:
-        s = set()
-        for block in blocks:
-            for channels, length in block.pattern:
-                s.update(self.channels_to_ints(channels))
-        return sorted(list(s))
+    def _included_channels_blocks(self, blocks: Blocks[Block]) -> list[int]:
+        """create sorted list of channels in blocks converted to ints."""
 
-    def _extract_trigger_blocks(self, blocks: Blocks[Block]) -> T.Optional[bool]:
+        # take set() here because channels_to_ints() may contain non-unique integers
+        # (CHANNELS is not always injective), though it's quite rare usecase.
+        return sorted(list(set(self.channels_to_ints(blocks.channels()))))
+
+    def _extract_trigger_blocks(self, blocks: Blocks[Block]) -> bool | None:
         trigger = False
         for i, block in enumerate(blocks):
             if block.trigger:
@@ -86,15 +101,29 @@ class PulseStreamer(Instrument):
         """Generate sequence from DTG-compatible 'blocks'."""
 
         rle_patterns = [(ch, []) for ch in self._included_channels_blocks(blocks)]
+        a0_patterns = []
+        a1_patterns = []
+
         for i, block in enumerate(blocks):
             for channels, length in block.total_pattern():
                 high_channels = self.channels_to_ints(channels)
                 for ch, pat in rle_patterns:
                     pat.append((length, 1 if ch in high_channels else 0))
 
+                if self.analog_channels:
+                    label = "".join(
+                        ("1" if ch in channels else "0" for ch in self.analog_channels)
+                    )
+                    a0, a1 = self.analog_values[label]
+                    a0_patterns.append((length, a0))
+                    a1_patterns.append((length, a1))
+
         seq = self.ps.createSequence()
         for ch, pat in rle_patterns:
             seq.setDigital(ch, pat)
+        if self.analog_channels:
+            seq.setAnalog(0, a0_patterns)
+            seq.setAnalog(1, a1_patterns)
 
         return seq
 
