@@ -383,6 +383,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             [
                 ("accum_window", self.accumwindowBox, 1e3),  # sec to ms
                 ("accum_rep", self.accumrepBox),
+                ("lockin_rep", self.lockinrepBox),
                 ("pd_rate", self.pdrateBox, 1e-3),  # Hz to kHz
                 ("pd_bounds", [self.pd_lbBox, self.pd_ubBox]),
             ],
@@ -574,6 +575,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.sweepsBox.setValue(p.get("sweeps", 0))
         self.accumwindowBox.setValue(p.get("accum_window", 1e-3), 1e3)  # [sec] ==> [ms]
         self.accumrepBox.setValue(p.get("accum_rep", 1))
+        if "lockin_rep" in p:
+            self.lockinrepBox.setValue(p["lockin_rep"])
         self.pdrateBox.setValue(p.get("pd_rate", 1e5) * 1e-3)
         if "pd_bounds" in p:
             lb, ub = p["pd_bounds"]
@@ -612,7 +615,6 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.nomwBox.setChecked(p.get("nomw", False))
         self.invertinitBox.setChecked(p.get("invertinit", False))
         self.reduceBox.setChecked(p.get("enable_reduce", False))
-        self.divideblockBox.setChecked(p.get("divide_block", True))
         partial = p.get("partial")
         if partial in (-1, 0, 1, 2):
             self.partialBox.setCurrentIndex(partial + 1)
@@ -673,12 +675,15 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
     def get_params(self) -> dict:
         params = {}
         params["method"] = self.get_method()
+        params["partial"] = self.partialBox.currentIndex() - 1
         params["freq"] = self.freqBox.value() * 1e6  # [MHz] ==> [Hz]
         params["power"] = self.powerBox.value()
 
         params["sweeps"] = self.sweepsBox.value()
         params["accum_window"] = self.accumwindowBox.value() * 1e-3  # [ms] ==> [sec]
         params["accum_rep"] = self.accumrepBox.value()
+        if params["partial"] == 2:
+            params["lockin_rep"] = self.lockinrepBox.value()
         params["pd_rate"] = self.pdrateBox.value() * 1e3  # [kHz] ==> [Hz]
         params["pd_bounds"] = [self.pd_lbBox.value(), self.pd_ubBox.value()]
 
@@ -705,11 +710,9 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["invertY"] = self.invertYBox.isChecked()
         params["reinitX"] = self.reinitXBox.isChecked()
         params["readY"] = self.readYBox.isChecked()
-        params["partial"] = self.partialBox.currentIndex() - 1
         params["nomw"] = self.nomwBox.isChecked()
         params["invertinit"] = self.invertinitBox.isChecked()
         params["enable_reduce"] = self.reduceBox.isChecked()
-        params["divide_block"] = self.divideblockBox.isChecked()
 
         # [ns] ==> [sec]
         params["laser_delay"] = self.ldelayBox.value() * 1e-9
@@ -835,12 +838,15 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             self.pd_ubBox,
             self.invertsweepBox,
             self.reduceBox,
-            self.divideblockBox,
             self.ldelayBox,
             self.lwidthBox,
             self.mdelayBox,
         ):
             w.setEnabled(state == BinaryState.IDLE)
+
+        self.lockinrepBox.setEnabled(
+            state == BinaryState.IDLE and self.partialBox.currentIndex() == 3
+        )
 
         # Widgets enable/disable of which depends on selected method
         if state == BinaryState.IDLE:

@@ -222,6 +222,7 @@ class BlocksBuilder(object):
         blocks: list[Blocks[Block]],
         accum_window: int,
         accum_rep: int,
+        lockin_rep: int,
         pd_period: int,
         laser_width: int,
     ):
@@ -254,13 +255,21 @@ class BlocksBuilder(object):
             if residual:
                 blk0.insert(0, (blk0.pattern[0].channels, residual))
                 blk1.insert(0, (blk1.pattern[0].channels, residual))
-            blk = blk0.union(gate0_blk).concatenate(blk1.union(gate1_blk))
-            extended_blks.append(blk.repeat(accum_rep))
+            # TODO: using concatenate() collapses the repeat (Nrep) of
+            # blk0.union(gate0_blk).repeat(accum_rep) and blk1.union(...).repeat(...) here,
+            # and can increase memory requirement in PG.
+            # Nested-Blocks (type to express nested repeat) would resolve this.
+            blk = (
+                blk0.union(gate0_blk)
+                .repeat(accum_rep)
+                .concatenate(blk1.union(gate1_blk).repeat(accum_rep))
+            )
+            extended_blks.append(blk.repeat(lockin_rep))
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
             markers.append(extended_blks.total_length())
 
-        return extended_blks, laser_duties, markers, 2 * pd_rep * accum_rep
+        return extended_blks, laser_duties, markers, 2 * pd_rep * accum_rep * lockin_rep
 
     def build_blocks(self, blocks: list[Blocks[Block]], freq: float, common_pulses, params):
         invertY = params.get("invertY", False)
@@ -289,8 +298,9 @@ class BlocksBuilder(object):
                 blocks, accum_window, accum_rep, pd_period, laser_width
             )
         elif partial == 2:
+            lockin_rep = params["lockin_rep"]
             blocks, laser_duties, markers, oversample = self.build_lockin(
-                blocks, accum_window, accum_rep, pd_period, laser_width
+                blocks, accum_window, accum_rep, lockin_rep, pd_period, laser_width
             )
         else:
             raise ValueError(f"Invalid partial {partial}")
@@ -657,6 +667,9 @@ class Pulser(Worker):
             ),
             accum_rep=P.IntParam(
                 self.conf.get("accum_rep", 10), 1, 10000, doc="number of accumulation repetitions"
+            ),
+            lockin_rep=P.IntParam(
+                self.conf.get("lockin_rep", 1), 1, 10000, doc="number of lockin repetitions"
             ),
         )
 
