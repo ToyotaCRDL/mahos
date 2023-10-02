@@ -174,6 +174,35 @@ class Block(Message):
         else:
             return ptn[:max_len]
 
+    def plottable_time(self, max_len: int | None = None) -> NDArray:
+        """Generate timeline (x-axis data) for plottable(), that's common for all channels."""
+
+        t = 0
+        x = []
+        for ch, duration in self.total_pattern():
+            x.extend((t, duration + t))
+            t += duration
+            if max_len is not None and len(x) > max_len:
+                break
+        if max_len is None:
+            return np.array(x)
+        else:
+            return np.array(x[:max_len])
+
+    def plottable(self, channel: str | int, max_len: int | None = None) -> list[int]:
+        """Decode the pulse pattern to plottable array."""
+
+        ptn = []
+        for ch, duration in self.total_pattern():
+            elem = 1 if channel in ch else 0
+            ptn.extend((elem, elem))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
     def decode_all(self, max_len: int | None = None) -> tuple[list[str | int], list[list[bool]]]:
         """Decode the patterns for all included channels."""
 
@@ -183,6 +212,17 @@ class Block(Message):
         except TypeError:
             channels = list(channels)
         patterns = [self.decode(ch, max_len=max_len) for ch in channels]
+        return channels, patterns
+
+    def plottable_all(self, max_len: int | None = None) -> tuple[list[str | int], list[list[int]]]:
+        """Decode the patterns for all included channels to plottable array."""
+
+        channels = self.channels()
+        try:
+            channels = list(sorted(channels))
+        except TypeError:
+            channels = list(channels)
+        patterns = [self.plottable(ch, max_len=max_len) for ch in channels]
         return channels, patterns
 
     def union(self, other: Block) -> Block:
@@ -412,7 +452,7 @@ class Blocks(UserList):
             return list(channels)
 
     def decode(self, channel: str | int, max_len: int | None = None) -> NDArray:
-        """Decode the pattern for given channel.
+        """Decode the pattern of given channel.
 
         If channel is not included, all-zero array will be returned.
 
@@ -428,11 +468,47 @@ class Blocks(UserList):
         else:
             return np.array(ptn[:max_len], dtype=np.uint8)
 
+    def plottable_time(self, max_len: int | None = None) -> NDArray:
+        """Generate timeline (x-axis data) for plottable(), that's common for all channels."""
+
+        ptn = np.empty(0, dtype=np.uint64)
+        for block in self.data:
+            t = np.array(block.plottable_time(max_len=max_len), dtype=np.uint64)
+            if len(ptn):
+                t += ptn[-1]
+            ptn = np.append(ptn, t)
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
+    def plottable(self, channel: str | int, max_len: int | None = None) -> NDArray:
+        """Decode the pattern of given channel to plottable array."""
+
+        ptn = []
+        for block in self.data:
+            ptn.extend(block.plottable(channel, max_len=max_len))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return np.array(ptn, dtype=np.uint8)
+        else:
+            return np.array(ptn[:max_len], dtype=np.uint8)
+
     def decode_all(self, max_len: int | None = None) -> tuple[list[str | int], list[NDArray]]:
         """Decode the patterns for all included channels."""
 
         channels = self.channels()
         patterns = [self.decode(ch, max_len=max_len) for ch in channels]
+        return channels, patterns
+
+    def plottable_all(self, max_len: int | None = None) -> tuple[list[str | int], list[NDArray]]:
+        """Decode the patterns for all included channels to plottable array."""
+
+        channels = self.channels()
+        patterns = [self.plottable(ch, max_len=max_len) for ch in channels]
         return channels, patterns
 
     def equivalent(self, other: Blocks[Block]) -> bool:

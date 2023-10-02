@@ -39,18 +39,12 @@ class PulseMonitorWidget(ClientTopWidget):
         # layout input UIs in hl
         hl = QtWidgets.QHBoxLayout()
 
-        self.downsampleBox = QtWidgets.QSpinBox()
-        self.downsampleBox.setPrefix("downsample: ")
-        self.downsampleBox.setMinimum(1)
-        self.downsampleBox.setMaximum(100)
-        self.downsampleBox.setValue(10)
-
         self.maxpointsBox = QtWidgets.QSpinBox()
         self.maxpointsBox.setPrefix("limit: ")
         self.maxpointsBox.setSuffix(" kpts")
-        self.maxpointsBox.setMinimum(100)
-        self.maxpointsBox.setMaximum(100_000)
-        self.maxpointsBox.setValue(5_000)
+        self.maxpointsBox.setMinimum(10)
+        self.maxpointsBox.setMaximum(10_000)
+        self.maxpointsBox.setValue(500)
 
         self.realtimeBox = QtWidgets.QCheckBox("Real time")
         self.usemarkerBox = QtWidgets.QCheckBox("Use marker")
@@ -69,12 +63,11 @@ class PulseMonitorWidget(ClientTopWidget):
         self.numBox.setValue(1)
         self.numBox.setMaximum(9999)
 
-        for w in (self.downsampleBox, self.maxpointsBox, self.indexBox, self.numBox):
+        for w in (self.maxpointsBox, self.indexBox, self.numBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
 
         for w in (
-            self.downsampleBox,
             self.maxpointsBox,
             self.realtimeBox,
             self.usemarkerBox,
@@ -86,7 +79,6 @@ class PulseMonitorWidget(ClientTopWidget):
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
         hl.addItem(spacer)
 
-        self.downsampleBox.editingFinished.connect(self.update_plot)
         self.realtimeBox.toggled.connect(self.update_plot)
         self.usemarkerBox.toggled.connect(self.update_plot)
         self.indexBox.valueChanged.connect(self.set_region)
@@ -162,19 +154,19 @@ class PulseMonitorWidget(ClientTopWidget):
         if self.pulse is None:
             return
 
-        channels, patterns = self.pulse.blocks.decode_all(max_len=self.maxpointsBox.value() * 1000)
+        max_len = self.maxpointsBox.value() * 1000
+        channels, patterns = self.pulse.blocks.plottable_all(max_len=max_len)
 
         if not channels:
             print("[ERROR] empty pulse pattern")
             return
 
         num = len(channels)
-        step = self.downsampleBox.value()
 
         self.plot.clearPlots()
         self.plot_sub.clearPlots()
 
-        x = np.arange(len(patterns[0]))[::step]
+        x = self.pulse.blocks.plottable_time(max_len=max_len)
         if self.realtimeBox.isChecked():
             x = x.astype(np.float64) / self.pulse.freq
             self.plot.setLabel("bottom", "time", "s")
@@ -190,7 +182,6 @@ class PulseMonitorWidget(ClientTopWidget):
             else:
                 pen = self.cmap.map(0.5)
 
-            pat = pat[::step]  # downsample
             self.plot.plot(x, pat + offset, name=ch, pen=pen)
             self.plot_sub.plot(x, pat + offset, name=ch, pen=pen)
         self.update_markers()
