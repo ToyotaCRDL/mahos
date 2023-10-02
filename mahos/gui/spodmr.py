@@ -383,6 +383,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             [
                 ("accum_window", self.accumwindowBox, 1e3),  # sec to ms
                 ("accum_rep", self.accumrepBox),
+                ("accum_drop", self.accumdropBox),
                 ("lockin_rep", self.lockinrepBox),
                 ("pd_rate", self.pdrateBox, 1e-3),  # Hz to kHz
                 ("pd_bounds", [self.pd_lbBox, self.pd_ubBox]),
@@ -575,6 +576,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.sweepsBox.setValue(p.get("sweeps", 0))
         self.accumwindowBox.setValue(p.get("accum_window", 1e-3), 1e3)  # [sec] ==> [ms]
         self.accumrepBox.setValue(p.get("accum_rep", 1))
+        if "accum_drop" in p:
+            self.accumdropBox.setValue(p["accum_drop"])
         if "lockin_rep" in p:
             self.lockinrepBox.setValue(p["lockin_rep"])
         self.pdrateBox.setValue(p.get("pd_rate", 1e5) * 1e-3)
@@ -684,6 +687,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["accum_rep"] = self.accumrepBox.value()
         if params["partial"] == 2:
             params["lockin_rep"] = self.lockinrepBox.value()
+        else:
+            params["accum_drop"] = self.accumdropBox.value()
         params["pd_rate"] = self.pdrateBox.value() * 1e3  # [kHz] ==> [Hz]
         params["pd_bounds"] = [self.pd_lbBox.value(), self.pd_ubBox.value()]
 
@@ -762,9 +767,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
     def request_start(self):
         self.round_box_values()
-
-        if self.validate_pulse():
-            self.start()
+        self.start()
 
     def validate_pulse(self):
         return self.cli.validate(self.get_params())
@@ -844,6 +847,9 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         ):
             w.setEnabled(state == BinaryState.IDLE)
 
+        self.accumdropBox.setEnabled(
+            state == BinaryState.IDLE and self.partialBox.currentIndex() != 3
+        )
         self.lockinrepBox.setEnabled(
             state == BinaryState.IDLE and self.partialBox.currentIndex() == 3
         )

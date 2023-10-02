@@ -29,18 +29,18 @@ class TriggerType(enum.Enum):
 Channels = T.NewType("Channels", T.Union[T.Tuple[str, ...], T.Tuple[int, ...]])
 
 
-class PatternElement(T.NamedTuple):
+class Pulse(T.NamedTuple):
     channels: Channels
     duration: int
 
 
-Pattern = T.NewType("Pattern", T.List[PatternElement])
+Pattern = T.NewType("Pattern", T.List[Pulse])
 
 AcceptedChannels = T.NewType(
     "AcceptedChannels", T.Union[None, str, int, T.Tuple[str, ...], T.Tuple[int, ...]]
 )
-AcceptedPatternElement = T.NewType("AcceptedPatternElement", T.Tuple[AcceptedChannels, int])
-AcceptedPattern = T.NewType("AcceptedPattern", T.List[AcceptedPatternElement])
+AcceptedPulse = T.NewType("AcceptedPulse", T.Tuple[AcceptedChannels, int])
+AcceptedPattern = T.NewType("AcceptedPattern", T.List[AcceptedPulse])
 
 
 class Block(Message):
@@ -76,27 +76,27 @@ class Block(Message):
         else:
             raise TypeError("channel {} has unrecognizable type {}".format(ch, type(ch)))
 
-    def regularize_pattern_elem(self, elem: AcceptedPatternElement) -> PatternElement:
+    def regularize_pulse(self, pulse: AcceptedPulse) -> Pulse:
         # cast duration to builtin int because numpy types (like np.int64) may be incorpolated
-        return PatternElement(self.regularize_channels(elem[0]), int(elem[1]))
+        return Pulse(self.regularize_channels(pulse[0]), int(pulse[1]))
 
     def regularize_pattern(self, pattern: AcceptedPattern) -> Pattern:
-        return [self.regularize_pattern_elem(p) for p in pattern]
+        return [self.regularize_pulse(p) for p in pattern]
 
     # Mutating (list-like) operations
 
-    def insert(self, index: int, elem: AcceptedPatternElement):
-        """Insert a pattern element `elem` to `index`."""
+    def insert(self, index: int, pulse: AcceptedPulse):
+        """Insert a `pulse` to `index` in pattern."""
 
-        self.pattern.insert(index, self.regularize_pattern_elem(elem))
+        self.pattern.insert(index, self.regularize_pulse(pulse))
 
-    def append(self, elem: AcceptedPatternElement):
-        """Append a pattern element `elem` to the tail."""
+    def append(self, pulse: AcceptedPulse):
+        """Append a `pulse` to the tail of pattern."""
 
-        self.pattern.append(self.regularize_pattern_elem(elem))
+        self.pattern.append(self.regularize_pulse(pulse))
 
     def extend(self, ptn: Block | AcceptedPattern):
-        """Extend the pattern or pattern in a Block."""
+        """Extend the pattern with given pattern or pattern in a Block."""
 
         if isinstance(ptn, Block):
             ptn = ptn.total_pattern()
@@ -256,12 +256,12 @@ class Block(Message):
                 t -= h0.duration
             elif h0.duration > h1.duration:
                 ptn.append((h0.channels + h1.channels, h1.duration))
-                p0[0] = PatternElement(h0.channels, h0.duration - h1.duration)
+                p0[0] = Pulse(h0.channels, h0.duration - h1.duration)
                 p1.pop(0)
                 t -= h1.duration
             else:  # h0.duration < h1.duration
                 ptn.append((h0.channels + h1.channels, h0.duration))
-                p1[0] = PatternElement(h1.channels, h1.duration - h0.duration)
+                p1[0] = Pulse(h1.channels, h1.duration - h0.duration)
                 p0.pop(0)
                 t -= h0.duration
         assert not p0
@@ -349,8 +349,8 @@ class Block(Message):
         """return simplified copy of this Block.
 
         simplification is done by:
-        * removing zero-period
-        * merging contiguous elements with same channels
+        - removing zero-duration pulses
+        - merging contiguous pulses with same channels
 
         """
 
@@ -387,14 +387,14 @@ class Block(Message):
         return Block(self.name, pat, Nrep=self.Nrep, trigger=self.trigger)
 
     def pattern_to_strs(self) -> list[str]:
-        def pattern_elem_to_str(pattern_elem: tuple[Channels, int]):
-            channels, period = pattern_elem
+        def pulse_to_str(pulse: Pulse):
+            channels, period = pulse
             n_str = ",".join([str(ch) for ch in channels])
             if not n_str:
                 n_str = "NOP"
             return f"{n_str:s}:{period:d}"
 
-        return [pattern_elem_to_str(pat) for pat in self.pattern]
+        return [pulse_to_str(pat) for pat in self.pattern]
 
 
 class Blocks(UserList):
@@ -413,8 +413,8 @@ class Blocks(UserList):
             blk.extend(b.total_pattern())
         return blk
 
-    def insert_pattern_elem(self, blk_index: int, ptn_index: int, elem: AcceptedPatternElement):
-        self.data[blk_index].insert(ptn_index, elem)
+    def insert_pulse(self, blk_index: int, ptn_index: int, pulse: AcceptedPulse):
+        self.data[blk_index].insert(ptn_index, pulse)
 
     def repeat(self, num: int) -> Blocks[Block]:
         """Return new Blocks[Block] with `num`-times repeat.
@@ -550,9 +550,16 @@ class Blocks(UserList):
         return Blocks([b.apply() for b in self.data])
 
     def simplify(self) -> Blocks[Block]:
-        """return simplified copy of this Blocks."""
+        """return simplified copy of this Blocks.
 
-        return Blocks([b.simplify() for b in self.data])
+        simplification is done by:
+        - removing zero-times repeated Blocks
+        - removing zero-duration pulses in Blocks
+        - merging contiguous pulses with same channels in Blocks
+
+        """
+
+        return Blocks([b.simplify() for b in self.data if b.Nrep])
 
     def total_length(self) -> int:
         """Total block length considering Nrep."""

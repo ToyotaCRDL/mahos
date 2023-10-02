@@ -141,16 +141,19 @@ class BlocksBuilder(object):
         blocks: list[Blocks[Block]],
         accum_window: int,
         accum_rep: int,
+        accum_drop: int,
         pd_period: int,
         laser_width: int,
     ):
         pd_rep = accum_window // pd_period
         residual = accum_window % pd_period
         w = pd_period // 2
+        drop0_blk = Block("drop", [("sync", accum_window)])
         gate0_blk = Block(
             "gate",
             [("sync", residual)] + [("sync", w), (("sync", "gate"), pd_period - w)] * pd_rep,
         )
+        # drop1_blk = Block("drop", [(None, accum_window)])
         gate1_blk = Block(
             "gate", [(None, residual)] + [(None, w), ("gate", pd_period - w)] * pd_rep
         )
@@ -174,7 +177,12 @@ class BlocksBuilder(object):
                 blk0.insert(0, (blk0.pattern[0].channels, residual))
                 blk1.insert(0, (blk1.pattern[0].channels, residual))
             extended_blks.extend(
-                [blk0.union(gate0_blk).repeat(accum_rep), blk1.union(gate1_blk).repeat(accum_rep)]
+                [
+                    blk0.union(drop0_blk).repeat(accum_drop),
+                    blk0.union(gate0_blk).repeat(accum_rep),
+                    blk1.repeat(accum_drop),  # no need to union(drop1_blk)
+                    blk1.union(gate1_blk).repeat(accum_rep),
+                ]
             )
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
@@ -187,6 +195,7 @@ class BlocksBuilder(object):
         blocks: list[Blocks[Block]],
         accum_window: int,
         accum_rep: int,
+        accum_drop: int,
         pd_period: int,
         laser_width: int,
     ):
@@ -210,7 +219,7 @@ class BlocksBuilder(object):
             blk = blks.repeat(rep).collapse()
             if residual:
                 blk.insert(0, (blk.pattern[0].channels, residual))
-            extended_blks.append(blk.union(gate_blks).repeat(accum_rep))
+            extended_blks.extend([blk.repeat(accum_drop), blk.union(gate_blks).repeat(accum_rep)])
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
             markers.append(extended_blks.total_length())
@@ -290,12 +299,14 @@ class BlocksBuilder(object):
 
         partial = params["partial"]
         if partial == -1:
+            accum_drop = params["accum_drop"]
             blocks, laser_duties, markers, oversample = self.build_complementary(
-                blocks, accum_window, accum_rep, pd_period, laser_width
+                blocks, accum_window, accum_rep, accum_drop, pd_period, laser_width
             )
         elif partial in (0, 1):
+            accum_drop = params["accum_drop"]
             blocks, laser_duties, markers, oversample = self.build_partial(
-                blocks, accum_window, accum_rep, pd_period, laser_width
+                blocks, accum_window, accum_rep, accum_drop, pd_period, laser_width
             )
         elif partial == 2:
             lockin_rep = params["lockin_rep"]
@@ -669,6 +680,12 @@ class Pulser(Worker):
             ),
             accum_rep=P.IntParam(
                 self.conf.get("accum_rep", 10), 1, 10000, doc="number of accumulation repetitions"
+            ),
+            accum_drop=P.IntParam(
+                self.conf.get("accum_drop", 0),
+                0,
+                100,
+                doc="number of dummy (dropped) accum. pattern repetitions",
             ),
             lockin_rep=P.IntParam(
                 self.conf.get("lockin_rep", 1), 1, 10000, doc="number of lockin repetitions"
