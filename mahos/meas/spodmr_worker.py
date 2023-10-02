@@ -742,3 +742,68 @@ class Pulser(Worker):
 
     def pulse_msg(self) -> PulsePattern | None:
         return self.pulse_pattern
+
+
+class DebugPulser(Pulser):
+    def init_inst(self, params: dict) -> bool:
+        # PG
+        if not self.init_pg(params):
+            self.logger.error("Error initializing PG.")
+            return False
+
+        self.op.set_instrument_params(self.data, self.freq, self.offsets)
+
+        return True
+
+    def start(self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]) -> bool:
+        if params is not None:
+            params = P.unwrap(params)
+        resume = params is None or ("resume" in params and params["resume"])
+        if not resume:
+            self.data = SPODMRData(params)
+            self.op.update_axes(self.data)
+        else:
+            self.data.update_params(params)
+
+        if not self.lock_instruments():
+            return self.fail_with_release("Error acquiring instrument locks.")
+
+        if not resume and not self.init_inst(self.data.params):
+            return self.fail_with_release("Error initializing instruments.")
+
+        # Skip PD, SG, and FG starts
+
+        # time.sleep(1)
+        success = self.pg.start()
+
+        if not success:
+            return self.fail_with_release("Error starting pulser.")
+
+        if resume:
+            self.data.resume()
+            self.logger.info("Resumed pulser.")
+        else:
+            self.data.start()
+            self.logger.info("Started pulser.")
+        return True
+
+    def stop(self) -> bool:
+        # avoid double-stop (abort status can be broken)
+        if not self.data.running:
+            return False
+
+        success = self.pg.stop() and self.pg.release()
+
+        self.data.finalize()
+
+        if success:
+            self.logger.info("Stopped pulser.")
+        else:
+            self.logger.error("Error stopping pulser.")
+        return success
+
+    def work(self) -> bool:
+        if not self.data.running:
+            return False
+
+        return True

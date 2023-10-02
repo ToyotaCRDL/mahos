@@ -20,7 +20,7 @@ from .tweaker import TweakerClient
 from .common_meas import BasicMeasClient, BasicMeasNode
 from .common_worker import DummyWorker, Switch
 from .podmr_fitter import PODMRFitter
-from .spodmr_worker import Pulser, SPODMRDataOperator
+from .spodmr_worker import Pulser, DebugPulser, SPODMRDataOperator
 from .spodmr_io import SPODMRIO
 
 
@@ -88,7 +88,10 @@ class SPODMR(BasicMeasNode):
             self.tweaker_cli = None
 
         has_fg = "fg" in self.conf["target"]["servers"]
-        self.worker = Pulser(self.cli, self.logger, has_fg, self.conf.get("pulser", {}))
+        if self.conf.get("debug", False):
+            self.worker = DebugPulser(self.cli, self.logger, has_fg, self.conf.get("pulser", {}))
+        else:
+            self.worker = Pulser(self.cli, self.logger, has_fg, self.conf.get("pulser", {}))
         self.fitter = PODMRFitter(self.logger)
         self.io = SPODMRIO(self.logger)
         self.buffer: Buffer[tuple[str, SPODMRData]] = Buffer()
