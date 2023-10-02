@@ -8,7 +8,6 @@ Typed Interface for Pulse Generator.
 """
 
 from __future__ import annotations
-import typing as T
 
 from .interface import InstrumentInterface
 
@@ -22,8 +21,8 @@ class PGInterface(InstrumentInterface):
         self,
         blocks: Blocks[Block],
         freq: float,
-        trigger_type: T.Optional[TriggerType] = None,
-        n_runs: T.Optional[int] = None,
+        trigger_type: TriggerType | None = None,
+        n_runs: int | None = None,
     ) -> bool:
         """Configure the PG using blocks representation.
 

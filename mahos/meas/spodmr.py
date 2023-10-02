@@ -130,7 +130,6 @@ class SPODMR(BasicMeasNode):
         for data in self.buffer.data_list():
             if self.op.update_plot_params(data, msg.params):
                 data.clear_fit_data()
-                self.op.analyze(data)
         return Resp(success)
 
     def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:

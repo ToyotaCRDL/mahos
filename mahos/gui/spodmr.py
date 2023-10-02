@@ -574,13 +574,13 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
         # pulser
         self.sweepsBox.setValue(p.get("sweeps", 0))
-        self.accumwindowBox.setValue(p.get("accum_window", 1e-3), 1e3)  # [sec] ==> [ms]
+        self.accumwindowBox.setValue(p.get("accum_window", 1e-3) * 1e3)  # [sec] ==> [ms]
         self.accumrepBox.setValue(p.get("accum_rep", 1))
         if "accum_drop" in p:
             self.accumdropBox.setValue(p["accum_drop"])
         if "lockin_rep" in p:
             self.lockinrepBox.setValue(p["lockin_rep"])
-        self.pdrateBox.setValue(p.get("pd_rate", 1e5) * 1e-3)
+        self.pdrateBox.setValue(round(p.get("pd_rate", 1e5) * 1e-3))
         if "pd_bounds" in p:
             lb, ub = p["pd_bounds"]
             self.pd_lbBox.setValue(lb)
@@ -665,7 +665,6 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
         self.set_plot_mode(p.get("plotmode", "data01"))
         self.set_tau_mode(p.get("taumode", "raw"))
-        self.set_ref_mode(p.get("refmode", "ignore"))
 
         self.xlogBox.setChecked(p.get("xlogscale", False))
         self.ylogBox.setChecked(p.get("ylogscale", False))
@@ -983,13 +982,6 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.taumodeBox.addItems(modes)
         self.taumodeBox.currentIndexChanged.connect(self.update_plot_params)
         self.set_tau_mode(prev_mode)
-
-    def set_ref_mode(self, mode: str):
-        i = self.refmodeBox.findText(mode)
-        if i >= 0:
-            self.refmodeBox.setCurrentIndex(i)
-        else:
-            print(f"[ERROR] unknown ref mode: {mode}")
 
     def get_fg_mode_dict(self):
         return [

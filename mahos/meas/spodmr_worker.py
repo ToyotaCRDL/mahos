@@ -533,6 +533,12 @@ class Pulser(Worker):
         success &= self.pg.start()
 
         if not success:
+            self.pg.stop()
+            if self._fg_enabled(self.data.params):
+                self.fg.set_output(False)
+            self.sg.set_output(False)
+            for pd in self.pds:
+                pd.stop()
             return self.fail_with_release("Error starting pulser.")
 
         if resume:
@@ -561,7 +567,7 @@ class Pulser(Worker):
             and self.sg.set_output(False)
             and self.sg.release()
         )
-        success &= all([pd.stop() for pd in self.pds])
+        success &= all([pd.stop() for pd in self.pds]) and all([pd.release() for pd in self.pds])
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(False)
         if self.fg is not None:

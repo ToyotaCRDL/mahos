@@ -14,7 +14,7 @@ import numpy as np
 
 from ..msgs.odmr_msgs import ODMRData
 from ..msgs import param_msgs as P
-from ..msgs.inst_pg_msgs import Block, Blocks
+from ..msgs.inst_pg_msgs import Block, Blocks, TriggerType
 from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface
 from ..inst.pd_interface import PDInterface
@@ -199,7 +199,7 @@ class Sweeper(Worker):
                 trigger=True,
             )
         blocks = Blocks([b]).simplify()
-        return self.pg.configure({"blocks": blocks, "freq": freq})
+        return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
 
     def configure_pg_CW_apd(self, params: dict) -> bool:
         freq = 1.0e6
@@ -233,7 +233,7 @@ class Sweeper(Worker):
                 trigger=True,
             )
         blocks = Blocks([b]).simplify()
-        return self.pg.configure({"blocks": blocks, "freq": freq})
+        return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
 
     def _make_blocks_pulse_apd_nobg(
         self, delay, laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
@@ -376,7 +376,7 @@ class Sweeper(Worker):
                 delay, laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
             )
 
-        return self.pg.configure({"blocks": blocks, "freq": freq})
+        return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
 
     def configure_pg(self, params: dict) -> bool:
         if not (self.pg.stop() and self.pg.clear()):

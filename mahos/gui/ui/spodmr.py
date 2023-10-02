@@ -82,6 +82,7 @@ class Ui_SPODMR(object):
         self.powerBox.setObjectName("powerBox")
         self.gridLayout_2.addWidget(self.powerBox, 2, 3, 1, 1)
         self.accumwindowBox = QtWidgets.QDoubleSpinBox(parent=self.groupBox_2)
+        self.accumwindowBox.setDecimals(4)
         self.accumwindowBox.setObjectName("accumwindowBox")
         self.gridLayout_2.addWidget(self.accumwindowBox, 0, 1, 1, 1)
         self.accumrepBox = QtWidgets.QSpinBox(parent=self.groupBox_2)
