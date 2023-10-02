@@ -64,7 +64,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.init_view()
 
     def sizeHint(self):
-        return QtCore.QSize(1400, 1000)
+        return QtCore.QSize(1400, 700)
 
     def init_ui(self):
         hl0 = QtWidgets.QHBoxLayout()
@@ -1023,7 +1023,7 @@ class SPODMRMainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.spodmr)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)
         self.d_plot.setWidget(self.plot)
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.d_plot)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, self.d_plot)
 
         self.view_menu = self.menuBar().addMenu("View")
         self.view_menu.addAction(self.d_plot.toggleViewAction())

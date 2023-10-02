@@ -460,6 +460,7 @@ class Pulser(Worker):
         self.op.set_laser_duties(self.data, laser_duties)
         self.pulse_pattern = PulsePattern(blocks, self.freq, markers=markers)
         pg_params = {"blocks": blocks, "freq": self.freq}
+        self.logger.info(f"Initialized PG. PD oversample: {self.oversample}")
 
         if not (self.pg.configure(pg_params) and self.pg.get_opc()):
             self.logger.error("Error configuring PG.")
@@ -809,7 +810,8 @@ class DebugPulser(Pulser):
         if not self.data.running:
             return False
 
-        success = self.pg.stop() and self.pg.release()
+        success = self.pg.stop()
+        self.release_instruments()
 
         self.data.finalize()
 
