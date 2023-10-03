@@ -76,7 +76,7 @@ class SPODMR(BasicMeasNode):
         self.pulse_pub = self.add_pub(b"pulse")
 
         if "switch" in self.conf["target"]["servers"]:
-            self.switch = Switch(self.cli, self.logger, "podmr")
+            self.switch = Switch(self.cli, self.logger, "spodmr")
         else:
             self.switch = DummyWorker()
         if "tweaker" in self.conf["target"]:
