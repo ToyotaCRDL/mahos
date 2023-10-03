@@ -11,6 +11,7 @@ from ..msgs.fit_msgs import str_to_peak_type
 from ..meas.confocal_io import ConfocalIO
 from ..meas.odmr_io import ODMRIO
 from ..meas.podmr_io import PODMRIO
+from ..meas.spodmr_io import SPODMRIO
 from ..meas.iodmr_io import IODMRIO
 from ..meas.hbt_io import HBTIO
 from ..meas.spectroscopy_io import SpectroscopyIO
@@ -124,6 +125,46 @@ def plot_podmr(args):
         for key, value in zip(("sigdelay", "sigwidth", "refdelay", "refwidth"), args.timings):
             plot_params[key] = value * 1e-9  # ns to sec
     for key in ("plotmode", "taumode", "xlogscale", "ylogscale", "fft", "refmode", "refaverage"):
+        value = getattr(args, key)
+        if value is not None:
+            plot_params[key] = value
+    if args.method or args.fit_params:
+        if args.fit_params:
+            fit_params = toml.load(args.fit_params)
+            if "method" not in fit_params:
+                fit_params["method"] = args.method
+        else:
+            fit_params = {"method": args.method}
+    else:
+        fit_params = {}
+
+    params = {
+        "plot": plot_params,
+        "fit": fit_params,
+        "show_fit": args.show_fit,
+        "color0": args.color0,
+        "color1": args.color1,
+        "color_fit": args.color_fit,
+        "marker0": args.marker0,
+        "marker1": args.marker1,
+        "label": args.label,
+        "offset": args.offset,
+        "linewidth": args.linewidth,
+        "linewidth_fit": args.linewidth_fit,
+    }
+    params.update(make_default_params(args))
+    if not args.one_figure:
+        plot_files(args, io.load_data, lambda fn, d: io.export_data(fn, d, params))
+    else:
+        data = [io.load_data(n) for n in args.names]
+        io.export_data(args.one_figure, data, params)
+
+
+def plot_spodmr(args):
+    io = SPODMRIO()
+
+    plot_params = {}
+    for key in ("plotmode", "taumode", "xlogscale", "ylogscale", "fft", "normalize"):
         value = getattr(args, key)
         if value is not None:
             plot_params[key] = value
@@ -516,6 +557,69 @@ def add_podmr_parser(sub_parsers):
     p.set_defaults(func=plot_podmr)
 
 
+def add_spodmr_parser(sub_parsers):
+    p = sub_parsers.add_parser(
+        "spodmr",
+        help=" ".join(
+            [
+                "Pulse odmr with Slow detectors.",
+                "Replot data if -m (--method) is set.",
+            ]
+        ),
+    )
+
+    p.add_argument(
+        "-p",
+        "--print",
+        action="store_true",
+        help="Print plot parameters stored in data file (no plot performed)",
+    )
+    p.add_argument(
+        "-o", "--one-figure", metavar="FILENAME", type=str, help="Filename for one-figure mode"
+    )
+
+    p.add_argument(
+        "-F", "--no-fit", dest="show_fit", action="store_false", help="Don't show fitting result"
+    )
+    p.add_argument(
+        "-M",
+        "--plotmode",
+        type=str,
+        help="[plot] Plot mode (data01|data0|data1|diff|average|normalize|concatenate|ref)",
+    )
+    p.add_argument("-T", "--taumode", type=str, help="[plot] Tau mode (raw|total|freq|index|head)")
+    p.add_argument("--fft", type=strtobool, help="[plot] FFT mode")
+    p.add_argument("--xlog", dest="xlogscale", type=strtobool, help="[plot] logscale X axis")
+    p.add_argument("--ylog", dest="ylogscale", type=strtobool, help="[plot] logscale Y axis")
+    p.add_argument("-n", "--normalize", type=strtobool, help="[plot] Normalize using laser duty")
+
+    p.add_argument(
+        "-m",
+        "--method",
+        type=str,
+        help="[fit] Fitting method (rabi|fid|spinecho|gaussian|lorentzian). Invokes re-fitting.",
+    )
+    p.add_argument(
+        "-P",
+        "--fit-params",
+        type=str,
+        help="[fit] Fitting parameters file name. Invokes re-fitting.",
+    )
+
+    p.add_argument("-l", "--label", type=str, nargs="+", help="matplotlib labels")
+    p.add_argument("-O", "--offset", type=float, nargs="+", help="offset along y-axis")
+    p.add_argument("--color0", type=str, nargs="+", help="matplotlib colors for data0")
+    p.add_argument("--color1", type=str, nargs="+", help="matplotlib colors for data1")
+    p.add_argument("--color_fit", type=str, nargs="+", help="matplotlib colors for fitting line")
+    p.add_argument("--marker0", type=str, nargs="+", help="matplotlib markers for data0")
+    p.add_argument("--marker1", type=str, nargs="+", help="matplotlib markers for data1")
+    p.add_argument("--linewidth", type=float, help="linewidth for data0 and data1")
+    p.add_argument("--linewidth_fit", type=float, default=1.0, help="linewidth for fitting line")
+
+    add_common_args(p)
+    p.set_defaults(func=plot_spodmr)
+
+
 def add_iodmr_parser(sub_parsers):
     p = sub_parsers.add_parser("iodmr", help="imaging odmr spectrum.")
 
@@ -673,6 +777,7 @@ def parse_args(args):
     add_confocal_trace_parser(sub_parsers)
     add_odmr_parser(sub_parsers)
     add_podmr_parser(sub_parsers)
+    add_spodmr_parser(sub_parsers)
     add_iodmr_parser(sub_parsers)
     add_iodmr_fit_parser(sub_parsers)
     add_hbt_parser(sub_parsers)

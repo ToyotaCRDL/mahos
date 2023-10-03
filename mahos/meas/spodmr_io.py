@@ -46,7 +46,7 @@ class SPODMRIO(object):
         if d is not None:
             return update_data(d)
 
-    def reanalyze_data(self, plot_params: dict, data: SPODMRData):
+    def update_plot_params(self, plot_params: dict, data: SPODMRData):
         op = SPODMRDataOperator()
         pparams = data.params["plot"].copy()
         pparams.update(plot_params)
@@ -126,7 +126,7 @@ class SPODMRIO(object):
 
         for d in data_list:
             if params.get("plot"):
-                self.reanalyze_data(params["plot"], d)
+                self.update_plot_params(params["plot"], d)
             if params.get("fit") and not self.refit_data(params, d):
                 return False
 
