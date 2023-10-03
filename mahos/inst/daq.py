@@ -124,8 +124,30 @@ class ConfigurableTask(Instrument):
 class ClockSource(ConfigurableTask):
     """A configurable DAQ Task class to provide a clock source.
 
+    Note that retriggerable trigger is supported only on 63xx series devices.
+    https://www.ni.com/ja/support/documentation/supplemental/21/retriggerable-tasks-in-ni-daqmx.html
+
     :param counter: DAQ's counter name.
     :type counter: str
+    :param freq: Clock frequency.
+    :type freq: float
+    :param samples: Number of samples for finite clock generation.
+        For infinite case, this value is used to estimate buffer size.
+    :param duty: (default: 0.5) Duty ratio of the clock.
+    :type duty: float
+    :param finite: (default: True) If True, generate finite clock pulse train.
+    :type finite: bool
+    :type samples: int
+    :param idle_state: (default: False) Set True (False) for the idle to H (L) logic level.
+    :type idle_state: bool
+    :param initial_delay: (default: 0.0) Initial delay before starting clock output.
+    :type initial_delay: float
+    :param trigger_source: DAQ terminal name for start trigger. Trigger is disabled if not given.
+    :type trigger_source: str
+    :param trigger_dir: (default: True) Set True (False) for rising (falling) edge trigger.
+    :type trigger_dir: bool
+    :param retriggerable: (default: True) Set True to enable retriggerable mode.
+    :type retriggerable: bool
 
     """
 
@@ -153,14 +175,24 @@ class ClockSource(ConfigurableTask):
         initial_delay = params.get("initial_delay", 0.0)
         duty = params.get("duty", 0.5)
 
+        trigger_source = params.get("trigger_source")
+        trigger_dir = _edge_polarity(params.get("trigger_dir", True))
+        retriggerable = params.get("retriggerable", True)
+
         self.task.CreateCOPulseChanFreq(
             self.counter, "", D.DAQmx_Val_Hz, idle_state, initial_delay, freq, duty
         )
         self.task.CfgImplicitTiming(_samples_finite_or_cont(self.finite), samples)
+        if trigger_source:
+            self.task.CfgDigEdgeStartTrig(trigger_source, trigger_dir)
+            if retriggerable:
+                self.task.SetStartTrigRetriggerable(True)
 
         msg = f"Clock configured. freq: {freq:.2f} Hz."
         if self.finite:
             msg += f" {samples} pulses."
+        if trigger_source:
+            msg += f" Start Trigger from {trigger_source}."
         self.logger.debug(msg)
 
         return True
