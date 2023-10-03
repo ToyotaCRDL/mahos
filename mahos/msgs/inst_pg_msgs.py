@@ -104,6 +104,13 @@ class Block(Message):
 
     # Non-mutating (copying) operations
 
+    def suffix(self, suffix: str) -> Block:
+        """Return new Block with a name suffix. Can be used to avoid name-duplication."""
+
+        ret = self.copy()
+        ret.name += suffix
+        return ret
+
     def repeat(self, num: int) -> Block:
         """Return new Block with `num`-times repeat."""
 

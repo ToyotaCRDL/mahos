@@ -18,6 +18,7 @@ from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface, Block, Blocks
 from ..inst.pd_interface import PDInterface
 from ..inst.fg_interface import FGInterface
+from ..inst.daq_interface import ClockSourceInterface
 from .common_worker import Worker
 
 from .podmr_generator.generator import make_generators
@@ -136,27 +137,33 @@ class Bounds(object):
 class BlocksBuilder(object):
     """Build the PG Blocks for SPODMR from PODMR's Blocks."""
 
+    def __init__(self, trigger_width: float, trigger_channel: str):
+        self.trigger_width = trigger_width
+        self.trigger_channel = trigger_channel
+
     def build_complementary(
         self,
         blocks: list[Blocks[Block]],
         accum_window: int,
         accum_rep: int,
-        accum_drop: int,
-        pd_period: int,
+        drop_rep: int,
         laser_width: int,
+        trigger_width: int,
     ):
-        pd_rep = accum_window // pd_period
-        residual = accum_window % pd_period
-        w = pd_period // 2
-        drop0_blk = Block("drop", [("sync", accum_window)])
-        gate0_blk = Block(
-            "gate",
-            [("sync", residual)] + [("sync", w), (("sync", "gate"), pd_period - w)] * pd_rep,
+        trigger0_blk = Block(
+            "trigger0",
+            [
+                (("sync", self.trigger_channel), trigger_width),
+                ("sync", accum_window - trigger_width),
+            ],
         )
-        # drop1_blk = Block("drop", [(None, accum_window)])
-        gate1_blk = Block(
-            "gate", [(None, residual)] + [(None, w), ("gate", pd_period - w)] * pd_rep
+        sync0_blk = Block("sync0", [("sync", accum_window)])
+        # drop1_blk = Block("drop1", [(None, accum_window)])
+        trigger1_blk = Block(
+            "trigger1",
+            [(self.trigger_channel, trigger_width), (None, accum_window - trigger_width)],
         )
+        # rest1_blk = Block("rest1", [(None, accum_window)])
 
         extended_blks = Blocks()
         laser_duties = []
@@ -178,32 +185,32 @@ class BlocksBuilder(object):
                 blk1.insert(0, (blk1.pattern[0].channels, residual))
             extended_blks.extend(
                 [
-                    blk0.union(drop0_blk).repeat(accum_drop),
-                    blk0.union(gate0_blk).repeat(accum_rep),
-                    blk1.repeat(accum_drop),  # no need to union(drop1_blk)
-                    blk1.union(gate1_blk).repeat(accum_rep),
+                    blk0.union(sync0_blk).suffix("_d").repeat(drop_rep),
+                    blk0.union(trigger0_blk).suffix("_t"),
+                    blk0.union(sync0_blk).repeat(accum_rep - 1),
+                    blk1.suffix("_d").repeat(drop_rep),  # no need to union(drop1_blk)
+                    blk1.union(trigger1_blk).suffix("_t"),
+                    blk1.repeat(accum_rep - 1),  # no need to union(rest1)
                 ]
             )
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
             markers.append(extended_blks.total_length())
 
-        return extended_blks, laser_duties, markers, pd_rep * accum_rep
+        return extended_blks, laser_duties, markers
 
     def build_partial(
         self,
         blocks: list[Blocks[Block]],
         accum_window: int,
         accum_rep: int,
-        accum_drop: int,
-        pd_period: int,
+        drop_rep: int,
         laser_width: int,
+        trigger_width: int,
     ):
-        pd_rep = accum_window // pd_period
-        residual = accum_window % pd_period
-        w = pd_period // 2
-        gate_blks = Block(
-            "gate", [(None, residual)] + [(None, w), ("gate", pd_period - w)] * pd_rep
+        trigger_blk = Block(
+            "trigger",
+            [(self.trigger_channel, trigger_width), (None, accum_window - trigger_width)],
         )
 
         extended_blks = Blocks()
@@ -219,12 +226,18 @@ class BlocksBuilder(object):
             blk = blks.repeat(rep).collapse()
             if residual:
                 blk.insert(0, (blk.pattern[0].channels, residual))
-            extended_blks.extend([blk.repeat(accum_drop), blk.union(gate_blks).repeat(accum_rep)])
+            extended_blks.extend(
+                [
+                    blk.suffix("_d").repeat(drop_rep),
+                    blk.union(trigger_blk).suffix("_t"),
+                    blk.repeat(accum_rep - 1),
+                ]
+            )
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
             markers.append(extended_blks.total_length())
 
-        return extended_blks, laser_duties, markers, pd_rep * accum_rep
+        return extended_blks, laser_duties, markers
 
     def build_lockin(
         self,
@@ -232,19 +245,18 @@ class BlocksBuilder(object):
         accum_window: int,
         accum_rep: int,
         lockin_rep: int,
-        pd_period: int,
+        drop_rep: int,
         laser_width: int,
+        trigger_width: int,
     ):
-        pd_rep = accum_window // pd_period
-        residual = accum_window % pd_period
-        w = pd_period // 2
-        gate0_blk = Block(
-            "gate",
-            [("sync", residual)] + [("sync", w), (("sync", "gate"), pd_period - w)] * pd_rep,
+        trigger0_blk = Block(
+            "trigger0",
+            [
+                (("sync", self.trigger_channel), trigger_width),
+                ("sync", accum_window - trigger_width),
+            ],
         )
-        gate1_blk = Block(
-            "gate", [(None, residual)] + [(None, w), ("gate", pd_period - w)] * pd_rep
-        )
+        sync0_blk = Block("sync0", [("sync", accum_window)])
 
         extended_blks = Blocks()
         laser_duties = []
@@ -268,17 +280,21 @@ class BlocksBuilder(object):
             # blk0.union(gate0_blk).repeat(accum_rep) and blk1.union(...).repeat(...) here,
             # and can increase memory requirement in PG.
             # Nested-Blocks (type to express nested repeat) would resolve this.
-            blk = (
-                blk0.union(gate0_blk)
-                .repeat(accum_rep)
-                .concatenate(blk1.union(gate1_blk).repeat(accum_rep))
+            trig = (
+                blk0.union(trigger0_blk)
+                .suffix("_t")
+                .concatenate(blk0.union(sync0_blk).repeat(accum_rep - 1))
+                .concatenate(blk1.repeat(accum_rep))
             )
-            extended_blks.append(blk.repeat(lockin_rep))
+            normal = blk0.union(sync0_blk).repeat(accum_rep).concatenate(blk1.repeat(accum_rep))
+            extended_blks.extend(
+                [normal.suffix("_d").repeat(drop_rep), trig, normal.repeat(lockin_rep - 1)]
+            )
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
             markers.append(extended_blks.total_length())
 
-        return extended_blks, laser_duties, markers, 2 * pd_rep * accum_rep * lockin_rep
+        return extended_blks, laser_duties, markers
 
     def build_blocks(self, blocks: list[Blocks[Block]], freq: float, common_pulses, params):
         invertY = params.get("invertY", False)
@@ -294,25 +310,28 @@ class BlocksBuilder(object):
         ) = common_pulses
 
         accum_rep = params["accum_rep"]
-        pd_period = int(round(freq / params["pd_rate"]))
+        drop_rep = params["drop_rep"]
         accum_window = int(round(freq * params["accum_window"]))
+        trigger_width = int(round(freq * self.trigger_width))
+        pd_period = int(round(freq / params["pd_rate"]))
 
         partial = params["partial"]
         if partial == -1:
-            accum_drop = params["accum_drop"]
-            blocks, laser_duties, markers, oversample = self.build_complementary(
-                blocks, accum_window, accum_rep, accum_drop, pd_period, laser_width
+            blocks, laser_duties, markers = self.build_complementary(
+                blocks, accum_window, accum_rep, drop_rep, laser_width, trigger_width
             )
+            oversample = (accum_window * accum_rep) // pd_period
         elif partial in (0, 1):
-            accum_drop = params["accum_drop"]
-            blocks, laser_duties, markers, oversample = self.build_partial(
-                blocks, accum_window, accum_rep, accum_drop, pd_period, laser_width
+            blocks, laser_duties, markers = self.build_partial(
+                blocks, accum_window, accum_rep, drop_rep, laser_width, trigger_width
             )
+            oversample = (accum_window * accum_rep) // pd_period
         elif partial == 2:
             lockin_rep = params["lockin_rep"]
-            blocks, laser_duties, markers, oversample = self.build_lockin(
-                blocks, accum_window, accum_rep, lockin_rep, pd_period, laser_width
+            blocks, laser_duties, markers = self.build_lockin(
+                blocks, accum_window, accum_rep, lockin_rep, drop_rep, laser_width, trigger_width
             )
+            oversample = (2 * accum_window * accum_rep * lockin_rep) // pd_period
         else:
             raise ValueError(f"Invalid partial {partial}")
 
@@ -340,6 +359,7 @@ class Pulser(Worker):
         self.pg = PGInterface(cli, "pg")
         self.pd_names = conf.get("pd_names", ["pd0"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
+        self.clock = ClockSourceInterface(cli, conf.get("clock_name", "clock"))
         if has_fg:
             self.fg = FGInterface(cli, "fg")
         else:
@@ -348,9 +368,9 @@ class Pulser(Worker):
 
         self.length = self.offsets = self.freq = self.oversample = None
 
-        if "pd_clock" not in conf:
-            raise KeyError("pulser.pd_clock must be given")
-        self._pd_clock = conf["pd_clock"]
+        if "pd_trigger" not in conf:
+            raise KeyError("pulser.pd_trigger must be given")
+        self._pd_trigger = conf["pd_trigger"]
         self.conf = conf
 
         mbl = conf.get("minimum_block_length", 1000)
@@ -367,7 +387,9 @@ class Pulser(Worker):
         # in current pattern generator.
         del self.generators["recovery"]
 
-        self.builder = BlocksBuilder()
+        self.builder = BlocksBuilder(
+            conf.get("trigger_width", 1e-6), conf.get("trigger_channel", "trigger")
+        )
 
         self.data = SPODMRData()
         self.op = SPODMRDataOperator()
@@ -401,15 +423,28 @@ class Pulser(Worker):
 
         return True
 
-    def init_start_pds(self):
+    def init_start_pds(self) -> bool:
         params = self.data.params
         rate = params["pd_rate"]
+
+        params_clock = {
+            "freq": rate,
+            "samples": self.oversample,
+            "finite": True,
+            "trigger_source": self._pd_trigger,
+            "trigger_dir": True,
+            "retriggerable": True,
+        }
+        if not self.clock.configure(params_clock):
+            return self.fail_with("failed to configure clock.")
+        clock_pd = self.clock.get_internal_output()
+
         num = self.data.get_num()
         if params["partial"] == -1:
             num *= 2
         buffer_size = num * self.conf.get("buffer_size_coeff", 20)
         params_pd = {
-            "clock": self._pd_clock,
+            "clock": clock_pd,
             "cb_samples": num,
             "samples": buffer_size,
             "buffer_size": buffer_size,
@@ -423,6 +458,7 @@ class Pulser(Worker):
 
         if not (
             all([pd.configure(params_pd) for pd in self.pds])
+            and self.clock.start()
             and all([pd.start() for pd in self.pds])
         ):
             self.logger.error("Error starting PDs.")
@@ -539,6 +575,7 @@ class Pulser(Worker):
             self.sg.set_output(False)
             for pd in self.pds:
                 pd.stop()
+            self.clock.stop()
             return self.fail_with_release("Error starting pulser.")
 
         if resume:
@@ -568,6 +605,7 @@ class Pulser(Worker):
             and self.sg.release()
         )
         success &= all([pd.stop() for pd in self.pds]) and all([pd.release() for pd in self.pds])
+        success &= self.clock.stop()
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(False)
         if self.fg is not None:
@@ -688,8 +726,8 @@ class Pulser(Worker):
             accum_rep=P.IntParam(
                 self.conf.get("accum_rep", 10), 1, 10000, doc="number of accumulation repetitions"
             ),
-            accum_drop=P.IntParam(
-                self.conf.get("accum_drop", 0),
+            drop_rep=P.IntParam(
+                self.conf.get("drop_rep", 1),
                 0,
                 100,
                 doc="number of dummy (dropped) accum. pattern repetitions",

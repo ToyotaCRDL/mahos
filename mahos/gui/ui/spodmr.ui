@@ -442,9 +442,9 @@
              </widget>
             </item>
             <item row="0" column="5">
-             <widget class="QSpinBox" name="accumdropBox">
+             <widget class="QSpinBox" name="droprepBox">
               <property name="prefix">
-               <string>accum drop: </string>
+               <string>drop rep: </string>
               </property>
              </widget>
             </item>
@@ -1396,7 +1396,7 @@
   <tabstop>tabWidget</tabstop>
   <tabstop>accumwindowBox</tabstop>
   <tabstop>accumrepBox</tabstop>
-  <tabstop>accumdropBox</tabstop>
+  <tabstop>droprepBox</tabstop>
   <tabstop>lockinrepBox</tabstop>
   <tabstop>sweepsBox</tabstop>
   <tabstop>pdrateBox</tabstop>

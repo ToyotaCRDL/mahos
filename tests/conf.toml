@@ -210,7 +210,7 @@ log_level = "DEBUG"
 rep_endpoint = "tcp://127.0.0.1:5580"
 pub_endpoint = "tcp://127.0.0.1:5581"
 [localhost.spodmr.pulser]
-pd_clock = "/Dummy"
+pd_trigger = "/Dummy"
 [localhost.spodmr.target]
 log = "localhost::log"
 tweaker = "localhost::tweaker"
@@ -220,6 +220,7 @@ sg = "localhost::server"
 pg = "localhost::server"
 fg = "localhost::server"
 pd0 = "localhost::server"
+clock = "localhost::server"
 
 [localhost.iodmr]
 module = "mahos.meas.iodmr"
