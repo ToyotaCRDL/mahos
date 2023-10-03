@@ -9,6 +9,7 @@ from ..node.log import DummyLogger
 from ..msgs.confocal_msgs import Image, Trace
 from ..msgs.odmr_msgs import ODMRData
 from ..msgs.podmr_msgs import PODMRData
+from ..msgs.spodmr_msgs import SPODMRData
 from ..msgs.iodmr_msgs import IODMRData
 from ..msgs.hbt_msgs import HBTData
 from ..msgs.spectroscopy_msgs import SpectroscopyData
@@ -30,6 +31,7 @@ exts_to_data = {
     ".trace.h5": Trace,
     ".odmr.h5": ODMRData,
     ".podmr.h5": PODMRData,
+    ".spodmr.h5": SPODMRData,
     ".iodmr.h5": IODMRData,
     ".hbt.h5": HBTData,
     ".spec.h5": SpectroscopyData,
