@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from mahos.msgs.inst_pg_msgs import Block
+from mahos.msgs.inst_pg_msgs import Block, BlockSeq
 
 
 def ch_upper(channels):
@@ -28,3 +28,44 @@ def test_block():
     assert block1.scale(3) == Block(
         "block1", [("a", 15), ("b", 9), (("b", "c"), 21), ("d", 15)], Nrep=10
     )
+
+
+def test_seq():
+    block0 = Block("block0", [("a", 5), ("b", 3), (("b", "c"), 2)], Nrep=3)  # len = 30, num = 3
+    block1 = Block("block1", [("a", 2), ("d", 3)], Nrep=2)  # len = 10, num = 2
+    seq0 = BlockSeq("seq0", [block0, block1], Nrep=2)
+    seq1 = BlockSeq("seq1", [seq0, block0])
+    seq2 = BlockSeq("seq2", [block0, seq0, seq1], Nrep=3)
+    seq3 = BlockSeq("seq3", [seq2, seq0, seq1, block0], Nrep=3)
+
+    assert seq0.channels() == ["a", "b", "c", "d"]
+    assert seq0.nest_depth() == 1
+    assert seq0.total_length() == 80
+    assert seq0.total_pattern_num() == 26
+    assert seq1.nest_depth() == 2
+    assert seq1.total_length() == seq0.total_length() + block0.total_length()
+    assert seq1.total_pattern_num() == seq0.total_pattern_num() + block0.total_pattern_num()
+    assert seq2.nest_depth() == 3
+    assert seq2.total_length() == 3 * (
+        block0.total_length() + seq0.total_length() + seq1.total_length()
+    )
+    assert seq3.nest_depth() == 4
+
+    assert seq0.equivalent(seq0.collapse())
+    assert seq1.equivalent(seq1.collapse())
+    assert seq2.equivalent(seq2.collapse())
+    assert seq3.equivalent(seq3.collapse())
+
+
+def test_seq_uniq():
+    def sorted_names(blocks):
+        return sorted([b.name for b in blocks])
+
+    b0 = Block("b0", [])
+    b1 = Block("b1", [])
+    b2 = Block("b2", [])
+    seq0 = BlockSeq("seq0", [b0, b1, b0, b1])
+    seq1 = BlockSeq("seq1", [b0, seq0, b2, b0])
+
+    assert sorted_names(seq0.unique_blocks()) == ["b0", "b1"]
+    assert sorted_names(seq1.unique_blocks()) == ["b0", "b1", "b2"]

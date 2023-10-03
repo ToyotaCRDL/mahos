@@ -420,9 +420,6 @@ class Blocks(UserList):
             blk.extend(b.total_pattern())
         return blk
 
-    def insert_pulse(self, blk_index: int, ptn_index: int, pulse: AcceptedPulse):
-        self.data[blk_index].insert(ptn_index, pulse)
-
     def repeat(self, num: int) -> Blocks[Block]:
         """Return new Blocks[Block] with `num`-times repeat.
 
@@ -579,6 +576,228 @@ class Blocks(UserList):
         return sum([b.total_pattern_num() for b in self.data])
 
     def scale(self, s: int) -> Blocks[Block]:
-        """Scale all the periods in the Blocks."""
+        """Scale all the durations in the Blocks."""
 
         return Blocks([b.scale(s) for b in self.data])
+
+
+class BlockSeq(Message):
+    """Nestable and named sequence of Blocks.
+
+    Methods compatible with Blocks are implemented.
+    Blocks[Block] and BlockSeq are almost equivalent if BlockSeq contains Block only.
+    Blocks[Block] may be a bit handier if you don't need the nested repeat
+    because it supports list-like operations.
+
+    """
+
+    def __init__(
+        self,
+        name: str,
+        data: list[Block | BlockSeq],
+        Nrep: int = 1,
+        trigger: bool = False,
+    ):
+        self.name = name
+        self.data = data
+        self.Nrep = Nrep
+        self.trigger = trigger
+
+    def _new(self, data) -> BlockSeq:
+        return BlockSeq(self.name, data, self.Nrep, self.trigger)
+
+    def collapse(self) -> Block:
+        """Collapse the contained Blocks | BlockSeq to single Block.
+
+        Resultant Block is almost equivalent to the original BlockSeq, but
+        the trigger attributes of non-first Blocks are silently discarded.
+
+        """
+
+        blk = self.data[0].collapse()
+        for b in self.data[1:]:
+            blk.extend(b.collapse())
+        return blk.repeat(self.Nrep).collapse()
+
+    def repeat(self, num: int) -> BlockSeq:
+        """Return new BlockSeq with `num`-times repeat."""
+
+        return BlockSeq(self.name, self.data, self.Nrep * num, self.trigger)
+
+    def total_sequence(self):
+        return self.data * self.Nrep
+
+    def unique_blocks(self) -> Blocks[Block]:
+        """Extract unique (in terms of their names) Blocks inside."""
+
+        ret = Blocks()
+        names = []
+        for bs in self.data:
+            if isinstance(bs, Block):
+                if bs.name in names:
+                    continue
+                ret.append(bs)
+                names.append(bs.name)
+            else:  # BlockSeq
+                blks = bs.unique_blocks()
+                ret.extend([b for b in blks if b.name not in names])
+                names.extend([b.name for b in blks])
+
+        return ret
+
+    def channels(self) -> list[str | int]:
+        """Get list of included channels.
+
+        If types of all channels are identical (all str or all int),
+        the result is sorted.
+        Otherwise the order is unpredictable (because mixed strs and ints cannot be sorted).
+
+        """
+
+        channels = set()
+        for blk_or_seq in self.data:
+            channels.update(blk_or_seq.channels())
+        try:
+            return list(sorted(channels))
+        except TypeError:
+            return list(channels)
+
+    def _decode(self, channel: str | int, max_len: int | None = None) -> list[bool]:
+        ptn = []
+        for blk_or_seq in self.total_sequence():
+            if isinstance(blk_or_seq, Block):
+                ptn.extend(blk_or_seq.decode(channel, max_len=max_len))
+            else:
+                ptn.extend(blk_or_seq._decode(channel, max_len=max_len))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
+    def decode(self, channel: str | int, max_len: int | None = None) -> NDArray:
+        """Decode the pattern of given channel.
+
+        If channel is not included, all-zero array will be returned.
+
+        """
+
+        return np.array(self._decode(channel, max_len=max_len), dtype=np.uint8)
+
+    def plottable_time(self, max_len: int | None = None) -> NDArray:
+        """Generate timeline (x-axis data) for plottable(), that's common for all channels."""
+
+        ptn = np.empty(0, dtype=np.uint64)
+        for blk_or_seq in self.total_sequence():
+            t = np.array(blk_or_seq.plottable_time(max_len=max_len), dtype=np.uint64)
+            if len(ptn):
+                t += ptn[-1]
+            ptn = np.append(ptn, t)
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
+    def _plottable(self, channel: str | int, max_len: int | None = None) -> list[int]:
+        """Decode the pattern of given channel to plottable array."""
+
+        ptn = []
+        for blk_or_seq in self.total_sequence():
+            if isinstance(blk_or_seq, Block):
+                ptn.extend(blk_or_seq.plottable(channel, max_len=max_len))
+            else:
+                ptn.extend(blk_or_seq._plottable(channel, max_len=max_len))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
+    def plottable(self, channel: str | int, max_len: int | None = None) -> NDArray:
+        return np.array(self._plottable(channel, max_len=max_len), dtype=np.uint8)
+
+    def decode_all(self, max_len: int | None = None) -> tuple[list[str | int], list[NDArray]]:
+        """Decode the patterns for all included channels."""
+
+        channels = self.channels()
+        patterns = [self.decode(ch, max_len=max_len) for ch in channels]
+        return channels, patterns
+
+    def plottable_all(self, max_len: int | None = None) -> tuple[list[str | int], list[NDArray]]:
+        """Decode the patterns for all included channels to plottable array."""
+
+        channels = self.channels()
+        patterns = [self.plottable(ch, max_len=max_len) for ch in channels]
+        return channels, patterns
+
+    def equivalent(self, other: BlockSeq | Block) -> bool:
+        """Check if this and other sequences are equivalent.
+
+        Compare the channels and patterns after decode.
+
+        """
+
+        channels, patterns = self.decode_all()
+        other_channels, other_patterns = other.decode_all()
+
+        if len(patterns) != len(other_patterns):
+            return False
+
+        return channels == other_channels and all(
+            [len(p0) == len(p1) and (p0 == p1).all() for p0, p1 in zip(patterns, other_patterns)]
+        )
+
+    def replace(
+        self,
+        replace_dict: dict[str | int, tuple[str, ...] | tuple[int, ...]],
+    ) -> BlockSeq:
+        """Return copy of this BlockSeq with replaced channels."""
+
+        return self._new([b.replace(replace_dict) for b in self.data])
+
+    def remove(
+        self,
+        remove_channels: str | int | tuple[str, ...] | tuple[int, ...],
+    ) -> BlockSeq:
+        """Return copy of this BlockSeq with removed channels."""
+
+        return self._new([b.remove(remove_channels) for b in self.data])
+
+    def apply(self, func: T.Callable[Channels, Channels]) -> BlockSeq:
+        """Return copy of this BlockSeq applying given function over channels."""
+
+        return self._new([b.apply() for b in self.data])
+
+    def simplify(self) -> BlockSeq:
+        """return simplified copy of this BlockSeq.
+
+        simplification is done by:
+        - removing zero-times repeated Blocks
+        - removing zero-duration pulses in Blocks
+        - merging contiguous pulses with same channels in Blocks
+
+        """
+
+        return self._new([b.simplify() for b in self.data if b.Nrep])
+
+    def total_length(self) -> int:
+        """Total block length considering Nrep."""
+
+        return sum([b.total_length() for b in self.data]) * self.Nrep
+
+    def total_pattern_num(self) -> int:
+        """Total pattern number (instruction size) considering Nrep."""
+
+        return sum([b.total_pattern_num() for b in self.data]) * self.Nrep
+
+    def scale(self, s: int) -> BlockSeq:
+        """Scale all the durations in this BlockSeq."""
+
+        return self._new([b.scale(s) for b in self.data])
+
+    def nest_depth(self) -> int:
+        return max([b.nest_depth() if isinstance(b, BlockSeq) else 0 for b in self.data]) + 1

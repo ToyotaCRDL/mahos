@@ -12,7 +12,7 @@ from __future__ import annotations
 import pulsestreamer
 
 from .instrument import Instrument
-from ..msgs.inst_pg_msgs import TriggerType, Block, Blocks
+from ..msgs.inst_pg_msgs import TriggerType, Block, Blocks, BlockSeq
 
 
 class PulseStreamer(Instrument):
@@ -98,7 +98,7 @@ class PulseStreamer(Instrument):
         return trigger
 
     def _generate_seq_blocks(self, blocks: Blocks[Block]) -> pulsestreamer.Sequence:
-        """Generate sequence from DTG-compatible 'blocks'."""
+        """Generate sequence from blocks."""
 
         rle_patterns = [(ch, []) for ch in self._included_channels_blocks(blocks)]
         a0_patterns = []
@@ -134,7 +134,7 @@ class PulseStreamer(Instrument):
         trigger_type: TriggerType | None = None,
         n_runs: int | None = None,
     ) -> bool:
-        """Make sequence from DTG-compatible 'blocks'."""
+        """Make sequence from blocks."""
 
         freq = round(freq)
         base_freq = round(1.0e9)
@@ -189,6 +189,19 @@ class PulseStreamer(Instrument):
         self.logger.info(f"Configured sequence. length: {self.length} trigger: {trigger}")
         return True
 
+    def configure_blockseq(
+        self,
+        blockseq: BlockSeq,
+        freq: float,
+        trigger_type: TriggerType | None = None,
+        n_runs: int | None = None,
+    ) -> bool:
+        """Make sequence from blockseq."""
+
+        # Since PulseStreamer doesn't have loop control mechanism,
+        # given BlockSeq is equivalent to collapsed one.
+        return self.configure_blocks(Blocks([blockseq.collapse()]), freq, trigger_type, n_runs)
+
     def trigger(self) -> bool:
         """issue a software trigger.
 
@@ -225,8 +238,15 @@ class PulseStreamer(Instrument):
                 trigger_type=params.get("trigger_type"),
                 n_runs=params.get("n_runs"),
             )
-        else:  # TODO: maybe other API (not DTG-compatible) ?
-            return self.fail_with("These params must be given: 'blocks' and 'freq'")
+        elif "blockseq" in params and "freq" in params:
+            return self.configure_blockseq(
+                params["blockseq"],
+                params["freq"],
+                trigger_type=params.get("trigger_type"),
+                n_runs=params.get("n_runs"),
+            )
+        else:
+            return self.fail_with("These params must be given: 'blocks' | 'blockseq' and 'freq'")
 
     def set(self, key: str, value=None) -> bool:
         if key == "trigger":
@@ -307,7 +327,7 @@ class PulseStreamerDAQTrigger(PulseStreamer):
     def configure_blocks(
         self, blocks, freq, trigger_type: TriggerType | None = None, n_runs: int | None = None
     ) -> bool:
-        """Make sequence from DTG-compatible 'blocks'."""
+        """Make sequence from blocks."""
 
         if trigger_type in (TriggerType.HARDWARE_RISING, TriggerType.HARDWARE_FALLING):
             if not self._set_idle_logic():

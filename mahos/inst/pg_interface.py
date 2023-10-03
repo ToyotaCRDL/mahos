@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from .interface import InstrumentInterface
 
-from ..msgs.inst_pg_msgs import TriggerType, Block, Blocks
+from ..msgs.inst_pg_msgs import TriggerType, Block, Blocks, BlockSeq
 
 
 class PGInterface(InstrumentInterface):
@@ -24,7 +24,7 @@ class PGInterface(InstrumentInterface):
         trigger_type: TriggerType | None = None,
         n_runs: int | None = None,
     ) -> bool:
-        """Configure the PG using blocks representation.
+        """Configure the PG using blocks (Blocks[Block]) representation.
 
         :param blocks: block representation of pulse pattern.
         :param freq: frequency in Hz.
@@ -35,6 +35,26 @@ class PGInterface(InstrumentInterface):
 
         return self.configure(
             {"blocks": blocks, "freq": freq, "trigger_type": trigger_type, "n_runs": n_runs}
+        )
+
+    def configure_blockseq(
+        self,
+        blockseq: BlockSeq,
+        freq: float,
+        trigger_type: TriggerType | None = None,
+        n_runs: int | None = None,
+    ) -> bool:
+        """Configure the PG using BlockSeq representation.
+
+        :param blockseq: BlockSeq representation of pulse pattern.
+        :param freq: frequency in Hz.
+        :param trigger_type: the trigger type. if None, instrument's default is used.
+        :param n_runs: repetition number. if None, runs infinitely.
+
+        """
+
+        return self.configure(
+            {"blockseq": blockseq, "freq": freq, "trigger_type": trigger_type, "n_runs": n_runs}
         )
 
     def clear(self) -> bool:
