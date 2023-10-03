@@ -997,6 +997,11 @@
               </item>
               <item>
                <property name="text">
+                <string>normalize1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
                 <string>concatenate</string>
                </property>
               </item>
