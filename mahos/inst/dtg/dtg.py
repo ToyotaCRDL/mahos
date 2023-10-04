@@ -210,6 +210,10 @@ class DTG5000(VisaInstrument):
     :type start_loop_delay_sec: float
     :param start_loop_num: (default: 20) Max. number of start command repeats in the start loop.
     :type start_loop_num: int
+    :param strict: (default: True) If True, check generated data strictly.
+        Since offset will not be allowed in strict mode, the pulse pattern data should be
+        prepared considering block granularity.
+    :type strict: bool
 
     """
 
@@ -243,6 +247,7 @@ class DTG5000(VisaInstrument):
         self._start_query_delay_sec = conf.get("start_query_sec", 0.1)
         self._start_loop_delay_sec = conf.get("start_loop_delay_sec", 1.0)
         self._start_loop_num = conf.get("start_loop_num", 20)
+        self._strict = conf.get("strict", True)
 
         # last total block length and offsets.
         self.length = 0
@@ -655,7 +660,12 @@ class DTG5000(VisaInstrument):
         self.length = blockseq.total_length()
         l = self._get_total_block_length_seq(blocks, subsequences, sequences)
         if l != self.length:
-            self.logger.warn(f"length mismatch: {l} != {self.length}. Check offsets.")
+            msg = f"length mismatch: {l} != {self.length}. Check offsets."
+            if self._strict:
+                self.logger.error(msg)
+                return None
+            else:
+                self.logger.warn(msg)
 
         if scaffold_name is None:
             scaffold_name = self.SCAFFOLD
