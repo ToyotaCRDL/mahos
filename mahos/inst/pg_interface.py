@@ -90,8 +90,14 @@ class PGInterface(InstrumentInterface):
             args = {"blocks": blocks, "freq": freq}
         return self.get("offsets", args)
 
-    def validate_blocks(self, blocks, freq):
+    def validate_blocks(self, blocks: Block[Blocks], freq: float):
         """Validate the blocks with freq."""
 
         args = {"blocks": blocks, "freq": freq}
+        return self.get("validate", args)
+
+    def validate_blockseq(self, blockseq: BlockSeq, freq: float):
+        """Validate the blocks with freq."""
+
+        args = {"blockseq": blockseq, "freq": freq}
         return self.get("validate", args)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 import uuid
 
-from .inst_pg_msgs import Block, Blocks
+from .inst_pg_msgs import Block, Blocks, BlockSeq
 from .common_msgs import Message
 
 
@@ -12,7 +12,7 @@ class PulsePattern(Message):
 
     def __init__(
         self,
-        blocks: Blocks[Block],
+        blocks: Blocks[Block] | BlockSeq,
         freq: float,
         markers: list[int] | None = None,
         ident: uuid.UUID | None = None,

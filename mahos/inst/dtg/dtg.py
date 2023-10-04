@@ -425,6 +425,10 @@ class DTG5000(VisaInstrument):
 
         return self._adjust_blocks(blocks, freq)
 
+    def validate_blockseq(self, blockseq: BlockSeq[Block], freq: float) -> list[int] | None:
+        blocks, subsequences, sequences = self._build_seq(blockseq, True)
+        return self.validate_blocks_seq(blocks, subsequences, sequences, freq)
+
     def generate_tree_seq(
         self,
         blocks: Blocks[Block],
@@ -609,8 +613,6 @@ class DTG5000(VisaInstrument):
                     steps = [Step(blk.name, blk.Nrep) for blk in bs.data]
                     subsequences.append(SubSequence(bs.name, steps))
                     subseq_names.append(bs.name)
-                else:
-                    self.logger.warn(f"Encountered BlockSeq {bs.name} multiple times.")
                 sequences.append(Sequence(bs.name, bs.Nrep, trigger=bs.trigger))
             else:
                 raise TypeError(f"Unknown type {type(bs)} of BlockSeq element: {bs}")
@@ -810,12 +812,23 @@ class DTG5000(VisaInstrument):
         elif key == "offsets":
             if args is None:
                 return self.offsets  # offsets of last configure_blocks
-            else:
+            elif "blocks" in args and "freq" in args:
                 return self.validate_blocks(args["blocks"], args["freq"])
+            elif "blockseq" in args and "freq" in args:
+                return self.validate_blockseq(args["blockseq"], args["freq"])
+            else:
+                self.logger.error(f"Invalid args for get(offsets): {args}")
+                return None
         elif key == "opc":
             return self.query_opc(delay=args)
         elif key == "validate":
-            return self.validate_blocks(args["blocks"], args["freq"])
+            if "blocks" in args and "freq" in args:
+                return self.validate_blocks(args["blocks"], args["freq"])
+            elif "blockseq" in args and "freq" in args:
+                return self.validate_blockseq(args["blockseq"], args["freq"])
+            else:
+                self.logger.error(f"Invalid args for get(validate): {args}")
+                return None
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

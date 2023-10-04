@@ -262,8 +262,10 @@ class PulseStreamer(Instrument):
         elif key == "offsets":  # for API compatibility
             if args is None:
                 return self.offsets
-            else:
+            elif "blocks" in args:
                 return [0] * len(args["blocks"])
+            elif "blockseq" in args:
+                return [0]
         elif key == "opc":  # for API compatibility
             return True
         elif key == "validate":  # for API compatibility

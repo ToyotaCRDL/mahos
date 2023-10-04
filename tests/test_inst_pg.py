@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from mahos.msgs.inst_pg_msgs import Block, BlockSeq
+from mahos.msgs.inst_pg_msgs import Block, Blocks, BlockSeq
 
 
 def ch_upper(channels):
@@ -55,6 +55,11 @@ def test_seq():
     assert seq1.equivalent(seq1.collapse())
     assert seq2.equivalent(seq2.collapse())
     assert seq3.equivalent(seq3.collapse())
+
+    assert seq0.equivalent(Blocks([seq0.collapse()]))
+    assert seq1.equivalent(Blocks([seq1.collapse()]))
+    assert seq2.equivalent(Blocks([seq2.collapse()]))
+    assert seq3.equivalent(Blocks([seq3.collapse()]))
 
 
 def test_seq_uniq():

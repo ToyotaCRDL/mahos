@@ -15,7 +15,7 @@ from ..msgs.spodmr_msgs import SPODMRData, is_sweepN, is_CPlike, is_correlation
 from ..msgs.pulse_msgs import PulsePattern
 from ..msgs import param_msgs as P
 from ..inst.sg_interface import SGInterface
-from ..inst.pg_interface import PGInterface, Block, Blocks
+from ..inst.pg_interface import PGInterface, Block, Blocks, BlockSeq
 from ..inst.pd_interface import PDInterface
 from ..inst.fg_interface import FGInterface
 from ..inst.daq_interface import ClockSourceInterface
@@ -346,6 +346,251 @@ class BlocksBuilder(object):
         return blocks, laser_duties, markers, oversample
 
 
+class BlockSeqBuilder(object):
+    """Build the PG BlockSeq for SPODMR from PODMR's Blocks."""
+
+    def __init__(self, trigger_width: float, trigger_channel: str):
+        self.trigger_width = trigger_width
+        self.trigger_channel = trigger_channel
+
+    def build_complementary(
+        self,
+        blocks: list[Blocks[Block]],
+        accum_window: int,
+        accum_rep: int,
+        drop_rep: int,
+        laser_width: int,
+        trigger_width: int,
+    ):
+        seqs = []
+        laser_duties = []
+        # markers just for PulseMonitor visualization
+        markers = [0]
+
+        for blks in blocks:
+            blks = blks.remove("sync")
+            assert len(blks) == 4
+            blks0: Blocks[Block] = blks[:2]
+            blks1: Blocks[Block] = blks[2:]
+            T = blks0.total_length()
+            assert T == blks1.total_length()
+            rep, residual = accum_window // T, accum_window % T
+            blk0 = blks0.collapse()  # Pi-0, readi-0 -> Pi-0
+            blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
+            blk1 = blks1.collapse()  # Pi-1, readi-1 -> Pi-1
+            blk0R = blk0.suffix("R")
+            blk1R = blk1.suffix("R")
+            if residual:
+                blk0R.insert(0, (blk0R.pattern[0].channels, residual))
+                blk1R.insert(0, (blk1R.pattern[0].channels, residual))
+            blk0T = blk0R.suffix("T").union(
+                Block(
+                    "trig",
+                    [
+                        (self.trigger_channel, trigger_width),
+                        (None, blk0R.total_length() - trigger_width),
+                    ],
+                )
+            )
+            blk1T = blk1R.suffix("T").union(
+                Block(
+                    "trig",
+                    [
+                        (self.trigger_channel, trigger_width),
+                        (None, blk1R.total_length() - trigger_width),
+                    ],
+                )
+            )
+            # units having duration of accum_window
+            blk0acc = [blk0R, blk0.repeat(rep - 1)]
+            blk0accT = [blk0T, blk0.repeat(rep - 1)]
+            blk1acc = [blk1R, blk1.repeat(rep - 1)]
+            blk1accT = [blk1T, blk1.repeat(rep - 1)]
+            seqs.extend(
+                [
+                    BlockSeq(blk0.name + "_SeqD", blk0acc, drop_rep),
+                    BlockSeq(blk0.name + "_SeqT", blk0accT),
+                    BlockSeq(blk0.name + "_SeqM", blk0acc, accum_rep - 1),
+                    BlockSeq(blk1.name + "_SeqD", blk1acc, drop_rep),
+                    BlockSeq(blk1.name + "_SeqT", blk1accT),
+                    BlockSeq(blk1.name + "_SeqM", blk1acc, accum_rep - 1),
+                ]
+            )
+            # residual is dark: duty becomes slightly lower than laser_width / T
+            laser_duties.append(laser_width * rep / accum_window)
+            markers.append(sum([s.total_length() for s in seqs]))
+
+        return BlockSeq("top", seqs), laser_duties, markers
+
+    def build_partial(
+        self,
+        blocks: list[Blocks[Block]],
+        accum_window: int,
+        accum_rep: int,
+        drop_rep: int,
+        laser_width: int,
+        trigger_width: int,
+    ):
+        seqs = []
+        laser_duties = []
+        # markers just for PulseMonitor visualization
+        markers = [0]
+
+        for blks in blocks:
+            blks = blks.remove("sync")
+            assert len(blks) == 2
+            T = blks.total_length()
+            rep, residual = accum_window // T, accum_window % T
+            blk = blks.collapse()
+            blkR = blk.suffix("R")
+            if residual:
+                blkR.insert(0, (blkR.pattern[0].channels, residual))
+            blkT = blkR.suffix("T").union(
+                Block(
+                    "trig",
+                    [
+                        (self.trigger_channel, trigger_width),
+                        (None, blkR.total_length() - trigger_width),
+                    ],
+                )
+            )
+            # units having duration of accum_window
+            blkacc = [blkR, blk.repeat(rep - 1)]
+            blkaccT = [blkT, blk.repeat(rep - 1)]
+            seqs.extend(
+                [
+                    BlockSeq(blk.name + "_SeqD", blkacc, drop_rep),
+                    BlockSeq(blk.name + "_SeqT", blkaccT),
+                    BlockSeq(blk.name + "_SeqM", blkacc, accum_rep - 1),
+                ]
+            )
+            # residual is dark: duty becomes slightly lower than laser_width / T
+            laser_duties.append(laser_width * rep / accum_window)
+            markers.append(sum([s.total_length() for s in seqs]))
+
+        return BlockSeq("top", seqs), laser_duties, markers
+
+    def build_lockin(
+        self,
+        blocks: list[Blocks[Block]],
+        accum_window: int,
+        accum_rep: int,
+        lockin_rep: int,
+        drop_rep: int,
+        laser_width: int,
+        trigger_width: int,
+    ):
+        seqs = []
+        laser_duties = []
+        # markers just for PulseMonitor visualization
+        markers = [0]
+
+        for blks in blocks:
+            blks = blks.remove("sync")
+            assert len(blks) == 4
+            blks0: Blocks[Block] = blks[:2]
+            blks1: Blocks[Block] = blks[2:]
+            T = blks0.total_length()
+            assert T == blks1.total_length()
+            rep, residual = accum_window // T, accum_window % T
+            blk0 = blks0.collapse()  # Pi-0, readi-0 -> Pi-0
+            blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
+            blk1 = blks1.collapse()  # Pi-1, readi-1 -> Pi-1
+            blk0R = blk0.suffix("R")
+            blk1R = blk1.suffix("R")
+            if residual:
+                blk0R.insert(0, (blk0R.pattern[0].channels, residual))
+                blk1R.insert(0, (blk1R.pattern[0].channels, residual))
+            blk0T = blk0R.suffix("T").union(
+                Block(
+                    "trig",
+                    [
+                        (self.trigger_channel, trigger_width),
+                        (None, blk0R.total_length() - trigger_width),
+                    ],
+                )
+            )
+            # units having duration of accum_window
+            blk0acc = [blk0R, blk0.repeat(rep - 1)]
+            blk0accT = [blk0T, blk0.repeat(rep - 1)]
+            blk1acc = [blk1R, blk1.repeat(rep - 1)]
+            # blkXacc * accum_rep here may be inefficient (blockseq data may be long),
+            # however, accum_rep won't be huge (order of 10 - 100).
+            # If this is a problem, we can try deeper nest of BlockSeq.
+            seqs.extend(
+                [
+                    BlockSeq(
+                        blk0.name + "_SeqD",
+                        blk0acc * accum_rep + blk1acc * accum_rep,
+                        drop_rep,
+                    ),
+                    BlockSeq(
+                        blk0.name + "_SeqT",
+                        blk0accT + blk0acc * (accum_rep - 1) + blk1acc * accum_rep,
+                    ),
+                    BlockSeq(
+                        blk0.name + "_SeqM",
+                        blk0acc * accum_rep + blk1acc * accum_rep,
+                        lockin_rep - 1,
+                    ),
+                ]
+            )
+            # residual is dark: duty becomes slightly lower than laser_width / T
+            laser_duties.append(laser_width * rep / accum_window)
+            markers.append(sum([s.total_length() for s in seqs]))
+
+        return BlockSeq("top", seqs), laser_duties, markers
+
+    def build_blocks(self, blocks: list[Blocks[Block]], freq: float, common_pulses, params):
+        invertY = params.get("invertY", False)
+
+        (
+            base_width,
+            laser_delay,
+            laser_width,
+            mw_delay,
+            trigger_width,
+            init_delay,
+            final_delay,
+        ) = common_pulses
+
+        accum_rep = params["accum_rep"]
+        drop_rep = params["drop_rep"]
+        accum_window = int(round(freq * params["accum_window"]))
+        trigger_width = int(round(freq * self.trigger_width))
+        pd_period = int(round(freq / params["pd_rate"]))
+
+        partial = params["partial"]
+        if partial == -1:
+            blockseq, laser_duties, markers = self.build_complementary(
+                blocks, accum_window, accum_rep, drop_rep, laser_width, trigger_width
+            )
+            oversample = (accum_window * accum_rep) // pd_period
+        elif partial in (0, 1):
+            blockseq, laser_duties, markers = self.build_partial(
+                blocks, accum_window, accum_rep, drop_rep, laser_width, trigger_width
+            )
+            oversample = (accum_window * accum_rep) // pd_period
+        elif partial == 2:
+            lockin_rep = params["lockin_rep"]
+            blockseq, laser_duties, markers = self.build_lockin(
+                blocks, accum_window, accum_rep, lockin_rep, drop_rep, laser_width, trigger_width
+            )
+            oversample = (2 * accum_window * accum_rep * lockin_rep) // pd_period
+        else:
+            raise ValueError(f"Invalid partial {partial}")
+
+        laser_duties = np.array(laser_duties, dtype=np.float64)
+
+        # shaping blockseq
+        blockseq = blockseq.simplify()
+        blockseq = K.encode_mw_phase(blockseq)
+        if invertY:
+            blockseq = K.invert_y_phase(blockseq)
+
+        return blockseq, laser_duties, markers, oversample
+
+
 class Pulser(Worker):
     def __init__(self, cli, logger, has_fg: bool, conf: dict):
         """Worker for Pulse ODMR with Slow detectors.
@@ -373,23 +618,26 @@ class Pulser(Worker):
         self._pd_trigger = conf["pd_trigger"]
         self.conf = conf
 
-        mbl = conf.get("minimum_block_length", 1000)
-        bb = conf.get("block_base", 4)
+        self.block_base = conf.get("block_base", 4)
         self.generators = make_generators(
             freq=conf.get("pg_freq", 2.0e9),
             reduce_start_divisor=conf.get("reduce_start_divisor", 2),
             split_fraction=conf.get("split_fraction", 4),
-            minimum_block_length=mbl,
-            block_base=bb,
+            minimum_block_length=conf.get("minimum_block_length", 1000),
+            block_base=self.block_base,
             print_fn=self.logger.info,
         )
         # disable recovery measurement because Pattern0 and Pattern1 lengths can be different
         # in current pattern generator.
         del self.generators["recovery"]
 
-        self.builder = BlocksBuilder(
+        self.builder = BlockSeqBuilder(
             conf.get("trigger_width", 1e-6), conf.get("trigger_channel", "trigger")
         )
+        # for debug using old builder
+        # self._builder = BlocksBuilder(
+        #     conf.get("trigger_width", 1e-6), conf.get("trigger_channel", "trigger")
+        # )
 
         self.data = SPODMRData()
         self.op = SPODMRDataOperator()
@@ -492,13 +740,12 @@ class Pulser(Worker):
             self.logger.error("Error stopping PG.")
             return False
 
-        blocks, self.freq, laser_duties, markers, self.oversample = self.generate_blocks()
+        blockseq, self.freq, laser_duties, markers, self.oversample = self.generate_blocks()
         self.op.set_laser_duties(self.data, laser_duties)
-        self.pulse_pattern = PulsePattern(blocks, self.freq, markers=markers)
-        pg_params = {"blocks": blocks, "freq": self.freq}
+        self.pulse_pattern = PulsePattern(blockseq, self.freq, markers=markers)
         self.logger.info(f"Initialized PG. PD oversample: {self.oversample}")
 
-        if not (self.pg.configure(pg_params) and self.pg.get_opc()):
+        if not (self.pg.configure_blockseq(blockseq, self.freq) and self.pg.get_opc()):
             self.logger.error("Error configuring PG.")
             return False
 
@@ -516,23 +763,33 @@ class Pulser(Worker):
         # fill unused params
         params["base_width"] = params["trigger_width"] = 0.0
         params["init_delay"] = params["final_delay"] = 0.0
-        params["ignore_base_width"] = True
+        params["fix_base_width"] = self.block_base
 
         blocks, freq, common_pulses = generate(data.xdata, params)
-        blocks, laser_duties, markers, oversample = self.builder.build_blocks(
+        blockseq, laser_duties, markers, oversample = self.builder.build_blocks(
             blocks, freq, common_pulses, params
         )
-        self.logger.info(f"Built Blocks. total pattern #: {blocks.total_pattern_num()}")
 
-        return blocks, freq, laser_duties, markers, oversample
+        # for debug using old builder
+        # _blocks, _laser_duties, _markers, _oversample = self._builder.build_blocks(
+        #     blocks, freq, common_pulses, params
+        # )
+        # assert np.allclose(laser_duties, _laser_duties)
+        # assert oversample == _oversample
+        # assert markers == _markers
+        # assert blockseq.equivalent(_blocks)
+
+        self.logger.info(f"Built BlockSeq. total pattern #: {blockseq.total_pattern_num()}")
+
+        return blockseq, freq, laser_duties, markers, oversample
 
     def validate_params(
         self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]
     ) -> bool:
         params = P.unwrap(params)
         d = SPODMRData(params)
-        blocks, freq, laser_duties, markers, oversample = self.generate_blocks(d)
-        offsets = self.pg.validate_blocks(blocks, freq)
+        blockseq, freq, laser_duties, markers, oversample = self.generate_blocks(d)
+        offsets = self.pg.validate_blockseq(blockseq, freq)
         return offsets is not None
 
     def update_plot_params(self, params: dict) -> bool:

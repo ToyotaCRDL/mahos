@@ -301,7 +301,7 @@ class Block(Message):
             )
 
     def copy(self) -> Block:
-        return copy.copy(self)
+        return copy.deepcopy(self)
 
     def replace(
         self,
@@ -734,7 +734,7 @@ class BlockSeq(Message):
         patterns = [self.plottable(ch, max_len=max_len) for ch in channels]
         return channels, patterns
 
-    def equivalent(self, other: BlockSeq | Block) -> bool:
+    def equivalent(self, other: BlockSeq | Blocks[Block] | Block) -> bool:
         """Check if this and other sequences are equivalent.
 
         Compare the channels and patterns after decode.

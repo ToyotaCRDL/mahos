@@ -14,7 +14,7 @@ import re
 import numpy as np
 from itertools import chain
 
-from ...msgs.inst_pg_msgs import Block, Blocks
+from ...msgs.inst_pg_msgs import Block, Blocks, BlockSeq
 
 
 def round_pulses(
@@ -77,7 +77,7 @@ def generate_blocks(
     read_phase1: str = "mw_x_inv",
     partial: int = -1,
     nomw: bool = False,
-    ignore_base_width: bool = False,
+    fix_base_width: int | None = None,
 ) -> Blocks[Block]:
     (
         base_width,
@@ -89,8 +89,8 @@ def generate_blocks(
         final_delay,
     ) = common_pulses
 
-    if ignore_base_width:
-        base_width = 1
+    if fix_base_width is not None:
+        base_width = fix_base_width
 
     # base length offset (laser)
     laser_width = laser_width + base_width - laser_width % base_width
@@ -207,7 +207,7 @@ def print_blocks(blocks: Blocks[Block], print_fn=print):
         print_fn("|".join(b.pattern_to_strs()))
 
 
-def encode_mw_phase(blocks: Blocks[Block]) -> Blocks[Block]:
+def encode_mw_phase(blocks: Blocks[Block] | BlockSeq) -> Blocks[Block] | BlockSeq:
     """encode mw phase from x/y(_inv) to i/q."""
 
     iq_phase_dict = {
@@ -220,7 +220,7 @@ def encode_mw_phase(blocks: Blocks[Block]) -> Blocks[Block]:
     return blocks.replace(iq_phase_dict)
 
 
-def invert_y_phase(blocks: Blocks[Block]) -> Blocks[Block]:
+def invert_y_phase(blocks: Blocks[Block] | BlockSeq) -> Blocks[Block] | BlockSeq:
     """y ==> y_inv, y_inv ==> y (invert i <==> q)."""
 
     def invert(ch):
