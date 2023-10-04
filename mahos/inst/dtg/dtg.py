@@ -8,8 +8,10 @@ Data Timing Generator module.
 """
 
 from __future__ import annotations
+import typing as T
 from os import path
 import time
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -53,7 +55,7 @@ def gen_block(length, blockid, name):
 
 
 def gen_pattern(blockid, pulses):
-    """generate a python tree for a pattern command.
+    """generate a tree for a pattern command.
 
     pattern is to fill block 'blockid' with the binary sequence 'pulses'.
 
@@ -76,7 +78,7 @@ def gen_pattern(blockid, pulses):
 
 
 def gen_subsequence(subid, subname, steps):
-    """generate a python tree for a subsequence entry.
+    """generate a tree for a subsequence entry.
 
     subsequence entry is based on given id, name, list of subsequences.
 
@@ -122,7 +124,7 @@ def gen_subsequence(subid, subname, steps):
 
 
 def gen_sequence(label, subname, Nrep, goto, jumpto, trigger):
-    """generate a python tree for a sequence entry.
+    """generate a tree for a sequence entry.
 
     sequence entry is based on given label, name of the block/subsequence,
     number of repetitions 'Nrep' and goto label 'goto'.
@@ -166,6 +168,27 @@ def gen_sequence(label, subname, Nrep, goto, jumpto, trigger):
             ["DTG_GOTO_RECID", goto.nbytes, goto],
         ],
     ]
+
+
+@dataclass
+class Sequence:
+    name: str
+    Nrep: int = 1
+    label: str = ""
+    goto: str = ""
+    jumpto: str = ""
+    trigger: bool = False
+
+
+class Step(T.NamedTuple):
+    name: str
+    Nrep: int
+
+
+@dataclass
+class SubSequence:
+    name: str
+    steps: list[Step]
 
 
 class DTG5000(VisaInstrument):
@@ -246,36 +269,39 @@ class DTG5000(VisaInstrument):
 
         return bits
 
-    def get_total_block_length_seq(
-        self, blocks: Blocks[Block], subsequences, sequences
+    def _find_name(self, li: list[Block | SubSequence], name: str) -> Block | SubSequence | None:
+        for elem in li:
+            if elem.name == name:
+                return elem
+        return None
+
+    def _get_total_block_length_seq(
+        self, blocks: Blocks[Block], subsequences: list[SubSequence], sequences: list[Sequence]
     ) -> int | None:
         t = 0
         for i, seq in enumerate(sequences):
-            blks = [b for b in blocks if b.name == seq["name"]]
-            if len(blks) > 0:
-                t += blks[0].raw_length() * seq["Nrep"]
+            blk = self._find_name(blocks, seq.name)
+            if blk is not None:
+                t += blk.raw_length() * seq.Nrep
             else:
                 subt = 0
-                subseq = [s for s in subsequences if s["name"] == seq["name"]]
-                if len(subseq) == 0:
+                subseq = self._find_name(subsequences, seq.name)
+                if subseq is None:
                     self.logger.error(
-                        f"Sequence ({i:d}, {seq['label']}) refers an undef. block/subsequence:"
-                        + f" {seq['name']}"
+                        f"Sequence ({i:d}, {seq.label}) refers to undef block/subseq: {seq.name}"
                     )
                     return None
-
-                for j, step in enumerate(subseq[0]["steps"]):
-                    blks = [b for b in blocks if b.name == step["name"]]
-                    if len(blks) == 0:
+                for j, step in enumerate(subseq.steps):
+                    blk = self._find_name(blocks, step.name)
+                    if blk is None:
                         self.logger.error(
-                            "SubSequence ({:d}, {:s}) refers an undefined block ({:s}).".format(
-                                j, subseq[0]["name"], step["name"]
+                            "SubSequence ({:d}, {:s}) refers to undef block ({:s}).".format(
+                                j, subseq.name, step.name
                             )
                         )
                         return None
-                    subt += blks[0].raw_length() * step["Nrep"]
-                t += subt * seq["Nrep"]
-
+                    subt += blk.raw_length() * step.Nrep
+                t += subt * seq.Nrep
         return t
 
     def _block_to_str(self, block: Block, max_len=10):
@@ -284,6 +310,42 @@ class DTG5000(VisaInstrument):
         if len(patterns) <= max_len:
             return s + "|".join(patterns)
         return s + "|".join(patterns[: max_len - 1]) + "|...|" + patterns[-1]
+
+    def _adjust_blocks(self, blocks: Blocks[Block], freq: float) -> list[int] | None:
+        gran = self.block_granularity(freq)
+        min_len = self.min_block_len(freq)
+
+        plus = True
+        offsets = []
+        for block in blocks:
+            # adjust total length to integer multiple of gran (to avoid block granularity error).
+            length = block.raw_length()
+            m = length % gran
+            if m != 0:
+                if plus:
+                    ofs = gran - m
+                    plus = False
+                else:
+                    ofs = -m
+                    plus = True
+
+                block.pattern[0] = (block.pattern[0][0], block.pattern[0][1] + ofs)
+                self.logger.warn(
+                    "Adjusted block {}. First step length is offset by {}.".format(block.name, ofs)
+                )
+                offsets.append(ofs)
+            else:
+                offsets.append(0)
+
+            if length > self.MAX_BLOCK_LENGTH or length < min_len:
+                self.logger.error(
+                    "Block length ({}) out of bounds ({}, {}).".format(
+                        length, min_len, self.MAX_BLOCK_LENGTH
+                    )
+                )
+                return None
+
+        return offsets
 
     def generate_tree(
         self,
@@ -348,42 +410,6 @@ class DTG5000(VisaInstrument):
 
         return tree
 
-    def _adjust_blocks(self, blocks: Blocks[Block], freq: float) -> list[int] | None:
-        gran = self.block_granularity(freq)
-        min_len = self.min_block_len(freq)
-
-        plus = True
-        offsets = []
-        for block in blocks:
-            # adjust total length to integer multiple of gran (to avoid block granularity error).
-            length = block.raw_length()
-            m = length % gran
-            if m != 0:
-                if plus:
-                    ofs = gran - m
-                    plus = False
-                else:
-                    ofs = -m
-                    plus = True
-
-                block.pattern[0] = (block.pattern[0][0], block.pattern[0][1] + ofs)
-                self.logger.warn(
-                    "Adjusted block {}. First step length is offset by {}.".format(block.name, ofs)
-                )
-                offsets.append(ofs)
-            else:
-                offsets.append(0)
-
-            if length > self.MAX_BLOCK_LENGTH or length < min_len:
-                self.logger.error(
-                    "Block length ({}) out of bounds ({}, {}).".format(
-                        length, min_len, self.MAX_BLOCK_LENGTH
-                    )
-                )
-                return None
-
-        return offsets
-
     def validate_blocks(self, blocks: Blocks[Block], freq: float) -> list[int] | None:
         if len(blocks) > self.MAX_BLOCK_NUM:
             self.logger.error(
@@ -398,6 +424,287 @@ class DTG5000(VisaInstrument):
             return None
 
         return self._adjust_blocks(blocks, freq)
+
+    def generate_tree_seq(
+        self,
+        blocks: Blocks[Block],
+        subsequences: list[SubSequence],
+        sequences: list[Sequence],
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_path=None,
+    ):
+        """Generate tree using explicit sequence."""
+
+        blk_trees = []
+        seq_trees = []
+        subseq_trees = []
+        ptn_trees = []
+
+        for i, block in enumerate(blocks):
+            blk_trees.append(gen_block(block.raw_length(), i + 1, block.name))
+
+            self.logger.debug(self._block_to_str(block))
+            pulses = np.concatenate(
+                [
+                    self.channels_to_int(channels) * np.ones(length, dtype=np.uint8)
+                    for channels, length in block.pattern
+                ]
+            )
+            ptn_trees.append(gen_pattern(i + 1, pulses))
+
+        for i, subseq in enumerate(subsequences):
+            subseq_trees.append(gen_subsequence(len(blocks) + i + 1, subseq.name, subseq.steps))
+
+        for i, seq in enumerate(sequences):
+            seq_trees.append(
+                gen_sequence(seq.label, seq.name, seq.Nrep, seq.goto, seq.jumpto, int(seq.trigger))
+            )
+
+        tree = self.load_scaffold(scaffold_path)
+        top = tree[0][-1]
+
+        # set clock frequency
+        dtg_io.replace_leaf(top, "DTG_TB_CLOCK_RECID", 8, np.array([freq], dtype=np.float64))
+
+        # set trigger slope
+        if trigger_positive:
+            dtg_io.replace_leaf(top, "DTG_TRIGGER_SLOPE_RECID", 2, np.array([0], dtype=np.int16))
+        else:
+            dtg_io.replace_leaf(top, "DTG_TRIGGER_SLOPE_RECID", 2, np.array([1], dtype=np.int16))
+
+        # remove parts of default setup (view, ptn, mainseq, block)
+        for i in range(4):
+            top.pop()
+
+        top.extend(blk_trees + subseq_trees + seq_trees + ptn_trees)
+
+        tree = dtg_io.recalculate_space(tree)[1]
+
+        return tree
+
+    def validate_blocks_seq(
+        self,
+        blocks: Blocks[Block],
+        subsequences: list[SubSequence],
+        sequences: list[Sequence],
+        freq: float,
+    ) -> list[int] | None:
+        def fail(msg):
+            self.logger.error(msg)
+            return None
+
+        if len(blocks) > self.MAX_BLOCK_NUM:
+            return fail(
+                "Number of blocks ({}) exceeds max value ({}).".format(
+                    len(blocks), self.MAX_BLOCK_NUM
+                )
+            )
+        if len(sequences) > self.MAX_BLOCK_NUM:
+            return fail(
+                "Number of sequences ({}) exceeds max value ({}).".format(
+                    len(sequences), self.MAX_BLOCK_NUM
+                )
+            )
+        if len(subsequences) > self.MAX_BLOCK_NUM:
+            return fail(
+                "Number of subsequences ({}) exceeds max value ({}).".format(
+                    len(subsequences), self.MAX_BLOCK_NUM
+                )
+            )
+
+        # name check
+        names = [b.name for b in blocks] + [sub.name for sub in subsequences]
+        if len(blocks) + len(subsequences) > len(set(names)):
+            return fail("Block/Subsequence names cannot be duplicated.")
+
+        # label & repetition check
+        labels = [s.label for s in sequences if s.label]
+        if len(labels) > len(set(labels)):
+            return fail("Sequence labels cannot be duplicated.")
+        for i, seq in enumerate(sequences):
+            if seq.goto:
+                if seq.goto not in labels:
+                    return fail(
+                        "Seq ({}): cannot go to an undefined seq ({})., sequence: {!r}".format(
+                            i, seq.goto, seq
+                        )
+                    )
+                if seq.Nrep == 0:
+                    return fail(
+                        f"Seq ({i}): Goto ({seq.goto}) cannot be used with infinite loop."
+                        + f" sequence: {seq!r}"
+                    )
+            if seq.jumpto:
+                if seq.jumpto not in labels:
+                    return fail(
+                        "Seq ({}): cannot jump to an undefined seq ({})., sequence: {!r}".format(
+                            i, seq.jumpto, seq
+                        )
+                    )
+
+        return self._adjust_blocks(blocks, freq)
+
+    def _configure_tree_blocks(
+        self,
+        blocks: Blocks[Block],
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_name: str | None = None,
+        endless: bool = True,
+    ) -> list | None:
+        self.offsets = self.validate_blocks(blocks, freq)
+        if self.offsets is None:
+            return None
+        self.length = blocks.total_length()
+
+        if scaffold_name is None:
+            scaffold_name = self.SCAFFOLD
+        scaffold_path = path.join(self.LOCAL_DIR, scaffold_name)
+
+        tree = self.generate_tree(
+            blocks,
+            freq,
+            trigger_positive=trigger_positive,
+            scaffold_path=scaffold_path,
+            endless=endless,
+        )
+
+        self.logger.info(f"DTG tree prepared. Total length: {self.length}")
+
+        return tree
+
+    def configure_blocks(
+        self,
+        blocks: Blocks[Block],
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_name: str | None = None,
+        endless: bool = True,
+    ) -> bool:
+        """Generate tree using default sequence and write it."""
+
+        tree = self._configure_tree_blocks(
+            blocks, freq, trigger_positive, scaffold_name=scaffold_name, endless=endless
+        )
+        if tree is None:
+            return False
+        return self._write_load_setup(tree)
+
+    def _build_seq(
+        self, blockseq: BlockSeq, endless: bool
+    ) -> tuple[Blocks[Block], list[SubSequence], list[Sequence]]:
+        """Build DTG subsequences and sequences (intermediate repr) from BlockSeq."""
+
+        blocks = blockseq.unique_blocks()
+        sequences = []
+        subsequences = []
+        subseq_names = []
+        # expand top-level Nrep here with total_sequence()
+        for bs in blockseq.total_sequence():
+            if isinstance(bs, Block):
+                sequences.append(Sequence(bs.name, bs.Nrep, trigger=bs.trigger))
+            elif isinstance(bs, BlockSeq):
+                if bs.name not in subseq_names:
+                    steps = [Step(blk.name, blk.Nrep) for blk in bs.data]
+                    subsequences.append(SubSequence(bs.name, steps))
+                    subseq_names.append(bs.name)
+                else:
+                    self.logger.warn(f"Encountered BlockSeq {bs.name} multiple times.")
+                sequences.append(Sequence(bs.name, bs.Nrep, trigger=bs.trigger))
+            else:
+                raise TypeError(f"Unknown type {type(bs)} of BlockSeq element: {bs}")
+        if endless:
+            sequences[0].label = "START"
+            sequences[-1].goto = "START"
+
+        return blocks, subsequences, sequences
+
+    def _configure_tree_blockseq(
+        self,
+        blockseq: BlockSeq,
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_name: str | None = None,
+        endless: bool = True,
+    ) -> list | None:
+        blocks, subsequences, sequences = self._build_seq(blockseq, endless)
+        self.offsets = self.validate_blocks_seq(blocks, subsequences, sequences, freq)
+        if self.offsets is None:
+            return None
+        self.length = blockseq.total_length()
+        l = self._get_total_block_length_seq(blocks, subsequences, sequences)
+        if l != self.length:
+            self.logger.error(f"length mismatch: {l} != {self.length}. Debug _build_seq().")
+            return None
+
+        if scaffold_name is None:
+            scaffold_name = self.SCAFFOLD
+        scaffold_path = path.join(self.LOCAL_DIR, scaffold_name)
+
+        tree = self.generate_tree_seq(
+            blocks,
+            subsequences,
+            sequences,
+            freq,
+            trigger_positive=trigger_positive,
+            scaffold_path=scaffold_path,
+        )
+
+        self.logger.info(f"DTG tree prepared. Total length: {self.length}")
+
+        return tree
+
+    def configure_blockseq(
+        self,
+        blockseq: BlockSeq,
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_name: str | None = None,
+        endless: bool = True,
+    ) -> bool:
+        """Generate tree using explicit sequence and write it."""
+
+        if blockseq.nest_depth() > 2:
+            return self.fail_with("maximum BlockSeq nest depth is 2 for DTG.")
+
+        tree = self._configure_tree_blockseq(
+            blockseq, freq, trigger_positive, scaffold_name=scaffold_name, endless=endless
+        )
+        if tree is None:
+            return False
+        return self._write_load_setup(tree)
+
+    def _write_load_setup(self, tree) -> bool:
+        local_path = path.join(self.LOCAL_DIR, self.SETUP)
+        remote_path = "\\".join((self.REMOTE_DIR, self.SETUP))  # remote (dtg) is always windows.
+        self.logger.info(f"Writing DTG setup file to {local_path}.")
+        with open(local_path, "wb") as f:
+            dtg_io.dump_tree(tree, f)
+        self.logger.info(f"DTG is loading setup file at {remote_path}.")
+        self.cls()  # to clear error queue
+        self.inst.write(f'MMEM:LOAD "{remote_path}"')
+        return self.check_error()
+
+    def min_block_len(self, freq):
+        if not hasattr(self, "MIN_BLOCK_LENGTH"):
+            raise NotImplementedError("MIN_BLOCK_LENGTH is not defined")
+
+        for i, v in enumerate(
+            (400e6, 200e6, 100e6, 50e6, 25e6, 20e6, 10e6, 5e6, 2.5, 2e6, 1e6, 0.5e6)
+        ):
+            if freq > v:
+                return self.MIN_BLOCK_LENGTH[i]
+
+        return self.MIN_BLOCK_LENGTH[-1]
+
+    def block_granularity(self, freq):
+        if freq > 400e6:
+            return 4
+        elif freq > 200e6:
+            return 2
+        else:
+            return 1
 
     def check_error(self) -> bool:
         """Query error once and return True if there's no error.
@@ -425,281 +732,6 @@ class DTG5000(VisaInstrument):
         """Translate trigger_type to trigger_positive (bool) for API compatibility."""
 
         return trigger_type != TriggerType.HARDWARE_FALLING
-
-    def _configure_tree_blocks(
-        self,
-        blocks: Blocks[Block],
-        freq: float,
-        trigger_positive: bool = True,
-        scaffold_name=None,
-        endless=True,
-    ) -> bool:
-        self.offsets = self.validate_blocks(blocks, freq)
-        if self.offsets is None:
-            return False
-        self.length = blocks.total_length()
-
-        if scaffold_name is None:
-            scaffold_name = self.SCAFFOLD
-        scaffold_path = path.join(self.LOCAL_DIR, scaffold_name)
-
-        tree = self.generate_tree(
-            blocks,
-            freq,
-            trigger_positive=trigger_positive,
-            scaffold_path=scaffold_path,
-            endless=endless,
-        )
-
-        self.logger.info(f"DTG tree prepared. Total length: {self.length}")
-
-        return tree
-
-    def configure_blocks(
-        self, blocks, freq, trigger_positive: bool = True, scaffold_name=None, endless=True
-    ) -> bool:
-        """Generate tree using default sequence and write it."""
-
-        tree = self._configure_tree_blocks(
-            blocks, freq, trigger_positive, scaffold_name=scaffold_name, endless=endless
-        )
-        return self._write_load_setup(tree)
-
-    def _build_seq(self, blockseq: BlockSeq, endless: bool) -> tuple:
-        """Build DTG subsequences and sequences (intermediate repr) from BlockSeq."""
-
-        blocks = blockseq.unique_blocks()
-        sequences = []
-        subsequences = []
-        subseq_names = []
-        # expand top-level Nrep here with total_sequence()
-        for bs in blockseq.total_sequence():
-            if isinstance(bs, Block):
-                sequences.append({"name": bs.name, "Nrep": bs.Nrep, "trigger": bs.trigger})
-            elif isinstance(bs, BlockSeq):
-                if bs.name not in subseq_names:
-                    steps = [{"name": b.name, "Nrep": b.Nrep} for b in bs.data]
-                    subsequences.append({"name": bs.name, "steps": steps})
-                    subseq_names.append(bs.name)
-                else:
-                    self.logger.warn(f"Encountered BlockSeq {bs.name} multiple times.")
-                sequences.append({"name": bs.name, "Nrep": bs.Nrep, "trigger": bs.trigger})
-            else:
-                raise TypeError(f"Unknown type {type(bs)} of BlockSeq element: {bs}")
-        if endless:
-            sequences[0]["label"] = "START"
-            sequences[-1]["goto"] = "START"
-
-        return blocks, subsequences, sequences
-
-    def _configure_tree_blockseq(
-        self,
-        blockseq: BlockSeq,
-        freq: float,
-        trigger_positive: bool = True,
-        scaffold_name=None,
-        endless=True,
-    ) -> bool:
-        blocks, subsequences, sequences = self._build_seq(blockseq, endless)
-        self.offsets = self.validate_blocks_seq(blocks, subsequences, sequences, freq)
-        if self.offsets is None:
-            return False
-        self.length = blockseq.total_length()
-
-        if scaffold_name is None:
-            scaffold_name = self.SCAFFOLD
-        scaffold_path = path.join(self.LOCAL_DIR, scaffold_name)
-
-        tree = self.generate_tree_seq(
-            blocks,
-            subsequences,
-            sequences,
-            freq,
-            trigger_positive=trigger_positive,
-            scaffold_path=scaffold_path,
-        )
-
-        self.logger.info(f"DTG tree prepared. Total length: {self.length}")
-
-        return tree
-
-    def configure_blockseq(
-        self,
-        blockseq: BlockSeq,
-        freq: float,
-        trigger_positive: bool = True,
-        scaffold_name=None,
-        endless=True,
-    ) -> bool:
-        """Generate tree using default sequence and write it."""
-
-        if blockseq.nest_depth() > 2:
-            return self.fail_with("maximum BlockSeq nest depth is 2 for DTG.")
-
-        tree = self._configure_tree_blockseq(
-            blockseq, freq, trigger_positive, scaffold_name=scaffold_name, endless=endless
-        )
-        return self._write_load_setup(tree)
-
-    def _write_load_setup(self, tree) -> bool:
-        local_path = path.join(self.LOCAL_DIR, self.SETUP)
-        remote_path = "\\".join((self.REMOTE_DIR, self.SETUP))  # remote (dtg) is always windows.
-        self.logger.info(f"Writing DTG setup file to {local_path}.")
-        with open(local_path, "wb") as f:
-            dtg_io.dump_tree(tree, f)
-        self.logger.info(f"DTG is loading setup file at {remote_path}.")
-        self.cls()  # to clear error queue
-        self.inst.write(f'MMEM:LOAD "{remote_path}"')
-        return self.check_error()
-
-    def generate_tree_seq(
-        self,
-        blocks: Blocks[Block],
-        subsequences,
-        sequences,
-        freq,
-        trigger_positive: bool = True,
-        scaffold_path=None,
-    ):
-        """Generate tree using explicit sequence.
-
-        sequence is {'label': sequence label, 'name': blk/sub name, 'Nrep': repeat count,
-                     'goto', 'jumpto', 'trigger'}
-        subsequence is {'name': subname,
-                        'steps': [{'name': blockname, 'Nrep': Nrep},
-                                  {'name': blockname, 'Nrep': Nrep}, ...]
-                       }
-
-        """
-
-        blk_trees = []
-        seq_trees = []
-        subseq_trees = []
-        ptn_trees = []
-
-        for i, block in enumerate(blocks):
-            blk_trees.append(gen_block(block.raw_length(), i + 1, block.name))
-            pulses = np.concatenate(
-                [
-                    self.channels_to_int(channels) * np.ones(length, dtype=np.uint8)
-                    for channels, length in block.pattern
-                ]
-            )
-            ptn_trees.append(gen_pattern(i + 1, pulses))
-
-        for i, subsequence in enumerate(subsequences):
-            steps = [(s["name"], s["Nrep"]) for s in subsequence["steps"]]
-            subseq_trees.append(gen_subsequence(len(blocks) + i + 1, subsequence["name"], steps))
-
-        for i, sequence in enumerate(sequences):
-            label = sequence.get("label", "")
-            goto = sequence.get("goto", "")
-            jumpto = sequence.get("jumpto", "")
-            trig = sequence.get("trigger", 0)
-
-            seq_trees.append(
-                gen_sequence(label, sequence["name"], sequence["Nrep"], goto, jumpto, trig)
-            )
-
-        tree = self.load_scaffold(scaffold_path)
-        top = tree[0][-1]
-
-        # set clock frequency
-        dtg_io.replace_leaf(top, "DTG_TB_CLOCK_RECID", 8, np.array([freq], dtype=np.float64))
-
-        # set trigger slope
-        if trigger_positive:
-            dtg_io.replace_leaf(top, "DTG_TRIGGER_SLOPE_RECID", 2, np.array([0], dtype=np.int16))
-        else:
-            dtg_io.replace_leaf(top, "DTG_TRIGGER_SLOPE_RECID", 2, np.array([1], dtype=np.int16))
-
-        # remove parts of default setup (view, ptn, mainseq, block)
-        for i in range(4):
-            top.pop()
-
-        top.extend(blk_trees + subseq_trees + seq_trees + ptn_trees)
-
-        tree = dtg_io.recalculate_space(tree)[1]
-
-        return tree
-
-    def validate_blocks_seq(
-        self, blocks: Blocks[Block], subsequences, sequences, freq: float
-    ) -> list[int] | None:
-        def fail(msg):
-            self.logger.error(msg)
-            return None
-
-        if len(blocks) > self.MAX_BLOCK_NUM:
-            return fail(
-                "Number of blocks ({}) exceeds max value ({}).".format(
-                    len(blocks), self.MAX_BLOCK_NUM
-                )
-            )
-        if len(sequences) > self.MAX_BLOCK_NUM:
-            return fail(
-                "Number of sequences ({}) exceeds max value ({}).".format(
-                    len(sequences), self.MAX_BLOCK_NUM
-                )
-            )
-        if len(subsequences) > self.MAX_BLOCK_NUM:
-            return fail(
-                "Number of subsequences ({}) exceeds max value ({}).".format(
-                    len(subsequences), self.MAX_BLOCK_NUM
-                )
-            )
-
-        # name check
-        names = [b.name for b in blocks] + [sub["name"] for sub in subsequences]
-        if len(blocks) + len(subsequences) > len(set(names)):
-            return fail("Block/Subsequence names cannot be duplicated.")
-
-        # label & repetition check
-        labels = [s["label"] for s in sequences if "label" in s]
-        if len(labels) > len(set(labels)):
-            return fail("Sequence labels cannot be duplicated.")
-        for i, seq in enumerate(sequences):
-            if "goto" in seq:
-                if seq["goto"] not in labels:
-                    return fail(
-                        "Seq ({}): cannot go to an undefined seq ({})., sequence: {!r}".format(
-                            i, seq["goto"], seq
-                        )
-                    )
-                if seq["Nrep"] == 0:
-                    return fail(
-                        f"Seq ({i}): Goto ({seq['goto']}) cannot be used with infinite loop."
-                        + f" sequence: {seq!r}"
-                    )
-            if "jumpto" in seq:
-                if seq["jumpto"] not in labels:
-                    return fail(
-                        "Seq ({}): cannot jump to an undefined seq ({})., sequence: {!r}".format(
-                            i, seq["jumpto"], seq
-                        )
-                    )
-
-        return self._adjust_blocks(blocks, freq)
-
-    def min_block_len(self, freq):
-        if not hasattr(self, "MIN_BLOCK_LENGTH"):
-            raise NotImplementedError("MIN_BLOCK_LENGTH is not defined")
-
-        for i, v in enumerate(
-            (400e6, 200e6, 100e6, 50e6, 25e6, 20e6, 10e6, 5e6, 2.5, 2e6, 1e6, 0.5e6)
-        ):
-            if freq > v:
-                return self.MIN_BLOCK_LENGTH[i]
-
-        return self.MIN_BLOCK_LENGTH[-1]
-
-    def block_granularity(self, freq):
-        if freq > 400e6:
-            return 4
-        elif freq > 200e6:
-            return 2
-        else:
-            return 1
 
     def start_once(self):
         self.logger.info(
@@ -859,14 +891,37 @@ class DTG5274_mock(DTG5274):
         self.logger.info("opened {} on {}".format(name, self.inst.resource_name))
 
     def configure_blocks(
-        self, blocks, freq, trigger_positive: bool = True, scaffold_name=None, endless=True
+        self,
+        blocks: Blocks[Block],
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_name: str | None = None,
+        endless: bool = True,
     ) -> bool:
-        """Generate tree using default sequence and write it."""
+        """Generate tree using default sequence."""
 
-        self._configure_tree_blocks(
+        tree = self._configure_tree_blocks(
             blocks, freq, trigger_positive, scaffold_name=scaffold_name, endless=endless
         )
-        return True
+        return tree is not None
+
+    def configure_blockseq(
+        self,
+        blockseq: BlockSeq,
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_name: str | None = None,
+        endless: bool = True,
+    ) -> bool:
+        """Generate tree using explicit sequence."""
+
+        if blockseq.nest_depth() > 2:
+            return self.fail_with("maximum BlockSeq nest depth is 2 for DTG.")
+
+        tree = self._configure_tree_blockseq(
+            blockseq, freq, trigger_positive, scaffold_name=scaffold_name, endless=endless
+        )
+        return tree is not None
 
     def query_opc(self, delay=None) -> bool:
         return True
