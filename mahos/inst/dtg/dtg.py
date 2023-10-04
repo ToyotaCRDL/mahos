@@ -214,6 +214,8 @@ class DTG5000(VisaInstrument):
     """
 
     MAX_BLOCK_NUM = 8000
+    MAX_SEQ_NUM = 8000
+    MAX_SUBSEQ_NUM = 50
 
     def __init__(self, name, conf, prefix=None):
         conf["write_termination"] = "\n"
@@ -227,6 +229,12 @@ class DTG5000(VisaInstrument):
         self.REMOTE_DIR = conf["remote_dir"]
         self.SCAFFOLD = conf.get("scaffold_filename", "scaffold.dtg")
         self.SETUP = conf.get("setup_filename", "setup.dtg")
+
+        self.logger.info(
+            "Default Scaffold: {} Setup: {}".format(
+                path.join(self.LOCAL_DIR, self.SCAFFOLD), path.join(self.LOCAL_DIR, self.SETUP)
+            )
+        )
 
         self.CHANNELS = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7}
         if "channels" in conf:
@@ -504,16 +512,16 @@ class DTG5000(VisaInstrument):
                     len(blocks), self.MAX_BLOCK_NUM
                 )
             )
-        if len(sequences) > self.MAX_BLOCK_NUM:
+        if len(sequences) > self.MAX_SEQ_NUM:
             return fail(
                 "Number of sequences ({}) exceeds max value ({}).".format(
-                    len(sequences), self.MAX_BLOCK_NUM
+                    len(sequences), self.MAX_SEQ_NUM
                 )
             )
-        if len(subsequences) > self.MAX_BLOCK_NUM:
+        if len(subsequences) > self.MAX_SUBSEQ_NUM:
             return fail(
                 "Number of subsequences ({}) exceeds max value ({}).".format(
-                    len(subsequences), self.MAX_BLOCK_NUM
+                    len(subsequences), self.MAX_SUBSEQ_NUM
                 )
             )
 
@@ -637,8 +645,7 @@ class DTG5000(VisaInstrument):
         self.length = blockseq.total_length()
         l = self._get_total_block_length_seq(blocks, subsequences, sequences)
         if l != self.length:
-            self.logger.error(f"length mismatch: {l} != {self.length}. Debug _build_seq().")
-            return None
+            self.logger.warn(f"length mismatch: {l} != {self.length}. Check offsets.")
 
         if scaffold_name is None:
             scaffold_name = self.SCAFFOLD
