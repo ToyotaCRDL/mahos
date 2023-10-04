@@ -349,9 +349,10 @@ class BlocksBuilder(object):
 class BlockSeqBuilder(object):
     """Build the PG BlockSeq for SPODMR from PODMR's Blocks."""
 
-    def __init__(self, trigger_width: float, trigger_channel: str):
+    def __init__(self, trigger_width: float, trigger_channel: str, nest: bool):
         self.trigger_width = trigger_width
         self.trigger_channel = trigger_channel
+        self.nest = nest
 
     def build_complementary(
         self,
@@ -406,16 +407,26 @@ class BlockSeqBuilder(object):
             blk0accT = [blk0T, blk0.repeat(rep - 1)]
             blk1acc = [blk1R, blk1.repeat(rep - 1)]
             blk1accT = [blk1T, blk1.repeat(rep - 1)]
-            seqs.extend(
-                [
-                    BlockSeq(blk0.name + "_SeqD", blk0acc, drop_rep),
-                    BlockSeq(blk0.name + "_SeqT", blk0accT),
-                    BlockSeq(blk0.name + "_SeqM", blk0acc, accum_rep - 1),
-                    BlockSeq(blk1.name + "_SeqD", blk1acc, drop_rep),
-                    BlockSeq(blk1.name + "_SeqT", blk1accT),
-                    BlockSeq(blk1.name + "_SeqM", blk1acc, accum_rep - 1),
-                ]
-            )
+            if self.nest:
+                seqs.extend(
+                    [
+                        BlockSeq(blk0.name + "SeqD", blk0acc, drop_rep),
+                        BlockSeq(blk0.name + "SeqT", blk0accT),
+                        BlockSeq(blk0.name + "SeqM", blk0acc, accum_rep - 1),
+                        BlockSeq(blk1.name + "SeqD", blk1acc, drop_rep),
+                        BlockSeq(blk1.name + "SeqT", blk1accT),
+                        BlockSeq(blk1.name + "SeqM", blk1acc, accum_rep - 1),
+                    ]
+                )
+            else:
+                seqs.extend(
+                    blk0acc * drop_rep
+                    + blk0accT
+                    + blk0acc * (accum_rep - 1)
+                    + blk1acc * drop_rep
+                    + blk1accT
+                    + blk1acc * (accum_rep - 1)
+                )
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
@@ -457,13 +468,16 @@ class BlockSeqBuilder(object):
             # units having duration of accum_window
             blkacc = [blkR, blk.repeat(rep - 1)]
             blkaccT = [blkT, blk.repeat(rep - 1)]
-            seqs.extend(
-                [
-                    BlockSeq(blk.name + "_SeqD", blkacc, drop_rep),
-                    BlockSeq(blk.name + "_SeqT", blkaccT),
-                    BlockSeq(blk.name + "_SeqM", blkacc, accum_rep - 1),
-                ]
-            )
+            if self.nest:
+                seqs.extend(
+                    [
+                        BlockSeq(blk.name + "SeqD", blkacc, drop_rep),
+                        BlockSeq(blk.name + "SeqT", blkaccT),
+                        BlockSeq(blk.name + "SeqM", blkacc, accum_rep - 1),
+                    ]
+                )
+            else:
+                seqs.extend(blkacc * drop_rep + blkaccT + blkacc * (accum_rep - 1))
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
@@ -517,24 +531,31 @@ class BlockSeqBuilder(object):
             # blkXacc * accum_rep here may be inefficient (blockseq data may be long),
             # however, accum_rep won't be huge (order of 10 - 100).
             # If this is a problem, we can try deeper nest of BlockSeq.
-            seqs.extend(
-                [
-                    BlockSeq(
-                        blk0.name + "_SeqD",
-                        blk0acc * accum_rep + blk1acc * accum_rep,
-                        drop_rep,
-                    ),
-                    BlockSeq(
-                        blk0.name + "_SeqT",
-                        blk0accT + blk0acc * (accum_rep - 1) + blk1acc * accum_rep,
-                    ),
-                    BlockSeq(
-                        blk0.name + "_SeqM",
-                        blk0acc * accum_rep + blk1acc * accum_rep,
-                        lockin_rep - 1,
-                    ),
-                ]
-            )
+            if self.nest:
+                seqs.extend(
+                    [
+                        BlockSeq(
+                            blk0.name + "SeqD",
+                            blk0acc * accum_rep + blk1acc * accum_rep,
+                            drop_rep,
+                        ),
+                        BlockSeq(
+                            blk0.name + "SeqT",
+                            blk0accT + blk0acc * (accum_rep - 1) + blk1acc * accum_rep,
+                        ),
+                        BlockSeq(
+                            blk0.name + "SeqM",
+                            blk0acc * accum_rep + blk1acc * accum_rep,
+                            lockin_rep - 1,
+                        ),
+                    ]
+                )
+            else:
+                seqs.extend(
+                    (blk0acc * accum_rep + blk1acc * accum_rep) * drop_rep
+                    + (blk0accT + blk0acc * (accum_rep - 1) + blk1acc * accum_rep)
+                    + (blk0acc * accum_rep + blk1acc * accum_rep) * (lockin_rep - 1)
+                )
             # residual is dark: duty becomes slightly lower than laser_width / T
             laser_duties.append(laser_width * rep / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
@@ -632,7 +653,9 @@ class Pulser(Worker):
         del self.generators["recovery"]
 
         self.builder = BlockSeqBuilder(
-            conf.get("trigger_width", 1e-6), conf.get("trigger_channel", "trigger")
+            conf.get("trigger_width", 1e-6),
+            conf.get("trigger_channel", "trigger"),
+            conf.get("nest_blockseq", False),
         )
         # for debug using old builder
         # self._builder = BlocksBuilder(

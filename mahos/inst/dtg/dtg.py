@@ -524,6 +524,16 @@ class DTG5000(VisaInstrument):
                     len(subsequences), self.MAX_SUBSEQ_NUM
                 )
             )
+        self.logger.info(
+            "blocks: {}/{} seqs: {}/{} subseqs: {}/{}".format(
+                len(blocks),
+                self.MAX_BLOCK_NUM,
+                len(sequences),
+                self.MAX_SEQ_NUM,
+                len(subsequences),
+                self.MAX_SUBSEQ_NUM,
+            )
+        )
 
         # name check
         names = [b.name for b in blocks] + [sub.name for sub in subsequences]
