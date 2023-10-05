@@ -107,8 +107,7 @@ def generate_blocks(
     if fix_base_width is not None:
         base_width = fix_base_width
 
-    # base length offset (laser)
-    laser_width = laser_width + base_width - laser_width % base_width
+    laser_width = offset_base_inc(laser_width, base_width)
 
     # blocks
     ptn0 = gen_single_ptn(v, *args0)
@@ -123,7 +122,7 @@ def generate_blocks(
         ptn0 = [((read_phase0,), sum([s[1] for s in ptn0]))]
         ptn1 = [((read_phase1,), sum([s[1] for s in ptn1]))]
 
-    # base length offset (operation)
+    # base width offset (operation)
     total0 = sum([s[1] for s in ptn_former + ptn0 + ptn_latter0])
     if total0 % base_width == 0:
         ptn_operate0 = ptn_former + ptn0 + ptn_latter0
@@ -179,11 +178,10 @@ def build_blocks(
         final_delay,
     ) = common_pulses
 
-    # base length offset
     init_block_width = max(trigger_width + init_delay + laser_width, minimum_block_length)
-    init_block_width = init_block_width + base_width - init_block_width % base_width
+    init_block_width = offset_base_inc(init_block_width, base_width)
     final_block_width = max(final_delay, minimum_block_length)
-    final_block_width = final_block_width + base_width - final_block_width % base_width
+    final_block_width = offset_base_inc(final_block_width, base_width)
 
     ptn_init = [
         (("trigger", "sync", "mw_x"), trigger_width),
