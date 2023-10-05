@@ -261,7 +261,7 @@ class Pulser(Worker):
             [
                 ("block_base", 1),
                 ("pg_freq", 1.0e9),
-                ("reduce_start_divisor", 1),
+                ("reduce_start_divisor", 10),
                 ("minimum_block_length", 1),
             ],
         )

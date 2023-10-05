@@ -26,6 +26,7 @@ from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface
 from ..inst.tdc_interface import TDCInterface
 from ..inst.fg_interface import FGInterface
+from ..util.conf import PresetLoader
 from .common_worker import Worker
 
 from .podmr_generator import generator_kernel as K
@@ -195,18 +196,20 @@ class QdyneAnalyzer(object):
 
 
 class Pulser(Worker):
-    def __init__(self, cli, logger, has_fg: bool, conf: dict):
+    def __init__(self, cli, logger, conf: dict):
         """Worker for Qdyne.
 
         Function generator is an option (fg may be None).
 
         """
 
-        Worker.__init__(self, cli, logger)
+        Worker.__init__(self, cli, logger, conf)
+        self.load_conf_preset(cli)
+
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
         self.tdc = TDCInterface(cli, "tdc")
-        if has_fg:
+        if "fg" in cli:
             self.fg = FGInterface(cli, "fg")
         else:
             self.fg = None
@@ -215,16 +218,19 @@ class Pulser(Worker):
         self.timer = None
         self.length = self.offsets = self.freq = self.laser_timing = None
 
-        self._raw_events_dir = conf.get("raw_events_dir", "")
-        self._remove_raw_events = conf.get("remove_raw_events", True)
-        self._start_delay = conf.get("start_delay", 0.0)
+        self.check_required_conf(
+            ["block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]
+        )
+        self._raw_events_dir = self.conf.get("raw_events_dir", "")
+        self._remove_raw_events = self.conf.get("remove_raw_events", True)
+        self._start_delay = self.conf.get("start_delay", 0.0)
 
-        mbl = conf.get("minimum_block_length", 1000)
-        bb = conf.get("block_base", 4)
+        mbl = self.conf["minimum_block_length"]
+        bb = self.conf["block_base"]
         self.generators = make_generators(
-            freq=conf.get("freq", 2.0e9),
-            reduce_start_divisor=conf.get("reduce_start_divisor", 2),
-            split_fraction=conf.get("split_fraction", 4),
+            freq=self.conf["pg_freq"],
+            reduce_start_divisor=self.conf["reduce_start_divisor"],
+            split_fraction=self.conf.get("split_fraction", 4),
             minimum_block_length=mbl,
             block_base=bb,
             print_fn=self.logger.info,
@@ -235,6 +241,28 @@ class Pulser(Worker):
         self.analyzer = QdyneAnalyzer()
         self.bounds = Bounds()
         self.pulse_pattern = None
+
+    def load_conf_preset(self, cli):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.FORWARD)
+        loader.add_preset(
+            "DTG",
+            [
+                ("block_base", 4),
+                ("pg_freq", 2.0e9),
+                ("reduce_start_divisor", 2),
+                ("minimum_block_length", 1000),
+            ],
+        )
+        loader.add_preset(
+            "PulseStreamer",
+            [
+                ("block_base", 1),
+                ("pg_freq", 1.0e9),
+                ("reduce_start_divisor", 10),
+                ("minimum_block_length", 1),
+            ],
+        )
+        loader.load_preset(self.conf, cli.class_name("pg"))
 
     def init_inst(self, params: dict) -> bool:
         # SG
