@@ -7,6 +7,7 @@ Pattern generators for Pulse ODMR.
 
 """
 
+from __future__ import annotations
 import typing as T
 import re
 
