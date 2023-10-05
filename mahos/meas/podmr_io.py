@@ -94,6 +94,8 @@ class PODMRIO(object):
         :type params.figsize: tuple[float, float]
         :param params.fontsize: matplotlib fontsize
         :type params.fontsize: float
+        :param params.dpi: matplotlib dpi
+        :type params.dpi: float
         :param params.label: matplotlib labels
         :type params.label: list[str]
         :param params.color_fit: matplotlib colors for fit data
@@ -218,7 +220,7 @@ class PODMRIO(object):
         figsize = params.get("figsize", (12, 12))
         plt.rcParams["font.size"] = params.get("fontsize", 28)
 
-        fig = plt.figure(figsize=figsize)
+        fig = plt.figure(figsize=figsize, dpi=params.get("dpi", 100))
         ax = fig.add_subplot(111)
 
         ax.set_xlim(x_min * xcoeff, x_max * xcoeff)

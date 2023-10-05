@@ -74,6 +74,8 @@ class HBTIO(object):
         :type params.figsize: tuple[float, float]
         :param params.fontsize: matplotlib fontsize
         :type params.fontsize: float
+        :param params.dpi: matplotlib dpi
+        :type params.dpi: float
         :param params.label: matplotlib labels
         :type params.label: list[str]
         :param params.color_fit: matplotlib colors for fit data
@@ -150,7 +152,7 @@ class HBTIO(object):
         color = cycle(params.get("color") or [f"C{i}" for i in range(10)])
         marker = cycle(params.get("marker") or ["o", "s", "^", "p", "*", "D", "h", "."])
 
-        fig = plt.figure(figsize=params.get("figsize", (12, 12)))
+        fig = plt.figure(figsize=params.get("figsize", (12, 12)), dpi=params.get("dpi", 100))
         ax = fig.add_subplot(111)
 
         lines = []
