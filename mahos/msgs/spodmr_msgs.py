@@ -135,7 +135,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
             elif plotmode == "average":
                 return (i0 + i1) / 2
             elif plotmode == "normalize":
-                return (i0 - i1) / (i0 + i1)
+                return (i0 - i1) / (i0 + i1) * 2
             elif plotmode == "normalize1":
                 return (i0 - i1) / i1
             else:  # "diff". fall back "data01" to "diff" too.
@@ -298,7 +298,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
         elif plotmode == "average":
             return (s0 + s1) / 2, None
         elif plotmode == "normalize":
-            return (s0 - s1) / (s0 + s1), None
+            return (s0 - s1) / (s0 + s1) * 2, None
         elif plotmode == "normalize1":
             return (s0 - s1) / s1, None
         elif plotmode == "concatenate":

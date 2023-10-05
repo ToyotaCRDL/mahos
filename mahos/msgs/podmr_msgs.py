@@ -356,7 +356,7 @@ class PODMRData(BasicMeasData):
         elif plotmode == "average":
             return (s0 + s1) / 2, None
         elif plotmode == "normalize":
-            return (s0 - s1) / (s0 + s1), None
+            return (s0 - s1) / (s0 + s1) * 2, None
         elif plotmode == "concatenate":
             return np.column_stack((s0, s1)).reshape(len(s0) * 2), None
         elif plotmode == "ref":
