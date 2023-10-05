@@ -430,7 +430,9 @@ class BlockSeqBuilder(object):
                     + blk1acc * (accum_rep - 1)
                 )
             # residual is dark: duty becomes slightly lower than laser_width / T
-            laser_duties.append(laser_width * rep / accum_window)
+            lw = Blocks(blk0acc).total_channel_length("laser", True)
+            assert lw == Blocks(blk1acc).total_channel_length("laser", True)
+            laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
 
         return BlockSeq("top", seqs), laser_duties, markers
@@ -481,7 +483,8 @@ class BlockSeqBuilder(object):
             else:
                 seqs.extend(blkacc * drop_rep + blkaccT + blkacc * (accum_rep - 1))
             # residual is dark: duty becomes slightly lower than laser_width / T
-            laser_duties.append(laser_width * rep / accum_window)
+            lw = Blocks(blkacc).total_channel_length("laser", True)
+            laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
 
         return BlockSeq("top", seqs), laser_duties, markers
@@ -559,7 +562,9 @@ class BlockSeqBuilder(object):
                     + (blk0acc * accum_rep + blk1acc * accum_rep) * (lockin_rep - 1)
                 )
             # residual is dark: duty becomes slightly lower than laser_width / T
-            laser_duties.append(laser_width * rep / accum_window)
+            lw = Blocks(blk0acc).total_channel_length("laser", True)
+            assert lw == Blocks(blk1acc).total_channel_length("laser", True)
+            laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
 
         return BlockSeq("top", seqs), laser_duties, markers

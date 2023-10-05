@@ -144,6 +144,19 @@ class Block(Message):
 
         return self.Nrep * self.raw_length()
 
+    def raw_channel_length(self, channel: str | int, high: bool) -> int:
+        """Count raw block length when given channel is high or low."""
+
+        if high:
+            return sum(elem[1] for elem in self.pattern if channel in elem[0])
+        else:
+            return sum(elem[1] for elem in self.pattern if channel not in elem[0])
+
+    def total_channel_length(self, channel: str | int, high: bool) -> int:
+        """Count total block length when given channel is high or low."""
+
+        return self.Nrep * self.raw_channel_length(channel, high)
+
     def total_pattern(self) -> Pattern:
         """Total (repeated) pattern considering Nrep."""
 
@@ -570,6 +583,11 @@ class Blocks(UserList):
 
         return sum([b.total_length() for b in self.data])
 
+    def total_channel_length(self, channel: str | int, high: bool) -> int:
+        """Count total block length when given channel is high or low."""
+
+        return sum([b.total_channel_length(channel, high) for b in self.data])
+
     def total_pattern_num(self) -> int:
         """Total pattern number (instruction size) considering Nrep."""
 
@@ -788,6 +806,11 @@ class BlockSeq(Message):
         """Total block length considering Nrep."""
 
         return sum([b.total_length() for b in self.data]) * self.Nrep
+
+    def total_channel_length(self, channel: str | int, high: bool) -> int:
+        """Count total block length when given channel is high or low."""
+
+        return sum([b.total_channel_length(channel, high) for b in self.data]) * self.Nrep
 
     def total_pattern_num(self) -> int:
         """Total pattern number (instruction size) considering Nrep."""

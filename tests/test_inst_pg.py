@@ -29,6 +29,11 @@ def test_block():
         "block1", [("a", 15), ("b", 9), (("b", "c"), 21), ("d", 15)], Nrep=10
     )
 
+    assert block1.total_channel_length("a", True) == 50
+    assert block1.total_channel_length("a", False) == 150
+    assert block1.total_channel_length("b", True) == 100
+    assert block1.total_channel_length("b", False) == 100
+
 
 def test_seq():
     block0 = Block("block0", [("a", 5), ("b", 3), (("b", "c"), 2)], Nrep=3)  # len = 30, num = 3
@@ -50,6 +55,13 @@ def test_seq():
         block0.total_length() + seq0.total_length() + seq1.total_length()
     )
     assert seq3.nest_depth() == 4
+
+    assert seq0.total_channel_length("a", True) == 38
+    assert seq0.total_channel_length("a", False) == seq0.total_length() - 38
+    assert seq1.total_channel_length("a", True) == 53
+    assert seq1.total_channel_length("a", False) == seq1.total_length() - 53
+    assert seq2.total_channel_length("a", True) == 3 * (15 + 38 + 53)
+    assert seq2.total_channel_length("a", False) == seq2.total_length() - 3 * (15 + 38 + 53)
 
     assert seq0.equivalent(seq0.collapse())
     assert seq1.equivalent(seq1.collapse())
