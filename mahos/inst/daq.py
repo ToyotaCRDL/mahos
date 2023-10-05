@@ -133,11 +133,11 @@ class ClockSource(ConfigurableTask):
     :type freq: float
     :param samples: Number of samples for finite clock generation.
         For infinite case, this value is used to estimate buffer size.
+    :type samples: int
     :param duty: (default: 0.5) Duty ratio of the clock.
     :type duty: float
     :param finite: (default: True) If True, generate finite clock pulse train.
     :type finite: bool
-    :type samples: int
     :param idle_state: (default: False) Set True (False) for the idle to H (L) logic level.
     :type idle_state: bool
     :param initial_delay: (default: 0.0) Initial delay before starting clock output.

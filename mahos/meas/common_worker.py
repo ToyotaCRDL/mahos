@@ -28,8 +28,8 @@ class Worker(object):
 
         self.cli = cli
         self.logger = logger
-        self._instruments: list[InstrumentInterface] = []
         self.conf = conf or {}
+        self._instruments: list[InstrumentInterface] = []
 
     def check_required_conf(self, req_keys: list[str] | str):
         """Check if required keys are defined in self.conf. raises ValueError if undefined.

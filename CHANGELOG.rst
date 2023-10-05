@@ -9,6 +9,7 @@ Added
 ^^^^^
 
 - meas: new measurement Qdyne.
+- meas: new measurement SPODMR (Pulse ODMR with Slow detectors).
 - inst.tdc: raw event recording features for above.
 - meas,gui: new generic node Tweaker (for manual instrument parameter tuning).
 - msgs.data_msgs.Data: new reserved attr '_inst_params' for parameter injection by Tweaker.
@@ -18,7 +19,7 @@ Added
 - inst.overlay: new module amplified_pd (to use AnalogPDs with configurable amplifiers).
 - inst.fg: ParamDict-based interface.
 - meas.odmr: new parameters delay and sg_modulation.
-- util: new module graph.
+- util: new modules graph and conf.
 - cli: auto-start of log (LogBroker) in mahos log and auto-exclude of log in mahos launch
 
 Changed
