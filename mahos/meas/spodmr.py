@@ -53,21 +53,30 @@ class SPODMR(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         """Pulse ODMR measurement with Slow detectors.
 
-        :param pulser.pg_freq: pulse generator frequency (default: 2.0E9)
-        :type pulser.pg_freq: float
-        :param pulser.reduce_start_divisor: the divisor on start of reducing frequency (default: 2)
-            reduce is done first by this value, and then repeated by 10.
-        :type pulser.reduce_start_divisor: int
-        :param pulser.split_fraction: fraction factor (F) to split the free period for MW phase
-            modulation (default: 4). the period (T) is split into (T // F, T - T // F) and MW phase
+        :param pulser.pd_trigger: DAQ terminal name for PD trigger.
+        :type pulser.pd_trigger: str
+        :param pulser.trigger_channel: (default: gate) PG channel name for PD trigger.
+            default value may look a bit strange, but considering shared physical line
+            with PD gate for ODMR (Analog PD mode).
+        :type pulser.trigger_channel: str
+        :param pulser.trigger_width: (default: 1e-6) pulse width for PD trigger
+        :type pulser.trigger_width: float
+        :param pulser.split_fraction: (default: 4) fraction factor (F) to split the free period
+            for MW phase modulation. the period (T) is split into (T // F, T - T // F) and MW phase
             is switched at T // F. Thus, larger F results in "quicker start" of the phase
             modulation (depending on hardware, but its response may be a bit slow).
         :type pulser.split_fraction: int
-        :param pulser.minimum_block_length: minimum block length in generated blocks
-                                            (default: 1000)
+        :param pulser.pg_freq: pulse generator frequency (has preset)
+        :type pulser.pg_freq: float
+        :param pulser.reduce_start_divisor: (has preset) the divisor on start of reducing frequency
+            reduce is done first by this value, and then repeated by 10.
+        :type pulser.reduce_start_divisor: int
+        :param pulser.minimum_block_length: (has preset) minimum block length in generated blocks
         :type pulser.minimum_block_length: int
-        :param pulser.block_base: block base granularity (default: 4)
+        :param pulser.block_base: (has preset) block base granularity of pulse generator.
         :type pulser.block_base: int
+        :param pulser.nest_blockseq: (has preset, default: False) allow nested BlockSeq.
+        :type pulser.nest_blockseq: bool
 
         """
 
@@ -87,11 +96,10 @@ class SPODMR(BasicMeasNode):
         else:
             self.tweaker_cli = None
 
-        has_fg = "fg" in self.conf["target"]["servers"]
         if self.conf.get("debug", False):
-            self.worker = DebugPulser(self.cli, self.logger, has_fg, self.conf.get("pulser", {}))
+            self.worker = DebugPulser(self.cli, self.logger, self.conf.get("pulser", {}))
         else:
-            self.worker = Pulser(self.cli, self.logger, has_fg, self.conf.get("pulser", {}))
+            self.worker = Pulser(self.cli, self.logger, self.conf.get("pulser", {}))
         self.fitter = PODMRFitter(self.logger)
         self.io = SPODMRIO(self.logger)
         self.buffer: Buffer[tuple[str, SPODMRData]] = Buffer()

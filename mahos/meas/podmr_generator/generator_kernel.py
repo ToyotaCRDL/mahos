@@ -66,6 +66,21 @@ def split_int(n, A):
     return n // A, n - n // A
 
 
+def offset_base_inc(duration: int, base: int) -> int:
+    """Offset a `duration` to make it an integer multiple of `base`.
+
+    Let duration = base * N + M,
+    when M == 0: return duration = base * N
+    when M != 0: return base * (N + 1)
+
+    """
+
+    M = duration % base
+    if M:
+        return duration + base - M
+    return duration
+
+
 def generate_blocks(
     i: int,
     v: int,

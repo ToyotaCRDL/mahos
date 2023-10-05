@@ -346,6 +346,10 @@ class MultiInstrumentClient(object):
             cli.close(close_ctx=close_ctx)
 
     @remap_inst
+    def __contains__(self, inst: str) -> bool:
+        return inst in self.inst_to_nodename
+
+    @remap_inst
     def module_class_names(self, inst: str) -> tuple[str, str] | None:
         """Get tuple of (module name, class name) of instrument `inst`."""
 

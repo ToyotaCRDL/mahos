@@ -7,6 +7,7 @@ Common measurement Workers.
 
 """
 
+from __future__ import annotations
 import typing as T
 
 from ..msgs.inst_pg_msgs import Block, Blocks
@@ -22,15 +23,45 @@ class Worker(object):
 
     """
 
-    def __init__(self, cli: MultiInstrumentClient, logger):
+    def __init__(self, cli: MultiInstrumentClient, logger, conf: dict | None = None):
+        # conf is optional because simple Worker doesn't have any
+
         self.cli = cli
         self.logger = logger
-        self._instruments: T.List[InstrumentInterface] = []
+        self._instruments: list[InstrumentInterface] = []
+        self.conf = conf or {}
+
+    def check_required_conf(self, req_keys: list[str] | str):
+        """Check if required keys are defined in self.conf. raises ValueError if undefined.
+
+        :raises KeyError: any key of req_keys is undefined in self.conf.
+
+        """
+
+        if isinstance(req_keys, str):
+            req_keys = [req_keys]
+        if any((k not in self.conf for k in req_keys)):
+            raise KeyError(f"These configs must be given: {req_keys}")
+
+    def check_required_params(self, params: dict[str, T.Any], req_keys: list[str] | str) -> bool:
+        """Check if required keys (`req_keys`) are defined in `params`.
+
+        :returns: False if undefined.
+
+        """
+
+        if isinstance(req_keys, str):
+            req_keys = [req_keys]
+        if any((k not in params for k in req_keys)):
+            self.logger.error(f"These params must be given: {req_keys}")
+            return False
+        else:
+            return True
 
     def add_instrument(self, inst: InstrumentInterface):
         self._instruments.append(inst)
 
-    def add_instruments(self, *insts: T.Optional[InstrumentInterface]):
+    def add_instruments(self, *insts: InstrumentInterface | None):
         """Add instruments. If None is contained, it is silently ignored."""
 
         self._instruments.extend([i for i in insts if i is not None])
@@ -65,7 +96,7 @@ class Worker(object):
         self.release_instruments()
         return False
 
-    def start(self, params: T.Optional[dict] = None) -> bool:
+    def start(self, params: dict | None = None) -> bool:
         """Start the worker. Returns True on success."""
 
         self.logger.error("start() is not implemented.")
@@ -85,7 +116,7 @@ class DummyWorker(Worker):
         Worker.__init__(self, cli, logger)
         self.running = False
 
-    def start(self, params: T.Optional[dict] = None) -> bool:
+    def start(self, params: dict | None = None) -> bool:
         self.running = True
         return True
 

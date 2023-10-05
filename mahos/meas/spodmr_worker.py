@@ -19,6 +19,7 @@ from ..inst.pg_interface import PGInterface, Block, Blocks, BlockSeq
 from ..inst.pd_interface import PDInterface
 from ..inst.fg_interface import FGInterface
 from ..inst.daq_interface import ClockSourceInterface
+from ..util.conf import PresetLoader
 from .common_worker import Worker
 
 from .podmr_generator.generator import make_generators
@@ -349,10 +350,11 @@ class BlocksBuilder(object):
 class BlockSeqBuilder(object):
     """Build the PG BlockSeq for SPODMR from PODMR's Blocks."""
 
-    def __init__(self, trigger_width: float, trigger_channel: str, nest: bool):
+    def __init__(self, trigger_width: float, trigger_channel: str, nest: bool, block_base: int):
         self.trigger_width = trigger_width
         self.trigger_channel = trigger_channel
         self.nest = nest
+        self.block_base = block_base
 
     def build_complementary(
         self,
@@ -577,7 +579,9 @@ class BlockSeqBuilder(object):
 
         accum_rep = params["accum_rep"]
         drop_rep = params["drop_rep"]
-        accum_window = int(round(freq * params["accum_window"]))
+        accum_window = K.offset_base_inc(
+            int(round(freq * params["accum_window"])), self.block_base
+        )
         trigger_width = int(round(freq * self.trigger_width))
         pd_period = int(round(freq / params["pd_rate"]))
 
@@ -613,20 +617,22 @@ class BlockSeqBuilder(object):
 
 
 class Pulser(Worker):
-    def __init__(self, cli, logger, has_fg: bool, conf: dict):
+    def __init__(self, cli, logger, conf):
         """Worker for Pulse ODMR with Slow detectors.
 
         Function generator is an option (fg may be None).
 
         """
 
-        Worker.__init__(self, cli, logger)
+        Worker.__init__(self, cli, logger, conf)
+        self.load_conf_preset(cli)
+
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
-        self.pd_names = conf.get("pd_names", ["pd0"])
+        self.pd_names = self.conf.get("pd_names", ["pd0"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
-        self.clock = ClockSourceInterface(cli, conf.get("clock_name", "clock"))
-        if has_fg:
+        self.clock = ClockSourceInterface(cli, self.conf.get("clock_name", "clock"))
+        if "fg" in cli:
             self.fg = FGInterface(cli, "fg")
         else:
             self.fg = None
@@ -634,17 +640,17 @@ class Pulser(Worker):
 
         self.length = self.offsets = self.freq = self.oversample = None
 
-        if "pd_trigger" not in conf:
-            raise KeyError("pulser.pd_trigger must be given")
-        self._pd_trigger = conf["pd_trigger"]
-        self.conf = conf
+        self.check_required_conf(
+            ["pd_trigger", "block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]
+        )
+        self._pd_trigger = self.conf["pd_trigger"]
 
-        self.block_base = conf.get("block_base", 4)
+        self.block_base = self.conf["block_base"]
         self.generators = make_generators(
-            freq=conf.get("pg_freq", 2.0e9),
-            reduce_start_divisor=conf.get("reduce_start_divisor", 2),
-            split_fraction=conf.get("split_fraction", 4),
-            minimum_block_length=conf.get("minimum_block_length", 1000),
+            freq=self.conf["pg_freq"],
+            reduce_start_divisor=self.conf["reduce_start_divisor"],
+            split_fraction=self.conf.get("split_fraction", 4),
+            minimum_block_length=self.conf["minimum_block_length"],
             block_base=self.block_base,
             print_fn=self.logger.info,
         )
@@ -653,19 +659,44 @@ class Pulser(Worker):
         del self.generators["recovery"]
 
         self.builder = BlockSeqBuilder(
-            conf.get("trigger_width", 1e-6),
-            conf.get("trigger_channel", "trigger"),
-            conf.get("nest_blockseq", False),
+            self.conf.get("trigger_width", 1e-6),
+            self.conf.get("trigger_channel", "gate"),
+            self.conf.get("nest_blockseq", False),
+            self.conf["block_base"],
         )
         # for debug using old builder
         # self._builder = BlocksBuilder(
-        #     conf.get("trigger_width", 1e-6), conf.get("trigger_channel", "trigger")
+        #     self.conf.get("trigger_width", 1e-6), conf.get("trigger_channel", "trigger")
         # )
 
         self.data = SPODMRData()
         self.op = SPODMRDataOperator()
         self.bounds = Bounds()
         self.pulse_pattern = None
+
+    def load_conf_preset(self, cli):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.FORWARD)
+        loader.add_preset(
+            "DTG",
+            [
+                ("block_base", 4),
+                ("pg_freq", 2.0e9),
+                ("reduce_start_divisor", 2),
+                ("minimum_block_length", 1000),
+                ("nest_blockseq", False),
+            ],
+        )
+        loader.add_preset(
+            "PulseStreamer",
+            [
+                ("block_base", 1),
+                ("pg_freq", 1.0e9),
+                ("reduce_start_divisor", 1),
+                ("minimum_block_length", 1),
+                ("nest_blockseq", False),
+            ],
+        )
+        loader.load_preset(self.conf, cli.class_name("pg"))
 
     def init_inst(self, params: dict) -> bool:
         # SG

@@ -30,23 +30,27 @@ class Instrument(object):
         self.logger, self._full_name = init_topic_logger(topic, prefix=prefix)
         self._closed = False
 
-    def check_required_conf(self, req_keys: T.Iterable[str]):
+    def check_required_conf(self, req_keys: list[str] | str):
         """Check if required keys are defined in self.conf. raises ValueError if undefined.
 
         :raises KeyError: any key of req_keys is undefined in self.conf.
 
         """
 
+        if isinstance(req_keys, str):
+            req_keys = [req_keys]
         if any((k not in self.conf for k in req_keys)):
             raise KeyError(f"These configs must be given: {req_keys}")
 
-    def check_required_params(self, params: T.Container[str], req_keys: T.Iterable[str]) -> bool:
+    def check_required_params(self, params: dict[str, T.Any], req_keys: list[str] | str) -> bool:
         """Check if required keys (`req_keys`) are defined in `params`.
 
         :returns: False if undefined.
 
         """
 
+        if isinstance(req_keys, str):
+            req_keys = [req_keys]
         if any((k not in params for k in req_keys)):
             self.logger.error(f"These params must be given: {req_keys}")
             return False
