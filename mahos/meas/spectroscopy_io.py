@@ -140,8 +140,12 @@ class SpectroscopyIO(object):
 
     def _export_data_image(self, fn, data_list: list[SpectroscopyData], params: dict) -> bool:
         xs = [data.xdata for data in data_list]
-        x_max = params.get("xmax") or max([max(x) for x in xs])
-        x_min = params.get("xmin") or min([min(x) for x in xs])
+        x_max = params.get("xmax")
+        if x_max is None:
+            x_max = max([max(x) for x in xs])
+        x_min = params.get("xmin")
+        if x_min is None:
+            x_min = min([min(x) for x in xs])
 
         plt.rcParams["font.size"] = params.get("fontsize", 28)
 

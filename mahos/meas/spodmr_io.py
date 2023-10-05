@@ -204,8 +204,12 @@ class SPODMRIO(object):
             xunit = d0.xunit
             xlabel = d0.xlabel
             ylabel = d0.ylabel
-        x_max = params.get("xmax") or max([max(x) for x in xs])
-        x_min = params.get("xmin") or min([min(x) for x in xs])
+        x_max = params.get("xmax")
+        if x_max is None:
+            x_max = max([max(x) for x in xs])
+        x_min = params.get("xmin")
+        if x_min is None:
+            x_min = min([min(x) for x in xs])
         if xunit:
             xcoeff, xprefix = SI_scale(x_max)
         else:

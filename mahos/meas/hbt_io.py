@@ -141,8 +141,14 @@ class HBTIO(object):
         normalize = params.get("normalize", True)
 
         xs = [data.get_xdata(normalize=normalize) for data in data_list]
-        x_max = params.get("xmax") or max([max(x) for x in xs]) * coeff
-        x_min = params.get("xmin") or min([min(x) for x in xs]) * coeff
+        x_max = params.get("xmax")
+        if x_max is None:
+            x_max = max([max(x) for x in xs])
+        x_min = params.get("xmin")
+        if x_min is None:
+            x_min = min([min(x) for x in xs])
+        x_max *= coeff
+        x_min *= coeff
 
         plt.rcParams["font.size"] = params.get("fontsize", 28)
 
