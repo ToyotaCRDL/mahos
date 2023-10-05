@@ -131,11 +131,7 @@ class InstrumentClient(StatusClient):
     M = inst_server_msgs
 
     def __init__(self, gconf: dict, name, context=None, prefix=None, status_handler=None):
-        """Instrument RPC Client.
-
-        :param handlers: list of (inst_name, topic_name, handler)
-
-        """
+        """Instrument RPC Client."""
 
         StatusClient.__init__(
             self, gconf, name, context=context, prefix=prefix, status_handler=status_handler
@@ -143,9 +139,30 @@ class InstrumentClient(StatusClient):
 
         self.ident = Ident(self.full_name())
 
-        inst = self.conf["instrument"] if "instrument" in self.conf else {}
-        lay = self.conf["instrument_overlay"] if "instrument_overlay" in self.conf else {}
-        self.inst_names = tuple(inst.keys()) + tuple(lay.keys())
+        self._mod_classes = {}
+        for inst, idict in self.conf.get("instrument", {}).items():
+            self._mod_classes[inst] = (idict["module"], idict["class"])
+        for lay, ldict in self.conf.get("instrument_overlay", {}).items():
+            self._mod_classes[lay] = (ldict["module"], ldict["class"])
+
+    def module_class_names(self, inst: str) -> tuple[str, str] | None:
+        """Get tuple of (module name, class name) of instrument `inst`."""
+
+        if inst not in self._mod_classes:
+            return None
+        return self._mod_classes[inst]
+
+    def module_name(self, inst: str) -> str | None:
+        """Get module name of instrument `inst`."""
+
+        module_class = self.module_class_names(inst)
+        return module_class[0] if module_class is not None else None
+
+    def class_name(self, inst: str) -> str | None:
+        """Get class name of instrument `inst`."""
+
+        module_class = self.module_class_names(inst)
+        return module_class[1] if module_class is not None else None
 
     def lock(self, inst: str) -> bool:
         """Acquire lock of an instrument."""
@@ -327,6 +344,24 @@ class MultiInstrumentClient(object):
     def close(self, close_ctx=True):
         for cli in self.nodename_to_client.values():
             cli.close(close_ctx=close_ctx)
+
+    @remap_inst
+    def module_class_names(self, inst: str) -> tuple[str, str] | None:
+        """Get tuple of (module name, class name) of instrument `inst`."""
+
+        return self.get_client(inst).module_class_names(inst)
+
+    @remap_inst
+    def module_name(self, inst: str) -> str | None:
+        """Get module name of instrument `inst`."""
+
+        return self.get_client(inst).module_name(inst)
+
+    @remap_inst
+    def class_name(self, inst: str) -> str | None:
+        """Get class name of instrument `inst`."""
+
+        return self.get_client(inst).class_name(inst)
 
     @remap_inst
     def get_client(self, inst: str) -> InstrumentClient:

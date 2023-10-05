@@ -58,6 +58,11 @@ def test_inst(server_2clients):
     client.wait()
     client2.wait()
 
+    # names
+    assert client.module_class_names("sg") == ("mock", "SG_mock")
+    assert client.module_name("sg") == "mock"
+    assert client.class_name("sg") == "SG_mock"
+
     # non-existent failures
     assert not client.lock("non-existent-inst")
     assert not client.release("non-existent-inst")
@@ -98,6 +103,14 @@ def test_overlay(server_2clients):
 
     client.wait()
     client2.wait()
+
+    # names
+    assert client.module_class_names("scanner") == (
+        "confocal_scanner_mock",
+        "ConfocalScanner_mock",
+    )
+    assert client.module_name("scanner") == "confocal_scanner_mock"
+    assert client.class_name("scanner") == "ConfocalScanner_mock"
 
     # func name and argument errors
     assert not client("scanner", "non-existent-func").success
