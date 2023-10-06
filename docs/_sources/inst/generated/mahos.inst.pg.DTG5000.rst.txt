@@ -1,10 +1,10 @@
-﻿mahos.inst.dtg.DTG5000
-======================
+﻿mahos.inst.pg.DTG5000
+=====================
 
 .. autosummary class template to exclude inherited_members
    The other parts are same as default.
 
-.. currentmodule:: mahos.inst.dtg
+.. currentmodule:: mahos.inst.pg
 
 .. autoclass:: DTG5000
 

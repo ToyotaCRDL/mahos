@@ -1,12 +1,12 @@
-﻿mahos.inst.dtg.DTG5334
-======================
+﻿mahos.inst.pg.DTG5078
+=====================
 
 .. autosummary class template to exclude inherited_members
    The other parts are same as default.
 
-.. currentmodule:: mahos.inst.dtg
+.. currentmodule:: mahos.inst.pg
 
-.. autoclass:: DTG5334
+.. autoclass:: DTG5078
 
    
    .. automethod:: __init__
@@ -16,6 +16,7 @@
 
    .. autosummary::
    
+      ~DTG5078.block_granularity
    
    
 
@@ -25,8 +26,8 @@
 
    .. autosummary::
    
-      ~DTG5334.MAX_BLOCK_LENGTH
-      ~DTG5334.MAX_FREQ
-      ~DTG5334.MIN_BLOCK_LENGTH
+      ~DTG5078.MAX_BLOCK_LENGTH
+      ~DTG5078.MAX_FREQ
+      ~DTG5078.MIN_BLOCK_LENGTH
    
    

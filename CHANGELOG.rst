@@ -52,6 +52,8 @@ Changed
     Instrument can also use ParamDicts with this.
   - signature of configure(): add new kwargs label and group to make it usable with get_param_dict().
 
+- (breaking config) DTG classes in inst.dtg module has been moved to inst.pg module.
+
 Removed
 ^^^^^^^
 
