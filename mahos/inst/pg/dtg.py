@@ -198,7 +198,7 @@ class DTG5000(VisaInstrument):
     :type local_dir: str
     :param remote_dir: Data exchange directory in remote DTG.
     :type remote_dir: str
-    :params channels: mapping from channel names to indices.
+    :param channels: mapping from channel names to indices.
     :type channels: dict[str | bytes, int]
 
     :param start_delay_sec: (default: 1.0) Delay between output relay on and sequencer start.

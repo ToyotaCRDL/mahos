@@ -18,11 +18,11 @@ from ...msgs.inst_pg_msgs import TriggerType, Block, Blocks, BlockSeq
 class PulseStreamer(Instrument):
     """Wrapper for Swabian Instrument Pulse Streamer 8/2.
 
-    :params channels: mapping from channel names to indices.
+    :param channels: mapping from channel names to indices.
     :type channels: dict[str | bytes, int]
-    :params analog.channels: list of channel names to represent analog output
+    :param analog.channels: list of channel names to represent analog output
     :type analog.channels: list[str | bytes]
-    :params analog.values: mapping of analog channel patterns to analog output values
+    :param analog.values: mapping of analog channel patterns to analog output values
         {"00": [0.5, 0.5], "01": [-0.5, 0.0]} reads as follows.
         When analog.channels[0] is L and analog.channels[1] is L, output A0 = 0.5 V, A1 = 0.5 V.
         When analog.channels[0] is L and analog.channels[1] is H, output A0 = -0.5 V, A1 = 0.0 V.

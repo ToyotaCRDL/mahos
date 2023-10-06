@@ -623,6 +623,7 @@ document.write(`
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>local_dir</strong> (<em>str</em>) – Data exchange directory in local computer.</p></li>
 <li><p><strong>remote_dir</strong> (<em>str</em>) – Data exchange directory in remote DTG.</p></li>
+<li><p><strong>channels</strong> (<em>dict</em><em>[</em><em>str</em><em> | </em><em>bytes</em><em>, </em><em>int</em><em>]</em>) – mapping from channel names to indices.</p></li>
 <li><p><strong>start_delay_sec</strong> (<em>float</em>) – (default: 1.0) Delay between output relay on and sequencer start.
 This is to wait the output relay to stabilize.</p></li>
 <li><p><strong>start_query_delay_sec</strong> (<em>float</em>) – (default: 0.1) Delay for OPC? command after start command.</p></li>
@@ -632,9 +633,6 @@ This is to wait the output relay to stabilize.</p></li>
 Since offset will not be allowed in strict mode, the pulse pattern data should be
 prepared considering block granularity.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Params channels<span class="colon">:</span></dt>
-<dd class="field-even"><p>mapping from channel names to indices.</p>
 </dd>
 </dl>
 <dl class="py method">
