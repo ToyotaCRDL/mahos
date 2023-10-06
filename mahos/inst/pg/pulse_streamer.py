@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Pulse Generator module.
+PulseStreamer part of Pulse Generator module.
 
 .. This file is a part of MAHOS project.
 
@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pulsestreamer
 
-from .instrument import Instrument
-from ..msgs.inst_pg_msgs import TriggerType, Block, Blocks, BlockSeq
+from ..instrument import Instrument
+from ...msgs.inst_pg_msgs import TriggerType, Block, Blocks, BlockSeq
 
 
 class PulseStreamer(Instrument):

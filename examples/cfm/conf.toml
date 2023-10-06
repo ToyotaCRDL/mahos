@@ -106,7 +106,7 @@ polarity = false
 idle_level = "CENTER"
 
 [localhost.server.instrument.pg]
-module = "dtg"
+module = "pg"
 class = "DTG5274"
 [localhost.server.instrument.pg.conf]
 resource = "GPIB0::2"

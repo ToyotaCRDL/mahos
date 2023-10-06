@@ -25,14 +25,6 @@ Instruments
 
    PulseStreamer
    PulseStreamerDAQTrigger
-
-.. automodule:: mahos.inst.dtg
-
-.. currentmodule:: mahos.inst.dtg
-
-.. autosummary::
-   :toctree: generated
-
    DTG5000
    DTG5078
    DTG5274

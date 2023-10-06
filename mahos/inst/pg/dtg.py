@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Data Timing Generator module.
+Tektronix DTG (Data Timing Generator) part of Pulse Generator module.
 
 .. This file is a part of MAHOS project.
 
