@@ -387,6 +387,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.confocal_msgs.Trace.html">mahos.msgs.confocal_msgs.Trace</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.odmr_msgs.ODMRData.html">mahos.msgs.odmr_msgs.ODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.podmr_msgs.PODMRData.html">mahos.msgs.podmr_msgs.PODMRData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.spodmr_msgs.SPODMRData.html">mahos.msgs.spodmr_msgs.SPODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.qdyne_msgs.QdyneData.html">mahos.msgs.qdyne_msgs.QdyneData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.iodmr_msgs.IODMRData.html">mahos.msgs.iodmr_msgs.IODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.hbt_msgs.HBTData.html">mahos.msgs.hbt_msgs.HBTData</a></li>
@@ -498,6 +499,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.confocal_tracker.ConfocalTracker.html">mahos.meas.confocal_tracker.ConfocalTracker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.odmr.ODMR.html">mahos.meas.odmr.ODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.podmr.PODMR.html">mahos.meas.podmr.PODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.spodmr.SPODMR.html">mahos.meas.spodmr.SPODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.qdyne.Qdyne.html">mahos.meas.qdyne.Qdyne</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.iodmr.IODMR.html">mahos.meas.iodmr.IODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.hbt.HBT.html">mahos.meas.hbt.HBT</a></li>
@@ -506,6 +508,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../meas/ConfocalIO.html">mahos.meas.confocal.ConfocalIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/ODMRIO.html">mahos.meas.odmr.ODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/PODMRIO.html">mahos.meas.podmr.PODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../meas/SPODMRIO.html">mahos.meas.podmr.SPODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/QdyneIO.html">mahos.meas.podmr.QdyneIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/IODMRIO.html">mahos.meas.podmr.IODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/HBTIO.html">mahos.meas.hbt.HBTIO</a></li>
@@ -528,6 +531,9 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRWidget.html">mahos.gui.podmr.PODMRWidget</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRMainWindow.html">mahos.gui.podmr.PODMRMainWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRGUI.html">mahos.gui.podmr.PODMRGUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRWidget.html">mahos.gui.spodmr.SPODMRWidget</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRMainWindow.html">mahos.gui.spodmr.SPODMRMainWindow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRGUI.html">mahos.gui.spodmr.SPODMRGUI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRWidget.html">mahos.gui.iodmr.IODMRWidget</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRMainWindow.html">mahos.gui.iodmr.IODMRMainWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRGUI.html">mahos.gui.iodmr.IODMRGUI</a></li>
@@ -622,6 +628,9 @@ This is to wait the output relay to stabilize.</p></li>
 <li><p><strong>start_query_delay_sec</strong> (<em>float</em>) – (default: 0.1) Delay for OPC? command after start command.</p></li>
 <li><p><strong>start_loop_delay_sec</strong> (<em>float</em>) – (default: 1.0) Delay for each loop of the start loop.</p></li>
 <li><p><strong>start_loop_num</strong> (<em>int</em>) – (default: 20) Max. number of start command repeats in the start loop.</p></li>
+<li><p><strong>strict</strong> (<em>bool</em>) – (default: True) If True, check generated data strictly.
+Since offset will not be allowed in strict mode, the pulse pattern data should be
+prepared considering block granularity.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Params channels<span class="colon">:</span></dt>
@@ -654,19 +663,19 @@ This is to wait the output relay to stabilize.</p></li>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_blocks</span></code>(blocks, freq[, ...])</p></td>
 <td><p>Generate tree using default sequence and write it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_tree</span></code>(blocks, freq[, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_blockseq</span></code>(blockseq, freq[, ...])</p></td>
+<td><p>Generate tree using explicit sequence and write it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_tree</span></code>(blocks, freq[, ...])</p></td>
 <td><p>Generate tree using default sequence.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_tree_advanced</span></code>(blocks, subsequences, ...)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_tree_seq</span></code>(blocks, subsequences, ...)</p></td>
 <td><p>Generate tree using explicit sequence.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(key[, args])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(key[, args])</p></td>
 <td><p>Get an instrument setting or measurement data.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sequencer_status</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_total_block_length_advanced</span></code>(blocks, ...)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sequencer_status</span></code>()</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_scaffold</span></code>(path)</p></td>
@@ -693,11 +702,11 @@ This is to wait the output relay to stabilize.</p></li>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_blocks</span></code>(blocks, freq)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_blocks_advanced</span></code>(blocks, ...)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_blocks_seq</span></code>(blocks, subsequences, ...)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_blocks_advanced</span></code>(blocks, subsequences, ...)</p></td>
-<td><p>Generate tree using explicit sequence and write it.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_blockseq</span></code>(blockseq, freq)</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
@@ -705,6 +714,12 @@ This is to wait the output relay to stabilize.</p></li>
 <table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_BLOCK_NUM</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_SEQ_NUM</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_SUBSEQ_NUM</span></code></p></td>
 <td><p></p></td>
 </tr>
 </tbody>

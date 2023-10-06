@@ -18,6 +18,7 @@ The mahos.meas package provides high-level measurement logics.
    confocal_tracker.ConfocalTracker
    odmr.ODMR
    podmr.PODMR
+   spodmr.SPODMR
    qdyne.Qdyne
    iodmr.IODMR
    hbt.HBT
@@ -32,6 +33,7 @@ The mahos.meas package provides high-level measurement logics.
    ConfocalIO
    ODMRIO
    PODMRIO
+   SPODMRIO
    QdyneIO
    IODMRIO
    HBTIO

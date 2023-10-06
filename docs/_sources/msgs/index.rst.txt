@@ -21,6 +21,7 @@ The mahos.msgs are message type definitions for node communications.
    confocal_msgs.Trace
    odmr_msgs.ODMRData
    podmr_msgs.PODMRData
+   spodmr_msgs.SPODMRData
    qdyne_msgs.QdyneData
    iodmr_msgs.IODMRData
    hbt_msgs.HBTData

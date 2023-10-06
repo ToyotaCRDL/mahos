@@ -1,0 +1,73 @@
+﻿mahos.gui.spodmr.SPODMRWidget
+=============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.gui.spodmr
+
+.. autoclass:: SPODMRWidget
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SPODMRWidget.__init__
+      ~SPODMRWidget.apply_fg_widgets
+      ~SPODMRWidget.apply_meas_widgets
+      ~SPODMRWidget.apply_plot_widgets
+      ~SPODMRWidget.check_ddphase
+      ~SPODMRWidget.export_data
+      ~SPODMRWidget.finalize
+      ~SPODMRWidget.get_fg_mode
+      ~SPODMRWidget.get_fg_mode_dict
+      ~SPODMRWidget.get_fg_params
+      ~SPODMRWidget.get_method
+      ~SPODMRWidget.get_params
+      ~SPODMRWidget.get_plot_params
+      ~SPODMRWidget.get_plottable_data
+      ~SPODMRWidget.has_fg
+      ~SPODMRWidget.init_connection
+      ~SPODMRWidget.init_radiobuttons
+      ~SPODMRWidget.init_widgets
+      ~SPODMRWidget.init_with_status
+      ~SPODMRWidget.load_data
+      ~SPODMRWidget.refresh_plot
+      ~SPODMRWidget.request_start
+      ~SPODMRWidget.request_stop
+      ~SPODMRWidget.reset_tau_modes
+      ~SPODMRWidget.round_box_values
+      ~SPODMRWidget.save_data
+      ~SPODMRWidget.set_method
+      ~SPODMRWidget.set_plot_mode
+      ~SPODMRWidget.set_tau_mode
+      ~SPODMRWidget.start
+      ~SPODMRWidget.switch_fg
+      ~SPODMRWidget.switch_method
+      ~SPODMRWidget.switch_partial
+      ~SPODMRWidget.update_Nstop
+      ~SPODMRWidget.update_buffer
+      ~SPODMRWidget.update_data
+      ~SPODMRWidget.update_inst_bounds
+      ~SPODMRWidget.update_plot_enable
+      ~SPODMRWidget.update_plot_params
+      ~SPODMRWidget.update_save_button
+      ~SPODMRWidget.update_state
+      ~SPODMRWidget.update_stop
+      ~SPODMRWidget.validate_pulse
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SPODMRWidget.METHODS
+   
+   

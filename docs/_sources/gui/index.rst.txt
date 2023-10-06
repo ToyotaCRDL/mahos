@@ -24,6 +24,9 @@ The mahos.gui package implements Qt-based GUI mainly for :ref:`mahos.meas`.
    podmr.PODMRWidget
    podmr.PODMRMainWindow
    podmr.PODMRGUI
+   spodmr.SPODMRWidget
+   spodmr.SPODMRMainWindow
+   spodmr.SPODMRGUI
    iodmr.IODMRWidget
    iodmr.IODMRMainWindow
    iodmr.IODMRGUI

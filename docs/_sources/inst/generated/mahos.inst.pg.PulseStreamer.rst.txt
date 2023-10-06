@@ -20,6 +20,7 @@
       ~PulseStreamer.channels_to_ints
       ~PulseStreamer.configure
       ~PulseStreamer.configure_blocks
+      ~PulseStreamer.configure_blockseq
       ~PulseStreamer.get
       ~PulseStreamer.reset
       ~PulseStreamer.set

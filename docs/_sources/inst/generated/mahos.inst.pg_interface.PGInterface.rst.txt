@@ -18,11 +18,13 @@
    
       ~PGInterface.clear
       ~PGInterface.configure_blocks
+      ~PGInterface.configure_blockseq
       ~PGInterface.get_length
       ~PGInterface.get_offsets
       ~PGInterface.get_opc
       ~PGInterface.trigger
       ~PGInterface.validate_blocks
+      ~PGInterface.validate_blockseq
    
    
 

@@ -387,6 +387,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.confocal_msgs.Trace.html">mahos.msgs.confocal_msgs.Trace</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.odmr_msgs.ODMRData.html">mahos.msgs.odmr_msgs.ODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.podmr_msgs.PODMRData.html">mahos.msgs.podmr_msgs.PODMRData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.spodmr_msgs.SPODMRData.html">mahos.msgs.spodmr_msgs.SPODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.qdyne_msgs.QdyneData.html">mahos.msgs.qdyne_msgs.QdyneData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.iodmr_msgs.IODMRData.html">mahos.msgs.iodmr_msgs.IODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.hbt_msgs.HBTData.html">mahos.msgs.hbt_msgs.HBTData</a></li>
@@ -498,6 +499,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.confocal_tracker.ConfocalTracker.html">mahos.meas.confocal_tracker.ConfocalTracker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.odmr.ODMR.html">mahos.meas.odmr.ODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.podmr.PODMR.html">mahos.meas.podmr.PODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.spodmr.SPODMR.html">mahos.meas.spodmr.SPODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.qdyne.Qdyne.html">mahos.meas.qdyne.Qdyne</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.iodmr.IODMR.html">mahos.meas.iodmr.IODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.hbt.HBT.html">mahos.meas.hbt.HBT</a></li>
@@ -506,6 +508,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../meas/ConfocalIO.html">mahos.meas.confocal.ConfocalIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/ODMRIO.html">mahos.meas.odmr.ODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/PODMRIO.html">mahos.meas.podmr.PODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../meas/SPODMRIO.html">mahos.meas.podmr.SPODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/QdyneIO.html">mahos.meas.podmr.QdyneIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/IODMRIO.html">mahos.meas.podmr.IODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/HBTIO.html">mahos.meas.hbt.HBTIO</a></li>
@@ -528,6 +531,9 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRWidget.html">mahos.gui.podmr.PODMRWidget</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRMainWindow.html">mahos.gui.podmr.PODMRMainWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRGUI.html">mahos.gui.podmr.PODMRGUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRWidget.html">mahos.gui.spodmr.SPODMRWidget</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRMainWindow.html">mahos.gui.spodmr.SPODMRMainWindow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRGUI.html">mahos.gui.spodmr.SPODMRGUI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRWidget.html">mahos.gui.iodmr.IODMRWidget</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRMainWindow.html">mahos.gui.iodmr.IODMRMainWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRGUI.html">mahos.gui.iodmr.IODMRGUI</a></li>
@@ -612,11 +618,6 @@ document.write(`
 <dt class="sig sig-object py" id="mahos.inst.server.InstrumentClient.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gconf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_handler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.server.InstrumentClient.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Instrument RPC Client.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>handlers</strong> – list of (inst_name, topic_name, handler)</p>
-</dd>
-</dl>
 </dd></dl>
 
 <p class="rubric">Methods</p>
@@ -628,49 +629,58 @@ document.write(`
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code>(inst, func, **args)</p></td>
 <td><p>Call arbitrary function of an instrument.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure</span></code>(inst, params[, label, group])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">class_name</span></code>(inst)</p></td>
+<td><p>Get class name of instrument <cite>inst</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure</span></code>(inst, params[, label, group])</p></td>
 <td><p>Configure the instrument settings.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(inst, key[, args])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(inst, key[, args])</p></td>
 <td><p>Get an instrument setting or commanding value.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict</span></code>(inst[, label, group])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict</span></code>(inst[, label, group])</p></td>
 <td><p>Get ParamDict for <cite>label</cite> in <cite>group</cite>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict_labels</span></code>(inst[, group])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict_labels</span></code>(inst[, group])</p></td>
 <td><p>Get list of available ParamDict labels pertaining to <cite>group</cite>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">help</span></code>(inst[, func])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">help</span></code>(inst[, func])</p></td>
 <td><p>Get help of instrument <cite>inst</cite>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_locked</span></code>(inst)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_locked</span></code>(inst)</p></td>
 <td><p>Check if an instrument is locked.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lock</span></code>(inst)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lock</span></code>(inst)</p></td>
 <td><p>Acquire lock of an instrument.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pause</span></code>(inst)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">module_class_names</span></code>(inst)</p></td>
+<td><p>Get tuple of (module name, class name) of instrument <cite>inst</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">module_name</span></code>(inst)</p></td>
+<td><p>Get module name of instrument <cite>inst</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pause</span></code>(inst)</p></td>
 <td><p>Pause the instrument operation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">release</span></code>(inst)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">release</span></code>(inst)</p></td>
 <td><p>Release lock of an instrument.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset</span></code>(inst)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset</span></code>(inst)</p></td>
 <td><p>Reset the instrument settings.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resume</span></code>(inst)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resume</span></code>(inst)</p></td>
 <td><p>Resume the instrument operation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code>(inst, key[, value])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code>(inst, key[, value])</p></td>
 <td><p>Set an instrument setting or commanding value.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown</span></code>(inst)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown</span></code>(inst)</p></td>
 <td><p>Shutdown the instrument and get ready to power-off.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>(inst)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>(inst)</p></td>
 <td><p>Start the instrument operation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>(inst)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>(inst)</p></td>
 <td><p>Stop the instrument operation.</p></td>
 </tr>
 </tbody>

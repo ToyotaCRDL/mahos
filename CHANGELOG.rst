@@ -20,7 +20,8 @@ Added
 - inst.fg: ParamDict-based interface.
 - meas.odmr: new parameters delay and sg_modulation.
 - util: new modules graph and conf.
-- cli: auto-start of log (LogBroker) in mahos log and auto-exclude of log in mahos launch
+- cli: auto-start of log (LogBroker) in mahos log and auto-exclude of log in mahos launch.
+- meas.podmr: changed definition of plot mode 'normalize' (difference / average).
 
 Changed
 ^^^^^^^

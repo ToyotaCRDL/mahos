@@ -387,6 +387,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.confocal_msgs.Trace.html">mahos.msgs.confocal_msgs.Trace</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.odmr_msgs.ODMRData.html">mahos.msgs.odmr_msgs.ODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.podmr_msgs.PODMRData.html">mahos.msgs.podmr_msgs.PODMRData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.spodmr_msgs.SPODMRData.html">mahos.msgs.spodmr_msgs.SPODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.qdyne_msgs.QdyneData.html">mahos.msgs.qdyne_msgs.QdyneData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.iodmr_msgs.IODMRData.html">mahos.msgs.iodmr_msgs.IODMRData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.hbt_msgs.HBTData.html">mahos.msgs.hbt_msgs.HBTData</a></li>
@@ -498,6 +499,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.confocal_tracker.ConfocalTracker.html">mahos.meas.confocal_tracker.ConfocalTracker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.odmr.ODMR.html">mahos.meas.odmr.ODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.podmr.PODMR.html">mahos.meas.podmr.PODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.spodmr.SPODMR.html">mahos.meas.spodmr.SPODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.qdyne.Qdyne.html">mahos.meas.qdyne.Qdyne</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.iodmr.IODMR.html">mahos.meas.iodmr.IODMR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.hbt.HBT.html">mahos.meas.hbt.HBT</a></li>
@@ -506,6 +508,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../meas/ConfocalIO.html">mahos.meas.confocal.ConfocalIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/ODMRIO.html">mahos.meas.odmr.ODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/PODMRIO.html">mahos.meas.podmr.PODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../meas/SPODMRIO.html">mahos.meas.podmr.SPODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/QdyneIO.html">mahos.meas.podmr.QdyneIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/IODMRIO.html">mahos.meas.podmr.IODMRIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/HBTIO.html">mahos.meas.hbt.HBTIO</a></li>
@@ -528,6 +531,9 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRWidget.html">mahos.gui.podmr.PODMRWidget</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRMainWindow.html">mahos.gui.podmr.PODMRMainWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.podmr.PODMRGUI.html">mahos.gui.podmr.PODMRGUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRWidget.html">mahos.gui.spodmr.SPODMRWidget</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRMainWindow.html">mahos.gui.spodmr.SPODMRMainWindow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.spodmr.SPODMRGUI.html">mahos.gui.spodmr.SPODMRGUI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRWidget.html">mahos.gui.iodmr.IODMRWidget</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRMainWindow.html">mahos.gui.iodmr.IODMRMainWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.iodmr.IODMRGUI.html">mahos.gui.iodmr.IODMRGUI</a></li>
@@ -612,9 +618,23 @@ document.write(`
 <dt class="sig sig-object py" id="mahos.inst.daq.ClockSource">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.inst.daq.</span></span><span class="sig-name descname"><span class="pre">ClockSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.daq.ClockSource" title="Permalink to this definition">#</a></dt>
 <dd><p>A configurable DAQ Task class to provide a clock source.</p>
+<p>Note that retriggerable trigger is supported only on 63xx series devices.
+<a class="reference external" href="https://www.ni.com/ja/support/documentation/supplemental/21/retriggerable-tasks-in-ni-daqmx.html">https://www.ni.com/ja/support/documentation/supplemental/21/retriggerable-tasks-in-ni-daqmx.html</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>counter</strong> (<em>str</em>) – DAQ’s counter name.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>counter</strong> (<em>str</em>) – DAQ’s counter name.</p></li>
+<li><p><strong>freq</strong> (<em>float</em>) – Clock frequency.</p></li>
+<li><p><strong>samples</strong> (<em>int</em>) – Number of samples for finite clock generation.
+For infinite case, this value is used to estimate buffer size.</p></li>
+<li><p><strong>duty</strong> (<em>float</em>) – (default: 0.5) Duty ratio of the clock.</p></li>
+<li><p><strong>finite</strong> (<em>bool</em>) – (default: True) If True, generate finite clock pulse train.</p></li>
+<li><p><strong>idle_state</strong> (<em>bool</em>) – (default: False) Set True (False) for the idle to H (L) logic level.</p></li>
+<li><p><strong>initial_delay</strong> (<em>float</em>) – (default: 0.0) Initial delay before starting clock output.</p></li>
+<li><p><strong>trigger_source</strong> (<em>str</em>) – DAQ terminal name for start trigger. Trigger is disabled if not given.</p></li>
+<li><p><strong>trigger_dir</strong> (<em>bool</em>) – (default: True) Set True (False) for rising (falling) edge trigger.</p></li>
+<li><p><strong>retriggerable</strong> (<em>bool</em>) – (default: True) Set True to enable retriggerable mode.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">

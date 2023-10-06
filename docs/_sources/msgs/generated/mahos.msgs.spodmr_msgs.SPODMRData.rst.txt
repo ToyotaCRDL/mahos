@@ -1,0 +1,45 @@
+﻿mahos.msgs.spodmr\_msgs.SPODMRData
+==================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.msgs.spodmr_msgs
+
+.. autoclass:: SPODMRData
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SPODMRData.__init__
+      ~SPODMRData.can_resume
+      ~SPODMRData.get_fit_xdata
+      ~SPODMRData.get_fit_ydata
+      ~SPODMRData.get_image
+      ~SPODMRData.get_method
+      ~SPODMRData.get_num
+      ~SPODMRData.get_pulse_params
+      ~SPODMRData.get_total_scale
+      ~SPODMRData.get_xdata
+      ~SPODMRData.get_ydata
+      ~SPODMRData.has_data
+      ~SPODMRData.init_xdata
+      ~SPODMRData.is_CPlike
+      ~SPODMRData.is_complex
+      ~SPODMRData.is_correlation
+      ~SPODMRData.is_partial
+      ~SPODMRData.is_supersampling
+      ~SPODMRData.is_sweepN
+      ~SPODMRData.partial
+      ~SPODMRData.sweeps
+   
+   
+
+   
+   
+   
