@@ -18,6 +18,8 @@ from ..msgs.inst_pg_msgs import Block, Blocks, TriggerType
 from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface
 from ..inst.pd_interface import PDInterface
+from ..inst.daq_interface import ClockSourceInterface
+from ..util.conf import PresetLoader
 from .common_worker import Worker
 
 
@@ -25,25 +27,52 @@ class Sweeper(Worker):
     """Worker for ODMR Sweep."""
 
     def __init__(self, cli, logger, conf: dict):
-        Worker.__init__(self, cli, logger)
+        Worker.__init__(self, cli, logger, conf)
+        self.load_conf_preset(cli)
+
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
-        self.pd_names = conf.get("pd_names", ["pd0", "pd1"])
+        self.pd_names = self.conf.get("pd_names", ["pd0", "pd1"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
+        self._pd_analog = self.conf.get("pd_analog", False)
+        if self._pd_analog:
+            self.clock = ClockSourceInterface(cli, self.conf.get("clock_name", "clock"))
+        else:
+            self.clock = None
         self.add_instruments(self.sg, self.pg, *self.pds)
 
-        if "pd_clock" not in conf:
-            raise KeyError("sweeper.pd_clock must be given")
-        self._pd_clock = conf["pd_clock"]
-        self._minimum_block_length = conf.get("minimum_block_length", 1000)
-        self._start_delay = conf.get("start_delay", 0.0)
-        self._drop_first = conf.get("drop_first", 0)
-        self._sg_first = conf.get("sg_first", False)
-        self._pd_analog = conf.get("pd_analog", False)
+        self.check_required_conf(["pd_clock", "block_base", "minimum_block_length"])
+        self._pd_clock = self.conf["pd_clock"]
+        self._minimum_block_length = self.conf["minimum_block_length"]
+        self._block_base = self.conf["block_base"]
+        self._start_delay = self.conf.get("start_delay", 0.0)
+        self._drop_first = self.conf.get("drop_first", 0)
+        self._sg_first = self.conf.get("sg_first", False)
         self._continue_mw = False
-        self._conf = conf
 
         self.data = ODMRData()
+
+    def load_conf_preset(self, cli):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.FORWARD)
+        loader.add_preset(
+            "DTG",
+            [
+                ("block_base", 4),
+                ("pg_freq_cw", 1.0e6),
+                ("pg_freq_pulse", 2.0e9),
+                ("minimum_block_length", 1000),
+            ],
+        )
+        loader.add_preset(
+            "PulseStreamer",
+            [
+                ("block_base", 1),
+                ("pg_freq_cw", 1.0e6),
+                ("pg_freq_pulse", 1.0e9),
+                ("minimum_block_length", 1),
+            ],
+        )
+        loader.load_preset(self.conf, cli.class_name("pg"))
 
     def get_param_dict_labels(self) -> list:
         return ["cw", "pulse"]
@@ -51,7 +80,7 @@ class Sweeper(Worker):
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         if label == "cw":
             timing = P.ParamDict(
-                time_window=P.FloatParam(self._conf.get("time_window", 10e-3), 0.1e-3, 1.0)
+                time_window=P.FloatParam(self.conf.get("time_window", 10e-3), 0.1e-3, 1.0)
             )
         elif label == "pulse":
             timing = P.ParamDict(
@@ -92,14 +121,14 @@ class Sweeper(Worker):
             return None
         f_min, f_max = bounds["freq"]
         p_min, p_max = bounds["power"]
-        f_start = max(min(self._conf.get("start", 2.74e9), f_max), f_min)
-        f_stop = max(min(self._conf.get("stop", 3.00e9), f_max), f_min)
+        f_start = max(min(self.conf.get("start", 2.74e9), f_max), f_min)
+        f_stop = max(min(self.conf.get("stop", 3.00e9), f_max), f_min)
         d = P.ParamDict(
             method=P.StrChoiceParam(label, ("cw", "pulse")),
             start=P.FloatParam(f_start, f_min, f_max),
             stop=P.FloatParam(f_stop, f_min, f_max),
-            num=P.IntParam(self._conf.get("num", 101), 2, 10000),
-            power=P.FloatParam(self._conf.get("power", p_min), p_min, p_max),
+            num=P.IntParam(self.conf.get("num", 101), 2, 10000),
+            power=P.FloatParam(self.conf.get("power", p_min), p_min, p_max),
             sweeps=P.IntParam(0, 0, 1_000_000_000),
             timing=timing,
             background=P.BoolParam(False, doc="take background data"),
@@ -120,7 +149,7 @@ class Sweeper(Worker):
                 doc="delay between normal and background (reference) measurements",
             ),
             sg_modulation=P.BoolParam(
-                self._conf.get("sg_modulation", False), doc="enable external IQ modulation for SG"
+                self.conf.get("sg_modulation", False), doc="enable external IQ modulation for SG"
             ),
             resume=P.BoolParam(False),
             continue_mw=P.BoolParam(False),
@@ -129,9 +158,9 @@ class Sweeper(Worker):
 
         if self._pd_analog:
             d["pd_rate"] = P.FloatParam(
-                self._conf.get("pd_rate", 400e3), 1e3, 10000e3, doc="PD sampling rate"
+                self.conf.get("pd_rate", 400e3), 1e3, 10000e3, doc="PD sampling rate"
             )
-            lb, ub = self._conf.get("pd_bounds", (-10.0, 10.0))
+            lb, ub = self.conf.get("pd_bounds", (-10.0, 10.0))
             d["pd_bounds"] = [
                 P.FloatParam(lb, -10.0, 10.0, unit="V"),
                 P.FloatParam(ub, -10.0, 10.0, unit="V"),
@@ -161,48 +190,16 @@ class Sweeper(Worker):
         success &= self.sg.get_opc()
         return success
 
-    def _get_oversamp_CW_analog(self, params: dict) -> int:
-        return round(params["timing"]["time_window"] * params["pd_rate"])
+    def _adjust_block(self, block: Block, index: int):
+        """Mutate block so that block's total_length is integer multiple of block base."""
 
-    def _get_oversamp_pulse_analog(self, params: dict) -> int:
-        t = params["timing"]
-        return round(t["laser_width"] * params["pd_rate"] * t["burst_num"])
+        duration = block.total_length()
+        if M := duration % self._block_base:
+            ch, d = block.pattern[index].channels, block.pattern[index].duration
+            block.pattern[index] = (ch, d + self._block_base - M)
 
     def configure_pg_CW_analog(self, params: dict) -> bool:
-        freq = 10.0e6
-        period = round(freq / params["pd_rate"])
-        delay = round(freq * params.get("delay", 0.0))
-        bg_delay = round(freq * params.get("background_delay", 0.0))
-        samples = self._get_oversamp_CW_analog(params)
-
-        if period <= 1:
-            self.logger.error(f"period became too small: {period}. decrease pd_rate.")
-            return False
-        w = period // 2  # ~ 50 % duty pulses
-
-        pat_laser_mw = [(("laser", "mw"), period - w), (("laser", "mw", "gate"), w)] * samples
-        pat_laser = [(("laser"), period - w), (("laser", "gate"), w)] * samples
-        if params.get("background", False):
-            b = Block(
-                "CW-ODMR",
-                [(None, max(8, delay))]
-                + pat_laser_mw
-                + [(None, max(8, bg_delay))]
-                + pat_laser
-                + [("trigger", 1)],
-                trigger=True,
-            )
-        else:
-            b = Block(
-                "CW-ODMR",
-                [(None, max(8, delay))] + pat_laser_mw + [("trigger", 1)],
-                trigger=True,
-            )
-        blocks = Blocks([b]).simplify()
-        return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
-
-    def configure_pg_CW_apd(self, params: dict) -> bool:
-        freq = 1.0e6
+        freq = self.conf["pg_freq_cw"]
         window = round(freq * params["timing"]["time_window"])
         delay = round(freq * params.get("delay", 0.0))
         bg_delay = round(freq * params.get("background_delay", 0.0))
@@ -210,11 +207,45 @@ class Sweeper(Worker):
             b = Block(
                 "CW-ODMR",
                 [
-                    (None, max(6, delay)),
+                    (None, max(1, delay)),
+                    ("gate", 1),
+                    (("laser", "mw"), window),
+                    (None, max(1, bg_delay)),
+                    ("gate", 1),
+                    ("laser", window),
+                    ("trigger", 1),
+                ],
+                trigger=True,
+            )
+        else:
+            b = Block(
+                "CW-ODMR",
+                [
+                    (None, max(1, delay)),
+                    ("gate", 1),
+                    (("laser", "mw"), window),
+                    ("trigger", 1),
+                ],
+                trigger=True,
+            )
+        self._adjust_block(b, 0)
+        blocks = Blocks([b]).simplify()
+        return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
+
+    def configure_pg_CW_apd(self, params: dict) -> bool:
+        freq = self.conf["pg_freq_cw"]
+        window = round(freq * params["timing"]["time_window"])
+        delay = round(freq * params.get("delay", 0.0))
+        bg_delay = round(freq * params.get("background_delay", 0.0))
+        if params.get("background", False):
+            b = Block(
+                "CW-ODMR",
+                [
+                    (None, max(1, delay)),
                     ("gate", 1),
                     (("laser", "mw"), window),
                     ("gate", 1),
-                    (None, max(6, bg_delay)),
+                    (None, max(1, bg_delay)),
                     ("gate", 1),
                     ("laser", window),
                     (("gate", "trigger"), 1),
@@ -225,13 +256,14 @@ class Sweeper(Worker):
             b = Block(
                 "CW-ODMR",
                 [
-                    (None, max(6, delay)),
+                    (None, max(1, delay)),
                     ("gate", 1),
                     (("laser", "mw"), window),
                     (("gate", "trigger"), 1),
                 ],
                 trigger=True,
             )
+        self._adjust_block(b, 0)
         blocks = Blocks([b]).simplify()
         return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
 
@@ -270,6 +302,9 @@ class Sweeper(Worker):
             ],
         )
 
+        for b in (init, final):
+            self._adjust_block(b, 0)
+        self._adjust_block(main, -1)
         return Blocks([init, main, final]).simplify()
 
     def _make_blocks_pulse_apd_bg(
@@ -344,10 +379,14 @@ class Sweeper(Worker):
             ],
         )
 
+        for b in (init, final, init_bg, final_bg):
+            self._adjust_block(b, 0)
+        for b in (main, main_bg):
+            self._adjust_block(b, -1)
         return Blocks([init, main, final, init_bg, main_bg, final_bg]).simplify()
 
     def configure_pg_pulse_apd(self, params: dict) -> bool:
-        freq = 1.0e9
+        freq = self.conf["pg_freq_pulse"]
         delay = round(freq * params.get("delay", 0.0))
         bg_delay = round(freq * params.get("background_delay", 0.0))
         laser_delay, laser_width, mw_delay, mw_width, trigger_width = [
@@ -418,7 +457,7 @@ class Sweeper(Worker):
             "samples": samples,
             "rate": rate,
             "finite": False,
-            "every": self._conf.get("every", True),
+            "every": self.conf.get("every", True),
             "drop_first": drop,
             "gate": True,
             "time_window": time_window,
@@ -431,32 +470,53 @@ class Sweeper(Worker):
 
     def start_analog_pd(self, params: dict) -> bool:
         rate = params["pd_rate"]
-        num = params["num"]
         if params["method"] == "cw":
-            oversamp = self._get_oversamp_CW_analog(params)
+            oversamp = round(params["timing"]["time_window"] * params["pd_rate"])
         else:
-            oversamp = self._get_oversamp_pulse_analog(params)
+            # t = params["timing"]
+            # oversamp = round(t["laser_width"] * params["pd_rate"] * t["burst_num"])
+            # won't reach here but just in case
+            self.logger.error("Pulse for Analog PD is not implemented yet.")
+            return False
+
         self.logger.info(f"Analog PD oversample: {oversamp}")
+
+        params_clock = {
+            "freq": rate,
+            "samples": oversamp,
+            "finite": True,
+            "trigger_source": self._pd_clock,
+            "trigger_dir": True,
+            "retriggerable": True,
+        }
+        if not self.clock.configure(params_clock):
+            return self.fail_with("failed to configure clock.")
+        clock_pd = self.clock.get_internal_output()
+
+        num = params["num"]
         drop = self._drop_first * oversamp
         if params.get("background", False):
             num *= 2
             drop *= 2
-        samples = num * 10  # large samples to assure enough buffer size
+        buffer_size = num * self.conf.get("buffer_size_coeff", 20)
         params_pd = {
-            "clock": self._pd_clock,
+            "clock": clock_pd,
             "cb_samples": num,
-            "samples": samples,
+            "samples": buffer_size,
+            "buffer_size": buffer_size,
             "rate": rate,
             "finite": False,
-            "every": self._conf.get("every", True),
+            "every": self.conf.get("every", False),
             "drop_first": drop,
             "clock_mode": True,
             "oversample": oversamp,
             "bounds": params.get("pd_bounds", (-10.0, 10.0)),
         }
 
-        success = all([pd.configure(params_pd) for pd in self.pds]) and all(
-            [pd.start() for pd in self.pds]
+        success = (
+            all([pd.configure(params_pd) for pd in self.pds])
+            and self.clock.start()
+            and all([pd.start() for pd in self.pds])
         )
         return success
 
@@ -571,6 +631,8 @@ class Sweeper(Worker):
             success &= self.sg.set_output(False)
 
         success &= all([pd.stop() for pd in self.pds])
+        if self._pd_analog:
+            success &= self.clock.stop()
         success &= self.pg.stop()
         success &= self.release_instruments()
 

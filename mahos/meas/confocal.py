@@ -234,41 +234,41 @@ class Confocal(Node):
     def __init__(self, gconf: dict, name, context=None):
         """Confocal scanner and interactive positioning.
 
-        :param piezo.interval_sec: (default 0.5) Interval to poll piezo pos.
+        :param piezo.interval_sec: (default: 0.5) Interval to poll piezo pos.
         :type piezo.interval_sec: float
 
-        :param tracer.pd_names: (default ["pd0", "pd1"]) PD names in target.servers.
+        :param tracer.pd_names: (default: ["pd0", "pd1"]) PD names in target.servers.
         :type tracer.pd_names: list[str]
-        :param tracer.interval_sec: (default 0.5) Interval to poll trace data.
+        :param tracer.interval_sec: (default: 0.5) Interval to poll trace data.
         :type tracer.interval_sec: float
-        :param tracer.size: (default 500) Size of trace data.
+        :param tracer.size: (default: 500) Size of trace data.
         :type tracer.size: int
-        :param tracer.samples: (default 5) Number of samples per chunk.
+        :param tracer.samples: (default: 5) Number of samples per chunk.
         :type tracer.samples: int
-        :param tracer.oversample: (default 1) Oversample factor.
+        :param tracer.oversample: (default: 1) Oversample factor.
         :type tracer.oversample: int
-        :param tracer.time_window_sec: (default 0.01) Time window for single data point.
+        :param tracer.time_window_sec: (default: 0.01) Time window for single data point.
         :type tracer.time_window_sec: float
-        :param tracer.pd_bounds: (default (-10.0, 10.0)) PD's voltage bounds.
+        :param tracer.pd_bounds: (default: (-10.0, 10.0)) PD's voltage bounds.
         :type tracer.pd_bounds: tuple[float, float]
 
-        :param scanner.xnum: (default 51) Default value of param xnum.
+        :param scanner.xnum: (default: 51) Default value of param xnum.
         :type scanner.xnum: int
-        :param scanner.ynum: (default 51) Default value of param ynum.
+        :param scanner.ynum: (default: 51) Default value of param ynum.
         :type scanner.ynum: int
-        :param scanner.delay: (default 0.0) Default value of param delay.
+        :param scanner.delay: (default: 0.0) Default value of param delay.
         :type scanner.delay: float
-        :param scanner.time_window: (default 0.01) Default value of param time_window.
+        :param scanner.time_window: (default: 0.01) Default value of param time_window.
         :type scanner.time_window: float
         :param scanner.pd_analog: set True if PD is AnalogIn-based.
         :type scanner.pd_analog: bool
-        :param scanner.pd_bounds: (default (-10.0, 10.0)) Default value of param pd_bounds.
+        :param scanner.pd_bounds: (default: (-10.0, 10.0)) Default value of param pd_bounds.
         :type scanner.pd_bounds: tuple[float, float]
-        :param scanner.oversample: (default 1) Default value of param oversample.
+        :param scanner.oversample: (default: 1) Default value of param oversample.
         :type scanner.oversample: int
-        :param scanner.dummy_samples: (default 10) Default value of param dummy_samples.
+        :param scanner.dummy_samples: (default: 10) Default value of param dummy_samples.
         :type scanner.dummy_samples: int
-        :param scanner.poll_samples: (default 1) Default value of param poll_samples.
+        :param scanner.poll_samples: (default: 1) Default value of param poll_samples.
         :type scanner.poll_samples: int
 
         """

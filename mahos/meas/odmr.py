@@ -40,21 +40,28 @@ class ODMR(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         """ODMR Sweep measurement.
 
-        :param sweeper.pd_clock: (Required) DAQ device name for PD's clock (gate)
+        :param sweeper.pd_clock: DAQ terminal name for PD's clock (gate)
         :type sweeper.pd_clock: str
-        :param sweeper.pd_names: (default ["pd0", "pd1"]) PD names in target.servers.
+        :param sweeper.pd_names: (default: ["pd0", "pd1"]) PD names in target.servers.
         :type sweeper.pd_names: list[str]
-        :param sweeper.minimum_block_length: minimum block length in generated blocks
-                                             (default: 1000)
-        :type sweeper.minimum_block_length: int
-        :param sweeper.start_delay: (sec.) delay time before starting SG/PG output. (default: 0.0)
-        :type sweeper.start_delay: float
-        :param sweeper.drop_first: drop first N freq points. (default: 0)
-        :type sweeper.drop_first: int
-        :param sweeper.sg_first: if True, turn on SG first and PG second. (default: False)
-        :type sweeper.sg_first: bool
-        :param sweeper.pd_analog: set True if PD is AnalogIn-based.
+        :param sweeper.pd_analog: (default: False) set True if PD is AnalogIn-based.
         :type sweeper.pd_analog: bool
+
+        :param sweeper.start_delay: (default: 0.0) delay time (sec.) before starting SG/PG output.
+        :type sweeper.start_delay: float
+        :param sweeper.drop_first: (default: 0) drop first N freq points.
+        :type sweeper.drop_first: int
+        :param sweeper.sg_first: (default: False) if True, turn on SG first and PG second.
+        :type sweeper.sg_first: bool
+
+        :param pulser.pg_freq_cw: (has preset) PG frequency for CW mode.
+        :type pulser.pg_freq_cw: float
+        :param pulser.pg_freq_pulse: (has preset) PG frequency for Pulse mode.
+        :type pulser.pg_freq_pulse: float
+        :param pulser.minimum_block_length: (has preset) minimum block length in generated blocks
+        :type pulser.minimum_block_length: int
+        :param sweeper.block_base: (has preset) block base granularity of pulse generator.
+        :type sweeper.block_base: int
 
         :param sweeper.start: (default param) start frequency in Hz.
         :type sweeper.start: float
