@@ -327,7 +327,7 @@ class E727_3_USB_AO(E727_3_USB):
 
     :param samples_margin: (has preset, default: 0) margin of samples for AnalogOut.
     :type samples_margin: int
-    :param write_and_start: (has preset, default: False) if False, DAQ Task is started and then
+    :param write_and_start: (has preset, default: True) if False, DAQ Task is started and then
         scan data is written in start_scan(). True reverses this order.
     :type write_and_start: bool
 
@@ -356,7 +356,7 @@ class E727_3_USB_AO(E727_3_USB):
             ao_conf["samples_margin"] = self.conf["samples_margin"]
         self._ao = AnalogOut(ao_name, ao_conf, prefix=prefix)
         self.load_conf_preset(self._ao.device_type)
-        self._write_and_start = self.conf.get("write_and_start", False)
+        self._write_and_start = self.conf.get("write_and_start", True)
 
         if self.conf.get("start_servo", True):
             self.start_servo()
@@ -482,7 +482,7 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
 
     :param samples_margin: (has preset, default: 0) margin of samples for AnalogOut.
     :type samples_margin: int
-    :param write_and_start: (has preset, default: False) if False, DAQ Task is started and then
+    :param write_and_start: (has preset, default: True) if False, DAQ Task is started and then
         scan data is written in start_scan(). True reverses this order.
     :type write_and_start: bool
 
@@ -512,7 +512,7 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
             ao_conf["samples_margin"] = self.conf["samples_margin"]
         self._ao = AnalogOut(ao_name, ao_conf, prefix=prefix)
         self.load_conf_preset(self._ao.device_type)
-        self._write_and_start = self.conf.get("write_and_start", False)
+        self._write_and_start = self.conf.get("write_and_start", True)
 
         ai_name = name + "_ai"
         ai_conf = {"lines": ai_lines}
