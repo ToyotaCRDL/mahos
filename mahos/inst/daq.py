@@ -541,31 +541,51 @@ class AnalogIn(ConfigurableTask):
 
     :param lines: list of strings to designate DAQ's physical channels.
     :type lines: list[str]
-    :param buffer_size: (default: 10000) Software buffer (queue) size.
-    :type buffer_size: int
+    :param queue_size: (default: 10000) Software buffer (queue) size for acquired data.
+    :type queue_size: int
 
     :param clock_mode: If True (False), configures as clock-mode (on-demand-mode).
     :type clock_mode: bool
     :param bounds: bounds (min, max) values of the expected input voltages per channels.
     :type bounds: list[tuple[float, float]]
-    :param finite: (default True) Switch if finite mode or infinite mode.
+
+    :param clock: DAQ terminal for clock.
+    :type clock: str
+    :param cb_samples: The number of samples for each callback.
+    :type cb_samples: int
+    :param samples: The number of samples. In infinite mode (finite=False), this is used for
+        automatic buffer allocation.
+    :type samples: int
+    :param buffer_size: The input buffer size. If not given, buffer size is not set manually
+        (automatic buffer allocation is used).
+    :type buffer_size: int | None
+
+    :param rate: (default: 10000.0) Estimated sampling rate.
+    :type rate: float
+    :param clock_dir: (default: True) True (False) for rising (falling) edge clock.
+    :type clock_dir: bool
+    :param finite: (default: True) Switch if finite mode or infinite mode.
     :type finite: bool
-    :param every: (default False) Switch if every1 mode or not.
+    :param every: (default: False) Switch if every1 mode or not.
     :type every: bool
-    :param oversample: (default 1) cb_samples and samples are multiplied by `oversample`,
-                       and everyN_handler is passed mean of `oversample` readings.
-    :type oversample: int
-    :param stamp: (default False) Attach timestamp for each samples.
+    :param stamp: (default: False) Attach timestamp for each samples.
     :type stamp: bool
-    :param drop_first: (default 0) drop the data on first N callbacks.
+    :param drop_first: (default: 0) drop the data on first N callbacks.
     :type drop_first: int
+
+    :param oversample: (default: 1) cb_samples, samples, and buffer_size are multiplied by
+                       `oversample`, and everyN_handler is passed mean of `oversample` readings.
+    :type oversample: int
 
     Finite or Infinite mode
     -----------------------
 
     In finite mode (finite=True), task is finished with `samples`.
     In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop().
-    (`samples` is used to determine the buffer size.)
+
+    On some device, we cannot call EveryNCallBack at arbitrary `cb_samples` in infinite mode.
+    (For example, buffer size must be even integer multiple of cb_samples.)
+    Setting buffer_size explicitly, or every=True may resolve such a situation.
 
     Callback handlers
     -----------------
@@ -574,7 +594,7 @@ class AnalogIn(ConfigurableTask):
     If every1 mode (every=True), EveryNCallBack is called with N=1 regardress of `cb_samples`.
     And every1_handler is called at each callbacks.
     EveryNCallBack aquires data and call everyN_handler at each `cb_samples` callbacks.
-    If every1 mode is not active (every=False), EveryNCallBack is called
+    If every1 mode is inactive (every=False), EveryNCallBack is called
     after acquiring `cb_samples`, and everyN_handler is called for each callback.
     In this mode every1_handler is never called.
 
@@ -586,8 +606,8 @@ class AnalogIn(ConfigurableTask):
         self.check_required_conf(("lines",))
         self.lines = conf["lines"]
 
-        self.buffer_size = self.conf.get("buffer_size", 10000)
-        self.queue = LockedQueue(self.buffer_size)
+        self.queue_size = self.conf.get("queue_size", 10000)
+        self.queue = LockedQueue(self.queue_size)
         self._stamp = False
         self.clock_mode = False
 
@@ -716,17 +736,20 @@ class AnalogIn(ConfigurableTask):
         clock = params["clock"]
         cb_samples = params["cb_samples"]
         samples = params["samples"]
+        buffer_size = params.get("buffer_size", 0)
 
         rate = params.get("rate", 10000.0)
         clock_dir = _edge_polarity(params.get("clock_dir", True))
+
+        self.finite = params.get("finite", True)
         every = params.get("every", False)
-        oversample = params.get("oversample", 1)
         self._stamp = params.get("stamp", False)
         drop_first = params.get("drop_first", 0)
-        self.finite = params.get("finite", True)
+        oversample = params.get("oversample", 1)
 
         cb_samples *= oversample
         samples *= oversample
+        buffer_size *= oversample
         if every and samples % cb_samples != 0:
             self.logger.error("samples must be integer multiple of cb_samples.")
             return False
@@ -736,7 +759,7 @@ class AnalogIn(ConfigurableTask):
             return False
         self.logger.debug(f"Input voltage bounds: {bounds}")
 
-        self.queue = LockedQueue(self.buffer_size)
+        self.queue = LockedQueue(self.queue_size)
 
         every1_handler = params.get("every1_handler", self._null_every1_handler)
         done_handler = params.get("done_handler", self._null_done_handler)
@@ -773,11 +796,8 @@ class AnalogIn(ConfigurableTask):
         )
 
         self.logger.debug(f"Buffer size (auto alloc): {self.get_buffer_size()}")
-
-        bs = params.get("buffer_size")
-        if bs:
-            self.logger.debug(f"Trying to allocate buffer size: {bs * oversample}")
-            self.set_buffer_size(bs * oversample)
+        if buffer_size:
+            self.set_buffer_size(buffer_size)
             self.logger.debug(f"Buffer size (manual alloc): {self.get_buffer_size()}")
 
         for i, line in enumerate(self.lines):
@@ -950,36 +970,50 @@ class BufferedEdgeCounter(ConfigurableTask):
     :type source: str
     :param source_dir: (default: True) Source direction. True (False) for rising (falling) edge.
     :type source_dir: bool
-    :param buffer_size: (default: 10000) Software buffer (queue) size.
-    :type buffer_size: int
+    :param queue_size: (default: 10000) Software buffer (queue) size for acquired data.
+    :type queue_size: int
 
-    :param finite: (default True) Switch if finite mode or infinite mode.
+    :param clock: DAQ terminal for clock.
+    :type clock: str
+    :param cb_samples: The number of samples for each callback.
+    :type cb_samples: int
+    :param samples: The number of samples. In infinite mode (finite=False), this is used for
+        automatic buffer allocation.
+    :type samples: int
+    :param buffer_size: The input buffer size. If not given, buffer size is not set manually
+        (automatic buffer allocation is used).
+    :type buffer_size: int | None
+
+    :param rate: (default: 10000.0) Estimated sampling rate.
+    :type rate: float
+    :param clock_dir: (default: True) True (False) for rising (falling) edge clock.
+    :type clock_dir: bool
+    :param finite: (default: True) Switch if finite mode or infinite mode.
     :type finite: bool
-    :param every: (default False) Switch if every1 mode or not.
+    :param every: (default: False) Switch if every1 mode or not.
     :type every: bool
-    :param diff: (default True) If True, everyN_handler is passed differential data
-                 (<count of n-th sample> - <count of (n-1)-th sample>).
-    :type diff: bool
-    :param gate: (default False) If True, cb_samples and samples are automatically
-                 doubled and everyN_handler is passed gated data
-                 (<count of (2n+1)-th sample> - <count of (2n)-th sample>).
-    :type gate: bool
     :param stamp: (default False) Attach timestamp for each samples.
     :type stamp: bool
     :param drop_first: (default 0) drop the data on first N callbacks.
     :type drop_first: int
+
+    :param diff: (default: True) If True, everyN_handler is passed differential data
+                 (<count of n-th sample> - <count of (n-1)-th sample>).
+    :type diff: bool
+    :param gate: (default: False) If True, cb_samples, samples, and buffer_size are automatically
+                 doubled and everyN_handler is passed gated data
+                 (<count of (2n+1)-th sample> - <count of (2n)-th sample>).
+    :type gate: bool
 
     Finite or Infinite mode
     -----------------------
 
     In finite mode (finite=True), task is finished with `samples`.
     In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop().
-    (`samples` is used to determine the buffer size.)
 
-    In infinite mode, buffer size is automatically assigned by NI-DAQmx.
-    On some device, we cannot call EveryNCallBack at arbitrary `cb_samples`.
+    On some device, we cannot call EveryNCallBack at arbitrary `cb_samples` in infinite mode.
     (For example, buffer size must be even integer multiple of cb_samples.)
-    Setting every=True may resolve such a situation.
+    Setting buffer_size explicitly, or every=True may resolve such a situation.
 
     Callback handlers
     -----------------
@@ -988,7 +1022,7 @@ class BufferedEdgeCounter(ConfigurableTask):
     If every1 mode (every=True), EveryNCallBack is called with N=1 regardress of `cb_samples`.
     And every1_handler is called at each callbacks.
     EveryNCallBack aquires data and call everyN_handler at each `cb_samples` callbacks.
-    If every1 mode is not active (every=False), EveryNCallBack is called
+    If every1 mode is inactive (every=False), EveryNCallBack is called
     after acquiring `cb_samples`, and everyN_handler is called for each callback.
     In this mode every1_handler is never called.
 
@@ -1002,8 +1036,8 @@ class BufferedEdgeCounter(ConfigurableTask):
         self.source = conf["source"]
         self.source_dir = _edge_polarity(conf.get("source_dir", True))
 
-        self.buffer_size = self.conf.get("buffer_size", 10000)
-        self.queue = LockedQueue(self.buffer_size)
+        self.queue_size = self.conf.get("queue_size", 10000)
+        self.queue = LockedQueue(self.queue_size)
         self._stamp = False
 
     def _null_every1_handler(self):
@@ -1065,19 +1099,22 @@ class BufferedEdgeCounter(ConfigurableTask):
         clock = params["clock"]
         cb_samples = params["cb_samples"]
         samples = params["samples"]
+        buffer_size = params.get("buffer_size", 0)
+
+        rate = params.get("rate", 10000.0)
         clock_dir = _edge_polarity(params.get("clock_dir", True))
 
         self.finite = params.get("finite", True)
         every = params.get("every", False)
+        self._stamp = params.get("stamp", False)
+        drop_first = params.get("drop_first", 0)
         diff = params.get("diff", True)
         gate = params.get("gate", False)
-        self._stamp = params.get("stamp", False)
-        rate = params.get("rate", 10000.0)
-        drop_first = params.get("drop_first", 0)
 
         if gate:
             cb_samples *= 2
             samples *= 2
+            buffer_size *= 2
         if every and samples % cb_samples != 0:
             self.logger.error("samples must be integer multiple of cb_samples.")
             return False
@@ -1085,7 +1122,7 @@ class BufferedEdgeCounter(ConfigurableTask):
             self.logger.error("samples must be greater than 1 in diff mode.")
             return False
 
-        self.queue = LockedQueue(self.buffer_size)
+        self.queue = LockedQueue(self.queue_size)
 
         every1_handler = params.get("every1_handler", self._null_every1_handler)
         done_handler = params.get("done_handler", self._null_done_handler)
@@ -1113,11 +1150,8 @@ class BufferedEdgeCounter(ConfigurableTask):
         )
 
         self.logger.debug(f"Buffer size (auto alloc): {self.get_buffer_size()}")
-
-        bs = params.get("buffer_size")
-        if bs:
-            self.logger.debug(f"Trying to allocate buffer size: {bs}")
-            self.set_buffer_size(bs)
+        if buffer_size:
+            self.set_buffer_size(buffer_size)
             self.logger.debug(f"Buffer size (manual alloc): {self.get_buffer_size()}")
 
         if every:
