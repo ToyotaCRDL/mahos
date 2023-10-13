@@ -22,6 +22,7 @@ from .instrument import Instrument
 from .exceptions import InstError
 from .daq import AnalogIn, AnalogOut
 from ..msgs.confocal_msgs import Axis
+from ..util.conf import PresetLoader
 
 
 class BasePiezo3Axes(Instrument):
@@ -324,12 +325,10 @@ class E727_3_USB_AO(E727_3_USB):
     :param offset_um: the AnalogOut voltage offset in um. see scale_volt_per_um too.
     :type offset_um: float
 
-    :param samples_margin: (default: 1) margin of samples for AnalogOut.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :param samples_margin: (has preset, default: 0) margin of samples for AnalogOut.
     :type samples_margin: int
-    :param write_and_start: (default: False) if False, DAQ Task is started and then
+    :param write_and_start: (has preset, default: False) if False, DAQ Task is started and then
         scan data is written in start_scan(). True reverses this order.
-        Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)
     :type write_and_start: bool
 
     """
@@ -345,20 +344,28 @@ class E727_3_USB_AO(E727_3_USB):
             raise ValueError("length of AO lines and number of axis don't match.")
         self._scale_volt_per_um = self.conf["scale_volt_per_um"]
         self._offset_um = self.conf["offset_um"]
-        self._write_and_start = self.conf.get("write_and_start", False)
 
         ao_name = name + "_ao"
         # bounds in volts converted from command space range
         bounds = [[self.um_to_volt_raw(v) for v in lim] for lim in self.get_limit()]
-        ao_param = {
+        ao_conf = {
             "lines": lines,
             "bounds": bounds,
-            "samples_margin": self.conf.get("samples_margin", 1),
         }
-        self._ao = AnalogOut(ao_name, ao_param, prefix=prefix)
+        if "samples_margin" in self.conf:
+            ao_conf["samples_margin"] = self.conf["samples_margin"]
+        self._ao = AnalogOut(ao_name, ao_conf, prefix=prefix)
+        self.load_conf_preset(self._ao.device_type)
+        self._write_and_start = self.conf.get("write_and_start", False)
 
         if self.conf.get("start_servo", True):
             self.start_servo()
+
+    def load_conf_preset(self, dev_type: str):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.PARTIAL)
+        loader.add_preset("PCIe-6343", [("write_and_start", False)])
+        loader.add_preset("USB-6363", [("write_and_start", True)])
+        loader.load_preset(self.conf, dev_type)
 
     def write_scan_array(self, scan_array: np.ndarray) -> bool:
         # scan_array is N x 3 array.
@@ -473,12 +480,10 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
     :param ai_oversample: (default: 10000) Number of sampling points to read current position.
     :type ai_oversample: int
 
-    :param samples_margin: (default: 1) margin of samples for AnalogOut.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :param samples_margin: (has preset, default: 0) margin of samples for AnalogOut.
     :type samples_margin: int
-    :param write_and_start: (default: False) if False, DAQ Task is started and then
+    :param write_and_start: (has preset, default: False) if False, DAQ Task is started and then
         scan data is written in start_scan(). True reverses this order.
-        Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)
     :type write_and_start: bool
 
     """
@@ -493,7 +498,6 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
         self._offset_um = self.conf["offset_um"]
         self._ai_scale_volt_per_um = self.conf.get("ai_scale_volt_per_um", self._scale_volt_per_um)
         self._ai_offset_um = self.conf.get("ai_offset_um", self._ai_offset_um)
-        self._write_and_start = self.conf.get("write_and_start", False)
         self._ont_error = self.conf.get("ont_error", 0.010)
         self._ai_oversample = self.conf.get("ai_oversample", 10000)
 
@@ -503,9 +507,12 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
         ao_conf = {
             "lines": lines,
             "bounds": bounds,
-            "samples_margin": self.conf.get("samples_margin", 1),
         }
+        if "samples_margin" in self.conf:
+            ao_conf["samples_margin"] = self.conf["samples_margin"]
         self._ao = AnalogOut(ao_name, ao_conf, prefix=prefix)
+        self.load_conf_preset(self._ao.device_type)
+        self._write_and_start = self.conf.get("write_and_start", False)
 
         ai_name = name + "_ai"
         ai_conf = {"lines": ai_lines}
@@ -515,6 +522,12 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
         self._ai.configure_on_demand({"bounds": ai_bounds})
 
         self.init_target_pos()
+
+    def load_conf_preset(self, dev_type: str):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.PARTIAL)
+        loader.add_preset("PCIe-6343", [("write_and_start", False)])
+        loader.add_preset("USB-6363", [("write_and_start", True)])
+        loader.load_preset(self.conf, dev_type)
 
     def write_scan_array(self, scan_array: np.ndarray) -> bool:
         # scan_array is N x 3 array.

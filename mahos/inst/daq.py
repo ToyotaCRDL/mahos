@@ -17,6 +17,7 @@ import numpy as np
 import PyDAQmx as D
 
 from ..util.locked_queue import LockedQueue
+from ..util.conf import PresetLoader
 from .instrument import Instrument
 from .exceptions import InstError
 
@@ -86,6 +87,12 @@ class ConfigurableTask(Instrument):
 
     def join(self, timeout_sec: float):
         self.task.WaitUntilTaskDone(timeout_sec)
+
+    def get_device_type(self, dev: str) -> str:
+        size = 200
+        data = D.create_string_buffer(size)
+        D.DAQmxGetDevProductType(dev, data, size)
+        return data.value.decode()
 
     # Standard API
 
@@ -273,9 +280,8 @@ class AnalogOut(ConfigurableTask):
     :type lines: list[str]
     :param bounds: bounds (min, max) values of the output voltage per channels.
     :type bounds: list[tuple[float, float]]
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
+    :param samples_margin: (has preset, default: 0) margin for sampsPerChanToAcquire arg of
+        CfgSampClkTiming. params["samples"] + samples_margin is passed for the argument.
     :type samples_margin: int
 
     """
@@ -289,7 +295,16 @@ class AnalogOut(ConfigurableTask):
         if len(self.lines) != len(self.bounds):
             raise ValueError("Length of lines and bounds must match.")
         self.clock_mode = False
-        self.samples_margin = self.conf.get("samples_margin", 1)
+
+        self.device_type = self.get_device_type(_device_name(self.lines[0]))
+        self.load_conf_preset(self.device_type)
+        self.samples_margin = self.conf.get("samples_margin", 0)
+
+    def load_conf_preset(self, dev_type: str):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.PARTIAL)
+        loader.add_preset("PCIe-6343", [("samples_margin", 1)])
+        loader.add_preset("USB-6363", [("samples_margin", 0)])
+        loader.load_preset(self.conf, dev_type)
 
     def clip(self, volts: np.ndarray) -> np.ndarray:
         """Clip the voltage values if it exceeds max or min bounds."""
