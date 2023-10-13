@@ -158,7 +158,7 @@ class Tracer(Worker):
         self.trace.yunit = self.pds[0].get_unit()
 
         freq = 1.0 / self.time_window_sec * self.oversample
-        buffer_size = self.cb_samples * self.conf.get("buffer_size_coeff", 20)
+        buffer_size = self.cb_samples * self.conf.get("buffer_size_coeff", 200)
         params_clock = {"freq": freq, "samples": buffer_size, "finite": False}
         params_pd = {
             "cb_samples": self.cb_samples,
