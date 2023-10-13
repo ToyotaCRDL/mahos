@@ -324,8 +324,7 @@ class E727_3_USB_AO(E727_3_USB):
     :param offset_um: the AnalogOut voltage offset in um. see scale_volt_per_um too.
     :type offset_um: float
 
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
+    :param samples_margin: (default: 1) margin of samples for AnalogOut.
         Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
     :type samples_margin: int
     :param write_and_start: (default: False) if False, DAQ Task is started and then
@@ -474,8 +473,7 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
     :param ai_oversample: (default: 10000) Number of sampling points to read current position.
     :type ai_oversample: int
 
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
+    :param samples_margin: (default: 1) margin of samples for AnalogOut.
         Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
     :type samples_margin: int
     :param write_and_start: (default: False) if False, DAQ Task is started and then

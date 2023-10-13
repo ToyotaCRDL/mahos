@@ -30,10 +30,6 @@ class APDCounter(BufferedEdgeCounter):
     :type source_dir: bool
     :param buffer_size: (default: 10000) Software buffer (queue) size.
     :type buffer_size: int
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
-    :type samples_margin: int
 
     :param corr_x_kcps: x-data of correction factor.
     :type corr_x_kcps: np.ndarray
@@ -108,10 +104,6 @@ class AnalogPD(AnalogIn):
     :type line: str
     :param buffer_size: (default: 10000) Software buffer (queue) size.
     :type buffer_size: int
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
-    :type samples_margin: int
 
     :param unit: (default: V) unit after conversion.
     :type unit: str
@@ -179,10 +171,6 @@ class LockinAnalogPD(AnalogIn):
     :type lines: list[str]
     :param buffer_size: (default: 10000) Software buffer (queue) size.
     :type buffer_size: int
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
-    :type samples_margin: int
 
     :param unit: (default: V) unit after conversion.
     :type unit: str

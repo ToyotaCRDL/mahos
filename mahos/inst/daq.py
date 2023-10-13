@@ -528,10 +528,6 @@ class AnalogIn(ConfigurableTask):
     :type lines: list[str]
     :param buffer_size: (default: 10000) Software buffer (queue) size.
     :type buffer_size: int
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
-    :type samples_margin: int
 
     :param clock_mode: If True (False), configures as clock-mode (on-demand-mode).
     :type clock_mode: bool
@@ -579,7 +575,6 @@ class AnalogIn(ConfigurableTask):
         self.queue = LockedQueue(self.buffer_size)
         self._stamp = False
         self.clock_mode = False
-        self.samples_margin = self.conf.get("samples_margin", 1)
 
     def _null_every1_handler(self):
         pass
@@ -759,7 +754,7 @@ class AnalogIn(ConfigurableTask):
             rate,
             clock_dir,
             _samples_finite_or_cont(self.finite),
-            samples + self.samples_margin,
+            samples,
         )
 
         self.logger.debug(f"Buffer size (auto alloc): {self.get_buffer_size()}")
@@ -942,10 +937,6 @@ class BufferedEdgeCounter(ConfigurableTask):
     :type source_dir: bool
     :param buffer_size: (default: 10000) Software buffer (queue) size.
     :type buffer_size: int
-    :param samples_margin: (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-        params["samples"] + samples_margin is passed for the argument.
-        Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)
-    :type samples_margin: int
 
     :param finite: (default True) Switch if finite mode or infinite mode.
     :type finite: bool
@@ -999,7 +990,6 @@ class BufferedEdgeCounter(ConfigurableTask):
         self.buffer_size = self.conf.get("buffer_size", 10000)
         self.queue = LockedQueue(self.buffer_size)
         self._stamp = False
-        self.samples_margin = self.conf.get("samples_margin", 1)
 
     def _null_every1_handler(self):
         pass
@@ -1104,7 +1094,7 @@ class BufferedEdgeCounter(ConfigurableTask):
             rate,
             clock_dir,
             _samples_finite_or_cont(self.finite),
-            samples + self.samples_margin,
+            samples,
         )
 
         self.logger.debug(f"Buffer size (auto alloc): {self.get_buffer_size()}")
