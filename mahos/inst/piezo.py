@@ -76,9 +76,9 @@ class BasePiezo3Axes(Instrument):
                 positions[i] = mx
         for ax, pos in zip(axes, positions):
             self.target[ax] = pos
-        return self.move(axes)
+        return self.move()
 
-    def move(self, axes) -> bool:
+    def move(self) -> bool:
         raise NotImplementedError("move() is not implemented")
 
     def set_target_X(self, pos) -> bool:
@@ -572,7 +572,7 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
             return abs(val) < self._ont_error
 
         pos = self.get_pos()
-        ont = [ontgt(p - t) for p, t in zip(pos, [self.target[ax] for ax in Axis])]
+        ont = [ontgt(p - t) for p, t in zip(pos, self.get_target())]
         return pos, ont
 
     def get_scan_buffer_size(self):
