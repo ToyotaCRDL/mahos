@@ -450,14 +450,15 @@ class Sweeper(Worker):
         if params.get("background", False):
             num *= 2
             drop *= 2
-        samples = num * 10  # large samples to assure enough buffer size
+        buffer_size = num * self.conf.get("buffer_size_coeff", 20)
         params_pd = {
             "clock": self._pd_clock,
             "cb_samples": num,
-            "samples": samples,
+            "samples": buffer_size,
+            "buffer_size": buffer_size,
             "rate": rate,
             "finite": False,
-            "every": self.conf.get("every", True),
+            "every": self.conf.get("every", False),
             "drop_first": drop,
             "gate": True,
             "time_window": time_window,

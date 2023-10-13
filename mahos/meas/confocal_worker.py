@@ -131,17 +131,17 @@ class Tracer(Worker):
     """
 
     def __init__(self, cli, logger, conf: dict):
-        Worker.__init__(self, cli, logger)
+        Worker.__init__(self, cli, logger, conf)
         self.clock = ClockSourceInterface(cli, "clock")
         self.pds = [PDInterface(cli, n) for n in conf.get("pd_names", ["pd0", "pd1"])]
         self.add_instruments(self.clock, *self.pds)
 
-        self.interval_sec = conf.get("interval_sec", 0.5)
-        self.size = conf.get("size", DEFAULT_TRACER_SIZE)
-        self.cb_samples = conf.get("samples", 5)
-        self.oversample = conf.get("oversample", 1)
-        self.time_window_sec = conf.get("time_window_sec", 0.01)
-        self.pd_bounds = conf.get("pd_bounds", (-10.0, 10.0))
+        self.interval_sec = self.conf.get("interval_sec", 0.5)
+        self.size = self.conf.get("size", DEFAULT_TRACER_SIZE)
+        self.cb_samples = self.conf.get("samples", 5)
+        self.oversample = self.conf.get("oversample", 1)
+        self.time_window_sec = self.conf.get("time_window_sec", 0.01)
+        self.pd_bounds = self.conf.get("pd_bounds", (-10.0, 10.0))
 
         self.trace = Trace(
             size=self.size, channels=len(self.pds), _complex=conf.get("complex", False)
@@ -158,11 +158,12 @@ class Tracer(Worker):
         self.trace.yunit = self.pds[0].get_unit()
 
         freq = 1.0 / self.time_window_sec * self.oversample
-        samples = self.cb_samples * 10  # large samples to assure enough buffer size
-        params_clock = {"freq": freq, "samples": samples, "finite": False}
+        buffer_size = self.cb_samples * self.conf.get("buffer_size_coeff", 20)
+        params_clock = {"freq": freq, "samples": buffer_size, "finite": False}
         params_pd = {
             "cb_samples": self.cb_samples,
-            "samples": samples,
+            "samples": buffer_size,
+            "buffer_size": buffer_size,
             "rate": freq,
             "finite": False,
             "every": False,

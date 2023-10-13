@@ -1007,6 +1007,11 @@ class BufferedEdgeCounter(ConfigurableTask):
     def _null_done_handler(self, status: int):
         pass
 
+    def set_buffer_size(self, size: int):
+        if self.task is None:
+            return None
+        self.task.CfgInputBuffer(size)
+
     def get_buffer_size(self) -> int | None:
         if self.task is None:
             return None
@@ -1102,7 +1107,13 @@ class BufferedEdgeCounter(ConfigurableTask):
             samples + self.samples_margin,
         )
 
-        self.logger.debug(f"Buffer size: {self.get_buffer_size()}")
+        self.logger.debug(f"Buffer size (auto alloc): {self.get_buffer_size()}")
+
+        bs = params.get("buffer_size")
+        if bs:
+            self.logger.debug(f"Trying to allocate buffer size: {bs}")
+            self.set_buffer_size(bs)
+            self.logger.debug(f"Buffer size (manual alloc): {self.get_buffer_size()}")
 
         if every:
             self.task.AutoRegisterEveryNSamplesEvent(D.DAQmx_Val_Acquired_Into_Buffer, 1, 0)
