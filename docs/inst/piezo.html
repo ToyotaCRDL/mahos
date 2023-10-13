@@ -453,8 +453,10 @@ document.write(`
 <li class="toctree-l2 current active has-children"><a class="current reference internal" href="#">mahos.inst.piezo</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/mahos.inst.piezo_interface.PiezoInterface.html">mahos.inst.piezo_interface.PiezoInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/mahos.inst.piezo_interface.AOPiezoInterface.html">mahos.inst.piezo_interface.AOPiezoInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/mahos.inst.piezo.BasePiezo3Axes.html">mahos.inst.piezo.BasePiezo3Axes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/mahos.inst.piezo.E727_3_USB.html">mahos.inst.piezo.E727_3_USB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/mahos.inst.piezo.E727_3_USB_AO.html">mahos.inst.piezo.E727_3_USB_AO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/mahos.inst.piezo.AnalogPiezo3Axes.html">mahos.inst.piezo.AnalogPiezo3Axes</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="sg.html">mahos.inst.sg</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -627,16 +629,24 @@ document.write(`
 <span id="instruments"></span><h2>Instruments<a class="headerlink" href="#module-mahos.inst.piezo" title="Permalink to this heading">#</a></h2>
 <p>Piezo Stage module.</p>
 <dl class="simple">
-<dt>available class(es):</dt><dd><p>E727_3_USB - PI E727.3 Piezo controller using PIPython (GCS USB).</p>
+<dt>available class(es):</dt><dd><p>E727_3_USB - PI E727.3 Piezo controller using PIPython (GCS USB).
+E727_3_USB_AO - PI E727.3 Piezo controller using PIPython and DAQ AnalogOut.
+AnalogPiezo3Axes - Generic Piezo Driver using DAQ AnalogIn and AnalogOut.</p>
 </dd>
 </dl>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.inst.piezo.E727_3_USB.html#mahos.inst.piezo.E727_3_USB" title="mahos.inst.piezo.E727_3_USB"><code class="xref py py-obj docutils literal notranslate"><span class="pre">E727_3_USB</span></code></a>(name[, conf, prefix])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.inst.piezo.BasePiezo3Axes.html#mahos.inst.piezo.BasePiezo3Axes" title="mahos.inst.piezo.BasePiezo3Axes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BasePiezo3Axes</span></code></a>(name, conf[, prefix])</p></td>
+<td><p>Base Class for Piezo with 3 axes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.inst.piezo.E727_3_USB.html#mahos.inst.piezo.E727_3_USB" title="mahos.inst.piezo.E727_3_USB"><code class="xref py py-obj docutils literal notranslate"><span class="pre">E727_3_USB</span></code></a>(name, conf[, prefix])</p></td>
 <td><p>E727.3 driver using USB connection of PIPython.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.inst.piezo.E727_3_USB_AO.html#mahos.inst.piezo.E727_3_USB_AO" title="mahos.inst.piezo.E727_3_USB_AO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">E727_3_USB_AO</span></code></a>(name, conf[, prefix])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.inst.piezo.E727_3_USB_AO.html#mahos.inst.piezo.E727_3_USB_AO" title="mahos.inst.piezo.E727_3_USB_AO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">E727_3_USB_AO</span></code></a>(name, conf[, prefix])</p></td>
 <td><p>E727.3 driver using USB connection of PIPython and DAQ AnalogOut.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.inst.piezo.AnalogPiezo3Axes.html#mahos.inst.piezo.AnalogPiezo3Axes" title="mahos.inst.piezo.AnalogPiezo3Axes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AnalogPiezo3Axes</span></code></a>(name, conf[, prefix])</p></td>
+<td><p>Generic Piezo Driver using DAQ AnalogIn and AnalogOut.</p></td>
 </tr>
 </tbody>
 </table>

@@ -8,7 +8,7 @@ Piezo Stage module.
 available class(es):
     E727_3_USB - PI E727.3 Piezo controller using PIPython (GCS USB).
     E727_3_USB_AO - PI E727.3 Piezo controller using PIPython and DAQ AnalogOut.
-    AnalogPiezo - Generic Piezo Driver using DAQ AnalogIn and AnalogOut.
+    AnalogPiezo3Axes - Generic Piezo Driver using DAQ AnalogIn and AnalogOut.
 
 """
 

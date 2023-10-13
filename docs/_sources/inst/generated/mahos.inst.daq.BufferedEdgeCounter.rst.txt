@@ -25,6 +25,7 @@
       ~BufferedEdgeCounter.pop_all_opt
       ~BufferedEdgeCounter.pop_block
       ~BufferedEdgeCounter.pop_opt
+      ~BufferedEdgeCounter.set_buffer_size
    
    
 

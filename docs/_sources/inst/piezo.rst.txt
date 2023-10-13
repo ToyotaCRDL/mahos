@@ -24,5 +24,7 @@ Instruments
 .. autosummary::
    :toctree: generated
 
+   BasePiezo3Axes
    E727_3_USB
    E727_3_USB_AO
+   AnalogPiezo3Axes

@@ -40,7 +40,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'inst/generated/mahos.inst.piezo.E727_3_USB_AO';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="mahos.inst.sg" href="../sg.html" />
+    <link rel="next" title="mahos.inst.piezo.AnalogPiezo3Axes" href="mahos.inst.piezo.AnalogPiezo3Axes.html" />
     <link rel="prev" title="mahos.inst.piezo.E727_3_USB" href="mahos.inst.piezo.E727_3_USB.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -453,8 +453,10 @@ document.write(`
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="../piezo.html">mahos.inst.piezo</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo_interface.PiezoInterface.html">mahos.inst.piezo_interface.PiezoInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo_interface.AOPiezoInterface.html">mahos.inst.piezo_interface.AOPiezoInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.BasePiezo3Axes.html">mahos.inst.piezo.BasePiezo3Axes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.E727_3_USB.html">mahos.inst.piezo.E727_3_USB</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">mahos.inst.piezo.E727_3_USB_AO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.AnalogPiezo3Axes.html">mahos.inst.piezo.AnalogPiezo3Axes</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../sg.html">mahos.inst.sg</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -622,29 +624,17 @@ document.write(`
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>start_servo</strong> (<em>bool</em>) – (default: True) if True, start servo on init.</p></li>
-<li><p><strong>lines</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – list of strings to designate DAQ AnalogOut physical channels.</p></li>
-<li><p><strong>scale_volt_per_um</strong> (<em>float</em>) – the AnalogOut voltage scale in V / um.
-the output voltage is determined by: (pos_um - offset_um) * scale_volt_per_um.</p></li>
-<li><p><strong>offset_um</strong> (<em>float</em>) – the AnalogOut voltage offset in um. see scale_volt_per_um too.</p></li>
-<li><p><strong>transform</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>float</em><em>]</em><em>]</em>) – (default: identity matrix) a 3x3 linear transformation matrix
-from (real) target coordinate to command-value coordinate.
-This is usable for tilt correction to compensate the cross-talks in piezo axes.</p></li>
-<li><p><strong>limit_um</strong> – (default: [[0.0, 100.0], [0.0, 100.0], [0.0, 100.0)]) limits of positions
-in command coordinate in the following format:
-[[xmin, xmax], [ymin, ymax], [zmin, zmax]].</p></li>
-<li><p><strong>range_um</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – travel ranges in target coordinate in the following format:
-[[xmin, xmax], [ymin, ymax], [zmin, zmax]].
-This should be identical to limit_um if transform is default (identity matrix), i.e.,
-the target corrdinate and the command-value coordinate are identical.</p></li>
 <li><p><strong>axes_order</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – (default: [0, 1, 2]) permutation for piezo axes IDs and (x, y, z).
 When axes_order is [1, 2, 0], the x axis is piezo axis of index 1,
 and the y (z) axis is index 2 (0).</p></li>
-<li><p><strong>samples_margin</strong> (<em>int</em>) – (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-params[“samples”] + samples_margin is passed for the argument.
-Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)</p></li>
-<li><p><strong>write_and_start</strong> (<em>bool</em>) – (default: False) if False, DAQ Task is started and then
-scan data is written in start_scan(). True reverses this order.
-Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)</p></li>
+<li><p><strong>lines</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – list of strings to designate DAQ AnalogOut physical channels.
+Order them as [x, y, z].</p></li>
+<li><p><strong>scale_volt_per_um</strong> (<em>float</em>) – the AnalogOut voltage scale in V / um.
+the output voltage is determined by: (pos_um - offset_um) * scale_volt_per_um.</p></li>
+<li><p><strong>offset_um</strong> (<em>float</em>) – the AnalogOut voltage offset in um. see scale_volt_per_um too.</p></li>
+<li><p><strong>samples_margin</strong> (<em>int</em>) – (has preset, default: 0) margin of samples for AnalogOut.</p></li>
+<li><p><strong>write_and_start</strong> (<em>bool</em>) – (has preset, default: True) if False, DAQ Task is started and then
+scan data is written in start_scan(). True reverses this order.</p></li>
 </ul>
 </dd>
 </dl>
@@ -671,35 +661,35 @@ Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)</p><
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(key[, args])</p></td>
 <td><p>Get an instrument setting or measurement data.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pos</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_scan_buffer_size</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_scan_buffer_size</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">join</span></code>(timeout_sec)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">join</span></code>(timeout_sec)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_conf_preset</span></code>(dev_type)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">move</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown</span></code>()</p></td>
 <td><p>Shutdown the instrument and get ready to hard power-off.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>()</p></td>
 <td><p>Start the instrument operation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_scan</span></code>(scan_array)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_scan</span></code>(scan_array)</p></td>
 <td><p>start the configured scan with scan_array.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
 <td><p>Stop the instrument operation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">um_to_volt</span></code>(pos_um[, update])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">um_to_volt</span></code>(pos_um)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">um_to_volt_raw</span></code>(pos_um)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">um_to_volt_raw</span></code>(pos_um)</p></td>
 <td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_target_pos</span></code>()</p></td>
-<td><p>query target pos and update self.target.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">volt_to_um</span></code>(volt)</p></td>
 <td><p></p></td>
@@ -707,6 +697,11 @@ Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)</p><
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_scan_array</span></code>(scan_array)</p></td>
 <td><p></p></td>
 </tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable table autosummary">
+<tbody>
 </tbody>
 </table>
 </dd></dl>
@@ -734,11 +729,11 @@ Recommended value depends on the device: (USB-6363: True, PCIe-6343: False)</p><
       </div>
     </a>
     <a class="right-next"
-       href="../sg.html"
+       href="mahos.inst.piezo.AnalogPiezo3Axes.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">mahos.inst.sg</p>
+        <p class="prev-next-title">mahos.inst.piezo.AnalogPiezo3Axes</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

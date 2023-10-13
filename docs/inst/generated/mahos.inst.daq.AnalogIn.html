@@ -453,8 +453,10 @@ document.write(`
 <li class="toctree-l2 has-children"><a class="reference internal" href="../piezo.html">mahos.inst.piezo</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo_interface.PiezoInterface.html">mahos.inst.piezo_interface.PiezoInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo_interface.AOPiezoInterface.html">mahos.inst.piezo_interface.AOPiezoInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.BasePiezo3Axes.html">mahos.inst.piezo.BasePiezo3Axes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.E727_3_USB.html">mahos.inst.piezo.E727_3_USB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.E727_3_USB_AO.html">mahos.inst.piezo.E727_3_USB_AO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.AnalogPiezo3Axes.html">mahos.inst.piezo.AnalogPiezo3Axes</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../sg.html">mahos.inst.sg</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -625,26 +627,33 @@ In on-demand-mode, data are read on get(“data”) request.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lines</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – list of strings to designate DAQ’s physical channels.</p></li>
-<li><p><strong>buffer_size</strong> (<em>int</em>) – (default: 10000) Software buffer (queue) size.</p></li>
-<li><p><strong>samples_margin</strong> (<em>int</em>) – (default: 1) margin for sampsPerChanToAcquire arg of CfgSampClkTiming.
-params[“samples”] + samples_margin is passed for the argument.
-Recommended value depends on the device: (USB-6363: 0, PCIe-6343: 1)</p></li>
+<li><p><strong>queue_size</strong> (<em>int</em>) – (default: 10000) Software buffer (queue) size for acquired data.</p></li>
 <li><p><strong>clock_mode</strong> (<em>bool</em>) – If True (False), configures as clock-mode (on-demand-mode).</p></li>
 <li><p><strong>bounds</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – bounds (min, max) values of the expected input voltages per channels.</p></li>
-<li><p><strong>finite</strong> (<em>bool</em>) – (default True) Switch if finite mode or infinite mode.</p></li>
-<li><p><strong>every</strong> (<em>bool</em>) – (default False) Switch if every1 mode or not.</p></li>
-<li><p><strong>oversample</strong> (<em>int</em>) – (default 1) cb_samples and samples are multiplied by <cite>oversample</cite>,
-and everyN_handler is passed mean of <cite>oversample</cite> readings.</p></li>
-<li><p><strong>stamp</strong> (<em>bool</em>) – (default False) Attach timestamp for each samples.</p></li>
-<li><p><strong>drop_first</strong> (<em>int</em>) – (default 0) drop the data on first N callbacks.</p></li>
+<li><p><strong>clock</strong> (<em>str</em>) – DAQ terminal for clock.</p></li>
+<li><p><strong>cb_samples</strong> (<em>int</em>) – The number of samples for each callback.</p></li>
+<li><p><strong>samples</strong> (<em>int</em>) – The number of samples. In infinite mode (finite=False), this is used for
+automatic buffer allocation.</p></li>
+<li><p><strong>buffer_size</strong> (<em>int</em><em> | </em><em>None</em>) – The input buffer size. If not given, buffer size is not set manually
+(automatic buffer allocation is used).</p></li>
+<li><p><strong>rate</strong> (<em>float</em>) – (default: 10000.0) Estimated sampling rate.</p></li>
+<li><p><strong>clock_dir</strong> (<em>bool</em>) – (default: True) True (False) for rising (falling) edge clock.</p></li>
+<li><p><strong>finite</strong> (<em>bool</em>) – (default: True) Switch if finite mode or infinite mode.</p></li>
+<li><p><strong>every</strong> (<em>bool</em>) – (default: False) Switch if every1 mode or not.</p></li>
+<li><p><strong>stamp</strong> (<em>bool</em>) – (default: False) Attach timestamp for each samples.</p></li>
+<li><p><strong>drop_first</strong> (<em>int</em>) – (default: 0) drop the data on first N callbacks.</p></li>
+<li><p><strong>oversample</strong> (<em>int</em>) – (default: 1) cb_samples, samples, and buffer_size are multiplied by
+<cite>oversample</cite>, and everyN_handler is passed mean of <cite>oversample</cite> readings.</p></li>
 </ul>
 </dd>
 </dl>
 <section id="finite-or-infinite-mode">
 <h2>Finite or Infinite mode<a class="headerlink" href="#finite-or-infinite-mode" title="Permalink to this heading">#</a></h2>
 <p>In finite mode (finite=True), task is finished with <cite>samples</cite>.
-In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop().
-(<cite>samples</cite> is used to determine the buffer size.)</p>
+In inifinite mode (finite=False), task continues infinitely but it can be stopped by stop().</p>
+<p>On some device, we cannot call EveryNCallBack at arbitrary <cite>cb_samples</cite> in infinite mode.
+(For example, buffer size must be even integer multiple of cb_samples.)
+Setting buffer_size explicitly, or every=True may resolve such a situation.</p>
 </section>
 <section id="callback-handlers">
 <h2>Callback handlers<a class="headerlink" href="#callback-handlers" title="Permalink to this heading">#</a></h2>
@@ -652,7 +661,7 @@ In inifinite mode (finite=False), task continues infinitely but it can be stoppe
 If every1 mode (every=True), EveryNCallBack is called with N=1 regardress of <cite>cb_samples</cite>.
 And every1_handler is called at each callbacks.
 EveryNCallBack aquires data and call everyN_handler at each <cite>cb_samples</cite> callbacks.
-If every1 mode is not active (every=False), EveryNCallBack is called
+If every1 mode is inactive (every=False), EveryNCallBack is called
 after acquiring <cite>cb_samples</cite>, and everyN_handler is called for each callback.
 In this mode every1_handler is never called.</p>
 <dl class="py method">

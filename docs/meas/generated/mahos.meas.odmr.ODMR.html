@@ -453,8 +453,10 @@ document.write(`
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/piezo.html">mahos.inst.piezo</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo_interface.PiezoInterface.html">mahos.inst.piezo_interface.PiezoInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo_interface.AOPiezoInterface.html">mahos.inst.piezo_interface.AOPiezoInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.BasePiezo3Axes.html">mahos.inst.piezo.BasePiezo3Axes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.E727_3_USB.html">mahos.inst.piezo.E727_3_USB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.E727_3_USB_AO.html">mahos.inst.piezo.E727_3_USB_AO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.AnalogPiezo3Axes.html">mahos.inst.piezo.AnalogPiezo3Axes</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/sg.html">mahos.inst.sg</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -619,14 +621,16 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sweeper.pd_clock</strong> (<em>str</em>) – (Required) DAQ device name for PD’s clock (gate)</p></li>
-<li><p><strong>sweeper.pd_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – (default [“pd0”, “pd1”]) PD names in target.servers.</p></li>
-<li><p><strong>sweeper.minimum_block_length</strong> (<em>int</em>) – minimum block length in generated blocks
-(default: 1000)</p></li>
-<li><p><strong>sweeper.start_delay</strong> (<em>float</em>) – (sec.) delay time before starting SG/PG output. (default: 0.0)</p></li>
-<li><p><strong>sweeper.drop_first</strong> (<em>int</em>) – drop first N freq points. (default: 0)</p></li>
-<li><p><strong>sweeper.sg_first</strong> (<em>bool</em>) – if True, turn on SG first and PG second. (default: False)</p></li>
-<li><p><strong>sweeper.pd_analog</strong> (<em>bool</em>) – set True if PD is AnalogIn-based.</p></li>
+<li><p><strong>sweeper.pd_clock</strong> (<em>str</em>) – DAQ terminal name for PD’s clock (gate)</p></li>
+<li><p><strong>sweeper.pd_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – (default: [“pd0”, “pd1”]) PD names in target.servers.</p></li>
+<li><p><strong>sweeper.pd_analog</strong> (<em>bool</em>) – (default: False) set True if PD is AnalogIn-based.</p></li>
+<li><p><strong>sweeper.start_delay</strong> (<em>float</em>) – (default: 0.0) delay time (sec.) before starting SG/PG output.</p></li>
+<li><p><strong>sweeper.drop_first</strong> (<em>int</em>) – (default: 0) drop first N freq points.</p></li>
+<li><p><strong>sweeper.sg_first</strong> (<em>bool</em>) – (default: False) if True, turn on SG first and PG second.</p></li>
+<li><p><strong>pulser.pg_freq_cw</strong> (<em>float</em>) – (has preset) PG frequency for CW mode.</p></li>
+<li><p><strong>pulser.pg_freq_pulse</strong> (<em>float</em>) – (has preset) PG frequency for Pulse mode.</p></li>
+<li><p><strong>pulser.minimum_block_length</strong> (<em>int</em>) – (has preset) minimum block length in generated blocks</p></li>
+<li><p><strong>sweeper.block_base</strong> (<em>int</em>) – (has preset) block base granularity of pulse generator.</p></li>
 <li><p><strong>sweeper.start</strong> (<em>float</em>) – (default param) start frequency in Hz.</p></li>
 <li><p><strong>sweeper.stop</strong> (<em>float</em>) – (default param) stop frequency in Hz.</p></li>
 <li><p><strong>sweeper.num</strong> (<em>int</em>) – (default param) number of frequency points.</p></li>

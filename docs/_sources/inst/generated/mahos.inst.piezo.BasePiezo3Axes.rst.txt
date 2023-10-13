@@ -1,0 +1,43 @@
+﻿mahos.inst.piezo.BasePiezo3Axes
+===============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.piezo
+
+.. autoclass:: BasePiezo3Axes
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BasePiezo3Axes.__init__
+      ~BasePiezo3Axes.get
+      ~BasePiezo3Axes.get_limit
+      ~BasePiezo3Axes.get_range
+      ~BasePiezo3Axes.get_target
+      ~BasePiezo3Axes.init_transform_matrix
+      ~BasePiezo3Axes.move
+      ~BasePiezo3Axes.set_target
+      ~BasePiezo3Axes.set_target_X
+      ~BasePiezo3Axes.set_target_Y
+      ~BasePiezo3Axes.set_target_Z
+      ~BasePiezo3Axes.set_target_pos
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BasePiezo3Axes.DEFAULT_LIMIT
+      ~BasePiezo3Axes.LIMIT_BOUNDS
+   
+   

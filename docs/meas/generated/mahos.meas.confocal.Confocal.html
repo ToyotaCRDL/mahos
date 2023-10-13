@@ -453,8 +453,10 @@ document.write(`
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/piezo.html">mahos.inst.piezo</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo_interface.PiezoInterface.html">mahos.inst.piezo_interface.PiezoInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo_interface.AOPiezoInterface.html">mahos.inst.piezo_interface.AOPiezoInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.BasePiezo3Axes.html">mahos.inst.piezo.BasePiezo3Axes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.E727_3_USB.html">mahos.inst.piezo.E727_3_USB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.E727_3_USB_AO.html">mahos.inst.piezo.E727_3_USB_AO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.AnalogPiezo3Axes.html">mahos.inst.piezo.AnalogPiezo3Axes</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/sg.html">mahos.inst.sg</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -619,23 +621,23 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>piezo.interval_sec</strong> (<em>float</em>) – (default 0.5) Interval to poll piezo pos.</p></li>
-<li><p><strong>tracer.pd_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – (default [“pd0”, “pd1”]) PD names in target.servers.</p></li>
-<li><p><strong>tracer.interval_sec</strong> (<em>float</em>) – (default 0.5) Interval to poll trace data.</p></li>
-<li><p><strong>tracer.size</strong> (<em>int</em>) – (default 500) Size of trace data.</p></li>
-<li><p><strong>tracer.samples</strong> (<em>int</em>) – (default 5) Number of samples per chunk.</p></li>
-<li><p><strong>tracer.oversample</strong> (<em>int</em>) – (default 1) Oversample factor.</p></li>
-<li><p><strong>tracer.time_window_sec</strong> (<em>float</em>) – (default 0.01) Time window for single data point.</p></li>
-<li><p><strong>tracer.pd_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – (default (-10.0, 10.0)) PD’s voltage bounds.</p></li>
-<li><p><strong>scanner.xnum</strong> (<em>int</em>) – (default 51) Default value of param xnum.</p></li>
-<li><p><strong>scanner.ynum</strong> (<em>int</em>) – (default 51) Default value of param ynum.</p></li>
-<li><p><strong>scanner.delay</strong> (<em>float</em>) – (default 0.0) Default value of param delay.</p></li>
-<li><p><strong>scanner.time_window</strong> (<em>float</em>) – (default 0.01) Default value of param time_window.</p></li>
+<li><p><strong>piezo.interval_sec</strong> (<em>float</em>) – (default: 0.5) Interval to poll piezo pos.</p></li>
+<li><p><strong>tracer.pd_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – (default: [“pd0”, “pd1”]) PD names in target.servers.</p></li>
+<li><p><strong>tracer.interval_sec</strong> (<em>float</em>) – (default: 0.5) Interval to poll trace data.</p></li>
+<li><p><strong>tracer.size</strong> (<em>int</em>) – (default: 500) Size of trace data.</p></li>
+<li><p><strong>tracer.samples</strong> (<em>int</em>) – (default: 5) Number of samples per chunk.</p></li>
+<li><p><strong>tracer.oversample</strong> (<em>int</em>) – (default: 1) Oversample factor.</p></li>
+<li><p><strong>tracer.time_window_sec</strong> (<em>float</em>) – (default: 0.01) Time window for single data point.</p></li>
+<li><p><strong>tracer.pd_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – (default: (-10.0, 10.0)) PD’s voltage bounds.</p></li>
+<li><p><strong>scanner.xnum</strong> (<em>int</em>) – (default: 51) Default value of param xnum.</p></li>
+<li><p><strong>scanner.ynum</strong> (<em>int</em>) – (default: 51) Default value of param ynum.</p></li>
+<li><p><strong>scanner.delay</strong> (<em>float</em>) – (default: 0.0) Default value of param delay.</p></li>
+<li><p><strong>scanner.time_window</strong> (<em>float</em>) – (default: 0.01) Default value of param time_window.</p></li>
 <li><p><strong>scanner.pd_analog</strong> (<em>bool</em>) – set True if PD is AnalogIn-based.</p></li>
-<li><p><strong>scanner.pd_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – (default (-10.0, 10.0)) Default value of param pd_bounds.</p></li>
-<li><p><strong>scanner.oversample</strong> (<em>int</em>) – (default 1) Default value of param oversample.</p></li>
-<li><p><strong>scanner.dummy_samples</strong> (<em>int</em>) – (default 10) Default value of param dummy_samples.</p></li>
-<li><p><strong>scanner.poll_samples</strong> (<em>int</em>) – (default 1) Default value of param poll_samples.</p></li>
+<li><p><strong>scanner.pd_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – (default: (-10.0, 10.0)) Default value of param pd_bounds.</p></li>
+<li><p><strong>scanner.oversample</strong> (<em>int</em>) – (default: 1) Default value of param oversample.</p></li>
+<li><p><strong>scanner.dummy_samples</strong> (<em>int</em>) – (default: 10) Default value of param dummy_samples.</p></li>
+<li><p><strong>scanner.poll_samples</strong> (<em>int</em>) – (default: 1) Default value of param poll_samples.</p></li>
 </ul>
 </dd>
 </dl>

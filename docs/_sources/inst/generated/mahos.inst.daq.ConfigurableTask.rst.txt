@@ -18,6 +18,7 @@
    
       ~ConfigurableTask.__init__
       ~ConfigurableTask.close
+      ~ConfigurableTask.get_device_type
       ~ConfigurableTask.join
       ~ConfigurableTask.start
       ~ConfigurableTask.stop

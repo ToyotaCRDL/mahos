@@ -1,0 +1,50 @@
+﻿mahos.inst.piezo.AnalogPiezo3Axes
+=================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.piezo
+
+.. autoclass:: AnalogPiezo3Axes
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AnalogPiezo3Axes.__init__
+      ~AnalogPiezo3Axes.ai_um_to_volt
+      ~AnalogPiezo3Axes.ai_um_to_volt_raw
+      ~AnalogPiezo3Axes.ai_volt_to_um
+      ~AnalogPiezo3Axes.close
+      ~AnalogPiezo3Axes.configure
+      ~AnalogPiezo3Axes.get
+      ~AnalogPiezo3Axes.get_pos
+      ~AnalogPiezo3Axes.get_pos_ont
+      ~AnalogPiezo3Axes.get_scan_buffer_size
+      ~AnalogPiezo3Axes.init_target_pos
+      ~AnalogPiezo3Axes.join
+      ~AnalogPiezo3Axes.load_conf_preset
+      ~AnalogPiezo3Axes.move
+      ~AnalogPiezo3Axes.set
+      ~AnalogPiezo3Axes.start
+      ~AnalogPiezo3Axes.start_scan
+      ~AnalogPiezo3Axes.stop
+      ~AnalogPiezo3Axes.um_to_volt
+      ~AnalogPiezo3Axes.um_to_volt_raw
+      ~AnalogPiezo3Axes.write_scan_array
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

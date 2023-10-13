@@ -21,21 +21,26 @@
       ~E727_3_USB_AO.close_ao
       ~E727_3_USB_AO.configure
       ~E727_3_USB_AO.get
-      ~E727_3_USB_AO.get_pos
       ~E727_3_USB_AO.get_scan_buffer_size
       ~E727_3_USB_AO.join
+      ~E727_3_USB_AO.load_conf_preset
+      ~E727_3_USB_AO.move
       ~E727_3_USB_AO.shutdown
       ~E727_3_USB_AO.start
       ~E727_3_USB_AO.start_scan
       ~E727_3_USB_AO.stop
       ~E727_3_USB_AO.um_to_volt
       ~E727_3_USB_AO.um_to_volt_raw
-      ~E727_3_USB_AO.update_target_pos
       ~E727_3_USB_AO.volt_to_um
       ~E727_3_USB_AO.write_scan_array
    
    
 
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
    
    
    
