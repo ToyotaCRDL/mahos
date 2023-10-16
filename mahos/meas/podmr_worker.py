@@ -639,6 +639,7 @@ class Pulser(Worker):
             "refwidth": P.FloatParam(2400e-9, 1e-9, 10e-6),
             "refmode": P.StrChoiceParam("subtract", ("subtract", "divide", "ignore")),
             "refaverage": P.BoolParam(False),
+            "flipY": P.BoolParam(False),
         }
         return d
 

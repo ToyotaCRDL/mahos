@@ -128,6 +128,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
             i1 = self._normalize_image(self._conv_complex(self.data1))
 
             plotmode = self.params["plot"]["plotmode"]
+            flip = self.params["plot"].get("flipY", False)
             if plotmode == "data0":
                 return i0
             elif plotmode == "data1":
@@ -135,11 +136,20 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
             elif plotmode == "average":
                 return (i0 + i1) / 2
             elif plotmode == "normalize":
-                return (i0 - i1) / (i0 + i1) * 2
+                if flip:
+                    return (i1 - i0) / (i0 + i1) * 2
+                else:
+                    return (i0 - i1) / (i0 + i1) * 2
             elif plotmode == "normalize1":
-                return (i0 - i1) / i1
+                if flip:
+                    return (i1 - i0) / i1
+                else:
+                    return (i0 - i1) / i1
             else:  # "diff". fall back "data01" to "diff" too.
-                return i0 - i1
+                if flip:
+                    return i1 - i0
+                else:
+                    return i0 - i1
 
     def get_fit_xdata(self) -> NDArray | None:
         return self.get_xdata(fit=True)
@@ -287,6 +297,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
         s1 = self._normalize(np.mean(self._conv_complex(self.data1)[:, -last_n:], axis=1))
 
         plotmode = self.params["plot"]["plotmode"]
+        flip = self.params["plot"].get("flipY", False)
         if plotmode == "data01":
             return s0, s1
         elif plotmode == "data0":
@@ -294,13 +305,22 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
         elif plotmode == "data1":
             return s1, None
         elif plotmode == "diff":
-            return s0 - s1, None
+            if flip:
+                return s1 - s0, None
+            else:
+                return s0 - s1, None
         elif plotmode == "average":
             return (s0 + s1) / 2, None
         elif plotmode == "normalize":
-            return (s0 - s1) / (s0 + s1) * 2, None
+            if flip:
+                return (s1 - s0) / (s0 + s1) * 2, None
+            else:
+                return (s0 - s1) / (s0 + s1) * 2, None
         elif plotmode == "normalize1":
-            return (s0 - s1) / s1, None
+            if flip:
+                return (s0 - s1) / s1, None
+            else:
+                return (s1 - s0) / s0, None
         elif plotmode == "concatenate":
             return np.column_stack((s0, s1)).reshape(len(s0) * 2), None
         else:

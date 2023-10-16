@@ -397,6 +397,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             self.xlogBox,
             self.ylogBox,
             self.fftBox,
+            self.flipYBox,
             self.normalizeBox,
             self.complexBox,
         ):
@@ -468,7 +469,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
                 cb.currentIndexChanged.connect(self.update_plot_params)
             else:
                 cb.currentIndexChanged.disconnect(self.update_plot_params)
-        for b in (self.xlogBox, self.ylogBox, self.fftBox, self.normalizeBox):
+        for b in (self.xlogBox, self.ylogBox, self.fftBox, self.flipYBox, self.normalizeBox):
             if connect:
                 b.toggled.connect(self.update_plot_params)
             else:
@@ -669,6 +670,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.xlogBox.setChecked(p.get("xlogscale", False))
         self.ylogBox.setChecked(p.get("ylogscale", False))
         self.fftBox.setChecked(p.get("fft", False))
+        self.flipYBox.setChecked(p.get("flipY", False))
 
         self._wire_plot_widgets(True)
 
@@ -747,6 +749,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["xlogscale"] = self.xlogBox.isChecked()
         params["ylogscale"] = self.ylogBox.isChecked()
         params["fft"] = self.fftBox.isChecked()
+        params["flipY"] = self.flipYBox.isChecked()
 
         params["complex_conv"] = self.complexBox.currentText()
         params["normalize"] = self.normalizeBox.isChecked()

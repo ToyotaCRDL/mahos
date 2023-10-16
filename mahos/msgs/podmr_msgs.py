@@ -345,6 +345,7 @@ class PODMRData(BasicMeasData):
             raise ValueError(f"unknown refmode {refmode}")
 
         plotmode = self.params["plot"]["plotmode"]
+        flip = self.params["plot"].get("flipY", False)
         if plotmode == "data01":
             return s0, s1
         elif plotmode == "data0":
@@ -352,11 +353,17 @@ class PODMRData(BasicMeasData):
         elif plotmode == "data1":
             return s1, None
         elif plotmode == "diff":
-            return s0 - s1, None
+            if flip:
+                return s1 - s0, None
+            else:
+                return s0 - s1, None
         elif plotmode == "average":
             return (s0 + s1) / 2, None
         elif plotmode == "normalize":
-            return (s0 - s1) / (s0 + s1) * 2, None
+            if flip:
+                return (s1 - s0) / (s0 + s1) * 2, None
+            else:
+                return (s0 - s1) / (s0 + s1) * 2, None
         elif plotmode == "concatenate":
             return np.column_stack((s0, s1)).reshape(len(s0) * 2), None
         elif plotmode == "ref":

@@ -868,6 +868,7 @@ class Pulser(Worker):
             "xlogscale": P.BoolParam(False),
             "ylogscale": P.BoolParam(False),
             "fft": P.BoolParam(False),
+            "flipY": P.BoolParam(False),
         }
         return d
 

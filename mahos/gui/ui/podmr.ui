@@ -1436,6 +1436,13 @@
               </property>
              </spacer>
             </item>
+            <item row="1" column="4">
+             <widget class="QCheckBox" name="flipYBox">
+              <property name="text">
+               <string>flip Y</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>
@@ -1750,6 +1757,7 @@
   <tabstop>plotenableBox</tabstop>
   <tabstop>plotmodeBox</tabstop>
   <tabstop>taumodeBox</tabstop>
+  <tabstop>flipYBox</tabstop>
   <tabstop>sigdelayBox</tabstop>
   <tabstop>sigwidthBox</tabstop>
   <tabstop>refdelayBox</tabstop>
@@ -1760,13 +1768,13 @@
   <tabstop>xlogBox</tabstop>
   <tabstop>ylogBox</tabstop>
   <tabstop>fftBox</tabstop>
+  <tabstop>fg_disableButton</tabstop>
+  <tabstop>fg_cwButton</tabstop>
+  <tabstop>fg_gateButton</tabstop>
   <tabstop>fg_waveBox</tabstop>
   <tabstop>fg_amplBox</tabstop>
   <tabstop>fg_phaseBox</tabstop>
   <tabstop>fg_freqBox</tabstop>
-  <tabstop>fg_disableButton</tabstop>
-  <tabstop>fg_cwButton</tabstop>
-  <tabstop>fg_gateButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

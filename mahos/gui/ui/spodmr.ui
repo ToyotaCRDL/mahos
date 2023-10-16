@@ -962,6 +962,101 @@
             <string>Plot</string>
            </property>
            <layout class="QGridLayout" name="gridLayout">
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Complex conv</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="plotenableBox">
+              <property name="text">
+               <string>enable edit</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="3">
+             <widget class="QCheckBox" name="fftBox">
+              <property name="text">
+               <string>FFT</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QComboBox" name="taumodeBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>raw</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>total</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>freq</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>index</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>transform</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QComboBox" name="complexBox">
+              <item>
+               <property name="text">
+                <string>real</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>imag</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>abs</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>angle</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="6">
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
             <item row="1" column="1">
              <widget class="QComboBox" name="plotmodeBox">
               <property name="sizePolicy">
@@ -1012,10 +1107,20 @@
               </item>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="plotenableBox">
+            <item row="1" column="4">
+             <widget class="QCheckBox" name="normalizeBox">
               <property name="text">
-               <string>enable edit</string>
+               <string>Normalize</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>mode</string>
               </property>
              </widget>
             </item>
@@ -1026,55 +1131,10 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_7">
-              <property name="text">
-               <string>Complex conv</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_14">
-              <property name="text">
-               <string>transform</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QComboBox" name="complexBox">
-              <item>
-               <property name="text">
-                <string>real</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>imag</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>abs</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>angle</string>
-               </property>
-              </item>
-             </widget>
-            </item>
             <item row="3" column="1">
              <widget class="QCheckBox" name="xlogBox">
               <property name="text">
                <string>log X</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="3">
-             <widget class="QCheckBox" name="fftBox">
-              <property name="text">
-               <string>FFT</string>
               </property>
              </widget>
             </item>
@@ -1085,63 +1145,10 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="3">
-             <widget class="QComboBox" name="taumodeBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>raw</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>total</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>freq</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>index</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_8">
+            <item row="4" column="2">
+             <widget class="QCheckBox" name="flipYBox">
               <property name="text">
-               <string>mode</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="5">
-             <spacer name="horizontalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="1" column="4">
-             <widget class="QCheckBox" name="normalizeBox">
-              <property name="text">
-               <string>Normalize</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
+               <string>flip Y</string>
               </property>
              </widget>
             </item>
@@ -1452,13 +1459,14 @@
   <tabstop>ylogBox</tabstop>
   <tabstop>fftBox</tabstop>
   <tabstop>complexBox</tabstop>
-  <tabstop>fg_amplBox</tabstop>
-  <tabstop>fg_cwButton</tabstop>
-  <tabstop>fg_phaseBox</tabstop>
+  <tabstop>flipYBox</tabstop>
   <tabstop>fg_disableButton</tabstop>
-  <tabstop>fg_freqBox</tabstop>
-  <tabstop>fg_waveBox</tabstop>
+  <tabstop>fg_cwButton</tabstop>
   <tabstop>fg_gateButton</tabstop>
+  <tabstop>fg_waveBox</tabstop>
+  <tabstop>fg_amplBox</tabstop>
+  <tabstop>fg_phaseBox</tabstop>
+  <tabstop>fg_freqBox</tabstop>
  </tabstops>
  <resources/>
  <connections/>

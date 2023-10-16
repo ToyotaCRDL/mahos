@@ -681,6 +681,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.xlogBox,
             self.ylogBox,
             self.fftBox,
+            self.flipYBox,
         ):
             w.setEnabled(enable)
 
@@ -761,7 +762,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
                 cb.currentIndexChanged.connect(self.update_plot_params)
             else:
                 cb.currentIndexChanged.disconnect(self.update_plot_params)
-        for b in (self.refavgBox, self.xlogBox, self.ylogBox, self.fftBox):
+        for b in (self.refavgBox, self.xlogBox, self.ylogBox, self.fftBox, self.flipYBox):
             if connect:
                 b.toggled.connect(self.update_plot_params)
             else:
@@ -971,6 +972,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.xlogBox.setChecked(p.get("xlogscale", False))
         self.ylogBox.setChecked(p.get("ylogscale", False))
         self.fftBox.setChecked(p.get("fft", False))
+        self.flipYBox.setChecked(p.get("flipY", False))
 
         self.sigdelayBox.setValue(p.get("sigdelay", 0.0) * 1e9)
         self.sigwidthBox.setValue(p.get("sigwidth", 100.0) * 1e9)
@@ -1055,6 +1057,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["xlogscale"] = self.xlogBox.isChecked()
         params["ylogscale"] = self.ylogBox.isChecked()
         params["fft"] = self.fftBox.isChecked()
+        params["flipY"] = self.flipYBox.isChecked()
 
         # [us] or [ns] ==> [sec]
         params["sigdelay"] = self.sigdelayBox.value() * 1e-9
