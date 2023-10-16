@@ -291,6 +291,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.tp2widthBox.setValue(-1)
         self.iqdelayBox.setValue(10)
 
+        self.offsetBox.setOpts(siPrefix=True)
+
     def init_with_status(self, status: BinaryStatus):
         """initialize widget after receiving first status."""
 
@@ -399,6 +401,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             self.fftBox,
             self.flipYBox,
             self.normalizeBox,
+            self.offsetBox,
             self.complexBox,
         ):
             w.setEnabled(enable)
@@ -474,6 +477,10 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
                 b.toggled.connect(self.update_plot_params)
             else:
                 b.toggled.disconnect(self.update_plot_params)
+        if connect:
+            self.offsetBox.editingFinished.connect(self.update_plot_params)
+        else:
+            self.offsetBox.editingFinished.disconnect(self.update_plot_params)
 
     def check_ddphase(self):
         """Validate input of ddgatephaseEdit. If input is invalid, set background color.
@@ -671,6 +678,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.ylogBox.setChecked(p.get("ylogscale", False))
         self.fftBox.setChecked(p.get("fft", False))
         self.flipYBox.setChecked(p.get("flipY", False))
+        self.offsetBox.setValue(p.get("offset", 0.0))
 
         self._wire_plot_widgets(True)
 
@@ -753,6 +761,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
         params["complex_conv"] = self.complexBox.currentText()
         params["normalize"] = self.normalizeBox.isChecked()
+        params["offset"] = self.offsetBox.value()
 
         return params
 

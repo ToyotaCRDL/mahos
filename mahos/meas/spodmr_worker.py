@@ -863,6 +863,7 @@ class Pulser(Worker):
                 ("data01", "data0", "data1", "diff", "average", "normalize", "concatenate"),
             ),
             "normalize": P.BoolParam(True, doc="normalize data using laser duties"),
+            "offset": P.FloatParam(0.0, SI_prefix=True, doc="offset value for normalization"),
             "complex_conv": P.StrChoiceParam("real", ("real", "imag", "abs", "angle")),
             "taumode": P.StrChoiceParam("raw", taumodes),
             "xlogscale": P.BoolParam(False),

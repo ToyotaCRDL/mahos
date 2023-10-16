@@ -114,7 +114,8 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
 
     def _normalize_image(self, data):
         if self.params["plot"].get("normalize", True):
-            return (data.T / self.laser_duties).T
+            offset = self.params["plot"].get("offset", 0.0)
+            return ((data.T - offset) / self.laser_duties).T
         else:
             return data
 
@@ -272,7 +273,8 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
 
     def _normalize(self, data):
         if self.params["plot"].get("normalize", True):
-            return data / self.laser_duties
+            offset = self.params["plot"].get("offset", 0.0)
+            return (data - offset) / self.laser_duties
         else:
             return data
 

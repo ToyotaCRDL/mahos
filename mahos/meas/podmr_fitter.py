@@ -43,7 +43,13 @@ class RabiFitter(Fitter):
             ),
             f=self.make_model_param(4e6, 1e3, 100e6, unit="Hz", SI_prefix=True, doc="frequency"),
             dt=self.make_model_param(
-                0.0, -15e-9, 15e-9, unit="s", SI_prefix=True, doc="shift in time (x-axis)"
+                0.0,
+                -15e-9,
+                15e-9,
+                unit="s",
+                SI_prefix=True,
+                fixable=True,
+                doc="shift in time (x-axis)",
             ),
         )
 
