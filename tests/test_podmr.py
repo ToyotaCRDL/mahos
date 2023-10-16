@@ -120,6 +120,7 @@ def test_podmr_patterns():
     # normal (sweep tau)
     for meth in (
         "rabi",
+        "t1",
         "fid",
         "spinecho",
         "trse",
@@ -168,6 +169,7 @@ def test_podmr(server, podmr, server_conf, podmr_conf):
     assert get_some(podmr.get_status, poll_timeout_ms).state == BinaryState.IDLE
     for m in (
         "rabi",
+        "t1",
         "fid",
         "spinecho",
         "trse",

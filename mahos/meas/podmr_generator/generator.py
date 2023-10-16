@@ -122,7 +122,7 @@ class PatternGenerator(object):
 class RabiGenerator(PatternGenerator):
     """Generate Pulse Pattern for Rabi nutation measurement.
 
-    pattern0 => Rabi
+    pattern0 => Rabi (mw pulse with tau duration)
     pattern1 => no operation (T1 limited)
 
     """
@@ -155,6 +155,65 @@ class RabiGenerator(PatternGenerator):
                 v,
                 common_pulses,
                 gen_single_ptn_Rabi,
+                p0,
+                p1,
+                read_phase0="mw_x",
+                read_phase1="mw_x",
+                partial=partial,
+                nomw=nomw,
+                fix_base_width=fix_base_width,
+            )
+            for i, v in enumerate(xdata)
+        ]
+        return blocks, freq, common_pulses
+
+
+class T1Generator(PatternGenerator):
+    """Generate Pulse Pattern for T1 (spin-lattice relaxation time) measurement.
+
+    :param 180pulse: duration of 180 deg (pi) pulse
+    :type 180pulse: float
+
+    pattern0 => (no 180 pulse) - tau
+    pattern1 => 180 (pi) pulse - tau
+
+    """
+
+    def pulse_params(self) -> T.List[str]:
+        return ["180pulse"]
+
+    def _generate(
+        self,
+        xdata,
+        common_pulses: T.List[float],
+        pulse_params: list,
+        partial: int,
+        nomw: bool,
+        reduce_start_divisor: int,
+        fix_base_width: int | None,
+    ):
+        p180 = pulse_params[0]
+
+        p0 = [p180]
+        p1 = [p180]
+        freq, xdata, common_pulses, p0, p1 = K.round_pulses(
+            self.freq, xdata, common_pulses, p0, p1, reduce_start_divisor, self.print_fn
+        )
+        p0 = p0 + [False]
+        p1 = p1 + [True]
+
+        def gen_single_ptn_T1(v, mw_width, operate):
+            if operate:
+                return [(("mw_x", "mw"), mw_width), (("mw_x",), v)]
+            else:
+                return [(("mw_x",), mw_width + v)]
+
+        blocks = [
+            K.generate_blocks(
+                i,
+                v,
+                common_pulses,
+                gen_single_ptn_T1,
                 p0,
                 p1,
                 read_phase0="mw_x",
@@ -1681,6 +1740,7 @@ def make_generators(
     args = (freq, reduce_start_divisor, split_fraction, minimum_block_length, block_base, print_fn)
     generators = {
         "rabi": RabiGenerator(*args),
+        "t1": T1Generator(*args),
         "fid": FIDGenerator(*args),
         "spinecho": SpinEchoGenerator(*args),
         "trse": TRSEGenerator(*args),

@@ -117,6 +117,56 @@ patterns = {
         2.0e9,
         [12800, 25600],
     ),
+    "t1": (
+        [
+            Block(
+                "INIT",
+                [
+                    (("trigger", "sync", "mw_i", "mw_q"), 40),
+                    (("laser", "sync", "mw_i", "mw_q"), 10200),
+                ],
+            ),
+            Block(
+                "P0-0_read0-0",
+                [
+                    (("laser", "sync", "mw_i", "mw_q"), 230),
+                    (("mw_i", "mw_q"), 2330),
+                    (("laser", "sync", "mw_i", "mw_q"), 10240),
+                ],
+            ),
+            Block(
+                "P0-1_read0-1",
+                [
+                    (("laser", "sync", "mw_i", "mw_q"), 230),
+                    (("mw_i", "mw_q"), 2000),
+                    (("mw", "mw_i", "mw_q"), 40),
+                    (("mw_i", "mw_q"), 290),
+                    (("laser", "sync", "mw_i", "mw_q"), 10240),
+                ],
+            ),
+            Block(
+                "P1-0_read1-0",
+                [
+                    (("laser", "sync", "mw_i", "mw_q"), 30),
+                    (("mw_i", "mw_q"), 2530),
+                    (("laser", "sync", "mw_i", "mw_q"), 10240),
+                ],
+            ),
+            Block(
+                "P1-1_read1-1",
+                [
+                    (("laser", "sync", "mw_i", "mw_q"), 30),
+                    (("mw_i", "mw_q"), 2000),
+                    (("mw", "mw_i", "mw_q"), 40),
+                    (("mw_i", "mw_q"), 490),
+                    (("laser", "sync", "mw_i", "mw_q"), 10240),
+                ],
+            ),
+            Block("FINAL", [(("sync", "mw_i", "mw_q"), 10240)]),
+        ],
+        2.0e9,
+        [12800, 25600, 38400, 51200],
+    ),
     "fid": (
         [
             Block(

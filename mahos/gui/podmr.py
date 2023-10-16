@@ -1283,6 +1283,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
     METHODS = (
         "rabi",
+        "t1",
         "fid",
         "spinecho",
         "trse",

@@ -918,6 +918,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
     METHODS = (
         "rabi",
+        "t1",
         "fid",
         "spinecho",
         "trse",

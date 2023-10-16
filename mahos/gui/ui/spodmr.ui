@@ -272,6 +272,11 @@
               </item>
               <item>
                <property name="text">
+                <string>T1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
                 <string>FID</string>
                </property>
               </item>

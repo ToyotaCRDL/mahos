@@ -299,6 +299,11 @@
               </item>
               <item>
                <property name="text">
+                <string>T1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
                 <string>FID</string>
                </property>
               </item>
@@ -1708,6 +1713,8 @@
   <tabstop>powerBox</tabstop>
   <tabstop>nomwBox</tabstop>
   <tabstop>methodBox</tabstop>
+  <tabstop>partialBox</tabstop>
+  <tabstop>intervalBox</tabstop>
   <tabstop>startBox</tabstop>
   <tabstop>numBox</tabstop>
   <tabstop>stepBox</tabstop>
@@ -1740,6 +1747,7 @@
   <tabstop>tpwidthBox</tabstop>
   <tabstop>tp2widthBox</tabstop>
   <tabstop>iqdelayBox</tabstop>
+  <tabstop>plotenableBox</tabstop>
   <tabstop>plotmodeBox</tabstop>
   <tabstop>taumodeBox</tabstop>
   <tabstop>sigdelayBox</tabstop>
@@ -1752,13 +1760,13 @@
   <tabstop>xlogBox</tabstop>
   <tabstop>ylogBox</tabstop>
   <tabstop>fftBox</tabstop>
-  <tabstop>fg_disableButton</tabstop>
-  <tabstop>fg_cwButton</tabstop>
-  <tabstop>fg_gateButton</tabstop>
   <tabstop>fg_waveBox</tabstop>
   <tabstop>fg_amplBox</tabstop>
   <tabstop>fg_phaseBox</tabstop>
   <tabstop>fg_freqBox</tabstop>
+  <tabstop>fg_disableButton</tabstop>
+  <tabstop>fg_cwButton</tabstop>
+  <tabstop>fg_gateButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>
