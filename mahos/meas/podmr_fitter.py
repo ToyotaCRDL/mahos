@@ -58,11 +58,16 @@ class RabiFitter(Fitter):
     ):
         ftau, fintensity = real_fft(xdata, ydata)
 
-        fit_params["c"].set(np.average(ydata))
-        fit_params["A"].set(np.max(ydata) - np.average(ydata))
-        fit_params["T"].set(np.max(xdata))
-        fit_params["f"].set(abs(ftau[np.argmax(fintensity)]))
-        fit_params["dt"].set(0.0)
+        if fit_params["c"].vary:
+            fit_params["c"].set(np.average(ydata))
+        if fit_params["A"].vary:
+            fit_params["A"].set(np.max(ydata) - np.average(ydata))
+        if fit_params["T"].vary:
+            fit_params["T"].set(np.max(xdata))
+        if fit_params["f"].vary:
+            fit_params["f"].set(abs(ftau[np.argmax(fintensity)]))
+        if fit_params["dt"].vary:
+            fit_params["dt"].set(0.0)
 
     def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
         baseline = F.models.ConstantModel()
@@ -84,7 +89,7 @@ def spinecho_exp_decay(x, A, T2, n):
 class SpinEchoFitter(Fitter):
     def model_params(self) -> P.ParamDict[str, P.PDValue]:
         return P.ParamDict(
-            c=self.make_model_param(0.0, -1.0, 1.0, doc="constant baseline"),
+            c=self.make_model_param(0.0, -1.0, 1.0, fixable=True, doc="constant baseline"),
             A=self.make_model_param(0.5, 0.001, 1.0, doc="intensity at x = 0"),
             T2=self.make_model_param(
                 10e-6, 1e-9, 1.0, unit="s", SI_prefix=True, doc="spin-spin relaxation time"
@@ -109,10 +114,14 @@ class SpinEchoFitter(Fitter):
     def guess_fit_params(
         self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
     ):
-        fit_params["c"].set(np.min(ydata))
-        fit_params["A"].set(np.max(ydata))
-        fit_params["T2"].set(np.max(xdata) / 2.0)
-        fit_params["n"].set(2.0)
+        if fit_params["c"].vary:
+            fit_params["c"].set(np.min(ydata))
+        if fit_params["A"].vary:
+            fit_params["A"].set(np.max(ydata))
+        if fit_params["T2"].vary:
+            fit_params["T2"].set(np.max(xdata) / 2.0)
+        if fit_params["n"].vary:
+            fit_params["n"].set(2.0)
 
     def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
         baseline = F.models.ConstantModel()
@@ -139,10 +148,14 @@ class FIDFitter(Fitter):
     def guess_fit_params(
         self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
     ):
-        fit_params["c"].set(np.max(ydata))
-        fit_params["A"].set(np.max(ydata) - np.min(ydata))
-        fit_params["T2s"].set(np.max(xdata) / 2.0)
-        fit_params["detuning"].set(2.2e6)
+        if fit_params["c"].vary:
+            fit_params["c"].set(np.max(ydata))
+        if fit_params["A"].vary:
+            fit_params["A"].set(np.max(ydata) - np.min(ydata))
+        if fit_params["T2s"].vary:
+            fit_params["T2s"].set(np.max(xdata) / 2.0)
+        if fit_params["detuning"].vary:
+            fit_params["detuning"].set(2.2e6)
 
     def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
         baseline = F.models.ConstantModel()
@@ -165,10 +178,14 @@ class GaussianFitter(Fitter):
     def guess_fit_params(
         self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
     ):
-        fit_params["c"].set(np.min(ydata))
-        fit_params["amplitude"].set(np.max(ydata) - np.min(ydata))
-        fit_params["center"].set(xdata[np.argmax(ydata)])
-        fit_params["sigma"].set(0.1 * (np.max(xdata) - np.min(xdata)))
+        if fit_params["c"].vary:
+            fit_params["c"].set(np.min(ydata))
+        if fit_params["amplitude"].vary:
+            fit_params["amplitude"].set(np.max(ydata) - np.min(ydata))
+        if fit_params["center"].vary:
+            fit_params["center"].set(xdata[np.argmax(ydata)])
+        if fit_params["sigma"].vary:
+            fit_params["sigma"].set(0.1 * (np.max(xdata) - np.min(xdata)))
 
     def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
         baseline = F.models.ConstantModel()
@@ -191,10 +208,14 @@ class LorentzianFitter(Fitter):
     def guess_fit_params(
         self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
     ):
-        fit_params["c"].set(np.min(ydata))
-        fit_params["amplitude"].set(np.max(ydata) - np.min(ydata))
-        fit_params["center"].set(xdata[np.argmax(ydata)])
-        fit_params["gamma"].set(0.1 * (np.max(xdata) - np.min(xdata)))
+        if fit_params["c"].vary:
+            fit_params["c"].set(np.min(ydata))
+        if fit_params["amplitude"].vary:
+            fit_params["amplitude"].set(np.max(ydata) - np.min(ydata))
+        if fit_params["center"].vary:
+            fit_params["center"].set(xdata[np.argmax(ydata)])
+        if fit_params["gamma"].vary:
+            fit_params["gamma"].set(0.1 * (np.max(xdata) - np.min(xdata)))
 
     def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
         baseline = F.models.ConstantModel()
