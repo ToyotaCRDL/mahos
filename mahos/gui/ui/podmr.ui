@@ -1159,7 +1159,7 @@
              </widget>
             </item>
             <item row="4" column="1">
-             <widget class="QCheckBox" name="xlogBox">
+             <widget class="QCheckBox" name="logXBox">
               <property name="text">
                <string>log X</string>
               </property>
@@ -1359,7 +1359,7 @@
              </widget>
             </item>
             <item row="4" column="2">
-             <widget class="QCheckBox" name="ylogBox">
+             <widget class="QCheckBox" name="logYBox">
               <property name="text">
                <string>log Y</string>
               </property>
@@ -1765,8 +1765,8 @@
   <tabstop>refmodeBox</tabstop>
   <tabstop>refavgBox</tabstop>
   <tabstop>autoadjustBox</tabstop>
-  <tabstop>xlogBox</tabstop>
-  <tabstop>ylogBox</tabstop>
+  <tabstop>logXBox</tabstop>
+  <tabstop>logYBox</tabstop>
   <tabstop>fftBox</tabstop>
   <tabstop>fg_disableButton</tabstop>
   <tabstop>fg_cwButton</tabstop>

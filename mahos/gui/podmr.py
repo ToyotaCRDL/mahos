@@ -678,8 +678,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.refwidthBox,
             self.refavgBox,
             self.autoadjustBox,
-            self.xlogBox,
-            self.ylogBox,
+            self.logXBox,
+            self.logYBox,
             self.fftBox,
             self.flipYBox,
         ):
@@ -762,7 +762,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
                 cb.currentIndexChanged.connect(self.update_plot_params)
             else:
                 cb.currentIndexChanged.disconnect(self.update_plot_params)
-        for b in (self.refavgBox, self.xlogBox, self.ylogBox, self.fftBox, self.flipYBox):
+        for b in (self.refavgBox, self.logXBox, self.logYBox, self.fftBox, self.flipYBox):
             if connect:
                 b.toggled.connect(self.update_plot_params)
             else:
@@ -969,8 +969,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.set_tau_mode(p.get("taumode", "raw"))
         self.set_ref_mode(p.get("refmode", "ignore"))
 
-        self.xlogBox.setChecked(p.get("xlogscale", False))
-        self.ylogBox.setChecked(p.get("ylogscale", False))
+        self.logXBox.setChecked(p.get("logX", False))
+        self.logYBox.setChecked(p.get("logY", False))
         self.fftBox.setChecked(p.get("fft", False))
         self.flipYBox.setChecked(p.get("flipY", False))
 
@@ -1054,8 +1054,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["plotmode"] = self.plotmodeBox.currentText()
         params["taumode"] = self.taumodeBox.currentText()
 
-        params["xlogscale"] = self.xlogBox.isChecked()
-        params["ylogscale"] = self.ylogBox.isChecked()
+        params["logX"] = self.logXBox.isChecked()
+        params["logY"] = self.logYBox.isChecked()
         params["fft"] = self.fftBox.isChecked()
         params["flipY"] = self.flipYBox.isChecked()
 

@@ -124,7 +124,7 @@ def plot_podmr(args):
     if args.timings is not None:
         for key, value in zip(("sigdelay", "sigwidth", "refdelay", "refwidth"), args.timings):
             plot_params[key] = value * 1e-9  # ns to sec
-    for key in ("plotmode", "taumode", "xlogscale", "ylogscale", "fft", "refmode", "refaverage"):
+    for key in ("plotmode", "taumode", "logX", "logY", "fft", "refmode", "refaverage", "flipY"):
         value = getattr(args, key)
         if value is not None:
             plot_params[key] = value
@@ -164,10 +164,13 @@ def plot_spodmr(args):
     io = SPODMRIO()
 
     plot_params = {}
-    for key in ("plotmode", "taumode", "xlogscale", "ylogscale", "fft", "normalize"):
+    for key in ("plotmode", "taumode", "logX", "logY", "fft", "normalize", "offset", "flipY"):
         value = getattr(args, key)
         if value is not None:
             plot_params[key] = value
+    # Since args.offset is taken below (y-axis offsets for plotting), we have to avoid it.
+    if args.norm_offset is not None:
+        plot_params["offset"] = args.norm_offset
     if args.method or args.fit_params:
         if args.fit_params:
             fit_params = toml.load(args.fit_params)
@@ -526,8 +529,9 @@ def add_podmr_parser(sub_parsers):
         "-R", "--refmode", type=str, help="[plot] Reference mode (subtract|divide|ignore)"
     )
     p.add_argument("--fft", type=strtobool, help="[plot] FFT mode")
-    p.add_argument("--xlog", dest="xlogscale", type=strtobool, help="[plot] logscale X axis")
-    p.add_argument("--ylog", dest="ylogscale", type=strtobool, help="[plot] logscale Y axis")
+    p.add_argument("--logX", type=strtobool, help="[plot] logscale X axis")
+    p.add_argument("--logY", type=strtobool, help="[plot] logscale Y axis")
+    p.add_argument("--flipY", type=strtobool, help="[plot] flip Y axis")
     p.add_argument("-a", "--refaverage", type=strtobool, help="[plot] Reference avaraging")
 
     p.add_argument(
@@ -585,13 +589,15 @@ def add_spodmr_parser(sub_parsers):
         "-M",
         "--plotmode",
         type=str,
-        help="[plot] Plot mode (data01|data0|data1|diff|average|normalize|concatenate|ref)",
+        help="[plot] Plot mode (data01|data0|data1|diff|average|normalize|normalize1|concatenate)",
     )
-    p.add_argument("-T", "--taumode", type=str, help="[plot] Tau mode (raw|total|freq|index|head)")
+    p.add_argument("-T", "--taumode", type=str, help="[plot] Tau mode (raw|total|freq|index)")
     p.add_argument("--fft", type=strtobool, help="[plot] FFT mode")
-    p.add_argument("--xlog", dest="xlogscale", type=strtobool, help="[plot] logscale X axis")
-    p.add_argument("--ylog", dest="ylogscale", type=strtobool, help="[plot] logscale Y axis")
+    p.add_argument("--logX", type=strtobool, help="[plot] logscale X axis")
+    p.add_argument("--logY", type=strtobool, help="[plot] logscale Y axis")
     p.add_argument("-n", "--normalize", type=strtobool, help="[plot] Normalize using laser duty")
+    p.add_argument("--norm-offset", type=float, help="[plot] Offset value for normalization")
+    p.add_argument("--flipY", type=strtobool, help="[plot] flip Y axis")
 
     p.add_argument(
         "-m",

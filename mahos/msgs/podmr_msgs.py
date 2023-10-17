@@ -73,7 +73,7 @@ def is_correlation(method: str) -> bool:
 
 class PODMRData(BasicMeasData):
     def __init__(self, params: dict | None = None):
-        self.set_version(2)
+        self.set_version(3)
         self.init_params(params)
         self.init_attrs()
 
@@ -498,5 +498,16 @@ def update_data(data: PODMRData):
         if data.yunit is None:
             data.yunit = ""
         data.set_version(2)
+
+    if data.version() <= 2:
+        # version 2 to 3
+        plot = data.params["plot"]
+        if "xlogscale" in plot:
+            plot["logX"] = plot["xlogscale"]
+            del plot["xlogscale"]
+        if "ylogscale" in plot:
+            plot["logY"] = plot["ylogscale"]
+            del plot["ylogscale"]
+        data.set_version(3)
 
     return data

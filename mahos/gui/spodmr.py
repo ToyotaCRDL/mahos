@@ -396,8 +396,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         for w in (
             self.plotmodeBox,
             self.taumodeBox,
-            self.xlogBox,
-            self.ylogBox,
+            self.logXBox,
+            self.logYBox,
             self.fftBox,
             self.flipYBox,
             self.normalizeBox,
@@ -472,7 +472,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
                 cb.currentIndexChanged.connect(self.update_plot_params)
             else:
                 cb.currentIndexChanged.disconnect(self.update_plot_params)
-        for b in (self.xlogBox, self.ylogBox, self.fftBox, self.flipYBox, self.normalizeBox):
+        for b in (self.logXBox, self.logYBox, self.fftBox, self.flipYBox, self.normalizeBox):
             if connect:
                 b.toggled.connect(self.update_plot_params)
             else:
@@ -674,8 +674,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.set_plot_mode(p.get("plotmode", "data01"))
         self.set_tau_mode(p.get("taumode", "raw"))
 
-        self.xlogBox.setChecked(p.get("xlogscale", False))
-        self.ylogBox.setChecked(p.get("ylogscale", False))
+        self.logXBox.setChecked(p.get("logX", False))
+        self.logYBox.setChecked(p.get("logY", False))
         self.fftBox.setChecked(p.get("fft", False))
         self.flipYBox.setChecked(p.get("flipY", False))
         self.offsetBox.setValue(p.get("offset", 0.0))
@@ -754,8 +754,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["plotmode"] = self.plotmodeBox.currentText()
         params["taumode"] = self.taumodeBox.currentText()
 
-        params["xlogscale"] = self.xlogBox.isChecked()
-        params["ylogscale"] = self.ylogBox.isChecked()
+        params["logX"] = self.logXBox.isChecked()
+        params["logY"] = self.logYBox.isChecked()
         params["fft"] = self.fftBox.isChecked()
         params["flipY"] = self.flipYBox.isChecked()
 

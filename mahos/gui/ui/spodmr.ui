@@ -1115,14 +1115,14 @@
              </widget>
             </item>
             <item row="3" column="2">
-             <widget class="QCheckBox" name="ylogBox">
+             <widget class="QCheckBox" name="logYBox">
               <property name="text">
                <string>log Y</string>
               </property>
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QCheckBox" name="xlogBox">
+             <widget class="QCheckBox" name="logXBox">
               <property name="text">
                <string>log X</string>
               </property>
@@ -1471,8 +1471,8 @@
   <tabstop>flipYBox</tabstop>
   <tabstop>normalizeBox</tabstop>
   <tabstop>offsetBox</tabstop>
-  <tabstop>xlogBox</tabstop>
-  <tabstop>ylogBox</tabstop>
+  <tabstop>logXBox</tabstop>
+  <tabstop>logYBox</tabstop>
   <tabstop>fftBox</tabstop>
   <tabstop>complexBox</tabstop>
   <tabstop>fg_disableButton</tabstop>

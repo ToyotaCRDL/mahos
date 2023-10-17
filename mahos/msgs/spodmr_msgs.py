@@ -59,7 +59,7 @@ def is_correlation(method: str) -> bool:
 
 class SPODMRData(BasicMeasData, ComplexDataMixin):
     def __init__(self, params: dict | None = None):
-        self.set_version(0)
+        self.set_version(1)
         self.init_params(params)
         self.init_attrs()
 
@@ -424,5 +424,16 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
 
 def update_data(data: SPODMRData):
     """update data to latest format"""
+
+    if data.version() <= 0:
+        # version 0 to 1
+        plot = data.params["plot"]
+        if "xlogscale" in plot:
+            plot["logX"] = plot["xlogscale"]
+            del plot["xlogscale"]
+        if "ylogscale" in plot:
+            plot["logY"] = plot["ylogscale"]
+            del plot["ylogscale"]
+        data.set_version(1)
 
     return data

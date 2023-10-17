@@ -169,12 +169,12 @@ class PODMRDataOperator(object):
             data.xlabel, data.xunit = "signal head time", "s"
 
         # transform
-        if plot.get("xlogscale"):
+        if plot.get("logX"):
             data.xscale = "log"
         else:
             data.xscale = "linear"
 
-        if plot.get("ylogscale"):
+        if plot.get("logY"):
             data.yscale = "log"
         else:
             data.yscale = "linear"
@@ -630,8 +630,8 @@ class Pulser(Worker):
                 ("data01", "data0", "data1", "diff", "average", "normalize", "concatenate", "ref"),
             ),
             "taumode": P.StrChoiceParam("raw", taumodes),
-            "xlogscale": P.BoolParam(False),
-            "ylogscale": P.BoolParam(False),
+            "logX": P.BoolParam(False),
+            "logY": P.BoolParam(False),
             "fft": P.BoolParam(False),
             "sigdelay": P.FloatParam(200e-9, 0.0, 10e-6),
             "sigwidth": P.FloatParam(300e-9, 1e-9, 10e-6),

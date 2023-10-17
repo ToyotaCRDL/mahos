@@ -100,12 +100,12 @@ class SPODMRDataOperator(object):
             data.xlabel, data.xunit = "sweep index", "#"
 
         # transform
-        if plot.get("xlogscale"):
+        if plot.get("logX"):
             data.xscale = "log"
         else:
             data.xscale = "linear"
 
-        if plot.get("ylogscale"):
+        if plot.get("logY"):
             data.yscale = "log"
         else:
             data.yscale = "linear"
@@ -866,8 +866,8 @@ class Pulser(Worker):
             "offset": P.FloatParam(0.0, SI_prefix=True, doc="offset value for normalization"),
             "complex_conv": P.StrChoiceParam("real", ("real", "imag", "abs", "angle")),
             "taumode": P.StrChoiceParam("raw", taumodes),
-            "xlogscale": P.BoolParam(False),
-            "ylogscale": P.BoolParam(False),
+            "logX": P.BoolParam(False),
+            "logY": P.BoolParam(False),
             "fft": P.BoolParam(False),
             "flipY": P.BoolParam(False),
         }
