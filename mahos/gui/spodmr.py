@@ -521,7 +521,9 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.cli.save_data(fn, note=note)
         self.update_save_button(True)
 
-        return fn
+        n = os.path.splitext(fn)[0] + ".png"
+        params = {"show_fit": self.fit.show_current_data_fit()}
+        self.cli.export_data(n, params=params)
 
     def export_data(self):
         data_list = self.get_plottable_data()
@@ -540,8 +542,6 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["color1"] = [color.color1 for (_, _, color) in data_list]
         params["show_fit"] = any([show_fit for (_, show_fit, _) in data_list])
         self.cli.export_data(fn, data=data, params=params)
-
-        return fn
 
     def load_data(self):
         if self.data.is_finalized() and not self.data.is_saved():

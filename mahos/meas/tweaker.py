@@ -155,6 +155,8 @@ class Tweaker(Node):
             else:
                 g = f
             for pid, params in self._param_dicts.items():
+                if params is None:
+                    continue
                 group = g.create_group(pid)
                 params.to_h5(group)
 

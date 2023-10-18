@@ -666,8 +666,6 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             n = os.path.splitext(fn)[0] + ".pos.png"
             self.confocal_cli.export_view(n)
 
-        return fn
-
     def load_data(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = load_dialog(self, default_path, "ODMR", ".odmr")

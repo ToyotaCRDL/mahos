@@ -147,6 +147,9 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
     def is_checked(self, row, col) -> bool:
         return self.bufferTable.item(row, col).checkState() == QtCore.Qt.CheckState.Checked
 
+    def show_current_data_fit(self) -> bool:
+        return self.is_checked(0, 2)
+
     def get_plottable_data(self, current_data: BasicMeasData) -> list:
         """get plottable data in buffer.
 
