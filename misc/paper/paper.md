@@ -22,7 +22,7 @@ bibliography: paper.bib
 
 The experimental researchers often face challenges building up the systems
 to automate their measurement procedures
-in physical science & engineering, or related areas.
+in physical science and engineering, or related areas.
 While simple automation could be done by a single script,
 systematic orchestration is required to handle complex cases.
 The measurement automation typically requires several pieces of programs in diverse layers:
@@ -30,19 +30,24 @@ The measurement automation typically requires several pieces of programs in dive
 2) high-level measurement logics or analysis algorithms, and
 3) graphical user interfaces (GUIs) or top-level automation scripts.
 The system may also involve multiple computers.
-These demands suggest that a distributed system can serve as
-a framework to help to write testable and maintainable programs.
+It would become very difficult to write debuggable, testable, and maintainable programs
+on a monolithic framework.
+To solve this kind of problem in measurement automation,
+`MAHOS` provides a flexible framework to build distributed systems consisting of small independent programs.
 
 # Statement of need
 
-`MAHOS` is a Python package for distributed measurement automation.
+`MAHOS` is a Python framework for building distributed measurement systems.
 Python has been a major language of choice for laboratory automation.
-The low-level binding libraries such as PyVISA [@pyvisa] and PyDAQmx [@pydaqmx] are available for Python.
-There are also several projects aiming to provide a comprehensive software stack
-ranging from the drivers to the GUIs [@pymeasure; @qudi].
-The target of `MAHOS` is similar to these libraries.
-A key feature of `MAHOS` is that it provides a simple framework to construct distributed systems,
-where the pieces of the programs are run on different processes (or threads), and talk to each other.
+The low-level binding libraries for instruments, such as PyVISA [@pyvisa] and PyDAQmx [@pydaqmx], are available for Python.
+There are also several projects aiming to provide a comprehensive software framework
+ranging from the instrument drivers to the GUIs [@pymeasure; @qudi; @nspyre].
+
+While we believe that a distributed framework would result in a more maintainable and flexible system,
+the existing libraries provide rather monolithic ones.
+That is why we have built `MAHOS` to provide a flexible framework for constructing distributed systems.
+On the `MAHOS`-based system, several pieces of the programs are run on different processes (or threads)
+and talk to each other.
 Due to this architecture, it is quite straightforward to set up multi-computer systems.
 Moving from GUI operation to scripted automation is made seamless as well;
 the GUI and top-level script (3rd layer) are seen as equivalent clients from a measurement logic (2nd layer).
