@@ -6,11 +6,14 @@ Overview
 What is this?
 -------------
 
-MAHOS is a library to create distributed measurement automation systems.
-The experimental researchers often face challenges building up the systems
-to automate their measurement procedures in physical science & engineering, or related areas.
-This library tries to help ease these processes by providing simple framework.
-The distributed architecture is adopted to help writing debuggable, testable, and maintainable programs.
+MAHOS is a framework for building distributed measurement automation systems.
+The experimental researchers often face challenges building up systems
+consisting of multiple instruments or computers to automate their measurement procedures
+in physical science and engineering, or related areas.
+We believe that a distributed system would be a better solution for complex measurement automation
+than the monolithic one.
+MAHOS is created to provide a flexible framework for constructing distributed systems,
+and to help write debuggable, testable, and maintainable measurement automation codes.
 
 Nodes and clients
 ^^^^^^^^^^^^^^^^^

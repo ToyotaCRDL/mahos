@@ -35,6 +35,7 @@
       ~SPODMRData.is_partial
       ~SPODMRData.is_supersampling
       ~SPODMRData.is_sweepN
+      ~SPODMRData.measurement_time
       ~SPODMRData.partial
       ~SPODMRData.sweeps
    
