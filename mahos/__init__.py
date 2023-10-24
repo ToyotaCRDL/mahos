@@ -11,9 +11,9 @@ __all__ = ["cli", "gui", "inst", "meas", "msgs", "node", "util"]
 
 import os
 
-config_dir = os.path.expanduser("~/.config/mahos")
-cache_dir = os.path.expanduser("~/.cache/mahos")
-log_dir = os.path.expanduser("~/.cache/mahos/log")
+config_dir = os.path.expanduser(os.path.join("~", ".config", "mahos"))
+cache_dir = os.path.expanduser(os.path.join("~", ".cache", "mahos"))
+log_dir = os.path.expanduser(os.path.join("~", ".cache", "mahos", "log"))
 
 for d in (config_dir, cache_dir, log_dir):
     if not os.path.exists(d):

@@ -28,33 +28,57 @@ class APDCounter(BufferedEdgeCounter):
     :type source: str
     :param source_dir: (default: True) Source direction. True (False) for rising (falling) edge.
     :type source_dir: bool
-    :param buffer_size: (default: 10000) Software buffer (queue) size.
-    :type buffer_size: int
+    :param queue_size: (default: 10000) Software buffer (queue) size.
+    :type queue_size: int
 
     :param corr_x_kcps: x-data of correction factor.
     :type corr_x_kcps: np.ndarray
     :param corr_y: y-data of correction factor.
     :type corr_y: np.ndarray
-    :param dark_cps: (default 0.0) dark count.
+    :param dark_cps: (default 0.0) Module dark count rate.
     :type dark_cps: float
+    :param dead_time_ns: (default 0.0) Module dead time in ns.
+        If given, correction factor is calculated using this.
+        And then corr_x_kcps and corr_y are ignored.
+    :type dead_time_ns: float
 
     """
 
     def __init__(self, name, conf, prefix=None):
         BufferedEdgeCounter.__init__(self, name, conf=conf, prefix=prefix)
 
-        self.check_required_conf(("corr_x_kcps", "corr_y"))
+        if "dead_time_ns" in self.conf:
+            self._dead_time = self.conf.get("dead_time_ns", 0.0) * 1e-9
 
-        self._spline = InterpolatedUnivariateSpline(
-            1e3 * np.array(self.conf["corr_x_kcps"]), np.array(self.conf["corr_y"])
-        )
+            if "corr_x_kcps" in self.conf or "corr_y" in self.conf:
+                self.logger.warn("corr_x_kcps or corr_y is ignored when dead_time_ns is given.")
+            self._spline = None
+        else:
+            self.check_required_conf(("corr_x_kcps", "corr_y"))
+            self._spline = InterpolatedUnivariateSpline(
+                1e3 * np.array(self.conf["corr_x_kcps"]), np.array(self.conf["corr_y"])
+            )
+
+            if "dead_time_ns" in self.conf:
+                self.logger.warn("dead_time_ns is ignored when corr_x_kcps and corr_y are given.")
+            self._dead_time = None
+
         self._dark_count = self.conf.get("dark_cps", 0.0)
 
-    def correction_factor(self, cnt):
-        if cnt < 1e5:
+    def _correction_factor_dead_time(self, cps):
+        return 1.0 / (1.0 - cps * self._dead_time)
+
+    def _correction_factor_spline(self, cps):
+        if cps < 1e5:
             return 1.0
         else:
-            return self._spline(cnt)
+            return self._spline(cps)
+
+    def correction_factor(self, cps):
+        if self._dead_time is not None:
+            return self._correction_factor_dead_time(cps)
+        else:
+            return self._correction_factor_spline(cps)
 
     def correct_cps(self, cps):
         if isinstance(cps, (np.ndarray, list, tuple)):

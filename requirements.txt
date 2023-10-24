@@ -28,8 +28,9 @@ PyDAQmx ~= 1.4.6
 PyVISA ~= 1.11.3
 pywin32 == 303; sys_platform == "win32"
 pythonnet ~= 3.0.1; sys_platform == "win32"
-pypylon ~= 1.8.0
+pypylon ~= 2.3.0
 pulsestreamer ~= 1.6.0
+# pipython ~= 2.10.0.2
 # these libraries may not be straightforward to install via pip.
 # pygraphviz ~= 1.9
 # opencv-python ~= 4.6.0.66

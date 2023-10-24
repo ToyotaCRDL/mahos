@@ -10,7 +10,7 @@ xpub_endpoint = "tcp://127.0.0.1:5755"
 xsub_endpoint = "tcp://127.0.0.1:5756"
 file = true
 
-[localhost.gparam]
+[localhost.gparams]
 module = "mahos.node.global_params"
 class = "GlobalParams"
 target = { log = "localhost::log" }
@@ -307,14 +307,14 @@ move_interval_ms = 20
 [localhost.confocal_gui.target]
 confocal = "localhost::confocal"
 tracker = "localhost::tracker"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 
 [localhost.odmr_gui]
 module = "mahos.gui.odmr"
 class = "ODMRGUI"
 [localhost.odmr_gui.target]
 odmr = "localhost::odmr"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 confocal = "localhost::confocal"
 
 [localhost.podmr_gui]
@@ -322,21 +322,21 @@ module = "mahos.gui.podmr"
 class = "PODMRGUI"
 [localhost.podmr_gui.target]
 podmr = "localhost::podmr"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 
 [localhost.hbt_gui]
 module = "mahos.gui.hbt"
 class = "HBTGUI"
 [localhost.hbt_gui.target]
 hbt = "localhost::hbt"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 
 [localhost.spectroscopy_gui]
 module = "mahos.gui.spectroscopy"
 class = "SpectroscopyGUI"
 [localhost.spectroscopy_gui.target]
 spectroscopy = "localhost::spectroscopy"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 confocal = "localhost::confocal"
 
 [localhost.camera_gui]
@@ -344,7 +344,7 @@ module = "mahos.gui.camera"
 class = "CameraGUI"
 [localhost.camera_gui.target]
 camera = "localhost::camera"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 
 [localhost.pulse_monitor]
 module = "mahos.gui.pulse_monitor"
@@ -358,6 +358,6 @@ class = "MainMonitor"
 work_dir = "~"
 [localhost.main_monitor.target]
 log = "localhost::log"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 servers = ["localhost::server", "localhost::server_spec", "localhost::server_camera"]
 manager = "localhost::manager"

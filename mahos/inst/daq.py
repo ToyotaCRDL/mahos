@@ -543,6 +543,8 @@ class AnalogIn(ConfigurableTask):
     :type lines: list[str]
     :param queue_size: (default: 10000) Software buffer (queue) size for acquired data.
     :type queue_size: int
+    :param silent: (default: False) Enable silent mode. Don't message warning on queue overflow.
+    :type silent: bool
 
     :param clock_mode: If True (False), configures as clock-mode (on-demand-mode).
     :type clock_mode: bool
@@ -608,6 +610,7 @@ class AnalogIn(ConfigurableTask):
 
         self.queue_size = self.conf.get("queue_size", 10000)
         self.queue = LockedQueue(self.queue_size)
+        self._silent = self.conf.get("silent", False)
         self._stamp = False
         self.clock_mode = False
 
@@ -638,7 +641,10 @@ class AnalogIn(ConfigurableTask):
         return rate.value
 
     def _append_data(self, data: np.ndarray | list[np.ndarray]):
-        if not self.queue.append((data, time.time_ns()) if self._stamp else data):
+        if (
+            not self.queue.append((data, time.time_ns()) if self._stamp else data)
+            and not self._silent
+        ):
             self.logger.warn("queue is overflowing. The oldest data is discarded.")
 
     def pop_opt(

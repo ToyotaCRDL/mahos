@@ -10,7 +10,7 @@ xpub_endpoint = "tcp://127.0.0.1:5755"
 xsub_endpoint = "tcp://127.0.0.1:5756"
 file = true
 
-[localhost.gparam]
+[localhost.gparams]
 module = "mahos.node.global_params"
 class = "GlobalParams"
 target = { log = "localhost::log" }
@@ -210,14 +210,14 @@ move_interval_ms = 20
 [localhost.confocal_gui.target]
 confocal = "localhost::confocal"
 tracker = "localhost::tracker"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 
 [localhost.odmr_gui]
 module = "mahos.gui.odmr"
 class = "ODMRGUI"
 [localhost.odmr_gui.target]
 odmr = "localhost::odmr"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 confocal = "localhost::confocal"
 
 [localhost.podmr_gui]
@@ -225,7 +225,7 @@ module = "mahos.gui.podmr"
 class = "PODMRGUI"
 [localhost.podmr_gui.target]
 podmr = "localhost::podmr"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 
 [localhost.main_monitor]
 module = "mahos.gui.main_monitor"
@@ -233,6 +233,6 @@ class = "MainMonitor"
 work_dir = "~"
 [localhost.main_monitor.target]
 log = "localhost::log"
-gparam = "localhost::gparam"
+gparams = "localhost::gparams"
 servers = ["localhost::server"]
 manager = "localhost::manager"

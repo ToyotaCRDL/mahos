@@ -20,7 +20,7 @@ from pipython import GCSDevice
 
 from .instrument import Instrument
 from .exceptions import InstError
-from .daq import AnalogIn, AnalogOut
+from .daq import AnalogIn, AnalogOut, ClockSource
 from ..msgs.confocal_msgs import Axis
 from ..util.conf import PresetLoader
 
@@ -451,8 +451,6 @@ class E727_3_USB_AO(E727_3_USB):
 class AnalogPiezo3Axes(BasePiezo3Axes):
     """Generic Piezo Driver using DAQ AnalogIn and AnalogOut.
 
-    TODO: NOTE that this class is not tested against real hardware yet.
-
     AnalogOut is used to output position command to Piezo Driver (amplifier), and
     AnalogIn is used to read the sensor value from Piezo Driver (amplifier).
 
@@ -477,8 +475,18 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
     :param ont_error: (default: 0.010) Threshold error in um to determine current position is
         on target or not.
     :type ont_error: float
-    :param ai_oversample: (default: 10000) Number of sampling points to read current position.
+    :param ai_oversample: (default: 1000) Number of sampling points to read current position.
     :type ai_oversample: int
+    :param ai_clock: Clock source (counter name of DAQ) for AnalogIn.
+        If (not) given, AnalogIn is used in clock_mode (on-demand mode).
+    :type ai_clock: str
+    :param ai_time_window: (default: 10e-3) time window for AnalogIn sampling.
+        Used only if ai_clock is given.
+        AnalogIn sampling rate is given by: 1 / ai_time_window * ai_oversample.
+    :type ai_time_window: float
+    :param ai_buffer_size: (default: 200) buffer size for AnalogIn sampling.
+        Used only if ai_clock is given.
+    :type ai_buffer_size: int
 
     :param samples_margin: (has preset, default: 0) margin of samples for AnalogOut.
     :type samples_margin: int
@@ -493,13 +501,12 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
 
         self.check_required_conf(("lines", "ai_lines", "scale_volt_per_um", "offset_um"))
         lines = self.conf["lines"]
-        ai_lines = self.conf["ai_lines"]
         self._scale_volt_per_um = self.conf["scale_volt_per_um"]
         self._offset_um = self.conf["offset_um"]
         self._ai_scale_volt_per_um = self.conf.get("ai_scale_volt_per_um", self._scale_volt_per_um)
-        self._ai_offset_um = self.conf.get("ai_offset_um", self._ai_offset_um)
+        self._ai_offset_um = self.conf.get("ai_offset_um", self._offset_um)
         self._ont_error = self.conf.get("ont_error", 0.010)
-        self._ai_oversample = self.conf.get("ai_oversample", 10000)
+        self._ai_oversample = self.conf.get("ai_oversample", 1000)
 
         ao_name = name + "_ao"
         # bounds in volts converted from command space range
@@ -514,14 +521,60 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
         self.load_conf_preset(self._ao.device_type)
         self._write_and_start = self.conf.get("write_and_start", True)
 
+        if "ai_counter" in self.conf:
+            self.init_ai_clock(name, prefix)
+            self._ai_clock = True
+        else:
+            self.init_ai_on_demand(name, prefix)
+            self._ai_clock = False
+
+        self.logger.info(f"Initialized. AnalogIn clock mode: {self._ai_clock}")
+        self.init_target_pos()
+
+    def init_ai_clock(self, name, prefix):
+        ai_lines = self.conf["ai_lines"]
+        clock_name = name + "_clock"
+        clock_conf = {"counter": self.conf["ai_counter"]}
+        self._clock = ClockSource(clock_name, clock_conf, prefix=prefix)
+
+        window = self.conf.get("ai_time_window", 10e-3)
+        rate = 1.0 / window * self._ai_oversample
+        buffer_size = self.conf.get("ai_buffer_size", 200)
+        ai_name = name + "_ai"
+        ai_conf = {"lines": ai_lines, "silent": True, "queue_size": 1}
+        # bounds in volts converted from command space range
+        ai_bounds = [[self.ai_um_to_volt_raw(v) for v in lim] for lim in self.get_limit()]
+        ai_params = {
+            "cb_samples": 1,
+            "samples": buffer_size,
+            "buffer_size": buffer_size,
+            "rate": rate,
+            "finite": False,
+            "every": False,
+            "stamp": False,
+            "clock": self._clock.get_internal_output(),
+            "time_window": window,
+            "oversample": self._ai_oversample,
+            "bounds": ai_bounds,
+        }
+        self._ai = AnalogIn(ai_name, ai_conf, prefix=prefix)
+        if not (
+            self._clock.configure({"freq": rate, "samples": buffer_size, "finite": False})
+            and self._ai.configure_clock(ai_params)
+            and self._ai.start()
+            and self._clock.start()
+        ):
+            raise RuntimeError("Failed to start AnalogIn")
+
+    def init_ai_on_demand(self, name, prefix):
+        ai_lines = self.conf["ai_lines"]
         ai_name = name + "_ai"
         ai_conf = {"lines": ai_lines}
         # bounds in volts converted from command space range
         ai_bounds = [[self.ai_um_to_volt_raw(v) for v in lim] for lim in self.get_limit()]
         self._ai = AnalogIn(ai_name, ai_conf, prefix=prefix)
-        self._ai.configure_on_demand({"bounds": ai_bounds})
-
-        self.init_target_pos()
+        if not self._ai.configure_on_demand({"bounds": ai_bounds}):
+            raise RuntimeError("Failed to start AnalogIn")
 
     def load_conf_preset(self, dev_type: str):
         loader = PresetLoader(self.logger, PresetLoader.Mode.PARTIAL)
@@ -575,7 +628,10 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
             self.target[ax] = p
 
     def get_pos(self):
-        ai_volt = self._ai.read_on_demand(self._ai_oversample)
+        if self._ai_clock:
+            ai_volt = np.concatenate(self._ai.pop_block())
+        else:
+            ai_volt = self._ai.read_on_demand(self._ai_oversample)
         return self.ai_volt_to_um(ai_volt)
 
     def get_pos_ont(self):
@@ -594,6 +650,11 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
     def close(self):
         if hasattr(self, "_ao"):
             self._ao.close_once()
+        if self._ai_clock:
+            self._ai.stop()
+            self._clock.stop()
+        if hasattr(self, "_clock"):
+            self._clock.close_once()
         if hasattr(self, "_ai"):
             self._ai.close_once()
 

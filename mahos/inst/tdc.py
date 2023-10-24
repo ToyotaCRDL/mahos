@@ -46,6 +46,8 @@ class MCS(Instrument):
         As correspondence is unclear after reading the manual (maybe dependent on the setting),
         it is recommended to inspect the output lst file first.
     :type lst_channels: list[int]
+    :param dll_mod: (default: True) Set True if modified DLL below is installed.
+        Set False if DLL is the original version.
 
     DLL Modifications
     =================
@@ -152,8 +154,9 @@ class MCS(Instrument):
 
         fn = self.conf.get("dll_name", "DMCS8.dll")
         self.resolution_sec = self.conf.get("resolution_sec", 0.2e-9)
+        self._dll_mod = self.conf.get("dll_mod", True)
         self.dll = C.windll.LoadLibrary(fn)
-        self.logger.info(f"Loaded {fn}")
+        self.logger.info(f"Loaded {fn} (mod: {self._dll_mod})")
 
         self._base_configs = self.conf.get("base_configs", {})
         self._mcs_dir = os.path.expanduser(self.conf.get("mcs_dir", "C:\\mcs8x64"))
@@ -172,6 +175,10 @@ class MCS(Instrument):
         """Run a command in MCS Server. Return True on success."""
 
         ret = self.dll.RunCmd(0, c_str(cmd))
+        if not self._dll_mod:
+            # if dll is original, return value is always void (None).
+            # we cannot check whether RunCmd() is successful or not.
+            return True
         if ret:
             self.logger.error(f"RunCmd() returned {ret}")
             return False

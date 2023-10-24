@@ -250,8 +250,10 @@ class LogBroker(Node):
             if "file_name" in self.conf:
                 n = self.conf["file_name"]
             else:
-                dt = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")
-                n = path.join(log_dir, "{}_{}.log".format(self.joined_name(), dt))
+                dt = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S.%f")
+                n = path.join(
+                    log_dir, "{}_{}.log".format(self.joined_name().replace("::", "-"), dt)
+                )
             self.file_logger = FileLogger(n)
             self.file_logger.write("# LogBroker started at {}\n".format(dt))
         else:
