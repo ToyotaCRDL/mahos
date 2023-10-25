@@ -620,7 +620,6 @@ document.write(`
 <dt class="sig sig-object py" id="mahos.inst.piezo.AnalogPiezo3Axes">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.inst.piezo.</span></span><span class="sig-name descname"><span class="pre">AnalogPiezo3Axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.piezo.AnalogPiezo3Axes" title="Permalink to this definition">#</a></dt>
 <dd><p>Generic Piezo Driver using DAQ AnalogIn and AnalogOut.</p>
-<p>TODO: NOTE that this class is not tested against real hardware yet.</p>
 <p>AnalogOut is used to output position command to Piezo Driver (amplifier), and
 AnalogIn is used to read the sensor value from Piezo Driver (amplifier).</p>
 <dl class="field-list simple">
@@ -639,7 +638,14 @@ the input voltage is considered as: (pos_um - ai_offset_um) * ai_scale_volt_per_
 see ai_scale_volt_per_um too.</p></li>
 <li><p><strong>ont_error</strong> (<em>float</em>) – (default: 0.010) Threshold error in um to determine current position is
 on target or not.</p></li>
-<li><p><strong>ai_oversample</strong> (<em>int</em>) – (default: 10000) Number of sampling points to read current position.</p></li>
+<li><p><strong>ai_oversample</strong> (<em>int</em>) – (default: 1000) Number of sampling points to read current position.</p></li>
+<li><p><strong>ai_clock</strong> (<em>str</em>) – Clock source (counter name of DAQ) for AnalogIn.
+If (not) given, AnalogIn is used in clock_mode (on-demand mode).</p></li>
+<li><p><strong>ai_time_window</strong> (<em>float</em>) – (default: 10e-3) time window for AnalogIn sampling.
+Used only if ai_clock is given.
+AnalogIn sampling rate is given by: 1 / ai_time_window * ai_oversample.</p></li>
+<li><p><strong>ai_buffer_size</strong> (<em>int</em>) – (default: 200) buffer size for AnalogIn sampling.
+Used only if ai_clock is given.</p></li>
 <li><p><strong>samples_margin</strong> (<em>int</em>) – (has preset, default: 0) margin of samples for AnalogOut.</p></li>
 <li><p><strong>write_and_start</strong> (<em>bool</em>) – (has preset, default: True) if False, DAQ Task is started and then
 scan data is written in start_scan(). True reverses this order.</p></li>
@@ -682,6 +688,12 @@ scan data is written in start_scan(). True reverses this order.</p></li>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_scan_buffer_size</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_ai_clock</span></code>(name, prefix)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_ai_on_demand</span></code>(name, prefix)</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_target_pos</span></code>()</p></td>

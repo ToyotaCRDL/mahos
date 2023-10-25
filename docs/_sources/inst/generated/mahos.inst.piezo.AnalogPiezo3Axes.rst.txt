@@ -26,6 +26,8 @@
       ~AnalogPiezo3Axes.get_pos
       ~AnalogPiezo3Axes.get_pos_ont
       ~AnalogPiezo3Axes.get_scan_buffer_size
+      ~AnalogPiezo3Axes.init_ai_clock
+      ~AnalogPiezo3Axes.init_ai_on_demand
       ~AnalogPiezo3Axes.init_target_pos
       ~AnalogPiezo3Axes.join
       ~AnalogPiezo3Axes.load_conf_preset

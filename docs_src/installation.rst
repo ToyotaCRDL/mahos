@@ -12,7 +12,7 @@ Steps to install mahos:
 System requirements
 -------------------
 
-You need Python (>= 3.8, < 3.11) on Windows or Linux, and a C++ compiler (see below).
+You need Python (>= 3.8, < 3.12) on Windows or Linux, and a C++ compiler (see below).
 
 C++ compiler
 ^^^^^^^^^^^^

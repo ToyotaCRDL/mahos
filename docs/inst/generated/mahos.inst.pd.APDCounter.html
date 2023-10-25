@@ -626,10 +626,13 @@ document.write(`
 <li><p><strong>counter</strong> (<em>str</em>) – The device name for counter (like /Dev1/Ctr0).</p></li>
 <li><p><strong>source</strong> (<em>str</em>) – The pin name for counter source (like /Dev1/PFI0).</p></li>
 <li><p><strong>source_dir</strong> (<em>bool</em>) – (default: True) Source direction. True (False) for rising (falling) edge.</p></li>
-<li><p><strong>buffer_size</strong> (<em>int</em>) – (default: 10000) Software buffer (queue) size.</p></li>
+<li><p><strong>queue_size</strong> (<em>int</em>) – (default: 10000) Software buffer (queue) size.</p></li>
 <li><p><strong>corr_x_kcps</strong> (<em>np.ndarray</em>) – x-data of correction factor.</p></li>
 <li><p><strong>corr_y</strong> (<em>np.ndarray</em>) – y-data of correction factor.</p></li>
-<li><p><strong>dark_cps</strong> (<em>float</em>) – (default 0.0) dark count.</p></li>
+<li><p><strong>dark_cps</strong> (<em>float</em>) – (default 0.0) Module dark count rate.</p></li>
+<li><p><strong>dead_time_ns</strong> (<em>float</em>) – (default 0.0) Module dead time in ns.
+If given, correction factor is calculated using this.
+And then corr_x_kcps and corr_y are ignored.</p></li>
 </ul>
 </dd>
 </dl>
@@ -650,7 +653,7 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">correct_cps</span></code>(cps)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">correction_factor</span></code>(cnt)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">correction_factor</span></code>(cps)</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(key[, args])</p></td>

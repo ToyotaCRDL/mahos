@@ -628,6 +628,7 @@ In on-demand-mode, data are read on get(“data”) request.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lines</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – list of strings to designate DAQ’s physical channels.</p></li>
 <li><p><strong>queue_size</strong> (<em>int</em>) – (default: 10000) Software buffer (queue) size for acquired data.</p></li>
+<li><p><strong>silent</strong> (<em>bool</em>) – (default: False) Enable silent mode. Don’t message warning on queue overflow.</p></li>
 <li><p><strong>clock_mode</strong> (<em>bool</em>) – If True (False), configures as clock-mode (on-demand-mode).</p></li>
 <li><p><strong>bounds</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – bounds (min, max) values of the expected input voltages per channels.</p></li>
 <li><p><strong>clock</strong> (<em>str</em>) – DAQ terminal for clock.</p></li>
