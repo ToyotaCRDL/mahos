@@ -127,7 +127,7 @@ class QdyneAnalyzer(object):
 
         if not data.has_raw_data() or data.marker_indices is None:
             return False
-        signal_head, signal_tail, reference_head, reference_tail = data.marker_indices
+        signal_head, signal_tail, reference_head, reference_tail = data.marker_indices.T[0]
 
         # T: period of measurements
         T = data.get_period_bins()
@@ -167,7 +167,7 @@ class QdyneAnalyzer(object):
 
         if not data.has_raw_data() or data.marker_indices is None:
             return False
-        signal_head, signal_tail, reference_head, reference_tail = data.marker_indices
+        signal_head, signal_tail, reference_head, reference_tail = data.marker_indices.T[0]
 
         # T: period of measurements
         T = data.get_period_bins()
