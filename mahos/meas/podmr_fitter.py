@@ -82,6 +82,35 @@ class RabiFitter(Fitter):
         )
 
 
+def T1_exp_decay(x, A, T1):
+    return A * np.exp(-(x / T1))
+
+
+class T1Fitter(Fitter):
+    def model_params(self) -> P.ParamDict[str, P.PDValue]:
+        return P.ParamDict(
+            c=self.make_model_param(0.0, -1.0, 1.0, fixable=True, doc="constant baseline"),
+            A=self.make_model_param(0.5, 0.001, 1.0, doc="intensity at x = 0"),
+            T1=self.make_model_param(
+                10e-6, 1e-9, 1.0, unit="s", SI_prefix=True, doc="spin-lattice relaxation time"
+            ),
+        )
+
+    def guess_fit_params(
+        self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
+    ):
+        if fit_params["c"].vary:
+            fit_params["c"].set(np.min(ydata))
+        if fit_params["A"].vary:
+            fit_params["A"].set(np.max(ydata))
+        if fit_params["T1"].vary:
+            fit_params["T1"].set(np.max(xdata) / 2.0)
+
+    def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
+        baseline = F.models.ConstantModel()
+        return baseline + F.Model(T1_exp_decay)
+
+
 def spinecho_exp_decay(x, A, T2, n):
     return A * np.exp(-((x / T2) ** n))
 
@@ -233,6 +262,7 @@ class PODMRFitter(object):
 
         self.fitters = {
             "rabi": RabiFitter(self.logger.info),
+            "T1": T1Fitter(self.logger.info),
             "spinecho": SpinEchoFitter(self.logger.info),
             "fid": FIDFitter(self.logger.info),
             "gaussian": GaussianFitter(self.logger.info),
