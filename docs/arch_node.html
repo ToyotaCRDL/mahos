@@ -432,17 +432,32 @@ document.write(`
                   
   <section id="node-client-and-communication">
 <h1>Node, Client, and Communication<a class="headerlink" href="#node-client-and-communication" title="Permalink to this heading">#</a></h1>
-<p>MAHOS helps to build <cite>distributed systems</cite>, which consists of multiple programs (processes) communicating each other.
+<p>MAHOS helps to build <cite>distributed</cite> measurement automation systems, which consist of multiple programs (processes) communicating with each other.
 We call these programs <a class="reference internal" href="glossary.html#term-node"><span class="xref std std-term">nodes</span></a> (<a class="reference internal" href="node/Node.html#mahos.node.node.Node" title="mahos.node.node.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a>).
 A node usually provides some services for other nodes.
-The <a class="reference internal" href="glossary.html#term-node-client"><span class="xref std std-term">node client</span></a> (<a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient" title="mahos.node.client.NodeClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeClient</span></code></a>) provides the standard way to access node’s functions.
-The core functionalities of node systems are implemented in <a class="reference internal" href="node/index.html#mahos-node"><span class="std std-ref">mahos.node</span></a> package.</p>
-<p>The node <a class="reference internal" href="node/generated/mahos.node.comm.Context.html#mahos.node.comm.Context" title="mahos.node.comm.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">communication</span></code></a> is currently based on <a class="reference external" href="https://zeromq.org/">ZeroMQ</a> library.
+The <a class="reference internal" href="glossary.html#term-node-client"><span class="xref std std-term">node client</span></a> (<a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient" title="mahos.node.client.NodeClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeClient</span></code></a>) provides the standard way to access the node’s functions.
+The core functionalities of node systems are implemented in the <a class="reference internal" href="node/index.html#mahos-node"><span class="std std-ref">mahos.node</span></a> package.</p>
+<section id="data-transport-and-serialization">
+<h2>Data transport and serialization<a class="headerlink" href="#data-transport-and-serialization" title="Permalink to this heading">#</a></h2>
+<p>The node <a class="reference internal" href="node/generated/mahos.node.comm.Context.html#mahos.node.comm.Context" title="mahos.node.comm.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">communication</span></code></a> is currently based on the <a class="reference external" href="https://zeromq.org/">ZeroMQ</a> library.
 The transport layer is abstracted by ZeroMQ, and we can choose different transports by changing a configuration (the endpoint) only.
-However, we assume TCP unless otherwise specified.
+We recommend using TCP as the default.
 By choosing TCP, multi-host (multi-computer) configuration is quite straightforward.
-ZeroMQ doesn’t specify the data serialization format; it provides methods to send / receive byte array of arbitrary length.
-We adopt Python standard pickle for serialization.</p>
+However, the transportation overhead can become an issue when one deals with very large data
+such as high-resolution images produced at a high rate.
+In such a case, the overhead can be reduced significantly by running the relevant nodes as threads
+in a single process and using intra-process transportation.</p>
+<p>ZeroMQ doesn’t specify the data serialization format; it provides methods to send/receive byte arrays of arbitrary length.
+Currently, we define the message types (classes) in the <a class="reference internal" href="msgs/index.html#mahos-msgs"><span class="std std-ref">mahos.msgs</span></a> package and serialize the instances
+using Python standard pickle.
+This approach is adopted due to pickle’s high compatibility with Python objects and moderate performance.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The pickle-based serialization practically limits the messaging within Python only.
+This might be changed to another approach (e.g., using Protocol Buffers)
+in the future to support other programming languages.</p>
+</div>
+</section>
 <section id="communication-patterns">
 <h2>Communication patterns<a class="headerlink" href="#communication-patterns" title="Permalink to this heading">#</a></h2>
 <p>We use two different communication patterns.</p>
@@ -450,28 +465,28 @@ We adopt Python standard pickle for serialization.</p>
 <h3>Req-Rep<a class="headerlink" href="#req-rep" title="Permalink to this heading">#</a></h3>
 <p><a class="reference internal" href="glossary.html#term-Req-Rep"><span class="xref std std-term">Req-Rep</span></a> (Request-Reply) pattern is synchronous <a class="reference internal" href="glossary.html#term-RPC"><span class="xref std std-term">RPC</span></a>.
 First, the client sends a request to the server (node).
-The server node does something accordingly, and send back a reply to the client.</p>
+The server node does something accordingly and sends back a reply to the client.</p>
 </section>
 <section id="pub-sub">
 <h3>Pub-Sub<a class="headerlink" href="#pub-sub" title="Permalink to this heading">#</a></h3>
 <p><a class="reference internal" href="glossary.html#term-Pub-Sub"><span class="xref std std-term">Pub-Sub</span></a> (Publish-Subscribe) pattern is asynchronous, one-to-many data distribution.
-The message regarding a topic is published by single node (Publisher).
+The message regarding a topic is published by a single node (Publisher).
 Here, the topic is a label to distinguish the data type.
-Publisher can publish multiple topics from single endpoint.
+A publisher can publish multiple topics from a single endpoint.
 The subscriber which <cite>subscribes to</cite> a topic receives the messages.
 The number of subscribers can be changed dynamically,
-and zero subscriber is a valid state too (message is just not sent to anywhere in this case).</p>
+and zero subscribers is a valid state too (the message is just not sent anywhere in this case).</p>
 </section>
 </section>
 <section id="client-usage">
 <h2>Client usage<a class="headerlink" href="#client-usage" title="Permalink to this heading">#</a></h2>
 <p>It can be said that a node <cite>provides</cite> functions via Rep and Pub;
-corresponding client uses them via Req and Sub.
+the corresponding client uses them via Req and Sub.
 Thus, <a class="reference internal" href="node/Node.html#mahos.node.node.Node" title="mahos.node.node.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a> has ways to <a class="reference internal" href="node/Node.html#mahos.node.node.Node.add_rep" title="mahos.node.node.Node.add_rep"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_rep</span></code></a>
 and <a class="reference internal" href="node/Node.html#mahos.node.node.Node.add_pub" title="mahos.node.node.Node.add_pub"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_pub</span></code></a>.
 <a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient" title="mahos.node.client.NodeClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeClient</span></code></a> has <a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient.add_req" title="mahos.node.client.NodeClient.add_req"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_req</span></code></a>
 and <a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient.add_sub" title="mahos.node.client.NodeClient.add_sub"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_sub</span></code></a>.</p>
-<p>A nodes can internally use the clients to access the others.
+<p>Nodes can internally use the clients to access the others.
 The custom programs can utilize them as well.
 This relationships are visualized in the figure below.</p>
 <figure class="align-default" id="id1">
@@ -530,6 +545,7 @@ This relationships are visualized in the figure below.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-transport-and-serialization">Data transport and serialization</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#communication-patterns">Communication patterns</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#req-rep">Req-Rep</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pub-sub">Pub-Sub</a></li>

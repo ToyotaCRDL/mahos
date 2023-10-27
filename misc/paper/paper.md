@@ -20,20 +20,20 @@ bibliography: paper.bib
 
 # Summary
 
-The experimental researchers often face challenges building up the systems
+Experimental researchers often face challenges building up the systems
 to automate their measurement procedures in physical science and engineering, or related areas.
 While simple automation could be done by a single script, systematic orchestration is required to handle complex cases.
 The measurement automation typically requires several pieces of programs in diverse layers:
 1) low-level drivers to communicate with the instruments,
-2) high-level measurement logics or analysis algorithms, and
+2) high-level measurement logic or analysis algorithms, and
 3) graphical user interfaces (GUIs) or top-level automation scripts.
 
 A `modular` framework is necessary to write maintainable programs for this purpose.
-On such a framework, the pieces of codes are organized within high-level abstraction mechanisms (module, class, etc.)
-and the interfaces are cleanly defined.
+In such a framework, the pieces of code are organized within high-level abstraction mechanisms (module, class, etc.)
+and the interfaces are clearly defined.
 
-The `distributed` messaging is one of the modern approaches for building extensible computing or control system.
-In this approach, individual programs run on multiple computers and they exchange the data by using messaging mechanism.
+`Distributed` messaging is one of the modern approaches for building flexible computing or control systems.
+In this approach, individual programs run on multiple computers and they exchange the data by using a messaging mechanism.
 Each program works in concert with the other to realize the system's functions.
 
 Although there are several `modular` frameworks for laboratory automation,
@@ -46,9 +46,9 @@ provide a `modular` and `distributed` framework for measurement automation.
 `MAHOS` is a `modular` and `distributed` framework for building measurement systems in Python.
 Python has been a major language of choice for laboratory automation.
 The low-level binding libraries for instruments, such as PyVISA [@pyvisa] and PyDAQmx [@pydaqmx], are available for Python.
-There are also several projects aiming to provide the comprehensive `modular` framework
+There are also several projects aiming to provide a comprehensive `modular` framework
 ranging from the instrument drivers to the GUIs [@pymeasure; @qudi; @nspyre].
-While we believe that the `distributed` messaging could result in more extensible and flexible systems,
+While we believe that the `distributed` messaging could help create flexible and accessible systems,
 the existing libraries take rather centralized approaches.
 That is why we have built `MAHOS` to provide both `modular` and `distributed` framework for measurement automation.
 
@@ -67,28 +67,28 @@ i.e., we assume to know all the possible nodes and messages beforehand.
 This assumption enables the transparent configuration of the whole system; it can be written in a single TOML configuration file.
 
 Since the messages can be delivered across computers even with different platforms (operating systems),
-we can build up multi-computer system easily and flexibly.
-For example, if an instrument has the driver only for Windows but we have to use Linux for rest of the system,
+we can build up a multi-computer system flexibly.
+For example, if an instrument has a driver only for Windows but we have to use Linux for the rest of the system,
 we can run a driver node on the Windows host and access it from the other nodes on the Linux.
 All it takes to move a node from one host to another is to change a few lines in the configuration file.
 
-The data transparency is the best effect brought to `MAHOS` by adopting the distributed messaging approach.
-Notable examples can be listed as below.
+High data and service accessibility are the best benefits brought to `MAHOS` by adopting the distributed messaging approach.
+Notable examples can be listed below.
 
-- The data published by measurement logics (nodes in 2nd layer defined in Summary) can be A) visualized in the GUI (3rd layer) node
-and B) processed and analyzed in interactive console such as IPython or Jupyter, simultaneously.
-- It is straightforward to conduct an initial measurement using GUI node, and then write ad-hoc script to run many measurements
+- The data published by a measurement logic (node in 2nd layer defined in Summary) can be simultaneously A) visualized in a GUI (3rd layer) node
+and B) processed and analyzed in an interactive console such as IPython or Jupyter.
+- It is straightforward to conduct an initial measurement using a GUI node, and then write an ad-hoc automation script to run many measurements
 with different parameters because the GUI node and the script are seen as equivalent clients from the measurement logic node.
 The GUI will visualize the data even when the measurement is started by the script.
 - We can inspect the instrument's status or perform ad-hoc operations on the instrument at run time without shutting down any nodes.
-This is because the operation requests from measurement logic nodes and ad-hoc ones are equivalent from the perspective of instrument driver (1st layer) node.
+This is because the operation requests from measurement logic nodes and ad-hoc ones are equivalent from the perspective of the instrument driver (1st layer) node.
 
 The transportation overhead could be the downside of networked messaging
-if one deals with very large data such as high resolution images produced at high rate.
-However, this overhead can be reduced significantly by running the relevant nodes as threads in single process,
-and use intra-process transportation.
+if one deals with very large data such as high-resolution images produced at a high rate.
+However, this overhead can be reduced significantly by running the relevant nodes as threads in a single process
+and using intra-process transportation.
 This switching can be performed by only modifying and adding several lines in the configuration file
-thanks to the ZeroMQ providing both networked (e.g. TCP) and intra-process transportations.
+thanks to ZeroMQ providing both networked (e.g. TCP) and intra-process transportation.
 
 Along with the base framework above, `MAHOS` currently comes with a confocal microscope and
 optically detected magnetic resonance (ODMR) measurement implementations
