@@ -145,6 +145,15 @@ class BlockSeqBuilder(object):
         self.nest = nest
         self.block_base = block_base
 
+    def fix_block_base(self, blk: Block, idx: int = 0) -> Block:
+        res = blk.total_length() % self.block_base
+        if not res:
+            return blk
+
+        pulse = blk.pattern[idx]
+        blk.update_duration(idx, pulse.duration + res)
+        return blk
+
     def build_complementary(
         self,
         blocks: list[Blocks[Block]],
@@ -162,16 +171,15 @@ class BlockSeqBuilder(object):
         for blks in blocks:
             blks = blks.remove("sync")
             assert len(blks) == 4
-            blks0: Blocks[Block] = blks[:2]
-            blks1: Blocks[Block] = blks[2:]
-            T = blks0.total_length()
-            assert T == blks1.total_length()
-            rep, residual = accum_window // T, accum_window % T
-            blk0 = blks0.collapse()  # Pi-0, readi-0 -> Pi-0
+            blk0 = self.fix_block_base(blks[:2].collapse())  # Pi-0, readi-0 -> Pi-0
             blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
-            blk1 = blks1.collapse()  # Pi-1, readi-1 -> Pi-1
+            blk1 = self.fix_block_base(blks[2:].collapse())  # Pi-1, readi-1 -> Pi-1
             blk0R = blk0.suffix("R")
             blk1R = blk1.suffix("R")
+
+            T = blk0.total_length()
+            assert T == blk1.total_length()
+            rep, residual = accum_window // T, accum_window % T
             if residual:
                 blk0R.insert(0, (blk0R.pattern[0].channels, residual))
                 blk1R.insert(0, (blk1R.pattern[0].channels, residual))
@@ -243,10 +251,11 @@ class BlockSeqBuilder(object):
         for blks in blocks:
             blks = blks.remove("sync")
             assert len(blks) == 2
-            T = blks.total_length()
-            rep, residual = accum_window // T, accum_window % T
-            blk = blks.collapse()
+            blk = self.fix_block_base(blks.collapse())
             blkR = blk.suffix("R")
+
+            T = blk.total_length()
+            rep, residual = accum_window // T, accum_window % T
             if residual:
                 blkR.insert(0, (blkR.pattern[0].channels, residual))
             blkT = blkR.suffix("T").union(
@@ -296,16 +305,15 @@ class BlockSeqBuilder(object):
         for blks in blocks:
             blks = blks.remove("sync")
             assert len(blks) == 4
-            blks0: Blocks[Block] = blks[:2]
-            blks1: Blocks[Block] = blks[2:]
-            T = blks0.total_length()
-            assert T == blks1.total_length()
-            rep, residual = accum_window // T, accum_window % T
-            blk0 = blks0.collapse()  # Pi-0, readi-0 -> Pi-0
+            blk0 = self.fix_block_base(blks[:2].collapse())  # Pi-0, readi-0 -> Pi-0
             blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
-            blk1 = blks1.collapse()  # Pi-1, readi-1 -> Pi-1
+            blk1 = self.fix_block_base(blks[2:].collapse())  # Pi-1, readi-1 -> Pi-1
             blk0R = blk0.suffix("R")
             blk1R = blk1.suffix("R")
+
+            T = blk0.total_length()
+            assert T == blk1.total_length()
+            rep, residual = accum_window // T, accum_window % T
             if residual:
                 blk0R.insert(0, (blk0R.pattern[0].channels, residual))
                 blk1R.insert(0, (blk1R.pattern[0].channels, residual))
@@ -439,13 +447,12 @@ class Pulser(Worker):
         )
         self._pd_trigger = self.conf["pd_trigger"]
 
-        self.block_base = self.conf["block_base"]
         self.generators = make_generators(
             freq=self.conf["pg_freq"],
             reduce_start_divisor=self.conf["reduce_start_divisor"],
             split_fraction=self.conf.get("split_fraction", 4),
             minimum_block_length=self.conf["minimum_block_length"],
-            block_base=self.block_base,
+            block_base=self.conf["block_base"],
             print_fn=self.logger.info,
         )
         # disable recovery measurement because Pattern0 and Pattern1 lengths can be different
@@ -607,7 +614,7 @@ class Pulser(Worker):
         # fill unused params
         params["base_width"] = params["trigger_width"] = 0.0
         params["init_delay"] = params["final_delay"] = 0.0
-        params["fix_base_width"] = self.block_base
+        params["fix_base_width"] = 1  # ignore base_width
 
         blocks, freq, common_pulses = generate(data.xdata, params)
         blockseq, laser_duties, markers, oversample = self.builder.build_blocks(

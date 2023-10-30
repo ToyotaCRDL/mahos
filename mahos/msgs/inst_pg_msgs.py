@@ -85,6 +85,12 @@ class Block(Message):
 
     # Mutating (list-like) operations
 
+    def update_duration(self, index: int, duration: int):
+        """update the duration of Pulse at `index` to new value `duration`."""
+
+        pulse = self.pattern[index]
+        self.pattern[index] = Pulse(pulse.channels, duration)
+
     def insert(self, index: int, pulse: AcceptedPulse):
         """Insert a `pulse` to `index` in pattern."""
 
