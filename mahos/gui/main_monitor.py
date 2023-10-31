@@ -57,9 +57,9 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
         self.inst_clis = {}
         self.locks = {}
         if "servers" in target:
-            for name in target["servers"]:
-                n = join_name(name)
-                cli = QInstrumentSubscriber(gconf, name, context=context, parent=self)
+            for n in target["servers"]:
+                n = join_name(n)
+                cli = QInstrumentSubscriber(gconf, n, context=context, parent=self)
                 cli.statusUpdated.connect(self.update_locks)
                 self.inst_clis[n] = cli
                 self.locks[n] = None
