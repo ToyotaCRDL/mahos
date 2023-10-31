@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+Tests for meas.qdyne.
+
+.. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
+.. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
+
+"""
+
 import numpy as np
 
 from mahos.meas.qdyne import QdyneIO

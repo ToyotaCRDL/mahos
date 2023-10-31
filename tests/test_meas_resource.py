@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+Tests for resource conflicts by multiple meas nodes.
+
+.. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
+.. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
+
+"""
+
 from mahos.msgs.confocal_msgs import ConfocalState
 from mahos.msgs.common_msgs import BinaryState
 from util import expect_value

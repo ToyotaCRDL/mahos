@@ -5,6 +5,9 @@ Definitions of binary codes for the .dtg file format.
 
 See the Tektronix Programmer's Manual for details.
 
+.. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
+.. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
+
 """
 
 import numpy as np

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+Tests for GlobalParams.
+
+.. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
+.. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
+
+"""
+
 from util import expect_value
 
 from fixtures import ctx, gconf, global_params, global_params_2clients, gparams_conf

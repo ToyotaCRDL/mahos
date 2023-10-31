@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+mahos ls command.
+
+.. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
+.. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
+
+"""
+
 import argparse
 
 from ..node.node import join_name, local_conf, host_nodes, hosts, threaded_nodes

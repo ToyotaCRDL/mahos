@@ -3,7 +3,8 @@
 """
 Unit conversion module.
 
-.. This file is a part of MAHOS project.
+.. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
+.. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
 
 The SI_scale function is taken from the pyqtgraph project (https://github.com/pyqtgraph/pyqtgraph),
 which is licensed under the MIT License:

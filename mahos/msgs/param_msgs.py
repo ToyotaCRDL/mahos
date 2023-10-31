@@ -3,7 +3,8 @@
 """
 Message Types for Generic Parameters.
 
-.. This file is a part of MAHOS project.
+.. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
+.. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
 
 Param is a wrapper around a value of primitive (mostly Python builtin) type, with a default.
 NumberParam has bounds (minimum and maximum).
