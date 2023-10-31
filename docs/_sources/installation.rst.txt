@@ -38,6 +38,14 @@ Skip this section if you prefer one of the following alternatives.
 
   pip install virtualenv
 
+If ``virtualenv`` command is not found by your shell, 
+add the directory containing ``virtualenv`` to environment variable PATH.
+The pip-installed executable is usually placed on the directory below,
+but you should confirm that by pip's warning message on installation.
+
+- ``%USERPROFILE%\AppData\Local\Programs\Python\Python3X\Scripts`` or ``%USERPROFILE%\AppData\Roaming\Python\Python3X\Scripts`` for Windows
+- ``~/.local/bin`` for Linux
+
 For some packages which are not quite straightforward to install via pip (OpenCV etc.),
 we recommend to enable system-site-packages.
 

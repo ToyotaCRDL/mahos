@@ -448,6 +448,14 @@ Skip this section if you prefer one of the following alternatives.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">virtualenv</span>
 </pre></div>
 </div>
+<p>If <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> command is not found by your shell,
+add the directory containing <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> to environment variable PATH.
+The pip-installed executable is usually placed on the directory below,
+but you should confirm that by pip’s warning message on installation.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">%USERPROFILE%\AppData\Local\Programs\Python\Python3X\Scripts</span></code> or <code class="docutils literal notranslate"><span class="pre">%USERPROFILE%\AppData\Roaming\Python\Python3X\Scripts</span></code> for Windows</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code> for Linux</p></li>
+</ul>
 <p>For some packages which are not quite straightforward to install via pip (OpenCV etc.),
 we recommend to enable system-site-packages.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virtualenv<span class="w"> </span>mahos<span class="w"> </span>-p<span class="w"> </span>&lt;python<span class="w"> </span>to<span class="w"> </span>use&gt;<span class="w"> </span>--system-site-packages
