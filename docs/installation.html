@@ -425,12 +425,15 @@ document.write(`
 </ol>
 <section id="system-requirements">
 <h2>System requirements<a class="headerlink" href="#system-requirements" title="Permalink to this heading">#</a></h2>
-<p>You need Python (&gt;= 3.8, &lt; 3.12) on Windows or Linux, and a C++ compiler (see below).</p>
-<section id="c-compiler">
-<h3>C++ compiler<a class="headerlink" href="#c-compiler" title="Permalink to this heading">#</a></h3>
+<p>You need Python (&gt;= 3.8, &lt; 3.12) on Windows or Linux, and prerequisites for C extensions (see below).</p>
+<section id="for-c-extensions">
+<h3>For C extensions<a class="headerlink" href="#for-c-extensions" title="Permalink to this heading">#</a></h3>
 <p>On Windows, you have to download and install the C++ compiler <a class="reference external" href="https://visualstudio.microsoft.com/ja/visual-cpp-build-tools/">Microsoft C++ Build Tools</a> in order to build the C extensions.
 You can skip this if you have already installed Visual Studio on your computer.</p>
-<p>On most of Linux, there’s nothing to do here because you should have <code class="docutils literal notranslate"><span class="pre">gcc</span></code> already.</p>
+<p>On Linux, install <code class="docutils literal notranslate"><span class="pre">gcc</span></code> and the dev-package for Python3.
+The <code class="docutils literal notranslate"><span class="pre">gcc</span></code> is installed by default on many distros.
+For the latter, try <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt</span> <span class="pre">install</span> <span class="pre">python3-dev</span></code> on Debian-based distros
+or <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">yum</span> <span class="pre">install</span> <span class="pre">python3-devel</span></code> on RHEL-like distros.</p>
 </section>
 </section>
 <section id="create-virtualenv">
@@ -481,7 +484,7 @@ You can install them with <code class="docutils literal notranslate"><span class
 You can skip this if you don’t need <a class="reference internal" href="cli.html#mahos-graph"><span class="std std-ref">mahos graph</span></a> command.</p>
 <section id="windows">
 <h4>Windows<a class="headerlink" href="#windows" title="Permalink to this heading">#</a></h4>
-<p>You have to install the <a class="reference internal" href="#c-compiler">C++ compiler</a> and the <a class="reference external" href="https://graphviz.org/download/#windows">graphviz binary</a> (version 2).
+<p>You have to install the <a class="reference internal" href="#for-c-extensions">C++ compiler</a> and the <a class="reference external" href="https://graphviz.org/download/#windows">graphviz binary</a> (version 2).
 And then, use following command to install pygraphviz.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--global-option<span class="w"> </span>build_ext<span class="w"> </span>--global-option<span class="w"> </span><span class="s2">&quot;-IC:\Program Files\Graphviz\include&quot;</span><span class="w"> </span>--global-option<span class="w"> </span><span class="s2">&quot;-LC:\Program Files\Graphviz\lib&quot;</span><span class="w"> </span>pygraphviz
 </pre></div>
@@ -600,7 +603,7 @@ pip<span class="w"> </span>install<span class="w"> </span>PyQt6
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#system-requirements">System requirements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#c-compiler">C++ compiler</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for-c-extensions">For C extensions</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-virtualenv">Create virtualenv</a></li>

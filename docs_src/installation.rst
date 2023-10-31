@@ -12,15 +12,18 @@ Steps to install mahos:
 System requirements
 -------------------
 
-You need Python (>= 3.8, < 3.12) on Windows or Linux, and a C++ compiler (see below).
+You need Python (>= 3.8, < 3.12) on Windows or Linux, and prerequisites for C extensions (see below).
 
-C++ compiler
-^^^^^^^^^^^^
+For C extensions
+^^^^^^^^^^^^^^^^
 
 On Windows, you have to download and install the C++ compiler `Microsoft C++ Build Tools <https://visualstudio.microsoft.com/ja/visual-cpp-build-tools/>`_ in order to build the C extensions.
 You can skip this if you have already installed Visual Studio on your computer.
 
-On most of Linux, there's nothing to do here because you should have ``gcc`` already.
+On Linux, install ``gcc`` and the dev-package for Python3.
+The ``gcc`` is installed by default on many distros.
+For the latter, try ``sudo apt install python3-dev`` on Debian-based distros
+or ``sudo yum install python3-devel`` on RHEL-like distros.
 
 Create virtualenv
 -----------------
@@ -76,7 +79,7 @@ You can skip this if you don't need :ref:`mahos graph` command.
 Windows
 .......
 
-You have to install the `C++ compiler`_ and the `graphviz binary <https://graphviz.org/download/#windows>`_ (version 2).
+You have to install the `C++ compiler <For C extensions_>`_ and the `graphviz binary <https://graphviz.org/download/#windows>`_ (version 2).
 And then, use following command to install pygraphviz.
 
 .. code-block:: bash
