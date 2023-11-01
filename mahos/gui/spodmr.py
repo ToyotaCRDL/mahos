@@ -123,7 +123,7 @@ class PlotWidget(QtWidgets.QWidget):
                 continue
 
             try:
-                y0, y1 = data.get_ydata()
+                y0, y1 = data.get_ydata(last_n=self.lastnBox.value())
                 if y0 is None:
                     return
                 yfit = data.get_fit_ydata()

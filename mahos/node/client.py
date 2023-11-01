@@ -338,7 +338,7 @@ class StateClient(StatusClient, StateClientMixin):
 
 
 class EchoSubscriber(NodeClient):
-    """ "Subscriber to print incoming messages."""
+    """Subscriber to print incoming messages."""
 
     def __init__(
         self,

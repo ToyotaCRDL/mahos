@@ -536,7 +536,8 @@ class Pulser(Worker):
             "retriggerable": True,
         }
         if not self.clock.configure(params_clock):
-            return self.fail_with("failed to configure clock.")
+            self.logger.error("failed to configure clock.")
+            return False
         clock_pd = self.clock.get_internal_output()
 
         num = self.data.get_num()
