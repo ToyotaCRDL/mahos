@@ -472,19 +472,6 @@
             <string>Sweep parameter (tau or N)</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_3">
-            <item row="2" column="6">
-             <widget class="QCheckBox" name="divideblockBox">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>divide long blocks</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="2">
              <widget class="QLabel" name="NstopLabel">
               <property name="text">
@@ -732,13 +719,6 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="5">
-             <widget class="QCheckBox" name="reduceBox">
-              <property name="text">
-               <string>reduce pg freq</string>
-              </property>
-             </widget>
-            </item>
             <item row="3" column="0">
              <widget class="QLabel" name="label_4">
               <property name="text">
@@ -829,6 +809,33 @@
               </property>
               <property name="maximum">
                <number>999999999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="7">
+             <widget class="QCheckBox" name="divideblockBox">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string>divide long blocks</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="6">
+             <widget class="QCheckBox" name="reduceBox">
+              <property name="text">
+               <string>reduce pg freq</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="5">
+             <widget class="QCheckBox" name="flipheadBox">
+              <property name="text">
+               <string>flip head</string>
               </property>
              </widget>
             </item>
@@ -1738,6 +1745,7 @@
   <tabstop>reinitXBox</tabstop>
   <tabstop>readYBox</tabstop>
   <tabstop>invertinitBox</tabstop>
+  <tabstop>flipheadBox</tabstop>
   <tabstop>reduceBox</tabstop>
   <tabstop>divideblockBox</tabstop>
   <tabstop>tau2constBox</tabstop>
@@ -1768,13 +1776,13 @@
   <tabstop>logXBox</tabstop>
   <tabstop>logYBox</tabstop>
   <tabstop>fftBox</tabstop>
-  <tabstop>fg_disableButton</tabstop>
-  <tabstop>fg_cwButton</tabstop>
-  <tabstop>fg_gateButton</tabstop>
   <tabstop>fg_waveBox</tabstop>
   <tabstop>fg_amplBox</tabstop>
   <tabstop>fg_phaseBox</tabstop>
   <tabstop>fg_freqBox</tabstop>
+  <tabstop>fg_cwButton</tabstop>
+  <tabstop>fg_disableButton</tabstop>
+  <tabstop>fg_gateButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

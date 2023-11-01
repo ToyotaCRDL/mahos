@@ -448,6 +448,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             ("invertY", self.invertYBox),
             ("readY", self.readYBox),
             ("reinitX", self.reinitXBox),
+            ("flip_head", self.flipheadBox),
         ]
         set_enabled(params, name_widgets)
 
@@ -624,6 +625,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.invertYBox.setChecked(p.get("invertY", False))
         self.reinitXBox.setChecked(p.get("reinitX", False))
         self.readYBox.setChecked(p.get("readY", False))
+        self.flipheadBox.setChecked(p.get("flip_head", False))
         self.nomwBox.setChecked(p.get("nomw", False))
         self.invertinitBox.setChecked(p.get("invertinit", False))
         self.reduceBox.setChecked(p.get("enable_reduce", False))
@@ -724,6 +726,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["invertY"] = self.invertYBox.isChecked()
         params["reinitX"] = self.reinitXBox.isChecked()
         params["readY"] = self.readYBox.isChecked()
+        params["flip_head"] = self.flipheadBox.isChecked()
         params["nomw"] = self.nomwBox.isChecked()
         params["invertinit"] = self.invertinitBox.isChecked()
         params["enable_reduce"] = self.reduceBox.isChecked()
@@ -883,6 +886,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
                 self.invertYBox,
                 self.reinitXBox,
                 self.readYBox,
+                self.flipheadBox,
                 self.invertinitBox,
                 self.iqdelayBox,
                 self.tpwidthBox,

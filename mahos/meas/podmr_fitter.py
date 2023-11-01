@@ -83,8 +83,8 @@ class RabiFitter(Fitter):
         )
 
 
-def T1_exp_decay(x, A, T1):
-    return A * np.exp(-(x / T1))
+def T1_exp_decay(x, A, T1, m):
+    return A * np.exp(-(m * x / T1))
 
 
 class T1Fitter(Fitter):
@@ -94,6 +94,14 @@ class T1Fitter(Fitter):
             A=self.make_model_param(0.5, 0.001, 1.0, doc="intensity at x = 0"),
             T1=self.make_model_param(
                 10e-6, 1e-9, 1.0, unit="s", SI_prefix=True, doc="spin-lattice relaxation time"
+            ),
+            m=self.make_model_param(
+                1.0,
+                1.0,
+                3.0,
+                fixable=True,
+                fixed=True,
+                doc="coefficient for tau depending on energy-level structure",
             ),
         )
 
@@ -106,6 +114,7 @@ class T1Fitter(Fitter):
             fit_params["A"].set(np.max(ydata))
         if fit_params["T1"].vary:
             fit_params["T1"].set(np.max(xdata) / 2.0)
+        # don't guess m
 
     def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
         baseline = F.models.ConstantModel()

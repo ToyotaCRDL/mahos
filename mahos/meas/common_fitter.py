@@ -71,6 +71,7 @@ class BaseFitter(object):
         unit: str = "",
         SI_prefix: bool = False,
         fixable: bool = False,
+        fixed: bool = False,
         doc: str = "",
     ) -> P.ParamDict[str, P.FloatParam]:
         ps = P.ParamDict(
@@ -79,7 +80,7 @@ class BaseFitter(object):
             max=P.FloatParam(maximum, unit=unit, SI_prefix=SI_prefix, optional=True),
         )
         if fixable:
-            ps["fix"] = P.BoolParam(False)
+            ps["fix"] = P.BoolParam(fixed)
         return ps
 
     def model_params(self) -> P.ParamDict[str, P.PDValue]:

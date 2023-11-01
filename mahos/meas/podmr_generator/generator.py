@@ -174,14 +174,16 @@ class T1Generator(PatternGenerator):
 
     :param 180pulse: duration of 180 deg (pi) pulse
     :type 180pulse: float
+    :param flip_head: If True (False), 180pulse is applied at start (end) of relaxation period.
+    :type flip_head: bool
 
     pattern0 => (no 180 pulse) - tau
-    pattern1 => 180 (pi) pulse - tau
+    pattern1 => 180 (pi) pulse - tau or tau - 180 (pi) pulse
 
     """
 
     def pulse_params(self) -> T.List[str]:
-        return ["180pulse"]
+        return ["180pulse", "flip_head"]
 
     def _generate(
         self,
@@ -193,19 +195,22 @@ class T1Generator(PatternGenerator):
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p180 = pulse_params[0]
+        p180, flip_head = pulse_params
 
         p0 = [p180]
         p1 = [p180]
         freq, xdata, common_pulses, p0, p1 = K.round_pulses(
             self.freq, xdata, common_pulses, p0, p1, reduce_start_divisor, self.print_fn
         )
-        p0 = p0 + [False]
-        p1 = p1 + [True]
+        p0 = p0 + [False, flip_head]
+        p1 = p1 + [True, flip_head]
 
-        def gen_single_ptn_T1(v, mw_width, operate):
+        def gen_single_ptn_T1(v, mw_width, operate, flip_head):
             if operate:
-                return [(("mw_x", "mw"), mw_width), (("mw_x",), v)]
+                if flip_head:
+                    return [(("mw_x", "mw"), mw_width), (("mw_x",), v)]
+                else:
+                    return [(("mw_x",), v), (("mw_x", "mw"), mw_width)]
             else:
                 return [(("mw_x",), mw_width + v)]
 

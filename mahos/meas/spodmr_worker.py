@@ -787,6 +787,8 @@ class Pulser(Worker):
             d["invertY"] = P.BoolParam(False)
         if "reinitX" in pulse_params:
             d["reinitX"] = P.BoolParam(False)
+        if "flip_head" in pulse_params:
+            d["flip_head"] = P.BoolParam(False)
 
         return d
 
