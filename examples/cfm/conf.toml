@@ -168,7 +168,7 @@ pub_endpoint = "tcp://127.0.0.1:5764"
 module = "camera"
 class = "ThorlabsCamera"
 [localhost.server_camera.instrument.camera.conf]
-dll_path = "~/bin/thorlabs"
+dll_dir = "~/bin/thorlabs"
 
 [localhost.confocal]
 module = "mahos.meas.confocal"
