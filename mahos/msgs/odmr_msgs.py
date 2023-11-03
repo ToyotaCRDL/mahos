@@ -65,19 +65,21 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
         return np.linspace(self.params["start"], self.params["stop"], self.params["num"])
 
     def _get_ydata_nobg(self, last_n, normalize_n, complex_conv):
-        ydata = np.mean(self.conv_complex(self.data, complex_conv)[:, -last_n:], axis=1)
-        if normalize_n:
-            if normalize_n > 0:
-                coeff = np.mean(np.sort(ydata)[-normalize_n:])
-            else:
-                coeff = np.mean(np.sort(ydata)[:-normalize_n])
-            if coeff != 0.0:
-                ydata /= coeff
-        return ydata, None
+        ydata = self.conv_complex(self.data, complex_conv)[:, -last_n:]
+        if not normalize_n:
+            return ydata, None
+
+        if normalize_n > 0:
+            coeff = np.mean(np.sort(np.mean(ydata, axis=1))[-normalize_n:])
+        else:
+            coeff = np.mean(np.sort(np.mean(ydata, axis=1))[:-normalize_n])
+        if coeff == 0.0:
+            coeff = 1.0
+        return ydata / coeff, None
 
     def _get_ydata_bg(self, last_n, normalize_n, complex_conv):
-        ydata = np.mean(self.conv_complex(self.data, complex_conv)[:, -last_n:], axis=1)
-        bg_ydata = np.mean(self.conv_complex(self.bg_data, complex_conv)[:, -last_n:], axis=1)
+        ydata = self.conv_complex(self.data, complex_conv)[:, -last_n:]
+        bg_ydata = self.conv_complex(self.bg_data, complex_conv)[:, -last_n:]
         if normalize_n:
             return ydata / bg_ydata, None
         return ydata, bg_ydata
@@ -87,6 +89,7 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
         last_n: int = 0,
         normalize_n: int = 0,
         complex_conv: str = "real",
+        std: bool = False,
     ) -> tuple[NDArray | None, NDArray | None]:
         """get ydata.
 
@@ -98,6 +101,7 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
             the baseline.
         :param complex_conv: (real | imag | abs[olute] | angle) conversion method for complex data.
             unused if data is not complex.
+        :param std: if True, estimated std. dev. instead of mean along the accumulations.
         :returns: (raw_ydata, background_ydata) if normalize_n is 0 and background is available.
                   (raw_ydata, None) if normalize_n is 0 and background is not available.
                   (normalized_ydata, None) if normalize_n is non-zero.
@@ -105,13 +109,24 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
 
         """
 
+        def conv(data):
+            if data is None:
+                return None
+            if std:
+                N = data.shape[1]
+                return np.std(data, axis=1) / np.sqrt(N)
+            else:
+                return np.mean(data, axis=1)
+
         if not self.has_data():
             return None, None
 
         if self.has_background():
-            return self._get_ydata_bg(last_n, normalize_n, complex_conv)
+            ydata0, ydata1 = self._get_ydata_bg(last_n, normalize_n, complex_conv)
+            return conv(ydata0), conv(ydata1)
         else:
-            return self._get_ydata_nobg(last_n, normalize_n, complex_conv)
+            ydata0, ydata1 = self._get_ydata_nobg(last_n, normalize_n, complex_conv)
+            return conv(ydata0), conv(ydata1)
 
     def get_image(self, complex_conv: str = "real") -> NDArray:
         return self.conv_complex(self.data, complex_conv)

@@ -71,18 +71,18 @@ class PlotWidget(QtWidgets.QWidget):
         hl0 = QtWidgets.QHBoxLayout()
         self.showimgBox = QtWidgets.QCheckBox("Show image", parent=self)
         self.showimgBox.setChecked(True)
+        self.showstdBox = QtWidgets.QCheckBox("Show std. dev.", parent=self)
+        self.showstdBox.setChecked(False)
         self.lastnBox = QtWidgets.QSpinBox(parent=self)
         self.lastnBox.setPrefix("last_n: ")
         self.lastnBox.setMinimum(0)
         self.lastnBox.setMaximum(10000)
         self.lastnBox.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
         self.lastnBox.setMaximumWidth(200)
-        self.stdBox = QtWidgets.QCheckBox("Show std. dev.", parent=self)
-        self.stdBox.setChecked(False)
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
         hl0.addWidget(self.showimgBox)
+        hl0.addWidget(self.showstdBox)
         hl0.addWidget(self.lastnBox)
-        hl0.addWidget(self.stdBox)
         hl0.addItem(spacer)
 
         hl = QtWidgets.QHBoxLayout()
@@ -127,7 +127,7 @@ class PlotWidget(QtWidgets.QWidget):
 
             try:
                 y0, y1 = data.get_ydata(last_n=self.lastnBox.value())
-                if self.stdBox.isChecked():
+                if self.showstdBox.isChecked():
                     y0std, y1std = data.get_ydata(last_n=self.lastnBox.value(), std=True)
                 else:
                     y0std = y1std = None
@@ -522,7 +522,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         n = os.path.splitext(fn)[0] + ".png"
         params = {
             "show_fit": self.fit.show_current_data_fit(),
-            "show_std": self.plot.stdBox.isChecked(),
+            "show_std": self.plot.showstdBox.isChecked(),
         }
         self.cli.export_data(n, params=params)
 
@@ -542,7 +542,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["color0"] = [color.color0 for (_, _, color) in data_list]
         params["color1"] = [color.color1 for (_, _, color) in data_list]
         params["show_fit"] = any([show_fit for (_, show_fit, _) in data_list])
-        params["show_std"] = self.plot.stdBox.isChecked()
+        params["show_std"] = self.plot.showstdBox.isChecked()
         self.cli.export_data(fn, data=data, params=params)
 
     def load_data(self):

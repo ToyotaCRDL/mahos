@@ -106,6 +106,8 @@ class ODMRIO(object):
         :type params.marker_bg: list[str]
         :param params.show_fit: set True to plot fit data
         :type params.show_fit: bool
+        :param params.show_std: set True to plot estimated std. dev.
+        :type params.show_std: bool
         :param params.legend: legend location (best|upper left|...). None to disable legend.
         :type params.legend: str|None
 
@@ -198,30 +200,32 @@ class ODMRIO(object):
             )
             xfit = data.get_fit_xdata()
             yfit = data.get_fit_ydata(normalize_n=normalize_n)
+            ystd, ybg_std = data.get_ydata(
+                normalize_n=normalize_n, complex_conv=params.get("complex_conv", "real"), std=True
+            )
             if normalize_n and params.get("base_line", False):
                 ax.hlines(1.0 + ofs, x_min * coeff, x_max * coeff, "#A0A0A0", "dashed")
-            if params.get("show_fit", True) and xfit is not None and yfit is not None:
-                lw_fit = params.get("linewidth_fit", 1.0)
-                lw = 0.0 if params.get("linewidth") is None else params.get("linewidth")
-                ax.plot(
-                    xfit * coeff,
-                    yfit + ofs,
-                    label=l + "_fit",
-                    linestyle="-",
-                    color=cf,
-                    linewidth=lw_fit,
-                )
+
+            _show_fit = params.get("show_fit", True) and xfit is not None and yfit is not None
+            lw = (
+                (0.5 if _show_fit else 1.0)
+                if params.get("linewidth") is None
+                else params.get("linewidth")
+            )
+            if params.get("show_std", False) and ystd is not None:
                 lines.append(
-                    ax.plot(x * coeff, y + ofs, label=l, marker=mk, color=col, linewidth=lw)[0]
+                    ax.errorbar(
+                        x * coeff,
+                        y + ofs,
+                        yerr=ystd,
+                        label=l,
+                        marker=mk,
+                        linestyle="-",
+                        color=col,
+                        linewidth=lw,
+                    )[0]
                 )
-                if y_bg is not None:
-                    lines.append(
-                        ax.plot(x * coeff, y_bg + ofs, label=l, marker=mb, color=cb, linewidth=lw)[
-                            0
-                        ]
-                    )
             else:
-                lw = 1.0 if params.get("linewidth") is None else params.get("linewidth")
                 lines.append(
                     ax.plot(
                         x * coeff,
@@ -233,7 +237,21 @@ class ODMRIO(object):
                         linewidth=lw,
                     )[0]
                 )
-                if y_bg is not None:
+            if y_bg is not None:
+                if params.get("show_std", False) and ystd is not None:
+                    lines.append(
+                        ax.errorbar(
+                            x * coeff,
+                            y_bg + ofs,
+                            yerr=ybg_std,
+                            label=l,
+                            marker=mb,
+                            linestyle="-",
+                            color=cb,
+                            linewidth=lw,
+                        )[0]
+                    )
+                else:
                     lines.append(
                         ax.plot(
                             x * coeff,
@@ -245,6 +263,17 @@ class ODMRIO(object):
                             linewidth=lw,
                         )[0]
                     )
+
+            if _show_fit:
+                lw_fit = params.get("linewidth_fit", 2.0)
+                ax.plot(
+                    xfit * coeff,
+                    yfit + ofs,
+                    label=l + "_fit",
+                    linestyle="-",
+                    color=cf,
+                    linewidth=lw_fit,
+                )
 
         # set_ylim should be called after all plots to auto-scale properly
         ax.set_ylim(params.get("ymin"), params.get("ymax"))

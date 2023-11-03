@@ -73,6 +73,8 @@ class PlotWidget(QtWidgets.QWidget):
         hl0 = QtWidgets.QHBoxLayout()
         self.showimgBox = QtWidgets.QCheckBox("Show image", parent=self)
         self.showimgBox.setChecked(True)
+        self.showstdBox = QtWidgets.QCheckBox("Show std. dev.", parent=self)
+        self.showstdBox.setChecked(False)
         self.lastnBox = QtWidgets.QSpinBox(parent=self)
         self.lastnBox.setPrefix("last_n: ")
         self.lastnBox.setMinimum(0)
@@ -88,10 +90,14 @@ class PlotWidget(QtWidgets.QWidget):
         self.complexBox.addItems(["real", "imag", "abs", "angle"])
         self.complexBox.setCurrentIndex(0)
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
-        hl0.addWidget(self.showimgBox)
-        hl0.addWidget(self.lastnBox)
-        hl0.addWidget(self.normalizenBox)
-        hl0.addWidget(self.complexBox)
+        for w in (
+            self.showimgBox,
+            self.showstdBox,
+            self.lastnBox,
+            self.normalizenBox,
+            self.complexBox,
+        ):
+            hl0.addWidget(w)
         hl0.addItem(spacer)
 
         hl = QtWidgets.QHBoxLayout()
@@ -148,7 +154,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.img.setTransform(QtGui.QTransform.fromScale(data.step(), 1.0))
 
     def update_plot(self, data_list: list[tuple[ODMRData, bool, Colors]]):
-        self.plot.clearPlots()
+        self.plot.clear()
 
         for data, show_fit, c in data_list:
             x = data.get_xdata()
@@ -157,48 +163,52 @@ class PlotWidget(QtWidgets.QWidget):
                 normalize_n=self.normalizenBox.value(),
                 complex_conv=self.complexBox.currentText(),
             )
+            if self.showstdBox.isChecked():
+                ystd, ybg_std = data.get_ydata(
+                    last_n=self.lastnBox.value(),
+                    normalize_n=self.normalizenBox.value(),
+                    complex_conv=self.complexBox.currentText(),
+                    std=True,
+                )
+            else:
+                ystd = ybg_std = None
             xfit = data.get_fit_xdata()
             yfit = data.get_fit_ydata(
                 last_n=self.lastnBox.value(), normalize_n=self.normalizenBox.value()
             )
 
-            if show_fit and (xfit is not None) and (yfit is not None):
-                self.plot.plot(
-                    x, y, pen=None, symbolPen=None, symbol="o", symbolSize=4, symbolBrush=c.color
-                )
-                if y_bg is not None:
-                    self.plot.plot(
-                        x,
-                        y_bg,
-                        pen=None,
-                        symbolPen=None,
-                        symbol="o",
-                        symbolSize=4,
-                        symbolBrush=c.color_bg,
-                    )
-                self.plot.plot(xfit, yfit, pen=c.color, width=1)
-            else:
+            _show_fit = show_fit and (xfit is not None) and (yfit is not None)
+            w = 0.5 if _show_fit else 1
+            pen = pg.mkPen(c.color, width=w)
+            pen_bg = pg.mkPen(c.color_bg, width=w)
+
+            if ystd is not None:
+                self.plot.addItem(pg.ErrorBarItem(x=x, y=y, height=2 * ystd, pen=pen))
+            if ybg_std is not None:
+                self.plot.addItem(pg.ErrorBarItem(x=x, y=y_bg, height=2 * ybg_std, pen=pen_bg))
+
+            self.plot.plot(
+                x,
+                y,
+                pen=pen,
+                symbolPen=None,
+                symbol="o",
+                symbolSize=8,
+                symbolBrush=c.color,
+            )
+            if y_bg is not None:
                 self.plot.plot(
                     x,
-                    y,
-                    pen=c.color,
-                    width=1,
+                    y_bg,
+                    pen=pen_bg,
                     symbolPen=None,
                     symbol="o",
                     symbolSize=8,
-                    symbolBrush=c.color,
+                    symbolBrush=c.color_bg,
                 )
-                if y_bg is not None:
-                    self.plot.plot(
-                        x,
-                        y_bg,
-                        pen=c.color_bg,
-                        width=1,
-                        symbolPen=None,
-                        symbol="o",
-                        symbolSize=8,
-                        symbolBrush=c.color_bg,
-                    )
+
+            if _show_fit:
+                self.plot.plot(xfit, yfit, pen=pg.mkPen(c.color, width=2))
 
         if self._normalize_updated:
             self.plot.autoRange()
@@ -661,6 +671,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params = {}
         params["normalize_n"] = self.plot.normalizenBox.value()
         params["complex_conv"] = self.plot.complexBox.currentText()
+        params["show_std"] = self.plot.showstdBox.isChecked()
         self.cli.export_data(n, params=params)
 
         if self.confocal_cli is not None and self.saveconfocalBox.isChecked():
@@ -699,6 +710,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params["color_bg"] = [c.color_bg for (_, _, c) in data_list]
         params["normalize_n"] = self.plot.normalizenBox.value()
         params["complex_conv"] = self.plot.complexBox.currentText()
+        params["show_std"] = self.plot.showstdBox.isChecked()
         self.cli.export_data(fn, data=data, params=params)
 
     # State managements

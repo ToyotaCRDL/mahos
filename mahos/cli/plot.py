@@ -82,12 +82,15 @@ def plot_odmr(args):
                 fit_params["n_guess"] = args.n_guess
             if "complex_conv" not in fit_params:
                 fit_params["complex_conv"] = args.complex_conv
+            if "dip" not in fit_params:
+                fit_params["dip"] = args.dip
         else:
             fit_params = {
                 "method": args.method,
                 "peak_type": str_to_peak_type(args.peak_type),
                 "n_guess": args.n_guess,
                 "complex_conv": args.complex_conv,
+                "dip": args.dip,
             }
             if fit_params["method"] == "multi":
                 fit_params["n_peaks"] = args.n_peaks
@@ -97,6 +100,7 @@ def plot_odmr(args):
     params = {
         "fit": fit_params,
         "show_fit": args.show_fit,
+        "show_std": args.show_std,
         "normalize_n": args.normalize_n,
         "complex_conv": args.complex_conv,
         "color": args.color,
@@ -477,6 +481,10 @@ def add_odmr_parser(sub_parsers):
         default=20,
         help="[fit] Number of samples to use for peak position guess",
     )
+    p.add_argument(
+        "--peak", dest="dip", action="store_false", help="ODMR signal is peak instead of dip."
+    )
+    p.add_argument("-S", "--show-std", action="store_true", help="plot estimated std. dev.")
     p.add_argument("--color", type=str, nargs="+", help="matplotlib colors for data")
     p.add_argument("--color_bg", type=str, nargs="+", help="matplotlib colors for background")
     p.add_argument("--color_fit", type=str, nargs="+", help="matplotlib colors for fitting lines")
@@ -484,7 +492,7 @@ def add_odmr_parser(sub_parsers):
     p.add_argument("--marker_bg", type=str, nargs="+", help="matplotlib markers for background")
     p.add_argument("-l", "--label", type=str, nargs="+", help="matplotlib labels")
     p.add_argument("--linewidth", type=float, help="linewidth for data")
-    p.add_argument("--linewidth_fit", type=float, default=1.0, help="linewidth for fitting line")
+    p.add_argument("--linewidth_fit", type=float, default=2.0, help="linewidth for fitting line")
     p.add_argument("-O", "--offset", type=float, nargs="+", help="offset along y-axis")
     p.add_argument(
         "--base-line", action="store_true", help="draw horizontal lines for normalization baseline"
@@ -564,7 +572,7 @@ def add_podmr_parser(sub_parsers):
     p.add_argument("--marker0", type=str, nargs="+", help="matplotlib markers for data0")
     p.add_argument("--marker1", type=str, nargs="+", help="matplotlib markers for data1")
     p.add_argument("--linewidth", type=float, help="linewidth for data0 and data1")
-    p.add_argument("--linewidth_fit", type=float, default=1.0, help="linewidth for fitting line")
+    p.add_argument("--linewidth_fit", type=float, default=2.0, help="linewidth for fitting line")
 
     add_common_args(p)
     p.set_defaults(func=plot_podmr)
@@ -630,7 +638,7 @@ def add_spodmr_parser(sub_parsers):
     p.add_argument("--marker0", type=str, nargs="+", help="matplotlib markers for data0")
     p.add_argument("--marker1", type=str, nargs="+", help="matplotlib markers for data1")
     p.add_argument("--linewidth", type=float, help="linewidth for data0 and data1")
-    p.add_argument("--linewidth_fit", type=float, default=1.0, help="linewidth for fitting line")
+    p.add_argument("--linewidth_fit", type=float, default=2.0, help="linewidth for fitting line")
 
     add_common_args(p)
     p.set_defaults(func=plot_spodmr)
