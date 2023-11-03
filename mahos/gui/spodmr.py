@@ -77,9 +77,12 @@ class PlotWidget(QtWidgets.QWidget):
         self.lastnBox.setMaximum(10000)
         self.lastnBox.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
         self.lastnBox.setMaximumWidth(200)
+        self.stdBox = QtWidgets.QCheckBox("Show std. dev.", parent=self)
+        self.stdBox.setChecked(False)
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
         hl0.addWidget(self.showimgBox)
         hl0.addWidget(self.lastnBox)
+        hl0.addWidget(self.stdBox)
         hl0.addItem(spacer)
 
         hl = QtWidgets.QHBoxLayout()
@@ -113,7 +116,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.showimgBox.toggled.connect(self.toggle_image)
 
     def update_plot(self, data_list: list[tuple[SPODMRData, bool, str]]):
-        self.plot.clearPlots()
+        self.plot.clear()
         for data, show_fit, c in data_list:
             try:
                 x = data.get_xdata()
@@ -124,6 +127,10 @@ class PlotWidget(QtWidgets.QWidget):
 
             try:
                 y0, y1 = data.get_ydata(last_n=self.lastnBox.value())
+                if self.stdBox.isChecked():
+                    y0std, y1std = data.get_ydata(last_n=self.lastnBox.value(), std=True)
+                else:
+                    y0std = y1std = None
                 if y0 is None:
                     return
                 yfit = data.get_fit_ydata()
@@ -131,44 +138,33 @@ class PlotWidget(QtWidgets.QWidget):
                 print("Error getting ydata: " + repr(e))
                 continue
 
-            if show_fit and (xfit is not None) and (yfit is not None):
-                self.plot.plot(
-                    x, y0, pen=None, symbolPen=None, symbol="o", symbolSize=4, symbolBrush=c.color0
-                )
-                if y1 is not None:
-                    self.plot.plot(
-                        x,
-                        y1,
-                        pen=None,
-                        symbolPen=None,
-                        symbol="o",
-                        symbolSize=4,
-                        symbolBrush=c.color1,
-                    )
-                self.plot.plot(xfit, yfit, pen=c.color0, width=1)
-
-            else:
+            if y0std is not None:
+                self.plot.addItem(pg.ErrorBarItem(x=x, y=y0, height=2 * y0std, pen=c.color0))
+            if y1std is not None:
+                self.plot.addItem(pg.ErrorBarItem(x=x, y=y1, height=2 * y1std, pen=c.color1))
+            self.plot.plot(
+                x,
+                y0,
+                pen=c.color0,
+                width=1,
+                symbolPen=None,
+                symbol="o",
+                symbolSize=8,
+                symbolBrush=c.color0,
+            )
+            if y1 is not None:
                 self.plot.plot(
                     x,
-                    y0,
-                    pen=c.color0,
+                    y1,
+                    pen=c.color1,
                     width=1,
                     symbolPen=None,
                     symbol="o",
                     symbolSize=8,
-                    symbolBrush=c.color0,
+                    symbolBrush=c.color1,
                 )
-                if y1 is not None:
-                    self.plot.plot(
-                        x,
-                        y1,
-                        pen=c.color1,
-                        width=1,
-                        symbolPen=None,
-                        symbol="o",
-                        symbolSize=8,
-                        symbolBrush=c.color1,
-                    )
+            if show_fit and (xfit is not None) and (yfit is not None):
+                self.plot.plot(xfit, yfit, pen=c.color0, width=2)
 
     def refresh(self, data_list: list[tuple[SPODMRData, bool, str]], data: SPODMRData):
         try:
@@ -524,7 +520,10 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.update_save_button(True)
 
         n = os.path.splitext(fn)[0] + ".png"
-        params = {"show_fit": self.fit.show_current_data_fit()}
+        params = {
+            "show_fit": self.fit.show_current_data_fit(),
+            "show_std": self.plot.stdBox.isChecked(),
+        }
         self.cli.export_data(n, params=params)
 
     def export_data(self):
@@ -543,6 +542,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["color0"] = [color.color0 for (_, _, color) in data_list]
         params["color1"] = [color.color1 for (_, _, color) in data_list]
         params["show_fit"] = any([show_fit for (_, show_fit, _) in data_list])
+        params["show_std"] = self.plot.stdBox.isChecked()
         self.cli.export_data(fn, data=data, params=params)
 
     def load_data(self):

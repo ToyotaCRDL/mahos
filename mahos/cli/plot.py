@@ -193,6 +193,7 @@ def plot_spodmr(args):
         "plot": plot_params,
         "fit": fit_params,
         "show_fit": args.show_fit,
+        "show_std": args.show_std,
         "color0": args.color0,
         "color1": args.color1,
         "color_fit": args.color_fit,
@@ -620,6 +621,7 @@ def add_spodmr_parser(sub_parsers):
         help="[fit] Fitting parameters file name. Invokes re-fitting.",
     )
 
+    p.add_argument("-S", "--show-std", action="store_true", help="plot estimated std. dev.")
     p.add_argument("-l", "--label", type=str, nargs="+", help="matplotlib labels")
     p.add_argument("-O", "--offset", type=float, nargs="+", help="offset along y-axis")
     p.add_argument("--color0", type=str, nargs="+", help="matplotlib colors for data0")

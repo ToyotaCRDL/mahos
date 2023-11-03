@@ -109,6 +109,8 @@ class SPODMRIO(object):
         :type params.marker1: list[str]
         :param params.show_fit: set True to plot fit data
         :type params.show_fit: bool
+        :param params.show_std: set True to plot estimated std. dev.
+        :type params.show_std: bool
         :param params.legend: legend location (best|upper left|...). None to disable legend.
         :type params.legend: str|None
 
@@ -172,6 +174,7 @@ class SPODMRIO(object):
         try:
             y0, y1 = data.get_ydata()
             yfit = data.get_fit_ydata()
+            y0std, y1std = data.get_ydata(std=True)
         except ValueError:
             self.logger.exception("Falied to get ydata")
             return None
@@ -182,7 +185,7 @@ class SPODMRIO(object):
             if xfit is not None and yfit is not None:
                 xfit, yfit = real_fft(xfit, yfit)
 
-        return x, xfit, y0, y1, yfit
+        return x, xfit, y0, y1, yfit, y0std, y1std
 
     def _fft_freq(self, data: SPODMRData):
         try:
@@ -247,12 +250,12 @@ class SPODMRIO(object):
             d = self._fetch_data(data, do_fft)
             if d is None:
                 return False
-            x, xfit, y0, y1, yfit = d
+            x, xfit, y0, y1, yfit, y0std, y1std = d
             l0 = l + "_0" if y1 is not None else l
             l1 = l + "_1"
             if params.get("show_fit", True) and xfit is not None and yfit is not None:
                 lw_fit = params.get("linewidth_fit", 1.0)
-                lw = 0.0 if params.get("linewidth") is None else params.get("linewidth")
+                lw = 0.5 if params.get("linewidth") is None else params.get("linewidth")
                 ax.plot(
                     xfit * xcoeff,
                     yfit + ofs,
@@ -261,40 +264,96 @@ class SPODMRIO(object):
                     color=cf,
                     linewidth=lw_fit,
                 )
-                lines.append(
-                    ax.plot(x * xcoeff, y0 + ofs, label=l0, marker=m0, color=c0, linewidth=lw)[0]
-                )
-                if y1 is not None:
+                if params.get("show_std", False) and y0std is not None:
                     lines.append(
-                        ax.plot(x * xcoeff, y1 + ofs, label=l1, marker=m1, color=c1, linewidth=lw)[
-                            0
-                        ]
-                    )
-            else:
-                lw = 1.0 if params.get("linewidth") is None else params.get("linewidth")
-                lines.append(
-                    ax.plot(
-                        x * xcoeff,
-                        y0 + ofs,
-                        label=l0,
-                        marker=m0,
-                        linestyle="-",
-                        color=c0,
-                        linewidth=lw,
-                    )[0]
-                )
-                if y1 is not None:
-                    lines.append(
-                        ax.plot(
+                        ax.errorbar(
                             x * xcoeff,
-                            y1 + ofs,
-                            label=l1,
-                            marker=m1,
-                            linestyle="-",
-                            color=c1,
+                            y0 + ofs,
+                            yerr=y0std,
+                            label=l0,
+                            marker=m0,
+                            color=c0,
                             linewidth=lw,
                         )[0]
                     )
+                else:
+                    lines.append(
+                        ax.plot(x * xcoeff, y0 + ofs, label=l0, marker=m0, color=c0, linewidth=lw)[
+                            0
+                        ]
+                    )
+                if y1 is not None:
+                    if params.get("show_std", False) and y1std is not None:
+                        lines.append(
+                            ax.errorbar(
+                                x * xcoeff,
+                                y1 + ofs,
+                                yerr=y1std,
+                                label=l1,
+                                marker=m1,
+                                color=c1,
+                                linewidth=lw,
+                            )[0]
+                        )
+                    else:
+                        lines.append(
+                            ax.plot(
+                                x * xcoeff, y1 + ofs, label=l1, marker=m1, color=c1, linewidth=lw
+                            )[0]
+                        )
+            else:
+                lw = 1.0 if params.get("linewidth") is None else params.get("linewidth")
+                if params.get("show_std", False) and y0std is not None:
+                    lines.append(
+                        ax.errorbar(
+                            x * xcoeff,
+                            y0 + ofs,
+                            yerr=y0std,
+                            label=l0,
+                            marker=m0,
+                            linestyle="-",
+                            color=c0,
+                            linewidth=lw,
+                        )[0]
+                    )
+                else:
+                    lines.append(
+                        ax.plot(
+                            x * xcoeff,
+                            y0 + ofs,
+                            label=l0,
+                            marker=m0,
+                            linestyle="-",
+                            color=c0,
+                            linewidth=lw,
+                        )[0]
+                    )
+                if y1 is not None:
+                    if params.get("show_std", False) and y1std is not None:
+                        lines.append(
+                            ax.errorbar(
+                                x * xcoeff,
+                                y1 + ofs,
+                                yerr=y1std,
+                                label=l1,
+                                marker=m1,
+                                linestyle="-",
+                                color=c1,
+                                linewidth=lw,
+                            )[0]
+                        )
+                    else:
+                        lines.append(
+                            ax.plot(
+                                x * xcoeff,
+                                y1 + ofs,
+                                label=l1,
+                                marker=m1,
+                                linestyle="-",
+                                color=c1,
+                                linewidth=lw,
+                            )[0]
+                        )
 
         # set_ylim should be called after all plots to auto-scale properly
         ax.set_ylim(params.get("ymin"), params.get("ymax"))

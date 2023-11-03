@@ -252,10 +252,13 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
     def get_fit_ydata(self):
         return self.fit_data
 
-    def get_ydata(self, last_n: int = 0) -> tuple[NDArray | None, NDArray | None]:
+    def get_ydata(
+        self, last_n: int = 0, std: bool = False
+    ) -> tuple[NDArray | None, NDArray | None]:
         """get analyzed ydata.
 
         :param last_n: if nonzero, take last_n sweeps to make y data.
+        :param std: if True, estimated std. dev. instead of mean along the accumulations.
 
         :returns: (ydata0, ydata1) if two types of data are available.
                   (ydata, None) if only one type of data is available.
@@ -264,18 +267,28 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
 
         """
 
+        def conv(data):
+            if data is None:
+                return None
+            if std:
+                N = data.shape[1]
+                return np.std(data, axis=1) / np.sqrt(N)
+            else:
+                return np.mean(data, axis=1)
+
         if not self.has_data():
             return None, None
 
         if self.is_partial():
-            return self._get_ydata_partial(last_n)
+            return conv(self._get_ydata_partial(last_n)), None
         else:
-            return self._get_ydata_complementary(last_n)
+            ydata0, ydata1 = self._get_ydata_complementary(last_n)
+            return conv(ydata0), conv(ydata1)
 
     def _normalize(self, data):
         if self.params["plot"].get("normalize", True):
             offset = self.params["plot"].get("offset", 0.0)
-            return (data - offset) / self.laser_duties
+            return ((data.T - offset) / self.laser_duties).T
         else:
             return data
 
@@ -285,19 +298,13 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
 
     def _get_ydata_partial(self, last_n: int):
         if self.partial() in (0, 2):
-            return (
-                self._normalize(np.mean(self._conv_complex(self.data0)[:, -last_n:], axis=1)),
-                None,
-            )
+            return self._normalize(self._conv_complex(self.data0)[:, -last_n:])
         else:  # assert self.partial() == 1
-            return (
-                self._normalize(np.mean(self._conv_complex(self.data1)[:, -last_n:], axis=1)),
-                None,
-            )
+            return self._normalize(self._conv_complex(self.data1)[:, -last_n:])
 
     def _get_ydata_complementary(self, last_n: int):
-        s0 = self._normalize(np.mean(self._conv_complex(self.data0)[:, -last_n:], axis=1))
-        s1 = self._normalize(np.mean(self._conv_complex(self.data1)[:, -last_n:], axis=1))
+        s0 = self._normalize(self._conv_complex(self.data0)[:, -last_n:])
+        s1 = self._normalize(self._conv_complex(self.data1)[:, -last_n:])
 
         plotmode = self.params["plot"]["plotmode"]
         flip = self.params["plot"].get("flipY", False)
@@ -321,11 +328,14 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
                 return (s0 - s1) / (s0 + s1) * 2, None
         elif plotmode == "normalize1":
             if flip:
-                return (s0 - s1) / s1, None
-            else:
                 return (s1 - s0) / s0, None
+            else:
+                return (s0 - s1) / s1, None
         elif plotmode == "concatenate":
-            return np.column_stack((s0, s1)).reshape(len(s0) * 2), None
+            out = np.empty((s0.shape[0] * 2, s0.shape[1]))
+            out[0::2, :] = s0
+            out[1::2, :] = s1
+            return out, None
         else:
             raise ValueError(f"unknown plotmode {plotmode}")
 
