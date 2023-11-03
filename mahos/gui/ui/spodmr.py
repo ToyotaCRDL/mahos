@@ -35,7 +35,7 @@ class Ui_SPODMR(object):
         self.loadButton = QtWidgets.QPushButton(parent=SPODMR)
         self.loadButton.setObjectName("loadButton")
         self.horizontalLayout.addWidget(self.loadButton)
-        spacerItem = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout_3.addLayout(self.horizontalLayout)
         self.tabWidget = QtWidgets.QTabWidget(parent=SPODMR)
