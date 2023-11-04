@@ -20,7 +20,7 @@ from .client import QStatusSubscriber
 
 
 class QTweakerClient(QStatusSubscriber):
-    """Subscribe to StateManager."""
+    """Qt-based client for Tweaker."""
 
     statusUpdated = QtCore.pyqtSignal(TweakerStatus)
 

@@ -9,6 +9,7 @@ Clients for mahos Node.
 """
 
 from __future__ import annotations
+import typing as T
 import time
 import threading
 import importlib
@@ -16,7 +17,7 @@ import importlib
 from .comm import Context, Requester
 from .node import join_name, split_name, infer_name, local_conf, load_gconf, get_value
 from .log import init_topic_logger
-from ..msgs.common_msgs import Message, StateReq, State, Status
+from ..msgs.common_msgs import Message, Resp, StateReq, State, Status
 from ..msgs.data_msgs import Data
 from ..util.typing import NodeName, SubHandler, MessageGetter
 
@@ -80,10 +81,17 @@ class SubWorker(object):
         self.handler_wrappers = []
 
     def add_sub(
-        self, endpoint: str, topic: bytes | str = b"", handler=None, deserial=True
+        self,
+        endpoint: str,
+        topic: bytes | str = b"",
+        handler=None,
+        msg_type: T.Type[Message] | None = None,
+        deserial=True,
     ) -> MessageGetter:
         hw = HandlerWrapper(handler=handler)
-        self.ctx.add_sub(endpoint, topic=topic, handler=hw.handler, deserial=deserial)
+        self.ctx.add_sub(
+            endpoint, topic=topic, handler=hw.handler, msg_type=msg_type, deserial=deserial
+        )
         self.handler_wrappers.append(hw)
         return hw.get_latest_msg
 
@@ -150,27 +158,31 @@ class NodeClient(object):
 
     def add_sub(
         self,
-        topic_handlers: list[tuple[bytes | str, SubHandler | None]],
+        topic_handler_types: list[tuple[bytes | str, SubHandler | None, T.Type[Message] | None]],
         endpoint: str = "pub_endpoint",
     ) -> list[MessageGetter]:
         """Subscribe to topics from `endpoint` registering the handlers.
 
         To do so, add and start a SubWorker for this client.
 
-        :param topic_handlers: List of Tuple[topic, handler] or topic. latter case,
-                               handler is considered None.
+        :param topic_handlers: List of (topic, handler, msg_type), (topic, handler) or topic.
+            In second case, msg_type is considered None. In the last case, handler and msg_type
+            are considered None.
         :returns: List of MessageGetters. Length is same as topic_handlers.
 
         """
 
         subw = SubWorker(self.ctx)
         getters = []
-        for topic_handler in topic_handlers:
-            if isinstance(topic_handler, (bytes, str)):
-                topic, handler = topic_handler, None
+        for topic_handler_type in topic_handler_types:
+            if isinstance(topic_handler_type, (bytes, str)):
+                topic, handler, msg_type = topic_handler_type, None, None
+            elif len(topic_handler_type) == 2:
+                topic, handler = topic_handler_type
+                msg_type = None
             else:
-                topic, handler = topic_handler
-            getters.append(subw.add_sub(self.conf[endpoint], topic, handler))
+                topic, handler, msg_type = topic_handler_type
+            getters.append(subw.add_sub(self.conf[endpoint], topic, handler, msg_type))
         self.start_subworker(subw)
         return getters
 
@@ -220,7 +232,9 @@ class NodeClient(object):
 
         return self.get_status() is not None
 
-    def add_req(self, gconf: dict, endpoint: str = "rep_endpoint") -> Requester:
+    def add_req(
+        self, gconf: dict, endpoint: str = "rep_endpoint", resp_type: T.Type[Resp] | None = None
+    ) -> Requester:
         """Add and return a Requester for `endpoint`.
 
         Request timeout (req_timeout_ms) is searched from self.conf or `gconf`.
@@ -230,6 +244,7 @@ class NodeClient(object):
         return self.ctx.add_req(
             self.conf[endpoint],
             timeout_ms=get_value(gconf, self.conf, "req_timeout_ms"),
+            resp_type=resp_type,
             logger=self.logger,
         )
 

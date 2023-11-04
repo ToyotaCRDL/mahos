@@ -11,26 +11,46 @@ Communication library for mahos Node.
 from __future__ import annotations
 import pickle
 import logging
+import typing as T
 
 import zmq
 
-from ..msgs.common_msgs import Message, Request, Resp
+from ..msgs.common_msgs import pickle_proto, Message, Request, Resp
 from ..util.typing import SubHandler, RepHandler
 
 from .log import PUBHandler, DummyLogger
 
 
-# As of Python 3.8, we can use pickle protocol version 5 (that is not default).
-# https://peps.python.org/pep-0574/
-pickle_proto = 5
+def serialize(msg: Message | T.Any) -> bytes:
+    """Serialize a Message or any object to bytes.
+
+    Default serialization method is pickle.
+    The Message type can implement custom serialize() method
+    (e.g. for data compression or foreign language interface).
+    When custom serialization is used, deserializer must know how to deserialize it.
+    For that, you must pass the Message type in add_sub(), add_req() or add_rep().
+
+    """
+
+    if isinstance(msg, Message):
+        return msg.serialize()
+    else:
+        return pickle.dumps(msg, protocol=pickle_proto)
 
 
-def serialize(msg: Message) -> bytes:
-    return pickle.dumps(msg, protocol=pickle_proto)
+def deserialize(b: bytes, msg_type: T.Type[Message] | None) -> Message | T.Any:
+    """Deserialize a bytes to reconstruct Message or any object.
 
+    msg_type is None (unspecified), deserialize is done assuming default serialization
+    method, pickle.
+    Otherwise, classmethod msg_type.deserialize() is invoked.
 
-def deserialize(b: bytes) -> Message:
-    return pickle.loads(b)
+    """
+
+    if msg_type is not None:
+        return msg_type.deserialize(b)
+    else:
+        return pickle.loads(b)
 
 
 def get_logger(logger):
@@ -46,12 +66,19 @@ class Requester(object):
     """Class providing request() for REQ-REP pattern communication."""
 
     def __init__(
-        self, context: zmq.Context, endpoint: str, linger_ms: int, timeout_ms=None, logger=None
+        self,
+        context: zmq.Context,
+        endpoint: str,
+        linger_ms: int,
+        timeout_ms: int | None = None,
+        resp_type: T.Type[Resp] | None = None,
+        logger=None,
     ):
         self.ctx = context
         self.endpoint = endpoint
         self.linger_ms = linger_ms
         self.timeout_ms = timeout_ms
+        self.resp_type = resp_type
         self.logger = get_logger(logger)
 
         self.create_socket()
@@ -72,7 +99,7 @@ class Requester(object):
 
         try:
             self._socket.send(serialize(msg))
-            resp = deserialize(self._socket.recv())
+            resp = deserialize(self._socket.recv(), self.resp_type)
         except zmq.ZMQError:
             # Comes here when timed-out for example.
             self.logger.exception("ZMQError in Requester.request().")
@@ -170,8 +197,8 @@ class Context(object):
         self.requesters: dict[str, zmq.Socket] = {}
         self.publishers: dict[str, zmq.Socket] = {}
         ## socket: handler
-        self.rep_handlers: dict[zmq.Socket, RepHandler] = {}
-        self.sub_handlers: dict[zmq.Socket, tuple[bool, SubHandler]] = {}
+        self.rep_handlers: dict[zmq.Socket, tuple[RepHandler, T.Type[Message] | None]] = {}
+        self.sub_handlers: dict[zmq.Socket, tuple[SubHandler, T.Type[Message] | None, bool]] = {}
         self.broker_handlers = []
 
         self.poller = zmq.Poller()
@@ -203,25 +230,40 @@ class Context(object):
 
         return self.ctx
 
-    def add_req(self, endpoint: str, timeout_ms: int | None = None, logger=None) -> Requester:
+    def add_req(
+        self,
+        endpoint: str,
+        timeout_ms: int | None = None,
+        resp_type: T.Type[Resp] | None = None,
+        logger=None,
+    ) -> Requester:
         """Add and return a Requester."""
 
         if endpoint in self.requesters:
             print(f"[WARN] Requester at {endpoint} has already been added.")
             return self.requesters[endpoint]
 
-        r = Requester(self.ctx, endpoint, self.linger_ms, timeout_ms=timeout_ms, logger=logger)
+        r = Requester(
+            self.ctx,
+            endpoint,
+            self.linger_ms,
+            timeout_ms=timeout_ms,
+            resp_type=resp_type,
+            logger=logger,
+        )
         self.requesters[endpoint] = r
         return r
 
-    def add_rep(self, endpoint: str, handler=null_handler):
+    def add_rep(
+        self, endpoint: str, handler=null_handler, req_type: T.Type[Message] | None = None
+    ):
         """Add rep handler."""
 
         sock = self.ctx.socket(zmq.REP)
         sock.setsockopt(zmq.LINGER, self.linger_ms)
         sock.bind(endpoint)
         self.poller.register(sock, zmq.POLLIN)
-        self.rep_handlers[sock] = handler
+        self.rep_handlers[sock] = (handler, req_type)
 
     def add_pub(self, endpoint: str, topic: bytes | str, logger=None) -> Publisher:
         """Add and return a Publisher."""
@@ -237,16 +279,27 @@ class Context(object):
         return p
 
     def add_sub(
-        self, endpoint: str, topic: bytes | str = b"", handler=null_handler, deserial=True
+        self,
+        endpoint: str,
+        topic: bytes | str = b"",
+        handler=null_handler,
+        msg_type: T.Type[Message] | None = None,
+        deserial=True,
     ):
-        """Add sub handler."""
+        """Add sub handler.
+
+        :param msg_type: Type (class object) of expected message.
+            Some value must be passed if custom-serialization will be received.
+            Otherwise, it can be omitted.
+
+        """
 
         sock = self.ctx.socket(zmq.SUB)
         sock.setsockopt(zmq.LINGER, self.linger_ms)
         sock.setsockopt(zmq.SUBSCRIBE, self._topic_to_bytes(topic))
         sock.connect(endpoint)
         self.poller.register(sock, zmq.POLLIN)
-        self.sub_handlers[sock] = (deserial, handler)
+        self.sub_handlers[sock] = (handler, msg_type, deserial)
 
     def add_pub_handler(self, endpoint: str, root_topic: str = ""):
         """Add PUBHandler for logging."""
@@ -286,30 +339,29 @@ class Context(object):
             raise TypeError("topic must be bytes or str")
 
     def _handle_rep(self, socks):
-        for sock, handler in self.rep_handlers.items():
+        for sock, (handler, req_type) in self.rep_handlers.items():
             if sock in socks:
-                msg = deserialize(sock.recv())
+                msg = deserialize(sock.recv(), req_type)
                 resp = handler(msg)
                 sock.send(serialize(resp))
 
     def _handle_sub(self, socks):
-        for sock, (deserial, handler) in self.sub_handlers.items():
+        for sock, (handler, msg_type, deserial) in self.sub_handlers.items():
             if sock in socks:
-                if deserial:
-                    frames = sock.recv_multipart()
-                    if len(frames) == 2:
-                        topic, msg = frames
-                        msg = deserialize(msg)
-                    else:
-                        # this should not happen as ZMQ assures multipart message to be atomic.
-                        print(f"[ERROR] {len(frames)} parts received instead of 2.")
-                        for f in frames:
-                            print(f[:10], end="")
-                        print()
-                        continue
+                if not deserial:
+                    handler(sock.recv_multipart())
+                    continue
+
+                frames = sock.recv_multipart()
+                if len(frames) == 2:
+                    topic, msg = frames
+                    handler(deserialize(msg, msg_type))
                 else:
-                    msg = sock.recv_multipart()
-                handler(msg)
+                    # this should not happen as ZMQ assures multipart message to be atomic.
+                    print(f"[ERROR] {len(frames)} parts received instead of 2.")
+                    for f in frames:
+                        print(f[:10], end="")
+                    print()
 
     def _handle_broker(self, socks):
         for xpub, xsub, xpub_handler, xsub_handler in self.broker_handlers:

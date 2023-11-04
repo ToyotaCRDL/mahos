@@ -11,8 +11,14 @@ Common and base definitions for mahos messages.
 from __future__ import annotations
 import enum
 import pprint
+import pickle
 
 import numpy as np
+
+
+# As of Python 3.8, we can use pickle protocol version 5 (that is not default).
+# https://peps.python.org/pep-0574/
+pickle_proto = 5
 
 
 class Message(object):
@@ -34,6 +40,27 @@ class Message(object):
         else:
             with np.printoptions(threshold=array_threshold):
                 pprint.pp(self.__dict__)
+
+    def serialize(self) -> bytes:
+        """Serialize this message to bytes.
+
+        Default implementation uses pickle.
+        Override this method (and deserialize()) to implement custom serialization.
+
+        """
+
+        return pickle.dumps(self, protocol=pickle_proto)
+
+    @classmethod
+    def deserialize(cls, b: bytes):
+        """Deserialize given bytes `b` to reconstruct an instance if this class.
+
+        Default implementation uses pickle.
+        Override this method (and serialize()) to implement custom serialization.
+
+        """
+
+        return pickle.loads(b)
 
 
 class Resp(Message):

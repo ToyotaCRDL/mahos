@@ -9,6 +9,7 @@ Base implementation for mahos Node.
 """
 
 from __future__ import annotations
+import typing as T
 import multiprocessing as mp
 import threading as mt
 import logging
@@ -303,12 +304,17 @@ class Node(NodeBase):
 
         self._clients.extend(clis)
 
-    def add_rep(self, handler: RepHandler | None = None, endpoint: str = "rep_endpoint"):
-        """Add the reply handler at `endpoint`."""
+    def add_rep(
+        self,
+        handler: RepHandler | None = None,
+        endpoint: str = "rep_endpoint",
+        req_type: T.Type[Request] | None = None,
+    ):
+        """Add the reply handler for request of `req_type` at `endpoint`."""
 
         if handler is None:
             handler = self._handle_req
-        self.ctx.add_rep(self.conf[endpoint], handler)
+        self.ctx.add_rep(self.conf[endpoint], handler, req_type=req_type)
 
     def add_pub(self, topic: bytes | str, endpoint: str = "pub_endpoint") -> Publisher:
         """Add and return a Publisher for `topic` at `endpoint`."""
