@@ -8,6 +8,9 @@
 .. rubric:: Classes
 
 .. autoclass:: Message
+   .. automethod:: Message.serialize
+   .. automethod:: Message.deserialize
+
 .. autoclass:: Request
 .. autoclass:: Reply
 .. autoclass:: State

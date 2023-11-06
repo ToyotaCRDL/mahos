@@ -64,7 +64,7 @@ class Message(object):
 
 
 class Reply(Message):
-    """Generic response message for requests.
+    """Generic reply message for requests.
 
     :ivar success: requests are successful or not.
     :ivar message: message from server (usually error message).
