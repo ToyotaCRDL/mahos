@@ -87,46 +87,46 @@ class QConfocalClient(QStateReqClient):
         self.add_sub(self.sub)
 
     def shutdown(self) -> bool:
-        resp = self.req.request(ShutdownReq())
-        return resp.success
+        rep = self.req.request(ShutdownReq())
+        return rep.success
 
     def move(self, ax: T.Union[Axis, T.List[Axis]], pos: T.Union[float, T.List[float]]) -> bool:
-        resp = self.req.request(MoveReq(ax, pos))
-        return resp.success
+        rep = self.req.request(MoveReq(ax, pos))
+        return rep.success
 
     def get_param_dict(self, label: str):
-        resp = self.req.request(GetParamDictReq(label))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(GetParamDictReq(label))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def save_image(
         self, file_name, direction: T.Optional[ScanDirection] = None, note: str = ""
     ) -> bool:
-        resp = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
-        return resp.success
+        rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
+        return rep.success
 
     def export_image(
         self, file_name, direction: T.Optional[ScanDirection] = None, params=None
     ) -> bool:
-        resp = self.req.request(ExportImageReq(file_name, direction, params))
-        return resp.success
+        rep = self.req.request(ExportImageReq(file_name, direction, params))
+        return rep.success
 
     def export_view(self, file_name, params=None) -> bool:
-        resp = self.req.request(ExportViewReq(file_name, params))
-        return resp.success
+        rep = self.req.request(ExportViewReq(file_name, params))
+        return rep.success
 
     def load_image(self, file_name) -> Image:
-        resp = self.req.request(LoadImageReq(file_name))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadImageReq(file_name))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def _command_buffer(self, direction: ScanDirection, command: BufferCommand):
-        resp = self.req.request(CommandBufferReq(direction, command))
-        return resp.success
+        rep = self.req.request(CommandBufferReq(direction, command))
+        return rep.success
 
     def pop_buffer(self, direction: ScanDirection):
         return self._command_buffer(direction, BufferCommand.POP)
@@ -135,9 +135,9 @@ class QConfocalClient(QStateReqClient):
         return self._command_buffer(direction, BufferCommand.CLEAR)
 
     def get_all_buffer(self, direction: ScanDirection) -> T.List[Image]:
-        resp = self.req.request(CommandBufferReq(direction, BufferCommand.GET_ALL))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(CommandBufferReq(direction, BufferCommand.GET_ALL))
+        if rep.success:
+            return rep.ret
         else:
             return []
 
@@ -241,23 +241,23 @@ class QTracerClient(QReqClient):
         self.paused.emit(status.tracer_paused)
 
     def save_trace(self, file_name, note: str = "") -> bool:
-        resp = self.req.request(SaveTraceReq(file_name, note=note))
-        return resp.success
+        rep = self.req.request(SaveTraceReq(file_name, note=note))
+        return rep.success
 
     def export_trace(self, file_name, params=None) -> bool:
-        resp = self.req.request(ExportTraceReq(file_name, params=params))
-        return resp.success
+        rep = self.req.request(ExportTraceReq(file_name, params=params))
+        return rep.success
 
     def load_trace(self, file_name) -> Trace:
-        resp = self.req.request(LoadTraceReq(file_name))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadTraceReq(file_name))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def _command(self, command: TraceCommand):
-        resp = self.req.request(CommandTraceReq(command))
-        return resp.success
+        rep = self.req.request(CommandTraceReq(command))
+        return rep.success
 
     def pause(self):
         return self._command(TraceCommand.PAUSE)
@@ -276,19 +276,19 @@ class QConfocalTrackerClient(QStateClient):
     stateUpdated = QtCore.pyqtSignal(BinaryState, BinaryState)
 
     def save_params(self, conf, file_name: T.Optional[str] = None) -> bool:
-        resp = self.req.request(SaveParamsReq(conf, file_name=file_name))
-        return resp.success
+        rep = self.req.request(SaveParamsReq(conf, file_name=file_name))
+        return rep.success
 
     def load_params(self, file_name: T.Optional[str] = None) -> T.Optional[dict]:
-        resp = self.req.request(LoadParamsReq(file_name))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadParamsReq(file_name))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def track_now(self) -> bool:
-        resp = self.req.request(TrackNowReq())
-        return resp.success
+        rep = self.req.request(TrackNowReq())
+        return rep.success
 
     def start(self, params=None) -> bool:
         """Start tracking, i.e., change state to ACTIVE."""

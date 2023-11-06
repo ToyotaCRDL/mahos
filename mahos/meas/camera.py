@@ -8,7 +8,7 @@ Logic and instrument control part of Camera stream.
 
 """
 
-from ..msgs.common_msgs import Resp, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..msgs import camera_msgs
@@ -59,49 +59,49 @@ class Camera(BasicMeasNode):
         if hasattr(self, "worker"):
             self.worker.stop()
 
-    def change_state(self, msg: StateReq) -> Resp:
+    def change_state(self, msg: StateReq) -> Reply:
         if self.state == msg.state:
-            return Resp(True, "Already in that state")
+            return Reply(True, "Already in that state")
 
         if msg.state == BinaryState.IDLE:
             success = self.switch.stop() and self.pg.stop() and self.worker.stop()
             if not success:
-                return Resp(False, "Failed to stop internal worker.", ret=self.state)
+                return Reply(False, "Failed to stop internal worker.", ret=self.state)
         elif msg.state == BinaryState.ACTIVE:
             success = self.switch.start() and self.pg.start() and self.worker.start(msg.params)
             if not success:
-                return Resp(False, "Failed to start internal worker.", ret=self.state)
+                return Reply(False, "Failed to start internal worker.", ret=self.state)
 
         self.state = msg.state
-        return Resp(True)
+        return Reply(True)
 
-    def save_data(self, msg: SaveDataReq) -> Resp:
+    def save_data(self, msg: SaveDataReq) -> Reply:
         success = self.io.save_data(msg.file_name, self.worker.image_msg(), msg.note)
         if success and self.tweaker_cli is not None:
             success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
-        return Resp(success)
+        return Reply(success)
 
-    def export_data(self, msg: ExportDataReq) -> Resp:
+    def export_data(self, msg: ExportDataReq) -> Reply:
         success = self.io.export_data(msg.file_name, self.worker.image_msg(), msg.params)
-        return Resp(success)
+        return Reply(success)
 
-    def load_data(self, msg: LoadDataReq) -> Resp:
+    def load_data(self, msg: LoadDataReq) -> Reply:
         image = self.io.load_data(msg.file_name)
         if image is None:
-            return Resp(False)
+            return Reply(False)
         else:
-            return Resp(True, ret=image)
+            return Reply(True, ret=image)
 
-    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:
-        return Resp(True, ret=["camera"])
+    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:
+        return Reply(True, ret=["camera"])
 
-    def get_param_dict(self, msg: GetParamDictReq) -> Resp:
+    def get_param_dict(self, msg: GetParamDictReq) -> Reply:
         d = self.worker.get_param_dict(msg.label)
 
         if d is None:
-            return Resp(False, "Failed to generate param dict.")
+            return Reply(False, "Failed to generate param dict.")
         else:
-            return Resp(True, ret=d)
+            return Reply(True, ret=d)
 
     def wait(self):
         self.logger.info("Waiting for instrument server...")

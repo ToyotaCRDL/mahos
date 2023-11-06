@@ -10,7 +10,7 @@ Typed Interface for InstrumentClient.
 
 from __future__ import annotations
 
-from ..msgs.common_msgs import Resp
+from ..msgs.common_msgs import Reply
 from ..msgs import param_msgs as P
 from .server import InstrumentClient, MultiInstrumentClient
 
@@ -41,7 +41,7 @@ class InstrumentInterface(object):
 
         return self.cli.release(self.inst)
 
-    def call(self, func: str, **args) -> Resp:
+    def call(self, func: str, **args) -> Reply:
         """Call arbitrary function of the instrument.
 
         Note that this is not quite a safe API (left for debug purpose).
@@ -52,7 +52,7 @@ class InstrumentInterface(object):
 
         return self.cli.call(self.inst, func, **args)
 
-    def __call__(self, func: str, **args) -> Resp:
+    def __call__(self, func: str, **args) -> Reply:
         return self.call(func, **args)
 
     def shutdown(self) -> bool:

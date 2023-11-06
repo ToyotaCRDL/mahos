@@ -22,9 +22,9 @@ class QSPODMRClient(QBasicMeasClient):
     stopped = QtCore.pyqtSignal(SPODMRData)
 
     def update_plot_params(self, params: dict) -> bool:
-        resp = self.req.request(UpdatePlotParamsReq(params))
-        return resp.success
+        rep = self.req.request(UpdatePlotParamsReq(params))
+        return rep.success
 
     def validate(self, params: dict) -> bool:
-        resp = self.req.request(ValidateReq(params))
-        return resp.success
+        rep = self.req.request(ValidateReq(params))
+        return rep.success

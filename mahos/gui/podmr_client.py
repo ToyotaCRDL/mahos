@@ -22,13 +22,13 @@ class QPODMRClient(QBasicMeasClient):
     stopped = QtCore.pyqtSignal(PODMRData)
 
     def update_plot_params(self, params: dict) -> bool:
-        resp = self.req.request(UpdatePlotParamsReq(params))
-        return resp.success
+        rep = self.req.request(UpdatePlotParamsReq(params))
+        return rep.success
 
     def validate(self, params: dict) -> bool:
-        resp = self.req.request(ValidateReq(params))
-        return resp.success
+        rep = self.req.request(ValidateReq(params))
+        return rep.success
 
     def discard(self) -> bool:
-        resp = self.req.request(DiscardReq())
-        return resp.success
+        rep = self.req.request(DiscardReq())
+        return rep.success

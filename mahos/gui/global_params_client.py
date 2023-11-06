@@ -44,5 +44,5 @@ class QGlobalParamsClient(QReqClient):
     def set_param(self, name: str, value):
         """Set a parameter. Value can be any pickle-able Python object."""
 
-        resp = self.req.request(SetParamReq(name, value))
-        return resp.success
+        rep = self.req.request(SetParamReq(name, value))
+        return rep.success

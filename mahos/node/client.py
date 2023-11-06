@@ -17,7 +17,7 @@ import importlib
 from .comm import Context, Requester
 from .node import join_name, split_name, infer_name, local_conf, load_gconf, get_value
 from .log import init_topic_logger
-from ..msgs.common_msgs import Message, Resp, StateReq, State, Status
+from ..msgs.common_msgs import Message, Reply, StateReq, State, Status
 from ..msgs.data_msgs import Data
 from ..util.typing import NodeName, SubHandler, MessageGetter
 
@@ -233,7 +233,7 @@ class NodeClient(object):
         return self.get_status() is not None
 
     def add_req(
-        self, gconf: dict, endpoint: str = "rep_endpoint", resp_type: T.Type[Resp] | None = None
+        self, gconf: dict, endpoint: str = "rep_endpoint", rep_type: T.Type[Reply] | None = None
     ) -> Requester:
         """Add and return a Requester for `endpoint`.
 
@@ -244,7 +244,7 @@ class NodeClient(object):
         return self.ctx.add_req(
             self.conf[endpoint],
             timeout_ms=get_value(gconf, self.conf, "req_timeout_ms"),
-            resp_type=resp_type,
+            rep_type=rep_type,
             logger=self.logger,
         )
 
@@ -334,8 +334,8 @@ class StateClientMixin(object):
     """Implements change_state() and get_state()."""
 
     def change_state(self, state: State, params=None) -> bool:
-        resp = self.req.request(StateReq(state, params=params))
-        return resp.success
+        rep = self.req.request(StateReq(state, params=params))
+        return rep.success
 
     def get_state(self) -> State:
         s = self.get_status()

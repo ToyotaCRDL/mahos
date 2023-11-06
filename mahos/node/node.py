@@ -19,7 +19,7 @@ import toml
 from .comm import Context, Publisher, Request
 from .log import DummyLogger
 from ..util.typing import NodeName, RepHandler
-from ..msgs.common_msgs import Resp
+from ..msgs.common_msgs import Reply
 
 
 # name
@@ -321,7 +321,7 @@ class Node(NodeBase):
 
         return self.ctx.add_pub(self.conf[endpoint], topic, self.logger)
 
-    def _handle_req(self, msg: Request) -> Resp:
+    def _handle_req(self, msg: Request) -> Reply:
         """The default RepHandler to wrap handle_req()."""
 
         try:
@@ -329,10 +329,10 @@ class Node(NodeBase):
         except Exception:
             msg = "Exception raised while handling request."
             self.logger.exception(msg)
-            return Resp(False, msg)
+            return Reply(False, msg)
 
-    def handle_req(self, msg: Request) -> Resp:
-        return Resp(False, "Handler is not implemented.")
+    def handle_req(self, msg: Request) -> Reply:
+        return Reply(False, "Handler is not implemented.")
 
     def poll(self):
         """Poll inbound messages and call corresponding handlers.
@@ -376,11 +376,11 @@ class Node(NodeBase):
         finally:
             self.close()
 
-    def fail_with(self, msg) -> Resp:
+    def fail_with(self, msg) -> Reply:
         """log error and return failing response with same message."""
 
         self.logger.error(msg)
-        return Resp(False, msg)
+        return Reply(False, msg)
 
 
 def run_node_proc(NodeClass, gconf: dict, name: NodeName, shutdown_ev: mp.Event):

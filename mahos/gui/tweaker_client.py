@@ -34,29 +34,29 @@ class QTweakerClient(QStatusSubscriber):
         )
 
     def read_all(self) -> tuple[bool, dict[str, P.ParamDict[str, P.PDValue] | None]]:
-        resp = self.req.request(ReadAllReq())
-        return resp.success, resp.ret
+        rep = self.req.request(ReadAllReq())
+        return rep.success, rep.ret
 
     def read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
-        resp = self.req.request(ReadReq(param_dict_id))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(ReadReq(param_dict_id))
+        if rep.success:
+            return rep.ret
 
     def write_all(self, param_dicts: dict[str, P.ParamDict[str, P.PDValue]]) -> bool:
-        resp = self.req.request(WriteAllReq(param_dicts))
-        return resp.success
+        rep = self.req.request(WriteAllReq(param_dicts))
+        return rep.success
 
     def write(self, param_dict_id: str, params: P.ParamDict[str, P.PDValue]) -> bool:
-        resp = self.req.request(WriteReq(param_dict_id, params))
-        return resp.success
+        rep = self.req.request(WriteReq(param_dict_id, params))
+        return rep.success
 
     def save(self, filename: str, group: str = "") -> bool:
-        resp = self.req.request(SaveReq(filename, group))
-        return resp.success
+        rep = self.req.request(SaveReq(filename, group))
+        return rep.success
 
     def load(
         self, filename: str, group: str = ""
     ) -> dict[str, P.ParamDict[str, P.PDValue] | None] | None:
-        resp = self.req.request(LoadReq(filename, group))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadReq(filename, group))
+        if rep.success:
+            return rep.ret

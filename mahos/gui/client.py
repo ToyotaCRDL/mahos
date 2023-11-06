@@ -110,8 +110,8 @@ class QStateReqClient(QReqClient):
     """Qt-based node client with req and change_state()."""
 
     def change_state(self, state, params=None) -> bool:
-        resp = self.req.request(StateReq(state, params=params))
-        return resp.success
+        rep = self.req.request(StateReq(state, params=params))
+        return rep.success
 
 
 class QStatusSubWorker(QSubWorker):

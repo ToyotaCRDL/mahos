@@ -10,7 +10,7 @@ Logic and instrument control part of confocal microscope.
 
 import typing as T
 
-from ..msgs.common_msgs import Resp, StateReq, ShutdownReq
+from ..msgs.common_msgs import Reply, StateReq, ShutdownReq
 from ..msgs import confocal_msgs
 from ..msgs.confocal_msgs import Axis, ConfocalState, MoveReq
 from ..msgs.confocal_msgs import SaveImageReq, ExportImageReq, ExportViewReq, LoadImageReq
@@ -62,54 +62,54 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
         self.req = self.add_req(gconf)
 
     def shutdown(self) -> bool:
-        resp = self.req.request(ShutdownReq())
-        return resp.success
+        rep = self.req.request(ShutdownReq())
+        return rep.success
 
     def move(self, ax: T.Union[Axis, T.List[Axis]], pos: T.Union[float, T.List[float]]) -> bool:
-        resp = self.req.request(MoveReq(ax, pos))
-        return resp.success
+        rep = self.req.request(MoveReq(ax, pos))
+        return rep.success
 
     def save_image(
         self, file_name, direction: T.Optional[ScanDirection] = None, note: str = ""
     ) -> bool:
-        resp = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
-        return resp.success
+        rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
+        return rep.success
 
     def export_image(
         self, file_name, direction: T.Optional[ScanDirection] = None, params=None
     ) -> bool:
-        resp = self.req.request(ExportImageReq(file_name, direction, params))
-        return resp.success
+        rep = self.req.request(ExportImageReq(file_name, direction, params))
+        return rep.success
 
     def export_view(self, file_name, params=None) -> bool:
-        resp = self.req.request(ExportViewReq(file_name, params))
-        return resp.success
+        rep = self.req.request(ExportViewReq(file_name, params))
+        return rep.success
 
     def load_image(self, file_name) -> T.Optional[Image]:
-        resp = self.req.request(LoadImageReq(file_name))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadImageReq(file_name))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def save_trace(self, file_name) -> bool:
-        resp = self.req.request(SaveTraceReq(file_name))
-        return resp.success
+        rep = self.req.request(SaveTraceReq(file_name))
+        return rep.success
 
     def export_trace(self, file_name, params=None) -> bool:
-        resp = self.req.request(ExportTraceReq(file_name, params=params))
-        return resp.success
+        rep = self.req.request(ExportTraceReq(file_name, params=params))
+        return rep.success
 
     def load_trace(self, file_name) -> T.Optional[Trace]:
-        resp = self.req.request(LoadTraceReq(file_name))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadTraceReq(file_name))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def _command_trace(self, command: TraceCommand):
-        resp = self.req.request(CommandTraceReq(command))
-        return resp.success
+        rep = self.req.request(CommandTraceReq(command))
+        return rep.success
 
     def pause_trace(self):
         return self._command_trace(TraceCommand.PAUSE)
@@ -121,8 +121,8 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
         return self._command_trace(TraceCommand.CLEAR)
 
     def _command_buffer(self, direction: ScanDirection, command: BufferCommand):
-        resp = self.req.request(CommandBufferReq(direction, command))
-        return resp.success
+        rep = self.req.request(CommandBufferReq(direction, command))
+        return rep.success
 
     def pop_buffer(self, direction: ScanDirection):
         return self._command_buffer(direction, BufferCommand.POP)
@@ -131,9 +131,9 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
         return self._command_buffer(direction, BufferCommand.CLEAR)
 
     def get_all_buffer(self, direction: ScanDirection) -> T.List[Image]:
-        resp = self.req.request(CommandBufferReq(direction, BufferCommand.GET_ALL))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(CommandBufferReq(direction, BufferCommand.GET_ALL))
+        if rep.success:
+            return rep.ret
         else:
             return []
 
@@ -154,38 +154,38 @@ class ConfocalIORequester(NodeClient):
     def save_image(
         self, file_name, direction: T.Optional[ScanDirection] = None, note: str = ""
     ) -> bool:
-        resp = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
-        return resp.success
+        rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
+        return rep.success
 
     def export_image(
         self, file_name, direction: T.Optional[ScanDirection] = None, params=None
     ) -> bool:
-        resp = self.req.request(ExportImageReq(file_name, direction, params))
-        return resp.success
+        rep = self.req.request(ExportImageReq(file_name, direction, params))
+        return rep.success
 
     def export_view(self, file_name, params=None) -> bool:
-        resp = self.req.request(ExportViewReq(file_name, params))
-        return resp.success
+        rep = self.req.request(ExportViewReq(file_name, params))
+        return rep.success
 
     def load_image(self, file_name) -> T.Optional[Image]:
-        resp = self.req.request(LoadImageReq(file_name))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadImageReq(file_name))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def save_trace(self, file_name) -> bool:
-        resp = self.req.request(SaveTraceReq(file_name))
-        return resp.success
+        rep = self.req.request(SaveTraceReq(file_name))
+        return rep.success
 
     def export_trace(self, file_name, params=None) -> bool:
-        resp = self.req.request(ExportTraceReq(file_name, params=params))
-        return resp.success
+        rep = self.req.request(ExportTraceReq(file_name, params=params))
+        return rep.success
 
     def load_trace(self, file_name) -> T.Optional[Trace]:
-        resp = self.req.request(LoadTraceReq(file_name))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadTraceReq(file_name))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
@@ -326,15 +326,15 @@ class Confocal(Node):
         if hasattr(self, "tracer") and self._tracer_active(self.state):
             self.tracer.stop()
 
-    def shutdown(self, msg: ShutdownReq) -> Resp:
+    def shutdown(self, msg: ShutdownReq) -> Reply:
         self.change_state(StateReq(ConfocalState.IDLE))
         self.cli.shutdown("piezo")
         self.set_shutdown()
-        return Resp(True)
+        return Reply(True)
 
-    def change_state(self, msg: StateReq) -> Resp:
+    def change_state(self, msg: StateReq) -> Reply:
         if self.state == msg.state:
-            return Resp(True, "Already in that state")
+            return Reply(True, "Already in that state")
 
         self.logger.info(f"Changing state from {self.state} to {msg.state}")
         # stop unnecessary modules
@@ -372,7 +372,7 @@ class Confocal(Node):
             return self.fail_with("Failed to start internal worker.")
 
         self.state = msg.state
-        return Resp(True)
+        return Reply(True)
 
     def restore_state(self):
         def restore_idle():
@@ -432,27 +432,27 @@ class Confocal(Node):
     def _scanner_active(self, state):
         return state == ConfocalState.SCAN
 
-    def move(self, msg: MoveReq) -> Resp:
+    def move(self, msg: MoveReq) -> Reply:
         if not self._piezo_active(self.state):
-            return Resp(False, f"Piezo is inactive in current state {self.state}")
+            return Reply(False, f"Piezo is inactive in current state {self.state}")
 
         self.piezo.move(msg.ax, msg.pos)
 
-        return Resp(True)
+        return Reply(True)
 
-    def _get_scan_param_dict(self, label: str) -> Resp:
+    def _get_scan_param_dict(self, label: str) -> Reply:
         params = self.scanner.get_param_dict(label)
         if params is None:
             return self.fail_with("Cannot generate param dict.")
         else:
-            return Resp(True, ret=params)
+            return Reply(True, ret=params)
 
-    def get_param_dict(self, msg: GetParamDictReq) -> Resp:
+    def get_param_dict(self, msg: GetParamDictReq) -> Reply:
         n = msg.label.lower()
         if n.endswith("scan"):
             return self._get_scan_param_dict(n)
         else:
-            return Resp(False, "Unknown param dict label " + n)
+            return Reply(False, "Unknown param dict label " + n)
 
     def direction_to_target_pos(self, direction: ScanDirection):
         p = self.piezo.pos
@@ -465,7 +465,7 @@ class Confocal(Node):
         else:
             raise ValueError("invalid direction {} is given.".format(direction))
 
-    def save_image(self, msg: SaveImageReq) -> Resp:
+    def save_image(self, msg: SaveImageReq) -> Reply:
         if msg.direction is None:
             img = self.scanner.image_msg()
             if not img.has_params():
@@ -478,9 +478,9 @@ class Confocal(Node):
         success = self.io.save_image(msg.file_name, img, msg.note)
         if success and self.tweaker_cli is not None:
             success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
-        return Resp(success)
+        return Reply(success)
 
-    def export_image(self, msg: ExportImageReq) -> Resp:
+    def export_image(self, msg: ExportImageReq) -> Reply:
         if msg.direction is None:
             img = self.scanner.image_msg()
             if not img.has_params():
@@ -493,69 +493,69 @@ class Confocal(Node):
         if isinstance(msg.params, dict) and msg.params.get("set_pos"):
             msg.params["pos"] = self.direction_to_target_pos(img.direction)
         success = self.io.export_image(msg.file_name, img, msg.params)
-        return Resp(success)
+        return Reply(success)
 
-    def export_view(self, msg: ExportViewReq) -> Resp:
+    def export_view(self, msg: ExportViewReq) -> Reply:
         images = self.image_buf.latest_all()
         p = self.piezo.pos
         pos = p.x_tgt, p.y_tgt, p.z_tgt
 
         success = self.io.export_view(msg.file_name, images, pos, msg.params)
-        return Resp(success)
+        return Reply(success)
 
-    def load_image(self, msg: LoadImageReq) -> Resp:
+    def load_image(self, msg: LoadImageReq) -> Reply:
         image = self.io.load_image(msg.file_name)
         if image is None:
-            return Resp(False)
+            return Reply(False)
         else:
             self.image_buf.append(image)
-            return Resp(True, ret=image)
+            return Reply(True, ret=image)
 
-    def save_trace(self, msg: SaveTraceReq) -> Resp:
+    def save_trace(self, msg: SaveTraceReq) -> Reply:
         success = self.io.save_trace(msg.file_name, self.tracer.trace_msg(), msg.note)
         if success and self.tweaker_cli is not None:
             success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
-        return Resp(success)
+        return Reply(success)
 
-    def export_trace(self, msg: ExportTraceReq) -> Resp:
+    def export_trace(self, msg: ExportTraceReq) -> Reply:
         success = self.io.export_trace(msg.file_name, self.tracer.trace_msg(), params=msg.params)
-        return Resp(success)
+        return Reply(success)
 
-    def load_trace(self, msg: LoadTraceReq) -> Resp:
+    def load_trace(self, msg: LoadTraceReq) -> Reply:
         trace = self.io.load_trace(msg.file_name)
         if trace is None:
-            return Resp(False)
+            return Reply(False)
         else:
-            return Resp(True, ret=trace)
+            return Reply(True, ret=trace)
 
-    def command_trace(self, msg: CommandTraceReq) -> Resp:
+    def command_trace(self, msg: CommandTraceReq) -> Reply:
         if msg.command == TraceCommand.CLEAR:
             self.tracer.clear_buf()
-            return Resp(True)
+            return Reply(True)
         elif msg.command == TraceCommand.PAUSE:
             self.tracer.pause_msg()
-            return Resp(True)
+            return Reply(True)
         elif msg.command == TraceCommand.RESUME:
             self.tracer.resume_msg()
-            return Resp(True)
+            return Reply(True)
         else:
-            return Resp(False, "Unknown trace command: " + str(msg.command))
+            return Reply(False, "Unknown trace command: " + str(msg.command))
 
-    def command_buffer(self, msg: CommandBufferReq) -> Resp:
+    def command_buffer(self, msg: CommandBufferReq) -> Reply:
         if msg.command == BufferCommand.POP:
             i = self.image_buf.pop(msg.direction)
             if i is not None:
                 self.logger.debug(f"Pop {msg.direction.name} buffer: {i.ident}")
-            return Resp(True)
+            return Reply(True)
         elif msg.command == BufferCommand.CLEAR:
             self.image_buf.clear(msg.direction)
             self.logger.debug(f"Clear {msg.direction.name} buffer")
-            return Resp(True)
+            return Reply(True)
         elif msg.command == BufferCommand.GET_ALL:
             self.logger.debug(f"Sending all contents of {msg.direction.name} buffer")
-            return Resp(True, ret=self.image_buf.get_all(msg.direction))
+            return Reply(True, ret=self.image_buf.get_all(msg.direction))
         else:
-            return Resp(False, "Unknown buffer command: " + str(msg.command))
+            return Reply(False, "Unknown buffer command: " + str(msg.command))
 
     def handle_req(self, msg):
         if isinstance(msg, StateReq):
@@ -585,7 +585,7 @@ class Confocal(Node):
         elif isinstance(msg, CommandBufferReq):
             return self.command_buffer(msg)
         else:
-            return Resp(False, "Invalid message type")
+            return Reply(False, "Invalid message type")
 
     def _work(self):
         if self._scanner_active(self.state):

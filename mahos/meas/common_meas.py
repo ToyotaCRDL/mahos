@@ -10,7 +10,7 @@ Common implementations for meas nodes.
 
 from __future__ import annotations
 
-from ..msgs.common_msgs import BinaryStatus, BinaryState, StateReq, Request, Resp
+from ..msgs.common_msgs import BinaryStatus, BinaryState, StateReq, Request, Reply
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import PopBufferReq, ClearBufferReq, FitReq, ClearFitReq
 from ..msgs.common_meas_msgs import Buffer, BasicMeasData
@@ -61,9 +61,9 @@ class ParamDictReqMixin(object):
 
         """
 
-        resp = self.req.request(P.GetParamDictLabelsReq(group))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(P.GetParamDictLabelsReq(group))
+        if rep.success:
+            return rep.ret
         else:
             return []
 
@@ -79,9 +79,9 @@ class ParamDictReqMixin(object):
 
         """
 
-        resp = self.req.request(P.GetParamDictReq(label, group))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(P.GetParamDictReq(label, group))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
@@ -108,8 +108,8 @@ class BasicMeasReqMixin(object):
     def save_data(self, file_name: str, params: dict | None = None, note: str = "") -> bool:
         """Save data to `file_name`."""
 
-        resp = self.req.request(SaveDataReq(file_name, params=params, note=note))
-        return resp.success
+        rep = self.req.request(SaveDataReq(file_name, params=params, note=note))
+        return rep.success
 
     def export_data(
         self,
@@ -123,8 +123,8 @@ class BasicMeasReqMixin(object):
 
         """
 
-        resp = self.req.request(ExportDataReq(file_name, data=data, params=params))
-        return resp.success
+        rep = self.req.request(ExportDataReq(file_name, data=data, params=params))
+        return rep.success
 
     def load_data(self, file_name: str, to_buffer: bool = False) -> BasicMeasData | None:
         """Load data from `file_name`.
@@ -133,24 +133,24 @@ class BasicMeasReqMixin(object):
 
         """
 
-        resp = self.req.request(LoadDataReq(file_name, to_buffer=to_buffer))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadDataReq(file_name, to_buffer=to_buffer))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def pop_buffer(self, index: int = -1) -> BasicMeasData | None:
-        resp = self.req.request(PopBufferReq(index))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(PopBufferReq(index))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def clear_buffer(self) -> bool:
-        resp = self.req.request(ClearBufferReq())
-        return resp.success
+        rep = self.req.request(ClearBufferReq())
+        return rep.success
 
-    def fit(self, params: dict, data_index=-1) -> Resp:
+    def fit(self, params: dict, data_index=-1) -> Reply:
         """Fit data."""
 
         return self.req.request(FitReq(params, data_index))
@@ -158,8 +158,8 @@ class BasicMeasReqMixin(object):
     def clear_fit(self, data_index=-1) -> bool:
         """Clear fit data."""
 
-        resp = self.req.request(ClearFitReq(data_index))
-        return resp.success
+        rep = self.req.request(ClearFitReq(data_index))
+        return rep.success
 
 
 class BasicMeasClient(BasicMeasClientBase, BaseMeasClientMixin, BasicMeasReqMixin):
@@ -204,55 +204,55 @@ class BasicMeasNode(Node):
         self.data_pub = self.add_pub(b"data")
         self.buffer_pub = self.add_pub(b"buffer")
 
-    def change_state(self, msg: StateReq) -> Resp:
+    def change_state(self, msg: StateReq) -> Reply:
         """Change state to msg.state. Inherited class must implement this."""
 
-        return Resp(False, "change_state() is not implemented.")
+        return Reply(False, "change_state() is not implemented.")
 
-    def get_param_dict_labels(self, msg: P.GetParamDictLabelsReq) -> Resp:
+    def get_param_dict_labels(self, msg: P.GetParamDictLabelsReq) -> Reply:
         """Get parameter dict labels. Inherited class must implement this."""
 
-        return Resp(False, "get_param_dict_labels() is not implemented.")
+        return Reply(False, "get_param_dict_labels() is not implemented.")
 
-    def get_param_dict(self, msg: P.GetParamDictReq) -> Resp:
+    def get_param_dict(self, msg: P.GetParamDictReq) -> Reply:
         """Get parameter dict. Inherited class must implement this."""
 
-        return Resp(False, "get_param_dict() is not implemented.")
+        return Reply(False, "get_param_dict() is not implemented.")
 
-    def save_data(self, msg: SaveDataReq) -> Resp:
+    def save_data(self, msg: SaveDataReq) -> Reply:
         """Save data. Inherited class must implement this."""
 
-        return Resp(False, "save_data() is not implemented.")
+        return Reply(False, "save_data() is not implemented.")
 
-    def export_data(self, msg: ExportDataReq) -> Resp:
+    def export_data(self, msg: ExportDataReq) -> Reply:
         """Export data. Inherited class must implement this."""
 
-        return Resp(False, "export_data() is not implemented.")
+        return Reply(False, "export_data() is not implemented.")
 
-    def load_data(self, msg: LoadDataReq) -> Resp:
+    def load_data(self, msg: LoadDataReq) -> Reply:
         """Load data. Inherited class must implement this."""
 
-        return Resp(False, "load_data() is not implemented.")
+        return Reply(False, "load_data() is not implemented.")
 
-    def pop_buffer(self, msg: PopBufferReq) -> Resp:
+    def pop_buffer(self, msg: PopBufferReq) -> Reply:
         """Pop data from the buffer. Inherited class should have attribute buffer: Buffer."""
 
         if not hasattr(self, "buffer"):
-            return Resp(False, "Buffer is not supported.")
+            return Reply(False, "Buffer is not supported.")
         try:
-            return Resp(True, ret=self.buffer.pop(msg.index))
+            return Reply(True, ret=self.buffer.pop(msg.index))
         except IndexError:
-            return Resp(False, f"Failed to pop buffer (i={msg.index})")
+            return Reply(False, f"Failed to pop buffer (i={msg.index})")
 
-    def clear_buffer(self, msg: ClearBufferReq) -> Resp:
+    def clear_buffer(self, msg: ClearBufferReq) -> Reply:
         """Clear the data buffer. Inherited class should have attribute buffer: Buffer."""
 
         if not hasattr(self, "buffer"):
-            return Resp(False, "Buffer is not supported.")
+            return Reply(False, "Buffer is not supported.")
         self.buffer.clear()
-        return Resp(True)
+        return Reply(True)
 
-    def fit(self, msg: FitReq) -> Resp:
+    def fit(self, msg: FitReq) -> Reply:
         """Fit data. Inherited class should have attribute worker: Worker."""
 
         if msg.data_index == -1:
@@ -260,16 +260,16 @@ class BasicMeasNode(Node):
         else:
             data = self.buffer.get_data(msg.data_index)
         if not isinstance(data, self.DATA) or not data.has_data():
-            return Resp(False, message="Data is invalid / not ready")
+            return Reply(False, message="Data is invalid / not ready")
 
         try:
             ret = self.fitter.fitd(data, msg.params)
         except Exception:
             self.logger.exception("Failed to fit")
-            return Resp(False, message="Failed to fit")
-        return Resp(True, ret=ret)
+            return Reply(False, message="Failed to fit")
+        return Reply(True, ret=ret)
 
-    def clear_fit(self, msg: ClearFitReq) -> Resp:
+    def clear_fit(self, msg: ClearFitReq) -> Reply:
         """Clear fit data. Inherited class should have attribute worker: Worker."""
 
         if msg.data_index == -1:
@@ -277,12 +277,12 @@ class BasicMeasNode(Node):
         else:
             data = self.buffer.get_data(msg.data_index)
         if not isinstance(data, self.DATA):
-            return Resp(False, message="Data is invalid")
+            return Reply(False, message="Data is invalid")
 
         data.clear_fit_data()
-        return Resp(True)
+        return Reply(True)
 
-    def _handle_req(self, msg: Request) -> Resp:
+    def _handle_req(self, msg: Request) -> Reply:
         """Handle basic Requests.
 
         Handles following:
@@ -320,9 +320,9 @@ class BasicMeasNode(Node):
         except Exception:
             msg = "Exception raised while handling request."
             self.logger.exception(msg)
-            return Resp(False, msg)
+            return Reply(False, msg)
 
-    def handle_req(self, msg: Request) -> Resp:
+    def handle_req(self, msg: Request) -> Reply:
         """Handle Request other than basic requests.
 
         basic requests are: change_state(), get_param_dict()
@@ -330,4 +330,4 @@ class BasicMeasNode(Node):
 
         """
 
-        return Resp(False, "Invalid message type")
+        return Reply(False, "Invalid message type")

@@ -10,7 +10,7 @@ Logic and instrument control part of Pulse ODMR.
 
 from __future__ import annotations
 
-from ..msgs.common_msgs import Resp, Request, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Reply, Request, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import GetParamDictLabelsReq, GetParamDictReq
@@ -39,16 +39,16 @@ class PODMRClient(BasicMeasClient):
         return self._get_buffer()
 
     def update_plot_params(self, params: dict) -> bool:
-        resp = self.req.request(UpdatePlotParamsReq(params))
-        return resp.success
+        rep = self.req.request(UpdatePlotParamsReq(params))
+        return rep.success
 
     def validate(self, params: dict) -> bool:
-        resp = self.req.request(ValidateReq(params))
-        return resp.success
+        rep = self.req.request(ValidateReq(params))
+        return rep.success
 
     def discard(self) -> bool:
-        resp = self.req.request(DiscardReq())
-        return resp.success
+        rep = self.req.request(DiscardReq())
+        return rep.success
 
 
 class PODMR(BasicMeasNode):
@@ -105,28 +105,28 @@ class PODMR(BasicMeasNode):
         if hasattr(self, "worker"):
             self.worker.stop()
 
-    def change_state(self, msg: StateReq) -> Resp:
+    def change_state(self, msg: StateReq) -> Reply:
         if self.state == msg.state:
-            return Resp(True, "Already in that state")
+            return Reply(True, "Already in that state")
 
         if msg.state == BinaryState.IDLE:
             success = self.switch.stop() and self.worker.stop()
             if success:
                 self.pub_timer = IntervalTimer(self._pub_interval)
             else:
-                return Resp(False, "Failed to stop internal worker.", ret=self.state)
+                return Reply(False, "Failed to stop internal worker.", ret=self.state)
         elif msg.state == BinaryState.ACTIVE:
             if not self.switch.start():
-                return Resp(False, "Failed to start switch.", ret=self.state)
+                return Reply(False, "Failed to start switch.", ret=self.state)
             if not self.worker.start(msg.params):
                 self.switch.stop()
-                return Resp(False, "Failed to start worker.", ret=self.state)
+                return Reply(False, "Failed to start worker.", ret=self.state)
             self.pub_timer = self.worker.timer.clone()
 
         self.state = msg.state
-        return Resp(True)
+        return Reply(True)
 
-    def update_plot_params(self, msg: UpdatePlotParamsReq) -> Resp:
+    def update_plot_params(self, msg: UpdatePlotParamsReq) -> Reply:
         """Update the plot params."""
 
         success = self.worker.update_plot_params(msg.params)
@@ -135,61 +135,61 @@ class PODMR(BasicMeasNode):
                 data.clear_fit_data()
                 self.op.get_marker_indices(data)
                 self.op.analyze(data)
-        return Resp(success)
+        return Reply(success)
 
-    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Resp:
+    def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:
         if msg.group == "fit":
-            return Resp(True, ret=self.fitter.get_param_dict_labels())
+            return Reply(True, ret=self.fitter.get_param_dict_labels())
         else:
-            return Resp(True, ret=self.worker.get_param_dict_labels())
+            return Reply(True, ret=self.worker.get_param_dict_labels())
 
-    def get_param_dict(self, msg: GetParamDictReq) -> Resp:
+    def get_param_dict(self, msg: GetParamDictReq) -> Reply:
         if msg.group == "fit":
             d = self.fitter.get_param_dict(msg.label)
         else:
             d = self.worker.get_param_dict(msg.label)
 
         if d is None:
-            return Resp(False, "Failed to generate param dict.")
+            return Reply(False, "Failed to generate param dict.")
         else:
-            return Resp(True, ret=d)
+            return Reply(True, ret=d)
 
-    def save_data(self, msg: SaveDataReq) -> Resp:
+    def save_data(self, msg: SaveDataReq) -> Reply:
         success = self.io.save_data(msg.file_name, self.worker.data_msg(), msg.params, msg.note)
         if success and self.tweaker_cli is not None:
             success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
-        return Resp(success)
+        return Reply(success)
 
-    def export_data(self, msg: ExportDataReq) -> Resp:
+    def export_data(self, msg: ExportDataReq) -> Reply:
         success = self.io.export_data(
             msg.file_name, msg.data if msg.data else self.worker.data_msg(), msg.params
         )
-        return Resp(success)
+        return Reply(success)
 
-    def load_data(self, msg: LoadDataReq) -> Resp:
+    def load_data(self, msg: LoadDataReq) -> Reply:
         data = self.io.load_data(msg.file_name)
         if data is None:
-            return Resp(False)
+            return Reply(False)
         else:
             if msg.to_buffer:
                 self.buffer.append((msg.file_name, data))
             else:
                 if self.state == BinaryState.ACTIVE:
-                    return Resp(False, "Cannot load data when active.")
+                    return Reply(False, "Cannot load data when active.")
                 self.worker.data = data
-            return Resp(True, ret=data)
+            return Reply(True, ret=data)
 
-    def validate(self, msg: ValidateReq) -> Resp:
+    def validate(self, msg: ValidateReq) -> Reply:
         """Validate the measurement params."""
 
-        return Resp(self.worker.validate_params(msg.params))
+        return Reply(self.worker.validate_params(msg.params))
 
-    def discard(self, msg: DiscardReq) -> Resp:
+    def discard(self, msg: DiscardReq) -> Reply:
         """Discard the data."""
 
-        return Resp(self.worker.discard())
+        return Reply(self.worker.discard())
 
-    def handle_req(self, msg: Request) -> Resp:
+    def handle_req(self, msg: Request) -> Reply:
         if isinstance(msg, UpdatePlotParamsReq):
             return self.update_plot_params(msg)
         elif isinstance(msg, ValidateReq):
@@ -197,7 +197,7 @@ class PODMR(BasicMeasNode):
         elif isinstance(msg, DiscardReq):
             return self.discard(msg)
         else:
-            return Resp(False, "Invalid message type")
+            return Reply(False, "Invalid message type")
 
     def wait(self):
         self.logger.info("Waiting for instrument server...")

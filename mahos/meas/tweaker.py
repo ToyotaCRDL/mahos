@@ -13,7 +13,7 @@ import os
 
 import h5py
 
-from ..msgs.common_msgs import Resp
+from ..msgs.common_msgs import Reply
 from ..msgs import param_msgs as P
 from ..msgs import tweaker_msgs
 from ..msgs.tweaker_msgs import TweakerStatus, ReadReq, ReadAllReq, WriteReq, WriteAllReq
@@ -32,32 +32,32 @@ class TweakerClient(StatusClient):
     M = tweaker_msgs
 
     def read_all(self) -> tuple[bool, dict[str, P.ParamDict[str, P.PDValue] | None]]:
-        resp = self.req.request(ReadAllReq())
-        return resp.success, resp.ret
+        rep = self.req.request(ReadAllReq())
+        return rep.success, rep.ret
 
     def read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
-        resp = self.req.request(ReadReq(param_dict_id))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(ReadReq(param_dict_id))
+        if rep.success:
+            return rep.ret
 
     def write_all(self, param_dicts: dict[str, P.ParamDict[str, P.PDValue]]) -> bool:
-        resp = self.req.request(WriteAllReq(param_dicts))
-        return resp.success
+        rep = self.req.request(WriteAllReq(param_dicts))
+        return rep.success
 
     def write(self, param_dict_id: str, params: P.ParamDict[str, P.PDValue]) -> bool:
-        resp = self.req.request(WriteReq(param_dict_id, params))
-        return resp.success
+        rep = self.req.request(WriteReq(param_dict_id, params))
+        return rep.success
 
     def save(self, filename: str, group: str = "") -> bool:
-        resp = self.req.request(SaveReq(filename, group))
-        return resp.success
+        rep = self.req.request(SaveReq(filename, group))
+        return rep.success
 
     def load(
         self, filename: str, group: str = ""
     ) -> dict[str, P.ParamDict[str, P.PDValue] | None] | None:
-        resp = self.req.request(LoadReq(filename, group))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadReq(filename, group))
+        if rep.success:
+            return rep.ret
 
 
 class Tweaker(Node):
@@ -96,7 +96,7 @@ class Tweaker(Node):
         for inst_name in self.conf["target"]["servers"]:
             self.cli.wait(inst_name)
 
-    def read_all(self, msg: ReadAllReq) -> Resp:
+    def read_all(self, msg: ReadAllReq) -> Reply:
         success = True
         for pid in self._param_dicts:
             res = self._read(pid)
@@ -104,15 +104,15 @@ class Tweaker(Node):
                 success = False
             else:
                 self._param_dicts[pid] = res
-        return Resp(success, ret=self._param_dicts)
+        return Reply(success, ret=self._param_dicts)
 
-    def read(self, msg: ReadReq) -> Resp:
+    def read(self, msg: ReadReq) -> Reply:
         ret = self._read(msg.param_dict_id)
         if ret is None:
-            return Resp(False)
+            return Reply(False)
         else:
             self._param_dicts[msg.param_dict_id] = ret
-            return Resp(True, ret=ret)
+            return Reply(True, ret=ret)
 
     def _read(self, param_dict_id: str) -> P.ParamDict[str, P.PDValue] | None:
         if param_dict_id not in self._param_dicts:
@@ -124,26 +124,26 @@ class Tweaker(Node):
             self.logger.error(f"Failed to read ParamDict {param_dict_id}")
         return d
 
-    def _write(self, param_dict_id: dict, params: P.ParamDict[str, P.PDValue]) -> Resp:
+    def _write(self, param_dict_id: dict, params: P.ParamDict[str, P.PDValue]) -> Reply:
         if param_dict_id not in self._param_dicts:
             return self.fail_with(f"Unknown ParamDict id: {param_dict_id}")
         inst, group, label = self._parse_param_dict_id(param_dict_id)
         success = self.cli.configure(inst, P.unwrap(params), label, group)
         if success:
             self._param_dicts[param_dict_id] = params
-            return Resp(True)
+            return Reply(True)
         else:
             return self.fail_with(f"Failed to write ParamDict {param_dict_id}")
 
-    def write(self, msg: WriteReq) -> Resp:
+    def write(self, msg: WriteReq) -> Reply:
         return self._write(msg.param_dict_id, msg.params)
 
-    def write_all(self, msg: WriteAllReq) -> Resp:
-        return Resp(
+    def write_all(self, msg: WriteAllReq) -> Reply:
+        return Reply(
             all([self._write(pid, params).success for pid, params in msg.param_dicts.items()])
         )
 
-    def save(self, msg: SaveReq) -> Resp:
+    def save(self, msg: SaveReq) -> Reply:
         """Save tweaker state (param_dicts) to file using h5."""
 
         mode = "r+" if os.path.exists(msg.filename) else "w"
@@ -162,9 +162,9 @@ class Tweaker(Node):
                 params.to_h5(group)
 
         self.logger.info(f"Saved {msg.filename}.")
-        return Resp(True)
+        return Reply(True)
 
-    def load(self, msg: LoadReq) -> Resp:
+    def load(self, msg: LoadReq) -> Reply:
         """Load the tweaker state (param_dicts).
 
         Load is done defensively, checking the existence and validity in current setup.
@@ -175,7 +175,7 @@ class Tweaker(Node):
             if msg.group:
                 if msg.group not in f:
                     self.logger.error(f"group {msg.group} doesn't exist in {msg.filename}")
-                    return Resp(False)
+                    return Reply(False)
                 g = f[msg.group]
             else:
                 g = f
@@ -188,7 +188,7 @@ class Tweaker(Node):
                             self.logger.error(f"Cannot set {pid}[{key}] to {lp}")
 
         self.logger.info(f"Loaded {msg.filename}.")
-        return Resp(True, ret=self._param_dicts)
+        return Reply(True, ret=self._param_dicts)
 
     def handle_req(self, msg):
         if isinstance(msg, ReadReq):

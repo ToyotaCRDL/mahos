@@ -8,7 +8,7 @@ Logic and instrument control part of Imaging ODMR.
 
 """
 
-from ..msgs.common_msgs import Resp, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.param_msgs import GetParamDictReq
 from ..msgs import iodmr_msgs
@@ -51,47 +51,47 @@ class IODMR(BasicMeasNode):
             self.isweeper.stop()
         self.io.close()
 
-    def change_state(self, msg: StateReq) -> Resp:
+    def change_state(self, msg: StateReq) -> Reply:
         if self.state == msg.state:
-            return Resp(True, "Already in that state")
+            return Reply(True, "Already in that state")
 
         if msg.state == BinaryState.IDLE:
             success = self.switch.stop() and self.isweeper.stop()
             if not success:
-                return Resp(False, "Failed to stop internal worker.", ret=self.state)
+                return Reply(False, "Failed to stop internal worker.", ret=self.state)
         elif msg.state == BinaryState.ACTIVE:
             if not self.switch.start():
-                return Resp(False, "Failed to start switch.", ret=self.state)
+                return Reply(False, "Failed to start switch.", ret=self.state)
             if not self.isweeper.start(msg.params):
                 self.switch.stop()
-                return Resp(False, "Failed to start worker.", ret=self.state)
+                return Reply(False, "Failed to start worker.", ret=self.state)
 
         self.state = msg.state
-        return Resp(True)
+        return Reply(True)
 
-    def get_param_dict(self, msg: GetParamDictReq) -> Resp:
+    def get_param_dict(self, msg: GetParamDictReq) -> Reply:
         b = self.isweeper.get_param_dict(msg.label)
         if b is None:
-            return Resp(False, "Failed to generate param dict.")
+            return Reply(False, "Failed to generate param dict.")
         else:
-            return Resp(True, ret=b)
+            return Reply(True, ret=b)
 
-    def save_data(self, msg: SaveDataReq) -> Resp:
+    def save_data(self, msg: SaveDataReq) -> Reply:
         success = self.io.save_data_async(
             msg.file_name, self.isweeper.data_msg(), msg.params, msg.note
         )
-        return Resp(success)
+        return Reply(success)
 
-    def export_data(self, msg: ExportDataReq) -> Resp:
+    def export_data(self, msg: ExportDataReq) -> Reply:
         success = self.io.export_data(msg.file_name, self.isweeper.data_msg())
-        return Resp(success)
+        return Reply(success)
 
-    def load_data(self, msg: LoadDataReq) -> Resp:
+    def load_data(self, msg: LoadDataReq) -> Reply:
         data = self.io.load_data(msg.file_name)
         if data is None:
-            return Resp(False)
+            return Reply(False)
         else:
-            return Resp(True, ret=data)
+            return Reply(True, ret=data)
 
     def wait(self):
         self.logger.info("Waiting for instrument server...")

@@ -10,7 +10,7 @@ Measurement state manager.
 
 import importlib
 
-from ..msgs.common_msgs import Resp
+from ..msgs.common_msgs import Reply
 from ..msgs import state_manager_msgs
 from ..msgs.state_manager_msgs import ManagerStatus, RestoreReq, CommandReq
 from ..node.node import Node
@@ -22,13 +22,13 @@ class StateManagerClient(StatusClient):
 
     M = state_manager_msgs
 
-    def command(self, name) -> Resp:
-        resp = self.req.request(CommandReq(name))
-        return resp.success
+    def command(self, name) -> Reply:
+        rep = self.req.request(CommandReq(name))
+        return rep.success
 
-    def restore(self, name) -> Resp:
-        resp = self.req.request(RestoreReq(name))
-        return resp.success
+    def restore(self, name) -> Reply:
+        rep = self.req.request(RestoreReq(name))
+        return rep.success
 
 
 class StateManager(Node):
@@ -72,7 +72,7 @@ class StateManager(Node):
             d[node_name] = self._clis[node_name].get_state()
         self._last_states[cmd_name] = d
 
-    def command(self, msg: CommandReq) -> Resp:
+    def command(self, msg: CommandReq) -> Reply:
         if msg.name not in self._commands:
             return self.fail_with(f"Unknown command {msg.name}.")
 
@@ -84,9 +84,9 @@ class StateManager(Node):
             success = self._clis[node_name].change_state(state)
             if not success:
                 return self.fail_with(f"Failed to change state of {node_name} to {state}")
-        return Resp(True)
+        return Reply(True)
 
-    def restore(self, msg: RestoreReq) -> Resp:
+    def restore(self, msg: RestoreReq) -> Reply:
         if msg.name not in self._commands:
             return self.fail_with(f"Unknown command {msg.name}.")
         if self._last_states[msg.name] is None:
@@ -99,7 +99,7 @@ class StateManager(Node):
             success = self._clis[node_name].change_state(state)
             if not success:
                 return self.fail_with(f"Failed to change state of {node_name} to {state}")
-        return Resp(True)
+        return Reply(True)
 
     def handle_req(self, msg):
         if isinstance(msg, CommandReq):

@@ -63,7 +63,7 @@ class Message(object):
         return pickle.loads(b)
 
 
-class Resp(Message):
+class Reply(Message):
     """Generic response message for requests.
 
     :ivar success: requests are successful or not.
@@ -78,7 +78,7 @@ class Resp(Message):
         self.ret = ret
 
     def __repr__(self):
-        return f"Resp({self.success}, {self.message}, {self.ret})"
+        return f"Reply({self.success}, {self.message}, {self.ret})"
 
 
 class Request(Message):

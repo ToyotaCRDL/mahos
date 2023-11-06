@@ -8,7 +8,7 @@ Type hints for MAHOS.
 
 """
 
-from ..msgs.common_msgs import Message, Request, Resp
+from ..msgs.common_msgs import Message, Request, Reply
 
 from typing import NewType, Callable, Union, Tuple
 
@@ -18,8 +18,8 @@ NodeName = NewType("NodeName", Union[Tuple[str, str], str])
 #: SubHandler receives a Message and handle it
 SubHandler = NewType("SubHandler", Callable[[Message], None])
 
-#: RepHandler receives a Request and return Resp
-RepHandler = NewType("RepHandler", Callable[[Request], Resp])
+#: RepHandler receives a Request and return Reply
+RepHandler = NewType("RepHandler", Callable[[Request], Reply])
 
 #: MessageGetter: getter function for Message
 MessageGetter = NewType("MessageGetter", Callable[[], Message])

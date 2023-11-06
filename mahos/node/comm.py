@@ -15,7 +15,7 @@ import typing as T
 
 import zmq
 
-from ..msgs.common_msgs import pickle_proto, Message, Request, Resp
+from ..msgs.common_msgs import pickle_proto, Message, Request, Reply
 from ..util.typing import SubHandler, RepHandler
 
 from .log import PUBHandler, DummyLogger
@@ -71,14 +71,14 @@ class Requester(object):
         endpoint: str,
         linger_ms: int,
         timeout_ms: int | None = None,
-        resp_type: T.Type[Resp] | None = None,
+        rep_type: T.Type[Reply] | None = None,
         logger=None,
     ):
         self.ctx = context
         self.endpoint = endpoint
         self.linger_ms = linger_ms
         self.timeout_ms = timeout_ms
-        self.resp_type = resp_type
+        self.rep_type = rep_type
         self.logger = get_logger(logger)
 
         self.create_socket()
@@ -94,19 +94,19 @@ class Requester(object):
         self._socket = sock
         return self._socket
 
-    def request(self, msg: Request) -> Resp:
-        """Send request and return response."""
+    def request(self, msg: Request) -> Reply:
+        """Send request and return reply."""
 
         try:
             self._socket.send(serialize(msg))
-            resp = deserialize(self._socket.recv(), self.resp_type)
+            rep = deserialize(self._socket.recv(), self.rep_type)
         except zmq.ZMQError:
             # Comes here when timed-out for example.
             self.logger.exception("ZMQError in Requester.request().")
             self.logger.info("Creating new socket.")
             self.create_socket()
-            return Resp(False, message="ZMQError in request()")
-        return resp
+            return Reply(False, message="ZMQError in request()")
+        return rep
 
     def close(self):
         self._socket.close()
@@ -234,7 +234,7 @@ class Context(object):
         self,
         endpoint: str,
         timeout_ms: int | None = None,
-        resp_type: T.Type[Resp] | None = None,
+        rep_type: T.Type[Reply] | None = None,
         logger=None,
     ) -> Requester:
         """Add and return a Requester."""
@@ -248,7 +248,7 @@ class Context(object):
             endpoint,
             self.linger_ms,
             timeout_ms=timeout_ms,
-            resp_type=resp_type,
+            rep_type=rep_type,
             logger=logger,
         )
         self.requesters[endpoint] = r
@@ -342,8 +342,8 @@ class Context(object):
         for sock, (handler, req_type) in self.rep_handlers.items():
             if sock in socks:
                 msg = deserialize(sock.recv(), req_type)
-                resp = handler(msg)
-                sock.send(serialize(resp))
+                rep = handler(msg)
+                sock.send(serialize(rep))
 
     def _handle_sub(self, socks):
         for sock, (handler, msg_type, deserial) in self.sub_handlers.items():

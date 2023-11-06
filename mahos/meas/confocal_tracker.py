@@ -25,7 +25,7 @@ except ImportError:
 
 from .. import cache_dir
 from .confocal import ConfocalClient
-from ..msgs.common_msgs import Resp, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
 from ..msgs import confocal_msgs
 from ..msgs.confocal_msgs import Image, ScanDirection, ScanMode, PiezoPos
 from ..msgs.confocal_msgs import ConfocalState
@@ -175,19 +175,19 @@ class ConfocalTrackerClient(StateClient):
     MC = confocal_msgs
 
     def save_params(self, params: dict, file_name: Optional[str] = None) -> bool:
-        resp = self.req.request(SaveParamsReq(params, file_name=file_name))
-        return resp.success
+        rep = self.req.request(SaveParamsReq(params, file_name=file_name))
+        return rep.success
 
     def load_params(self, file_name: Optional[str] = None) -> Optional[dict]:
-        resp = self.req.request(LoadParamsReq(file_name))
-        if resp.success:
-            return resp.ret
+        rep = self.req.request(LoadParamsReq(file_name))
+        if rep.success:
+            return rep.ret
         else:
             return None
 
     def track_now(self) -> bool:
-        resp = self.req.request(TrackNowReq())
-        return resp.success
+        rep = self.req.request(TrackNowReq())
+        return rep.success
 
 
 class ConfocalTracker(Node):
@@ -218,10 +218,10 @@ class ConfocalTracker(Node):
 
     def change_state(self, msg: StateReq):
         if self.state == msg.state:
-            return Resp(True, "Already in that state")
+            return Reply(True, "Already in that state")
 
         # TODO: resolve states of other meas modules
-        # if condition is not met, Resp(False "Couldn't change state")
+        # if condition is not met, Reply(False "Couldn't change state")
 
         if msg.state == BinaryState.IDLE:
             self.stop()
@@ -229,16 +229,16 @@ class ConfocalTracker(Node):
             self.start(msg.params)
 
         self.state = msg.state
-        return Resp(True)
+        return Reply(True)
 
-    def track_now(self, msg: TrackNowReq) -> Resp:
+    def track_now(self, msg: TrackNowReq) -> Reply:
         if self.state == BinaryState.IDLE:
             return self.fail_with("TrackNow rejected: tracker is IDLE.")
         if self.timer is None:
             return self.fail_with("TrackNow rejected: timer is None.")
 
         self.timer.force_activation()
-        return Resp(True)
+        return Reply(True)
 
     def _default_params_file(self):
         return path.join(cache_dir, "track_params.pkl")
@@ -249,28 +249,28 @@ class ConfocalTracker(Node):
             with open(fn, "wb") as f:
                 pickle.dump(msg.params, f)
             self.logger.info("Saved {}".format(fn))
-            return Resp(True)
+            return Reply(True)
         except IOError:
             msg = "Cannot save {}".format(fn)
             self.logger.exception(fn)
-            return Resp(False, msg)
+            return Reply(False, msg)
 
     def load_params(self, msg: LoadParamsReq):
         fn = self._default_params_file() if msg.file_name is None else msg.file_name
         if not path.exists(fn):
             msg = "Params file doesn't exist: {}".format(fn)
             self.logger.info(msg)
-            return Resp(False, msg)
+            return Reply(False, msg)
 
         try:
             with open(fn, "rb") as f:
                 params = pickle.load(f)
             self.logger.info("Loaded {}".format(fn))
-            return Resp(True, ret=params)
+            return Reply(True, ret=params)
         except IOError:
             msg = "Cannot load {}".format(fn)
             self.logger.exception(msg)
-            return Resp(False, msg)
+            return Reply(False, msg)
 
     def handle_req(self, msg):
         if isinstance(msg, StateReq):
@@ -282,7 +282,7 @@ class ConfocalTracker(Node):
         elif isinstance(msg, LoadParamsReq):
             return self.load_params(msg)
         else:
-            return Resp(False, "Invalid message type")
+            return Reply(False, "Invalid message type")
 
     def main(self):
         self.poll()

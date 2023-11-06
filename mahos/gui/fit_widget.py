@@ -183,10 +183,10 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
         params["method"] = m
         index = self.indexBox.value()
 
-        resp = self.cli.fit(params, index)
-        if not resp.success:
+        rep = self.cli.fit(params, index)
+        if not rep.success:
             return
-        ret = resp.ret
+        ret = rep.ret
 
         if "msg" in ret:
             self.resultEdit.setText(ret["msg"])
@@ -195,7 +195,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
             for key, val in ret["popt"].items():
                 self.paramTable.apply_value(".".join(("model", key, "value")), val)
 
-        return resp
+        return rep
 
     def request_clear_fit(self):
         self.cli.clear_fit(data_index=self.indexBox.value())

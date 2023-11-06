@@ -21,5 +21,5 @@ class QHBTClient(QBasicMeasClient):
     stopped = QtCore.pyqtSignal(HBTData)
 
     def update_plot_params(self, params: dict) -> bool:
-        resp = self.req.request(UpdatePlotParamsReq(params))
-        return resp.success
+        rep = self.req.request(UpdatePlotParamsReq(params))
+        return rep.success

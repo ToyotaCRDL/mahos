@@ -8,7 +8,7 @@ Global parameter dictionary.
 
 """
 
-from ..msgs.common_msgs import Resp
+from ..msgs.common_msgs import Reply
 from ..msgs import global_params_msgs
 from ..msgs.global_params_msgs import GlobalParamsStatus, SetParamReq
 from .node import Node
@@ -32,9 +32,9 @@ class GlobalParamsClient(StatusClient):
     def set_param(self, key: str, value):
         """Set a parameter. Value can be any pickle-able Python object."""
 
-        resp = self.req.request(SetParamReq(key, value))
+        rep = self.req.request(SetParamReq(key, value))
 
-        return resp.success
+        return rep.success
 
 
 class GlobalParams(Node):
@@ -55,15 +55,15 @@ class GlobalParams(Node):
 
         self._params = {}
 
-    def set_param(self, msg: SetParamReq) -> Resp:
+    def set_param(self, msg: SetParamReq) -> Reply:
         self._params[msg.key] = msg.value
-        return Resp(True, "")
+        return Reply(True, "")
 
     def handle_req(self, msg):
         if isinstance(msg, SetParamReq):
             return self.set_param(msg)
         else:
-            return Resp(False, "Invalid message type")
+            return Reply(False, "Invalid message type")
 
     def _publish(self):
         s = GlobalParamsStatus(params=self._params)

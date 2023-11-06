@@ -21,5 +21,5 @@ class QODMRClient(QBasicMeasClient):
     stopped = QtCore.pyqtSignal(ODMRData)
 
     def validate(self, params: dict) -> bool:
-        resp = self.req.request(ValidateReq(params))
-        return resp.success
+        rep = self.req.request(ValidateReq(params))
+        return rep.success
