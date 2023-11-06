@@ -237,7 +237,13 @@ class Context(object):
         rep_type: T.Type[Reply] | None = None,
         logger=None,
     ) -> Requester:
-        """Add and return a Requester."""
+        """Add and return a Requester.
+
+        :param rep_type: Type (class object) of expected reply.
+            Some value must be passed if custom-serialization will be received.
+            Otherwise, it can be omitted.
+
+        """
 
         if endpoint in self.requesters:
             print(f"[WARN] Requester at {endpoint} has already been added.")
@@ -255,9 +261,15 @@ class Context(object):
         return r
 
     def add_rep(
-        self, endpoint: str, handler=null_handler, req_type: T.Type[Message] | None = None
+        self, endpoint: str, handler=null_handler, req_type: T.Type[Request] | None = None
     ):
-        """Add rep handler."""
+        """Add rep handler.
+
+        :param req_type: Type (class object) of expected request.
+            Some value must be passed if custom-serialization will be received.
+            Otherwise, it can be omitted.
+
+        """
 
         sock = self.ctx.socket(zmq.REP)
         sock.setsockopt(zmq.LINGER, self.linger_ms)

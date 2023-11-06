@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 from mahos.meas.common_meas import BasicMeasClient, BasicMeasNode
 from mahos.meas.common_worker import Worker
-from mahos.msgs.common_msgs import Resp, StateReq, BinaryState, BinaryStatus
+from mahos.msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
 import mahos.msgs.param_msgs as P
 from mahos.util.typing import NodeName
 
@@ -139,21 +139,21 @@ class IVCurve(BasicMeasNode):
         if hasattr(self, "sweeper"):
             self.sweeper.stop()
 
-    def change_state(self, msg: StateReq) -> Resp:
+    def change_state(self, msg: StateReq) -> Reply:
         if self.state == msg.state:
-            return Resp(True, "Already in that state")
+            return Reply(True, "Already in that state")
 
         if msg.state == BinaryState.IDLE:
             if not self.sweeper.stop():
-                return Resp(False, "Failed to stop internal worker.", ret=self.state)
+                return Reply(False, "Failed to stop internal worker.", ret=self.state)
         elif msg.state == BinaryState.ACTIVE:
             if not self.sweeper.start(msg.params):
-                return Resp(False, "Failed to start internal worker.", ret=self.state)
+                return Reply(False, "Failed to start internal worker.", ret=self.state)
 
         self.state = msg.state
-        return Resp(True)
+        return Reply(True)
 
-    def get_param_dict(self, msg: P.GetParamDictReq) -> Resp:
+    def get_param_dict(self, msg: P.GetParamDictReq) -> Reply:
         params = P.ParamDict(
             start=P.FloatParam(0.0, -10.0, 10.0),
             stop=P.FloatParam(5.0, -10.0, 10.0),
@@ -161,7 +161,7 @@ class IVCurve(BasicMeasNode):
             sweeps=P.IntParam(0, 0, 100000),
             delay_sec=P.FloatParam(0.0, 0.0, 0.5),
         )
-        return Resp(True, ret=params)
+        return Reply(True, ret=params)
 
     def wait(self):
         self.logger.info("Waiting for instrument server...")
