@@ -661,13 +661,13 @@ See mahos.node.client for example implementations.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_pub_handler</span></code>(endpoint[, root_topic])</p></td>
 <td><p>Add PUBHandler for logging.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_rep</span></code>(endpoint[, handler])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_rep</span></code>(endpoint[, handler, req_type])</p></td>
 <td><p>Add rep handler.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_req</span></code>(endpoint[, timeout_ms, logger])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_req</span></code>(endpoint[, timeout_ms, rep_type, logger])</p></td>
 <td><p>Add and return a Requester.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_sub</span></code>(endpoint[, topic, handler, deserial])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_sub</span></code>(endpoint[, topic, handler, ...])</p></td>
 <td><p>Add sub handler.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code>([close_zmq_ctx])</p></td>

@@ -9,7 +9,7 @@
 
 .. autoclass:: Message
 .. autoclass:: Request
-.. autoclass:: Resp
+.. autoclass:: Reply
 .. autoclass:: State
 .. autoclass:: Status
 .. autoclass:: BinaryState
