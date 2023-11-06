@@ -362,12 +362,13 @@ class EchoSubscriber(NodeClient):
         context: Context | None = None,
         prefix: str | None = None,
         topic=b"status",
+        type_=None,
         rate=False,
     ):
         NodeClient.__init__(self, gconf, name, context=context, prefix=prefix)
 
         self.msg_count = -1
-        self.add_sub([(topic, self.print_rate if rate else lambda msg: print(msg))])
+        self.add_sub([(topic, self.print_rate if rate else lambda msg: print(msg), type_)])
 
     def print_rate(self, msg):
         self.msg_count += 1

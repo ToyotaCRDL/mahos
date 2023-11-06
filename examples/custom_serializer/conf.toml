@@ -1,0 +1,9 @@
+[localhost.clock]
+module = "nodes"
+class = "Clock"
+pub_endpoint = "tcp://127.0.0.1:5566"
+
+[localhost.calc]
+module = "nodes"
+class = "Calc"
+rep_endpoint = "tcp://127.0.0.1:5567"

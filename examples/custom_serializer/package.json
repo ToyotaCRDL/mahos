@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "msgpackr": "^1.9.9",
+    "zeromq": "^5.3.1"
+  },
+  "name": "example_js_client",
+  "version": "0.1.0",
+  "description": "Example toy client in Javascript",
+  "main": "print_clock.js",
+  "author": "Kosuke Tahara",
+  "license": "BSD 3-Clause"
+}

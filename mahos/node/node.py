@@ -241,8 +241,11 @@ class Node(NodeBase):
 
     """
 
-    #: The class for standard client.
+    #: The class object for standard client.
     CLIENT = None
+
+    #: Mapping from topic-name to message type (class object) for the topic.
+    TOPIC_TYPES = {}
 
     def __init__(self, gconf: dict, name: NodeName, context: Context | None = None):
         NodeBase.__init__(self, gconf, name)

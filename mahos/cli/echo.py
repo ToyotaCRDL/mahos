@@ -10,6 +10,8 @@ mahos echo command.
 
 import time
 import argparse
+import sys
+import importlib
 
 from ..node.node import join_name
 from ..node.client import EchoSubscriber
@@ -48,7 +50,19 @@ def main(args=None):
     joined_name = join_name((host, node))
     print("Subscribing to {} of {} (config file: {}).".format(args.topic, joined_name, args.conf))
 
-    sub = EchoSubscriber(gconf, joined_name, topic=args.topic, rate=args.rate)
+    try:
+        c = gconf[host][node]
+    except KeyError:
+        print(f"[ERROR] {joined_name} is not found in the config file.")
+        sys.exit(1)
+    module = importlib.import_module(c["module"])
+    NodeClass = getattr(module, c["class"])
+    if hasattr(NodeClass, "TOPIC_TYPES"):
+        type_ = NodeClass.TOPIC_TYPES.get(args.topic)
+    else:
+        type_ = None
+
+    sub = EchoSubscriber(gconf, joined_name, topic=args.topic, rate=args.rate, type_=type_)
 
     try:
         while True:
