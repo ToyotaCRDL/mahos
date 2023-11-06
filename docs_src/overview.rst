@@ -7,7 +7,7 @@ What is this?
 -------------
 
 MAHOS is a framework for building `modular` and `distributed` measurement automation systems.
-Experimental researchers often face challenges building up systems
+Experimental researchers often face challenges in building systems
 consisting of multiple instruments or computers to automate their measurement procedures
 in physical science and engineering, or related areas.
 
