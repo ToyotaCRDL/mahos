@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1630</width>
-    <height>639</height>
+    <height>753</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,7 +41,9 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <widget class="HistogramLUTWidget" name="histo_XY"/>
-     <widget class="GraphicsView" name="graphicsView"/>
+     <widget class="GraphicsView" name="graphicsView_XY"/>
+     <widget class="GraphicsView" name="graphicsView_XZ"/>
+     <widget class="GraphicsView" name="graphicsView_YZ"/>
      <widget class="HistogramLUTWidget" name="histo_XZ"/>
      <widget class="HistogramLUTWidget" name="histo_YZ"/>
     </widget>
@@ -237,7 +239,7 @@
      <item>
       <widget class="QPushButton" name="xymaxButton">
        <property name="text">
-        <string>Max</string>
+        <string>Full</string>
        </property>
       </widget>
      </item>
@@ -289,7 +291,7 @@
      <item>
       <widget class="QPushButton" name="xzmaxButton">
        <property name="text">
-        <string>Max</string>
+        <string>Full</string>
        </property>
       </widget>
      </item>
@@ -339,16 +341,16 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="yzclearButton">
+      <widget class="QPushButton" name="yzmaxButton">
        <property name="text">
-        <string>Clear</string>
+        <string>Full</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="yzmaxButton">
+      <widget class="QPushButton" name="yzclearButton">
        <property name="text">
-        <string>Max</string>
+        <string>Clear</string>
        </property>
       </widget>
      </item>
@@ -458,7 +460,9 @@
  </customwidgets>
  <tabstops>
   <tabstop>histo_XY</tabstop>
-  <tabstop>graphicsView</tabstop>
+  <tabstop>graphicsView_XY</tabstop>
+  <tabstop>graphicsView_XZ</tabstop>
+  <tabstop>graphicsView_YZ</tabstop>
   <tabstop>histo_XZ</tabstop>
   <tabstop>histo_YZ</tabstop>
   <tabstop>idleButton</tabstop>
@@ -489,8 +493,8 @@
   <tabstop>xzsaveButton</tabstop>
   <tabstop>xzexportButton</tabstop>
   <tabstop>yzfitButton</tabstop>
-  <tabstop>yzclearButton</tabstop>
   <tabstop>yzmaxButton</tabstop>
+  <tabstop>yzclearButton</tabstop>
   <tabstop>yzpopButton</tabstop>
   <tabstop>yzsaveButton</tabstop>
   <tabstop>yzexportButton</tabstop>

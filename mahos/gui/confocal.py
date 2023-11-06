@@ -1220,19 +1220,22 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         """Initialize views."""
 
         x, y, z = pos.x_tgt, pos.y_tgt, pos.z_tgt
-        self.layout = pg.GraphicsLayout()
-        self.graphicsView.setCentralItem(self.layout)
-        self.graphicsScene = self.graphicsView.scene()
+        self.layout_XY = pg.GraphicsLayout()
+        self.graphicsView_XY.setCentralItem(self.layout_XY)
+        self.layout_XZ = pg.GraphicsLayout()
+        self.graphicsView_XZ.setCentralItem(self.layout_XZ)
+        self.layout_YZ = pg.GraphicsLayout()
+        self.graphicsView_YZ.setCentralItem(self.layout_YZ)
 
-        self.layout.addLabel("XY", row=0, col=0)
-        main_XY = self.layout.addPlot(row=1, col=0)
-        sub_XY = self.layout.addPlot(row=2, col=0)
-        self.layout.addLabel("XZ", row=0, col=1)
-        main_XZ = self.layout.addPlot(row=1, col=1)
-        sub_XZ = self.layout.addPlot(row=2, col=1)
-        self.layout.addLabel("YZ", row=0, col=2)
-        main_YZ = self.layout.addPlot(row=1, col=2)
-        sub_YZ = self.layout.addPlot(row=2, col=2)
+        self.layout_XY.addLabel("XY", row=0, col=0)
+        main_XY = self.layout_XY.addPlot(row=1, col=0)
+        sub_XY = self.layout_XY.addPlot(row=2, col=0)
+        self.layout_XZ.addLabel("XZ", row=0, col=1)
+        main_XZ = self.layout_XZ.addPlot(row=1, col=1)
+        sub_XZ = self.layout_XZ.addPlot(row=2, col=1)
+        self.layout_YZ.addLabel("YZ", row=0, col=2)
+        main_YZ = self.layout_YZ.addPlot(row=1, col=2)
+        sub_YZ = self.layout_YZ.addPlot(row=2, col=2)
 
         for pi in (main_XY, sub_XY, main_XZ, sub_XZ, main_YZ, sub_YZ):
             pi.setAspectLocked(True)
@@ -1290,7 +1293,8 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
     def init_splitter(self):
         sizes = self.splitter.sizes()
         w = self._style.get("lut_width", 120)
-        self.splitter.setSizes([w, sum(sizes) - 3 * w, w, w])
+        ww = round(sum(sizes) / 3.0 - w)
+        self.splitter.setSizes([w, ww, ww, ww, w, w])
 
     def load_buffers(self, pos):
         """get the image buffers from confocal and load all the images."""
