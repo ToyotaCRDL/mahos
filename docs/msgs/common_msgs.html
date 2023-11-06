@@ -617,6 +617,22 @@ document.write(`
 <dt class="sig sig-object py" id="mahos.msgs.common_msgs.Message">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.msgs.common_msgs.</span></span><span class="sig-name descname"><span class="pre">Message</span></span><a class="headerlink" href="#mahos.msgs.common_msgs.Message" title="Permalink to this definition">#</a></dt>
 <dd><p>Base class for mahos messages.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mahos.msgs.common_msgs.Message.serialize">
+<span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#mahos.msgs.common_msgs.Message.serialize" title="Permalink to this definition">#</a></dt>
+<dd><p>Serialize this message to bytes.</p>
+<p>Default implementation uses pickle.
+Override this method (and deserialize()) to implement custom serialization.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mahos.msgs.common_msgs.Message.deserialize">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.msgs.common_msgs.Message.deserialize" title="Permalink to this definition">#</a></dt>
+<dd><p>Deserialize given bytes <cite>b</cite> to reconstruct an instance if this class.</p>
+<p>Default implementation uses pickle.
+Override this method (and serialize()) to implement custom serialization.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -628,7 +644,7 @@ document.write(`
 <dl class="py class">
 <dt class="sig sig-object py" id="mahos.msgs.common_msgs.Reply">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.msgs.common_msgs.</span></span><span class="sig-name descname"><span class="pre">Reply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">success</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.msgs.common_msgs.Reply" title="Permalink to this definition">#</a></dt>
-<dd><p>Generic response message for requests.</p>
+<dd><p>Generic reply message for requests.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -743,7 +759,11 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.common_msgs.Message"><code class="docutils literal notranslate"><span class="pre">Message</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.common_msgs.Message"><code class="docutils literal notranslate"><span class="pre">Message</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.common_msgs.Message.serialize"><code class="docutils literal notranslate"><span class="pre">Message.serialize()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.common_msgs.Message.deserialize"><code class="docutils literal notranslate"><span class="pre">Message.deserialize()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.common_msgs.Request"><code class="docutils literal notranslate"><span class="pre">Request</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.common_msgs.Reply"><code class="docutils literal notranslate"><span class="pre">Reply</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.common_msgs.State"><code class="docutils literal notranslate"><span class="pre">State</span></code></a></li>

@@ -20,15 +20,16 @@ In such a case, the overhead can be reduced significantly by running the relevan
 in a single process and using intra-process transportation.
 
 ZeroMQ doesn't specify the data serialization format; it provides methods to send/receive byte arrays of arbitrary length.
-Currently, we define the message types (classes) in the :ref:`mahos.msgs` package and serialize the instances
+By default, we define the message types (classes) in the :ref:`mahos.msgs` package and serialize the instances
 using Python standard pickle.
 This approach is adopted due to pickle's high compatibility with Python objects and moderate performance.
 
-.. note::
-
-   The pickle-based serialization practically limits the messaging within Python only.
-   This might be changed to another approach (e.g., using Protocol Buffers)
-   in the future to support other programming languages.
+However, the pickle-based serialization practically limits the messaging within Python only.
+The other serialization can also be utilized to support different programming languages.
+For that, serializer methods must be overridden in your :class:`Message <mahos.msgs.common_msgs.Message>` classes
+and they must be passed when :meth:`add_sub <mahos.node.client.NodeClient.add_sub>`,
+`add_req<mahos.node.client.NodeClient.add_req>`, or `add_rep <mahos.node.node.Node.add_rep>`.
+See ``examples/custom_serializer`` for the examples of this approach.
 
 Communication patterns
 ----------------------

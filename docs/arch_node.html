@@ -448,15 +448,15 @@ such as high-resolution images produced at a high rate.
 In such a case, the overhead can be reduced significantly by running the relevant nodes as threads
 in a single process and using intra-process transportation.</p>
 <p>ZeroMQ doesn’t specify the data serialization format; it provides methods to send/receive byte arrays of arbitrary length.
-Currently, we define the message types (classes) in the <a class="reference internal" href="msgs/index.html#mahos-msgs"><span class="std std-ref">mahos.msgs</span></a> package and serialize the instances
+By default, we define the message types (classes) in the <a class="reference internal" href="msgs/index.html#mahos-msgs"><span class="std std-ref">mahos.msgs</span></a> package and serialize the instances
 using Python standard pickle.
 This approach is adopted due to pickle’s high compatibility with Python objects and moderate performance.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The pickle-based serialization practically limits the messaging within Python only.
-This might be changed to another approach (e.g., using Protocol Buffers)
-in the future to support other programming languages.</p>
-</div>
+<p>However, the pickle-based serialization practically limits the messaging within Python only.
+The other serialization can also be utilized to support different programming languages.
+For that, serializer methods must be overridden in your <a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.Message" title="mahos.msgs.common_msgs.Message"><code class="xref py py-class docutils literal notranslate"><span class="pre">Message</span></code></a> classes
+and they must be passed when <a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient.add_sub" title="mahos.node.client.NodeClient.add_sub"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_sub</span></code></a>,
+<cite>add_req&lt;mahos.node.client.NodeClient.add_req&gt;</cite>, or <cite>add_rep &lt;mahos.node.node.Node.add_rep&gt;</cite>.
+See <code class="docutils literal notranslate"><span class="pre">examples/custom_serializer</span></code> for the examples of this approach.</p>
 </section>
 <section id="communication-patterns">
 <h2>Communication patterns<a class="headerlink" href="#communication-patterns" title="Permalink to this heading">#</a></h2>

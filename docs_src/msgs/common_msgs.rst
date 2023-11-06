@@ -8,6 +8,7 @@
 .. rubric:: Classes
 
 .. autoclass:: Message
+
    .. automethod:: Message.serialize
    .. automethod:: Message.deserialize
 
