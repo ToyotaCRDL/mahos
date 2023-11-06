@@ -31,3 +31,4 @@
    .. autosummary::
 
       ~Node.CLIENT
+      ~Node.TOPIC_TYPES

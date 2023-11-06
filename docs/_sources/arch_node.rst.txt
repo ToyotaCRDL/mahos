@@ -28,7 +28,7 @@ However, the pickle-based serialization practically limits the messaging within 
 The other serialization can also be utilized to support different programming languages.
 For that, serializer methods must be overridden in your :class:`Message <mahos.msgs.common_msgs.Message>` classes
 and they must be passed when :meth:`add_sub <mahos.node.client.NodeClient.add_sub>`,
-`add_req<mahos.node.client.NodeClient.add_req>`, or `add_rep <mahos.node.node.Node.add_rep>`.
+:meth:`add_req<mahos.node.client.NodeClient.add_req>`, or :meth:`add_rep <mahos.node.node.Node.add_rep>`.
 See ``examples/custom_serializer`` for the examples of this approach.
 
 Communication patterns

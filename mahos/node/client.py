@@ -165,10 +165,10 @@ class NodeClient(object):
 
         To do so, add and start a SubWorker for this client.
 
-        :param topic_handlers: List of (topic, handler, msg_type), (topic, handler) or topic.
+        :param topic_handler_types: List of (topic, handler, msg_type), (topic, handler) or topic.
             In second case, msg_type is considered None. In the last case, handler and msg_type
             are considered None.
-        :returns: List of MessageGetters. Length is same as topic_handlers.
+        :returns: List of MessageGetters. Length is same as topic_handler_types.
 
         """
 

@@ -455,7 +455,7 @@ This approach is adopted due to pickle’s high compatibility with Python object
 The other serialization can also be utilized to support different programming languages.
 For that, serializer methods must be overridden in your <a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.Message" title="mahos.msgs.common_msgs.Message"><code class="xref py py-class docutils literal notranslate"><span class="pre">Message</span></code></a> classes
 and they must be passed when <a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient.add_sub" title="mahos.node.client.NodeClient.add_sub"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_sub</span></code></a>,
-<cite>add_req&lt;mahos.node.client.NodeClient.add_req&gt;</cite>, or <cite>add_rep &lt;mahos.node.node.Node.add_rep&gt;</cite>.
+<a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient.add_req" title="mahos.node.client.NodeClient.add_req"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_req</span></code></a>, or <a class="reference internal" href="node/Node.html#mahos.node.node.Node.add_rep" title="mahos.node.node.Node.add_rep"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_rep</span></code></a>.
 See <code class="docutils literal notranslate"><span class="pre">examples/custom_serializer</span></code> for the examples of this approach.</p>
 </section>
 <section id="communication-patterns">
