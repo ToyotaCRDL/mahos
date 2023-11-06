@@ -20,7 +20,7 @@ bibliography: paper.bib
 
 # Summary
 
-Experimental researchers often face challenges building up the systems
+Experimental researchers often face challenges in building systems
 to automate their measurement procedures in physical science and engineering, or related areas.
 While simple automation could be done by a single script, systematic orchestration is required to handle complex cases.
 The measurement automation typically requires several pieces of programs in diverse layers:
@@ -50,7 +50,7 @@ There are also several projects aiming to provide a comprehensive `modular` fram
 ranging from the instrument drivers to the GUIs [@pymeasure; @qudi; @nspyre].
 While we believe that the `distributed` messaging could help create flexible and accessible systems,
 the existing libraries take rather centralized approaches.
-That is why we have built `MAHOS` to provide both `modular` and `distributed` framework for measurement automation.
+That is why we have developed `MAHOS` to provide both a `modular` and `distributed` framework for measurement automation.
 
 On the `MAHOS`, several programs run as different processes
 and exchange the data by using a distributed messaging system.
@@ -99,6 +99,6 @@ The covered functionalities are similar to that of the qudi project [@qudi].
 
 We acknowledge Prof. Mutsuko Hatano and Prof. Takayuki Iwasaki for their support in developing the predecessor project at Tokyo Institute of Technology.
 We are also grateful to Wataru Naruki, Kosuke Mizuno, and Ryota Kitagawa for contributing to and maintaining it.
-We thank Katsuhiro Kutsuki and Taishi Kimura for the opportunity and support to start up this project.
+We thank Katsuhiro Kutsuki and Taishi Kimura for the opportunity and support to start this project.
 
 # References
