@@ -39,7 +39,7 @@ class DatetimeMP(Message):
                     msg.get("microsecond", 0),
                 )
             )
-        except:
+        except Exception:
             return None
 
 
@@ -56,7 +56,7 @@ class CalcReqMP(Request):
         try:
             msg = msgpack.loads(b)
             return CalcReqMP(msg["a"], msg["b"])
-        except:
+        except Exception:
             return None
 
 
@@ -85,5 +85,5 @@ class CalcRepMP(Reply):
         try:
             msg = msgpack.loads(b)
             return CalcRepMP(msg["success"], msg["message"], msg["product"], msg["quotient"])
-        except:
+        except Exception:
             return None
