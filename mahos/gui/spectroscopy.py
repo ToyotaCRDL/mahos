@@ -244,11 +244,11 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
 
     def init_widgets(self):
         params = self.cli.get_param_dict()
+        if params is None:
+            raise RuntimeError("[ERROR] Failed to get param_dict")
+
         self.baseconfBox.clear()
-        if params is not None:
-            self.baseconfBox.addItems(params["base_config"].options())
-        else:
-            print("[ERROR] Failed to get param_dict")
+        self.baseconfBox.addItems(params["base_config"].options())
 
         apply_widgets(
             params,
