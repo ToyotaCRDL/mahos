@@ -22,6 +22,7 @@ Added
 - util: new modules graph and conf.
 - cli: auto-start of log (LogBroker) in mahos log and auto-exclude of log in mahos launch.
 - meas.podmr: changed definition of plot mode 'normalize' (difference / average).
+- node: custom serialization of the message (other than default of pickle).
 
 Changed
 ^^^^^^^
@@ -53,6 +54,12 @@ Changed
   - signature of configure(): add new kwargs label and group to make it usable with get_param_dict().
 
 - (breaking config) DTG classes in inst.dtg module has been moved to inst.pg module.
+
+- common_msgs: Resp class has been renamed to Reply.
+
+- Common directories has been moved from ~/.config/mahos or ~/.cache/mahos/log to ~/.mahos/config ~/.mahos/log .
+
+  - The home directory (~/.mahos) has become configurable with environment var "MAHOS_HOME".
 
 Removed
 ^^^^^^^

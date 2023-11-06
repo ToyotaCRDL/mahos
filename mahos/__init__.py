@@ -12,11 +12,11 @@ __all__ = ["cli", "gui", "inst", "meas", "msgs", "node", "util"]
 
 import os
 
-config_dir = os.path.expanduser(os.path.join("~", ".config", "mahos"))
-cache_dir = os.path.expanduser(os.path.join("~", ".cache", "mahos"))
-log_dir = os.path.expanduser(os.path.join("~", ".cache", "mahos", "log"))
+HOME_DIR = os.environ.get("MAHOS_HOME", os.path.expanduser(os.path.join("~", ".mahos")))
+CONFIG_DIR = os.path.join(HOME_DIR, "config")
+LOG_DIR = os.path.join(HOME_DIR, "log")
 
-for d in (config_dir, cache_dir, log_dir):
+for d in (CONFIG_DIR, LOG_DIR):
     if not os.path.exists(d):
         os.makedirs(d)
         print("Directory {} is created.".format(d))

@@ -22,7 +22,7 @@ from .comm import Context
 from .client import NodeClient, SubWorker
 from .log import TOPIC_DELIM, TIME_DELIM
 from ..util.term_color import col
-from .. import log_dir
+from .. import LOG_DIR
 
 
 class LogEntry(T.NamedTuple):
@@ -253,7 +253,7 @@ class LogBroker(Node):
             else:
                 dt = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S.%f")
                 n = path.join(
-                    log_dir, "{}_{}.log".format(self.joined_name().replace("::", "-"), dt)
+                    LOG_DIR, "{}_{}.log".format(self.joined_name().replace("::", "-"), dt)
                 )
             self.file_logger = FileLogger(n)
             self.file_logger.write("# LogBroker started at {}\n".format(dt))

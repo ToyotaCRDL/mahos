@@ -23,7 +23,7 @@ try:
 except ImportError:
     print("mahos.meas.confocal_tracker: failed to import cv2")
 
-from .. import cache_dir
+from .. import CONFIG_DIR
 from .confocal import ConfocalClient
 from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
 from ..msgs import confocal_msgs
@@ -241,7 +241,7 @@ class ConfocalTracker(Node):
         return Reply(True)
 
     def _default_params_file(self):
-        return path.join(cache_dir, "track_params.pkl")
+        return path.join(CONFIG_DIR, "confocal_tracker_params.pkl")
 
     def save_params(self, msg: SaveParamsReq):
         fn = self._default_params_file() if msg.file_name is None else msg.file_name
