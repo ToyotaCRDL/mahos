@@ -583,9 +583,13 @@ class InstrumentServer(Node):
                     InstrumentOverlay,
                 )
                 prefix = self.joined_name()
-                self._overlays[lay] = C(lay, conf=conf.resolved_conf(lay), prefix=prefix)
-                conf.add_overlay(lay, self._overlays[lay])
-                self.locks.add_overlay(lay, conf.inst_names(lay))
+                try:
+                    self._overlays[lay] = C(lay, conf=conf.resolved_conf(lay), prefix=prefix)
+                    conf.add_overlay(lay, self._overlays[lay])
+                    self.locks.add_overlay(lay, conf.inst_names(lay))
+                except Exception:
+                    self.logger.exception(f"Failed to initialize {lay}")
+                    self._overlays[lay] = None
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
