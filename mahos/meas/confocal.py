@@ -21,6 +21,7 @@ from ..msgs.param_msgs import GetParamDictReq
 from ..node.node import Node
 from ..node.client import NodeClient
 from ..inst.server import MultiInstrumentClient
+from ..util.timer import IntervalTimer
 from .tweaker import TweakerClient
 from .common_meas import BaseMeasClientMixin
 from .common_worker import DummyWorker, PulseGen_CW, Switch
@@ -310,6 +311,7 @@ class Confocal(Node):
         self.scanner = Scanner(self.cli, self.logger, self.conf.get("scanner", {}))
         self.piezo = Piezo(self.cli, self.logger, self.conf.get("piezo", {}))
         self.tracer = Tracer(self.cli, self.logger, self.conf.get("tracer", {}))
+        self.pub_timer = IntervalTimer(self.conf.get("pub_interval_sec", 0.5))
 
         self.io = ConfocalIO(self.logger)
         self.image_buf = ImageBuffer()
@@ -595,13 +597,17 @@ class Confocal(Node):
         if self._tracer_active(self.state):
             self.tracer.work()
 
-    def _publish(self):
+    def _publish(self, publish_image):
         status = ConfocalStatus(
             state=self.state, pos=self.piezo.get_pos(), tracer_paused=self.tracer.is_paused()
         )
         self.status_pub.publish(status)
         if self._scanner_active(self.state):
-            self.image_pub.publish(self.scanner.image_msg())
+            img = self.scanner.image_msg()
+            # image pub rate is limited here when finished (not running) to avoid
+            # publishing possibly large data at too high-rate
+            if img.running or publish_image:
+                self.image_pub.publish(img)
         if self._tracer_active(self.state):
             self.trace_pub.publish(self.tracer.trace_msg())
 
@@ -613,4 +619,5 @@ class Confocal(Node):
     def main(self):
         self.poll()
         self._work()
-        self._publish()
+        time_to_pub = self.pub_timer.check()
+        self._publish(time_to_pub)
