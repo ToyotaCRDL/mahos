@@ -62,7 +62,11 @@ class RabiFitter(Fitter):
         if fit_params["c"].vary:
             fit_params["c"].set(np.average(ydata))
         if fit_params["A"].vary:
-            fit_params["A"].set(np.max(ydata) - np.average(ydata))
+            A = np.max(ydata) - np.average(ydata)
+            if fit_params["A"].value >= 0.0:
+                fit_params["A"].set(A)
+            else:
+                fit_params["A"].set(-A)
         if fit_params["T"].vary:
             fit_params["T"].set(np.max(xdata))
         if fit_params["f"].vary:
