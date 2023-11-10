@@ -44,6 +44,7 @@ class Sweeper(Worker):
 
         self.check_required_conf(["pd_clock", "block_base", "minimum_block_length"])
         self._pd_clock = self.conf["pd_clock"]
+        self._pd_data_transfer = self.conf.get("pd_data_transfer")
         self._minimum_block_length = self.conf["minimum_block_length"]
         self._block_base = self.conf["block_base"]
         self._start_delay = self.conf.get("start_delay", 0.0)
@@ -514,6 +515,8 @@ class Sweeper(Worker):
             "oversample": oversamp,
             "bounds": params.get("pd_bounds", (-10.0, 10.0)),
         }
+        if self._pd_data_transfer:
+            params_pd["data_transfer"] = self._pd_data_transfer
 
         success = (
             all([pd.configure(params_pd) for pd in self.pds])

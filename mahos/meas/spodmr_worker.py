@@ -447,6 +447,7 @@ class Pulser(Worker):
             ["pd_trigger", "block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]
         )
         self._pd_trigger = self.conf["pd_trigger"]
+        self._pd_data_transfer = self.conf.get("pd_data_transfer")
 
         self.generators = make_generators(
             freq=self.conf["pg_freq"],
@@ -556,6 +557,8 @@ class Pulser(Worker):
             "oversample": self.oversample,
             "bounds": params.get("pd_bounds", (-10.0, 10.0)),
         }
+        if self._pd_data_transfer:
+            params_pd["data_transfer"] = self._pd_data_transfer
 
         if not (
             all([pd.configure(params_pd) for pd in self.pds])

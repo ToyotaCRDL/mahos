@@ -143,6 +143,7 @@ class Tracer(Worker):
         self.oversample = self.conf.get("oversample", 1)
         self.time_window_sec = self.conf.get("time_window_sec", 0.01)
         self.pd_bounds = self.conf.get("pd_bounds", (-10.0, 10.0))
+        self._pd_data_transfer = self.conf.get("pd_data_transfer")
 
         self.trace = Trace(
             size=self.size, channels=len(self.pds), _complex=conf.get("complex", False)
@@ -175,6 +176,8 @@ class Tracer(Worker):
             "oversample": self.oversample,  # only for AnalogIn
             "bounds": self.pd_bounds,  # only for AnalogIn
         }
+        if self._pd_data_transfer:
+            params_pd["data_transfer"] = self._pd_data_transfer
         success = (
             self.clock.configure(params_clock)
             and all([pd.configure(params_pd) for pd in self.pds])

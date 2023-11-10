@@ -71,6 +71,33 @@ def _device_name(ident: str) -> str:
     return ident.strip("/").split("/")[0]
 
 
+def _data_transfer_to_str(mode: int) -> str:
+    if mode == D.DAQmx_Val_DMA:
+        return "dma"
+    elif mode == D.DAQmx_Val_Interrupts:
+        return "interrupts"
+    elif mode == D.DAQmx_Val_ProgrammedIO:
+        return "programmedio"
+    elif mode == D.DAQmx_Val_USBbulk:
+        return "usbbulk"
+    else:
+        return ""
+
+
+def _data_transfer_of_str(mode: str) -> int:
+    mode = mode.lower()
+    if mode == "dma":
+        return D.DAQmx_Val_DMA
+    elif mode == "interrupts":
+        return D.DAQmx_Val_Interrupts
+    elif mode == "programmedio":
+        return D.DAQmx_Val_ProgrammedIO
+    elif mode == "usbbulk":
+        return D.DAQmx_Val_USBbulk
+    else:
+        return 0
+
+
 class ConfigurableTask(Instrument):
     """Base class for configurable DAQ Tasks.
 
@@ -641,6 +668,38 @@ class AnalogIn(ConfigurableTask):
             D.GetDevAIMaxMultiChanRate(_device_name(self.lines[0]), D.byref(rate))
         return rate.value
 
+    def get_data_transfer(self, channel: str) -> str:
+        """Get current transfer mechanism of `channel`.
+
+        :returns: empty when task is not ready or invalid value is returned.
+
+        """
+
+        if self.task is None:
+            return ""
+        mode = D.int32()
+        self.task.GetAIDataXferMech(channel, D.byref(mode))
+        ret = _data_transfer_to_str(mode.value)
+        if not ret:
+            self.logger.error(f"Unknown return value of GetAIDataXferMech: {mode.value}")
+        return ret
+
+    def set_data_transfer(self, channel: str, mode: str) -> bool:
+        """Set current transfer mechanism of `channel`.
+
+        :param mode: one of dma, interrupts, programmedio, or usbbulk.
+
+        """
+
+        if self.task is None:
+            return False
+        m = _data_transfer_of_str(mode)
+        if m == 0:
+            return self.fail_with(f"Invalid data transfer mode: {mode}")
+
+        self.task.SetAIDataXferMech(channel, m)
+        return True
+
     def _append_data(self, data: np.ndarray | list[np.ndarray]):
         if (
             not self.queue.append((data, time.time_ns()) if self._stamp else data)
@@ -792,6 +851,7 @@ class AnalogIn(ConfigurableTask):
                 D.DAQmx_Val_Volts,
                 None,
             )
+
         self.task.SetSampTimingType(_samp_timing_clock_or_ondemand(True))
 
         self.task.CfgSampClkTiming(
@@ -810,6 +870,14 @@ class AnalogIn(ConfigurableTask):
         for i, line in enumerate(self.lines):
             ranges = self._get_ranges(f"AnalogIn{i}")
             self.logger.debug(f"Input voltage ranges of {line}: {ranges}")
+
+            # must set data transfer after CfgSampClkTiming because data transfer can be limited
+            # by sampling method. For example, USBbulk cannot be used in OnDemand mode.
+            if params.get("data_transfer"):
+                if not self.set_data_transfer(f"AnalogIn{i}", params["data_transfer"]):
+                    return False
+            transfer = self.get_data_transfer(f"AnalogIn{i}")
+            self.logger.info(f"DataTransfer of {line}: {transfer}")
 
         if every:
             self.task.AutoRegisterEveryNSamplesEvent(D.DAQmx_Val_Acquired_Into_Buffer, 1, 0)

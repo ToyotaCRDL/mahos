@@ -102,6 +102,8 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
         self.loop_stop_ev = self.loop_thread = None
         self.running = False
 
+        self._pd_data_transfer = self.conf.get("pd_data_transfer")
+
     def get_capability(self):
         return (ScanMode.ANALOG,)
 
@@ -259,6 +261,8 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
             "oversample": self.oversample,  # only for AnalogIn
             "bounds": self.pd_bounds,  # only for AnalogIn
         }
+        if self._pd_data_transfer:
+            params_pd["data_transfer"] = self._pd_data_transfer
 
         success = self.piezo.configure(self.params_piezo) and self.piezo.start_scan(
             self.scan_array[: self.xlen, :]
