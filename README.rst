@@ -56,7 +56,8 @@ Test
 Cite
 ====
 
-It is appreciated you cite the following paper when you publish your research works based on this software.
+It is appreciated you cite `this paper <https://doi.org/10.21105/joss.05938>`_ when you publish
+your research works based on MAHOS. The BibTeX snippet can be copied below.
 
 .. code-block:: bibtex
 
