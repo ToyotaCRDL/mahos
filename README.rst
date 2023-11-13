@@ -2,7 +2,12 @@
 MAHOS
 #####
 
-.. image:: https://github.com/ToyotaCRDL/mahos/actions/workflows/build.yaml/badge.svg
+|build_badge| |paper_badge|
+
+.. |build_badge| image:: https://github.com/ToyotaCRDL/mahos/actions/workflows/build.yaml/badge.svg
+
+.. |paper_badge| image:: https://joss.theoj.org/papers/10.21105/joss.05938/status.svg
+   :target: https://doi.org/10.21105/joss.05938
 
 MAHOS: Measurement Automation Handling and Orchestration System.
 
@@ -47,6 +52,15 @@ Test
 ====
 
 ``pytest``
+
+Cite
+====
+
+It is appreciated you cite the following paper when you publish your research works based on this software.
+
+.. code-block:: bibtex
+
+  @article{Tahara2023, doi = {10.21105/joss.05938}, url = {https://doi.org/10.21105/joss.05938}, year = {2023}, publisher = {The Open Journal}, volume = {8}, number = {91}, pages = {5938}, author = {Kosuke Tahara}, title = {MAHOS: Measurement Automation Handling and Orchestration System}, journal = {Journal of Open Source Software} }
 
 License
 =======
