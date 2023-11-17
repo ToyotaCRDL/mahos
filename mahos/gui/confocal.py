@@ -13,6 +13,7 @@ import os
 from functools import partial
 import uuid
 import typing as T
+import enum
 
 from . import Qt
 from .Qt import QtCore, QtGui, QtWidgets
@@ -1126,6 +1127,41 @@ class MoveBinder(QtCore.QObject):
         self.updated = True
 
 
+class MoveDirection(enum.Enum):
+    Up = 0
+    Down = 1
+    Left = 2
+    Right = 3
+
+
+class GraphicsLayout(pg.GraphicsLayout):
+    # when bool is True (False): fine (coarse) move
+    move = QtCore.pyqtSignal(MoveDirection, bool)
+
+    keys = {
+        QtCore.Qt.Key.Key_Up: MoveDirection.Up,
+        QtCore.Qt.Key.Key_Down: MoveDirection.Down,
+        QtCore.Qt.Key.Key_Left: MoveDirection.Left,
+        QtCore.Qt.Key.Key_Right: MoveDirection.Right,
+        QtCore.Qt.Key.Key_K: MoveDirection.Up,
+        QtCore.Qt.Key.Key_J: MoveDirection.Down,
+        QtCore.Qt.Key.Key_H: MoveDirection.Left,
+        QtCore.Qt.Key.Key_L: MoveDirection.Right,
+        QtCore.Qt.Key.Key_W: MoveDirection.Up,
+        QtCore.Qt.Key.Key_S: MoveDirection.Down,
+        QtCore.Qt.Key.Key_A: MoveDirection.Left,
+        QtCore.Qt.Key.Key_D: MoveDirection.Right,
+    }
+
+    def keyPressEvent(self, e: QtGui.QKeyEvent):
+        if e.key() in self.keys and e.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier:
+            self.move.emit(self.keys[e.key()], False)
+        elif e.key() in self.keys and e.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier:
+            self.move.emit(self.keys[e.key()], True)
+        else:
+            pg.GraphicsLayout.keyPressEvent(self, e)
+
+
 class ConfocalWidget(ClientWidget, Ui_Confocal):
     """Main widget for Confocal (scan and interact)"""
 
@@ -1137,6 +1173,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         gparams_name,
         style: dict,
         invert,
+        key_move_steps,
         move_interval_ms,
         context,
         parent=None,
@@ -1147,6 +1184,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self.confocal_conf = local_conf(gconf, name)
         self._style = style
         self._invert = invert
+        self._key_move_step_fine, self._key_move_step_coarse = key_move_steps
 
         self._finalizing = False
         self._scan_param_dict = None
@@ -1218,11 +1256,11 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         """Initialize views."""
 
         x, y, z = pos.x_tgt, pos.y_tgt, pos.z_tgt
-        self.layout_XY = pg.GraphicsLayout()
+        self.layout_XY = GraphicsLayout()
         self.graphicsView_XY.setCentralItem(self.layout_XY)
-        self.layout_XZ = pg.GraphicsLayout()
+        self.layout_XZ = GraphicsLayout()
         self.graphicsView_XZ.setCentralItem(self.layout_XZ)
-        self.layout_YZ = pg.GraphicsLayout()
+        self.layout_YZ = GraphicsLayout()
         self.graphicsView_YZ.setCentralItem(self.layout_YZ)
 
         self.layout_XY.addLabel("XY", row=0, col=0)
@@ -1488,6 +1526,51 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
 
         for si in (self.XY, self.XZ, self.YZ):
             si.center_roi()
+
+    def key_move_XY(self, direction: MoveDirection, fine: bool):
+        x, y, z = self.get_pos()
+        xinv, yinv = self.XY.get_inverted()
+        step = self._key_move_step_fine if fine else self._key_move_step_coarse
+        if direction == MoveDirection.Up:
+            y += -step if yinv else step
+        elif direction == MoveDirection.Down:
+            y -= -step if yinv else step
+        elif direction == MoveDirection.Left:
+            x -= -step if xinv else step
+        else:  # Right
+            x += -step if xinv else step
+        if self.XY.contains((x, y)):
+            self.move_crosshair((x, y, z))
+
+    def key_move_XZ(self, direction: MoveDirection, fine: bool):
+        x, y, z = self.get_pos()
+        xinv, zinv = self.XZ.get_inverted()
+        step = self._key_move_step_fine if fine else self._key_move_step_coarse
+        if direction == MoveDirection.Up:
+            z += -step if zinv else step
+        elif direction == MoveDirection.Down:
+            z -= -step if zinv else step
+        elif direction == MoveDirection.Left:
+            x -= -step if xinv else step
+        else:  # Right
+            x += -step if xinv else step
+        if self.XZ.contains((x, z)):
+            self.move_crosshair((x, y, z))
+
+    def key_move_YZ(self, direction: MoveDirection, fine: bool):
+        x, y, z = self.get_pos()
+        yinv, zinv = self.YZ.get_inverted()
+        step = self._key_move_step_fine if fine else self._key_move_step_coarse
+        if direction == MoveDirection.Up:
+            z += -step if zinv else step
+        elif direction == MoveDirection.Down:
+            z -= -step if zinv else step
+        elif direction == MoveDirection.Left:
+            y -= -step if yinv else step
+        else:  # Right
+            y += -step if yinv else step
+        if self.YZ.contains((y, z)):
+            self.move_crosshair((x, y, z))
 
     def update_XYbox(self, rect):
         self.XTgtBox.setMinimum(rect.x())
@@ -1933,11 +2016,13 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             self.XZ.switch_interaction(True)
             self.YZ.switch_interaction(True)
             self.switch_TgtBox(True)
+            self.switch_key_move(True)
         elif active(last_state) and not active(state):
             self.XY.switch_interaction(False)
             self.XZ.switch_interaction(False)
             self.YZ.switch_interaction(False)
             self.switch_TgtBox(False)
+            self.switch_key_move(False)
 
     def switch_TgtBox(self, editable):
         for ax in ("X", "Y", "Z"):
@@ -1947,6 +2032,16 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
                 box.editingFinished.connect(getattr(self, ax + "_edited"))
             else:
                 box.editingFinished.disconnect(getattr(self, ax + "_edited"))
+
+    def switch_key_move(self, enable):
+        if enable:
+            self.layout_XY.move.connect(self.key_move_XY)
+            self.layout_XZ.move.connect(self.key_move_XZ)
+            self.layout_YZ.move.connect(self.key_move_YZ)
+        else:
+            self.layout_XY.move.disconnect(self.key_move_XY)
+            self.layout_XZ.move.disconnect(self.key_move_XZ)
+            self.layout_YZ.move.disconnect(self.key_move_YZ)
 
     def switch_PosEdit(self, state):
         """Set PosEdit string for states without polling."""
@@ -2226,6 +2321,10 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
         target = lconf["target"]
         style = lconf.get("style", {})
         invert = lconf.get("invert", (False, False, False))
+        key_move_steps = (
+            lconf.get("key_move_step_fine", 0.02),
+            lconf.get("key_move_step_coarse", 0.10),
+        )
         move_interval_ms = lconf.get("move_interval_ms", 0)
 
         self.confocal = ConfocalWidget(
@@ -2235,6 +2334,7 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
             target["gparams"],
             style,
             invert,
+            key_move_steps,
             move_interval_ms,
             context,
             parent=self,
