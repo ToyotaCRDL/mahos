@@ -273,6 +273,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
             if std:
                 N = data.shape[1]
                 if N == 1:
+                    # avoid nan (zero division)
                     return np.zeros(data.shape[0])
                 return np.std(data, axis=1, ddof=1) / np.sqrt(N)
             else:
