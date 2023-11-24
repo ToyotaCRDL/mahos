@@ -114,7 +114,10 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
                 return None
             if std:
                 N = data.shape[1]
-                return np.std(data, axis=1) / np.sqrt(N)
+                if N == 1:
+                    # avoid nan (zero division)
+                    return np.zeros(data.shape[0])
+                return np.std(data, axis=1, ddof=1) / np.sqrt(N)
             else:
                 return np.mean(data, axis=1)
 
