@@ -119,7 +119,7 @@ class Ui_Camera(object):
         sizePolicy.setHeightForWidth(self.heightBox.sizePolicy().hasHeightForWidth())
         self.heightBox.setSizePolicy(sizePolicy)
         self.heightBox.setMinimum(10)
-        self.heightBox.setMaximum(1080)
+        self.heightBox.setMaximum(1200)
         self.heightBox.setProperty("value", 100)
         self.heightBox.setObjectName("heightBox")
         self.horizontalLayout_3.addWidget(self.heightBox)
