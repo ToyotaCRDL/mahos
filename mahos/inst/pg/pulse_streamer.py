@@ -290,7 +290,7 @@ class PulseStreamerDAQTrigger(PulseStreamer):
         do_conf = {"lines": [self.conf["do_line"]]}
 
         # import here to make PulseStreamer usable on PC without DAQ
-        from .daq import DigitalOut
+        from ..daq import DigitalOut
 
         self._do = DigitalOut(do_name, do_conf, prefix=prefix)
         self._set_idle_logic()
