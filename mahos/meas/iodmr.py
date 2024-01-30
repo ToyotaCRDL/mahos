@@ -43,6 +43,7 @@ class IODMR(BasicMeasNode):
             self.isweeper = ISweeperOverlay(self.cli, self.logger)
 
         self.io = IODMRIO(self.logger)
+        self._manually_stopped = False
 
     def close_resources(self):
         if hasattr(self, "switch"):
@@ -57,6 +58,7 @@ class IODMR(BasicMeasNode):
 
         if msg.state == BinaryState.IDLE:
             success = self.switch.stop() and self.isweeper.stop()
+            self._manually_stopped = True
             if not success:
                 return Reply(False, "Failed to stop internal worker.", ret=self.state)
         elif msg.state == BinaryState.ACTIVE:
@@ -104,8 +106,9 @@ class IODMR(BasicMeasNode):
     def main(self):
         self.poll()
         status = self._work()
-        self._check_stop(status == WorkStatus.Error)
-        self._publish(status == WorkStatus.SweepDone)
+        finished = self._check_finished(status == WorkStatus.Error)
+        # self._publish(status == WorkStatus.SweepDone)
+        self._publish(finished)
 
     def _work(self) -> WorkStatus:
         if self.state == BinaryState.ACTIVE:
@@ -116,8 +119,14 @@ class IODMR(BasicMeasNode):
     def _publish(self, publish_data: bool):
         self.status_pub.publish(BinaryStatus(state=self.state))
         if publish_data:
+            self.logger.info("Publishing the data.")
             self.data_pub.publish(self.isweeper.data_msg())
 
-    def _check_stop(self, stop: bool):
+    def _check_finished(self, stop: bool) -> bool:
+        if self._manually_stopped:
+            self._manually_stopped = False
+            return True
         if self.state == BinaryState.ACTIVE and (stop or self.isweeper.is_finished()):
             self.change_state(StateReq(BinaryState.IDLE))
+            return True
+        return False

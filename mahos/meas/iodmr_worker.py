@@ -250,6 +250,7 @@ class ISweeperDirect(ISweeperBase):
             d.data_sum = frames.astype(np.float64)
             d.data_history = frames_to_line(frames)
         d.sweeps += 1
+        self.logger.info(f"Done sweep #{d.sweeps}.")
 
     def update_frame(self, frame) -> bool:
         """returns True if sweep is done."""
