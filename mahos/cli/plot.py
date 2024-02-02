@@ -243,7 +243,7 @@ def fit_iodmr(args):
     fit_params = {
         "method": args.method,
         "peak": args.peak,
-        "resize": {"width": args.width, "height": args.height},
+        "binning": args.binning,
         "flim": (args.fmin, args.fmax),
         "n_guess": args.n_guess,
         "n_workers": args.n_workers,
@@ -688,8 +688,7 @@ def add_iodmr_fit_parser(sub_parsers):
     )
     p.add_argument("--fmin", type=float, help="Lower bound of frequency (MHz) used for fitting")
     p.add_argument("--fmax", type=float, help="Upper bound of frequency (MHz) used for fitting")
-    p.add_argument("-W", "--width", type=int, help="Resize width")
-    p.add_argument("-H", "--height", type=int, help="Resize height")
+    p.add_argument("-b", "--binning", type=int, default=1, help="Perform binning resize")
     p.add_argument(
         "-g", "--n-guess", type=int, help="Number of samples to use for peak position guess"
     )

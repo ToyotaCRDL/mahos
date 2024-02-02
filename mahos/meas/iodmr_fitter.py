@@ -29,6 +29,7 @@ from ..node.log import DummyLogger
 from ..msgs.iodmr_msgs import IODMRData
 from ..util.timer import StopWatch
 from ..util.nv import Dgs_MHz, gamma_MHz_mT
+from ..util.image import apply_binning
 
 
 def load_modelresult(s: str):
@@ -146,10 +147,14 @@ class IODMRFitResult(object):
         return cls(params, result)
 
     def height(self) -> int:
-        return self.params.get("resize").get("height") or self.params["size"]["height"]
+        # return self.params.get("resize").get("height") or self.params["size"]["height"]
+        binning = self.params.get("binning", 1)
+        return self.params["size"]["height"] // binning
 
     def width(self) -> int:
-        return self.params.get("resize").get("width") or self.params["size"]["width"]
+        # return self.params.get("resize").get("width") or self.params["size"]["width"]
+        binning = self.params.get("binning", 1)
+        return self.params["size"]["width"] // binning
 
     def r(self, h, w) -> ModelResult:
         """Get result at height=h, width=w."""
@@ -321,8 +326,10 @@ class IODMRFitter(object):
             xdata = xdata[indices]
             d = d[indices]
 
-        if "resize" in params:
-            h = params["resize"].get("height", d.shape[1])
-            w = params["resize"].get("width", d.shape[2])
-            d = np.array([cv2.resize(img, (w, h)) for img in d])
+        # if "resize" in params:
+        #     h = params["resize"].get("height", d.shape[1])
+        #     w = params["resize"].get("width", d.shape[2])
+        #     d = np.array([cv2.resize(img, (w, h)) for img in d])
+        if "binning" in params and params["binning"] > 1:
+            d = np.array([apply_binning(img, params["binning"]) for img in d])
         return xdata, d
