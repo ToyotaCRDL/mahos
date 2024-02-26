@@ -83,9 +83,9 @@ class PODMRDataOperator(object):
         sigdelay, sigwidth, refdelay, refwidth = [
             data.params["plot"][k] for k in ("sigdelay", "sigwidth", "refdelay", "refwidth")
         ]
-        margin_head, _ = data.get_roi_margins()
+        roi_head, _ = data.get_roi_margins()
 
-        signal_head = margin_head + sigdelay
+        signal_head = roi_head + sigdelay
         signal_tail = signal_head + sigwidth
         reference_head = signal_tail + refdelay
         reference_tail = reference_head + refwidth
@@ -687,6 +687,20 @@ class Pulser(Worker):
             interval=P.FloatParam(1.0, 0.1, 10.0),
             sweeps=P.IntParam(0, 0, 9999999),
             ident=P.UUIDParam(optional=True, enable=False),
+            roi_head=P.FloatParam(
+                -1e-9,
+                -1e-9,
+                10e6,
+                unit="s",
+                doc="margin at head of ROI. negative value disables ROI.",
+            ),
+            roi_tail=P.FloatParam(
+                -1e-9,
+                -1e-9,
+                10e6,
+                unit="s",
+                doc="margin at tail of ROI. negative value disables ROI.",
+            ),
         )
 
         self._get_param_dict_pulse(label, d)

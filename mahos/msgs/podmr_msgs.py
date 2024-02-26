@@ -165,28 +165,35 @@ class PODMRData(BasicMeasData):
     def get_roi_margins(self) -> tuple[float, float]:
         """ROI margins [head, tail] in sec."""
 
-        return (self.params.get("roi_margin_head", -1.0), self.params.get("roi_margin_tail", -1.0))
+        return (self.params.get("roi_head", -1.0e-9), self.params.get("roi_tail", -1.0e-9))
 
     def get_roi_num(self) -> int:
         margin_head, margin_tail = self.get_roi_margins()
         return round((self.params["laser_width"] + margin_head + margin_tail) / self.get_bin())
 
     def get_roi(self, index: int) -> tuple[int, int]:
-        margin_head, _ = self.get_roi_margins()
-        start = round((self.laser_timing[index] - margin_head) / self.get_bin())
+        head, _ = self.get_roi_margins()
+        start = round((self.laser_timing[index] - head) / self.get_bin())
         stop = start + self.get_roi_num()
         return start, stop
 
     def get_rois(self) -> list[tuple[int, int]]:
-        margin_head, _ = self.get_roi_margins()
+        head, _ = self.get_roi_margins()
         num = self.get_roi_num()
         rois = []
         for t in self.laser_timing:
-            start = round((t - margin_head) / self.get_bin())
+            start = round((t - head) / self.get_bin())
             rois.append((start, start + num))
         return rois
 
-    def get_raw_xdata(self):
+    def get_raw_xdata(self) -> np.ndarray | list[np.ndarray] | None:
+        """get x (time) axis of raw data.
+
+        if roi is enabled, returns list of ndarray for each laser pulses.
+        if roi is disabled, returns single ndarray.
+
+        """
+
         if self.raw_xdata is not None:
             return self.raw_xdata
 
@@ -546,5 +553,11 @@ def update_data(data: PODMRData):
             plot["logY"] = plot["ylogscale"]
             del plot["ylogscale"]
         data.set_version(3)
+
+    if data.version() <= 3:
+        # version 3 to 4
+        ## newly added ROI-related params
+        data.params["roi_head"] = -1.0e-9
+        data.params["roi_tail"] = -1.0e-9
 
     return data

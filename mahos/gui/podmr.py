@@ -258,16 +258,25 @@ class RawPlotWidget(QtWidgets.QWidget):
 
         if self.allBox.isChecked():
             # show whole raw data
+            if data.has_roi():
+                rx = np.concatenate(rx)
+                ry = np.concatenate(ry)
             self.raw_plot.plot(rx, ry)
             plot_markers(0, None)
             return
 
         lstart = self.indexBox.value()
         lstop = min(lstart + self.numBox.value() - 1, laser_pulses - 1)
-        margin = self.marginBox.value()
-        head = data.marker_indices[0][lstart] - margin
-        tail = data.marker_indices[3][lstop] + margin
-        self.raw_plot.plot(rx[head:tail], ry[head:tail])
+
+        if data.has_roi():
+            rx = np.concatenate(rx[lstart : lstop + 1])
+            ry = np.concatenate(ry[lstart : lstop + 1])
+            self.raw_plot.plot(rx, ry)
+        else:
+            margin = self.marginBox.value()
+            head = data.marker_indices[0][lstart] - margin
+            tail = data.marker_indices[3][lstop] + margin
+            self.raw_plot.plot(rx[head:tail], ry[head:tail])
         plot_markers(lstart, lstop + 1)
 
     def refresh(self, data: PODMRData):
@@ -879,11 +888,12 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         else:
             p = params
 
-        # pulser
+        # TDC
         self.binBox.setValue(p.get("timebin", 0.0) * 1e9)  # sec to ns
-
         self.intervalBox.setValue(int(round(p.get("interval", 0.0) * 1e3)))  # sec to ms
         self.sweepsBox.setValue(p.get("sweeps", 0))
+        self.roiheadBox.setValue(p.get("roi_head", -1e-9) * 1e9)  # sec to ns
+        self.roitailBox.setValue(p.get("roi_tail", -1e-9) * 1e9)  # sec to ns
 
         # method
         method = p.get("method", "rabi")
@@ -993,9 +1003,10 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["freq"] = self.freqBox.value() * 1e6  # [MHz] ==> [Hz]
         params["power"] = self.powerBox.value()
         params["timebin"] = self.binBox.value() * 1e-9  # [ns] ==> [sec]
-
         params["interval"] = self.intervalBox.value() * 1e-3  # [ms] ==> [sec]
         params["sweeps"] = self.sweepsBox.value()
+        params["roi_head"] = self.roiheadBox.value() * 1e-9  # ns to sec
+        params["roi_tail"] = self.roitailBox.value() * 1e-9  # ns to sec
 
         params["start"] = self.startBox.value() * 1e-9  # [ns] ==> [sec]
         params["num"] = self.numBox.value()
@@ -1203,6 +1214,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.partialBox,
             self.intervalBox,
             self.sweepsBox,
+            self.roiheadBox,
+            self.roitailBox,
             self.invertsweepBox,
             self.reduceBox,
             self.divideblockBox,
