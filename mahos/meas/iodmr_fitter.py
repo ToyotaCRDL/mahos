@@ -13,10 +13,10 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import json
 from functools import partial
 
-try:
-    import cv2
-except ImportError:
-    print("mahos.meas.iodmr_fitter: failed to import cv2")
+# try:
+#     import cv2
+# except ImportError:
+#     print("mahos.meas.iodmr_fitter: failed to import cv2")
 
 import numpy as np
 from numpy.typing import NDArray
