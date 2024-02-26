@@ -162,6 +162,30 @@ class PODMRData(BasicMeasData):
         except (KeyError, TypeError):
             return None
 
+    def get_roi_margins(self) -> tuple[float, float]:
+        """ROI margins [head, tail] in sec."""
+
+        return (self.params.get("roi_margin_head", -1.0), self.params.get("roi_margin_tail", -1.0))
+
+    def get_roi_num(self) -> int:
+        margin_head, margin_tail = self.get_roi_margins()
+        return round((self.params["laser_width"] + margin_head + margin_tail) / self.get_bin())
+
+    def get_roi(self, index: int) -> tuple[int, int]:
+        margin_head, _ = self.get_roi_margins()
+        start = round((self.laser_timing[index] - margin_head) / self.get_bin())
+        stop = start + self.get_roi_num()
+        return start, stop
+
+    def get_rois(self) -> list[tuple[int, int]]:
+        margin_head, _ = self.get_roi_margins()
+        num = self.get_roi_num()
+        rois = []
+        for t in self.laser_timing:
+            start = round((t - margin_head) / self.get_bin())
+            rois.append((start, start + num))
+        return rois
+
     def get_raw_xdata(self):
         if self.raw_xdata is not None:
             return self.raw_xdata
@@ -169,8 +193,16 @@ class PODMRData(BasicMeasData):
         if (self.raw_data is None) or ("instrument" not in self.params):
             return None
 
-        self.raw_xdata = np.arange(len(self.raw_data)) * self.params["instrument"]["tbin"]
-        return self.raw_xdata
+        if not self.has_roi():
+            self.raw_xdata = np.arange(len(self.raw_data)) * self.get_bin()
+            return self.raw_xdata
+        else:
+            self.raw_xdata = []
+            for i in range(len(self.laser_timing)):
+                start, stop = self.get_roi(i)
+                num = stop - start
+                self.raw_xdata.append(np.arange(num) * self.get_bin() + start)
+            return self.raw_xdata
 
     def get_fit_xdata(self) -> NDArray | None:
         return self.get_xdata(fit=True)
@@ -400,6 +432,10 @@ class PODMRData(BasicMeasData):
 
     # helpers
 
+    def has_roi(self) -> bool:
+        head, tail = self.get_roi_margins()
+        return head >= 0.0 and tail >= 0.0
+
     def sweeps(self) -> float:
         if self.tdc_status is None:
             return 0.0
@@ -416,7 +452,7 @@ class PODMRData(BasicMeasData):
     def has_raw_data(self) -> bool:
         """return True if current data is valid (not empty nor all zero)."""
 
-        return self.raw_data is not None and any(self.raw_data > 0)
+        return self.raw_data is not None and (self.raw_data > 0).any()
 
     def has_data(self) -> bool:
         partial = self.partial()

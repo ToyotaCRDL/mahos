@@ -251,6 +251,21 @@ class MCS(Instrument):
         else:
             return np.array(buf)
 
+    def get_data_roi(self, nDisplay: int, roi: list[tuple[int, int]]) -> list[np.ndarray] | None:
+        data = self.get_data(nDisplay)
+        if data is None:
+            return None
+        data_roi = []
+        for start, stop in roi:
+            d = data[start, stop]
+            # fill up out-of-bounds in ROI with zeros
+            if start < 0:
+                d = np.concatenate((np.zeros(abs(start), dtype=d.dtype), d))
+            if stop > len(data):
+                d = np.concatenate((d, np.zeros(stop - len(data), dtype=d.dtype)))
+            data_roi.append(d)
+        return data_roi
+
     def get_count(self, nDisplay: int) -> np.ndarray | None:
         cnt = (C.c_double * self.MAXCNT)()
         if self.dll.LVGetCnt(cnt, nDisplay) == 0:
@@ -583,6 +598,8 @@ class MCS(Instrument):
             if not isinstance(args, int):
                 self.logger.error('get("data", args): args must be int (channel).')
             return self.get_data(args)
+        elif key == "data_roi":
+            return self.get_data_roi(args["ch"], args["roi"])
         elif key == "status":
             if not isinstance(args, int):
                 self.logger.error('get("status", args): args must be int (channel).')

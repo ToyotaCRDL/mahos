@@ -85,6 +85,11 @@ class TDCInterface(InstrumentInterface):
 
         return self.get("data", ch)
 
+    def get_data_roi(self, ch: int, roi: list[tuple[int, int]]) -> list[np.ndarray] | None:
+        """Get data of channel `ch` using ROI."""
+
+        return self.get("data_roi", {"ch": ch, "roi": roi})
+
     def get_status(self, ch: int):
         """Get status of channel `ch`."""
 
