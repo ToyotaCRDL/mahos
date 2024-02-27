@@ -415,14 +415,10 @@ class E727_3_USB_AO(E727_3_USB):
 
     def shutdown(self) -> bool:
         success = (
-            self.stop()
-            and self.configure({})
-            and self.start()
-            and self.set_target_pos([0.0] * 3)
-            and time.sleep(0.1)
-            and self.stop()
-            and self.set_servo(False)
+            self.stop() and self.configure({}) and self.start() and self.set_target_pos([0.0] * 3)
         )
+        time.sleep(0.1)
+        success &= self.stop() and self.set_servo(False)
 
         self.close_once()
 
