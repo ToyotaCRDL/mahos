@@ -74,7 +74,7 @@ def is_correlation(method: str) -> bool:
 
 class PODMRData(BasicMeasData):
     def __init__(self, params: dict | None = None):
-        self.set_version(3)
+        self.set_version(4)
         self.init_params(params)
         self.init_attrs()
 
@@ -168,16 +168,22 @@ class PODMRData(BasicMeasData):
         return (self.params.get("roi_head", -1.0e-9), self.params.get("roi_tail", -1.0e-9))
 
     def get_roi_num(self) -> int:
+        """get number of points in a ROI."""
+
         margin_head, margin_tail = self.get_roi_margins()
         return round((self.params["laser_width"] + margin_head + margin_tail) / self.get_bin())
 
     def get_roi(self, index: int) -> tuple[int, int]:
+        """get ROI (start, stop) at `index` in unit of time bins."""
+
         head, _ = self.get_roi_margins()
         start = round((self.laser_timing[index] - head) / self.get_bin())
         stop = start + self.get_roi_num()
         return start, stop
 
     def get_rois(self) -> list[tuple[int, int]]:
+        """get list of ROI (start, stop) in unit of time bins for all the laser pulses."""
+
         head, _ = self.get_roi_margins()
         num = self.get_roi_num()
         rois = []
@@ -208,7 +214,7 @@ class PODMRData(BasicMeasData):
             for i in range(len(self.laser_timing)):
                 start, stop = self.get_roi(i)
                 num = stop - start
-                self.raw_xdata.append(np.arange(num) * self.get_bin() + start)
+                self.raw_xdata.append((np.arange(num) + start) * self.get_bin())
             return self.raw_xdata
 
     def get_fit_xdata(self) -> NDArray | None:

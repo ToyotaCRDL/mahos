@@ -359,6 +359,22 @@ class MCS_mock(Instrument):
         data = np.random.normal(0.0, 1.0, size=self._range)
         return data
 
+    def get_data_roi(self, nDisplay: int, roi: list[tuple[int, int]]) -> list[np.ndarray] | None:
+        data = self.get_data(nDisplay)
+        if data is None:
+            return None
+        data_roi = []
+        for start, stop in roi:
+            # fill up out-of-bounds in ROI with zeros
+            if start < 0:
+                d = np.concatenate((np.zeros(abs(start), dtype=data.dtype), data[:stop]))
+            else:
+                d = data[start:stop]
+            if stop > len(data):
+                d = np.concatenate((d, np.zeros(stop - len(data), dtype=data.dtype)))
+            data_roi.append(d)
+        return data_roi
+
     def get_status(self, nDisplay: int):
         status = self.ACQSTATUS()
         self._sweeps += 1.0
@@ -398,6 +414,8 @@ class MCS_mock(Instrument):
             if not isinstance(args, int):
                 self.logger.error('get("data", args): args must be int (channel).')
             return self.get_data(args)
+        elif key == "data_roi":
+            return self.get_data_roi(args["ch"], args["roi"])
         elif key == "status":
             if not isinstance(args, int):
                 self.logger.error('get("status", args): args must be int (channel).')

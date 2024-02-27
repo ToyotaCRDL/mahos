@@ -64,7 +64,7 @@ class PODMRDataOperator(object):
         reference_head = signal_tail + refdelay
         reference_tail = reference_head + refwidth
 
-        # [sec] ==> index
+        # sec to time bin index
         signal_head = np.round(signal_head / tbin).astype(np.int64)
         signal_tail = np.round(signal_tail / tbin).astype(np.int64)
         reference_head = np.round(reference_head / tbin).astype(np.int64)
@@ -72,31 +72,6 @@ class PODMRDataOperator(object):
 
         data.marker_indices = np.vstack((signal_head, signal_tail, reference_head, reference_tail))
         return data.marker_indices
-
-    def get_indices_roi(self, data: PODMRData):
-        """get analysis indices for ROI-enabled case."""
-
-        tbin = data.get_bin()
-        if data.params is None or tbin is None:
-            return None
-
-        sigdelay, sigwidth, refdelay, refwidth = [
-            data.params["plot"][k] for k in ("sigdelay", "sigwidth", "refdelay", "refwidth")
-        ]
-        roi_head, _ = data.get_roi_margins()
-
-        signal_head = roi_head + sigdelay
-        signal_tail = signal_head + sigwidth
-        reference_head = signal_tail + refdelay
-        reference_tail = reference_head + refwidth
-
-        # [sec] ==> index
-        signal_head = round(signal_head / tbin)
-        signal_tail = round(signal_tail / tbin)
-        reference_head = round(reference_head / tbin)
-        reference_tail = round(reference_tail / tbin)
-
-        return signal_head, signal_tail, reference_head, reference_tail
 
     def analyze(self, data: PODMRData) -> bool:
         if not data.has_raw_data() or data.marker_indices is None or data.tdc_status.sweeps < 1.0:
@@ -114,102 +89,104 @@ class PODMRDataOperator(object):
                 return self._analyze_complementary_noroi(data)
 
     def _analyze_partial_roi(self, data: PODMRData) -> bool:
-        signal = np.zeros(len(data.xdata))
-        reference = np.zeros(len(data.xdata))
-        signal_head, signal_tail, reference_head, reference_tail = self.get_indices_roi(data)
+        sig = np.zeros(len(data.xdata))
+        ref = np.zeros(len(data.xdata))
+        sig_head, sig_tail, ref_head, ref_tail = data.marker_indices
 
         for i, d in enumerate(data.raw_data):
+            s, _ = data.get_roi(i)
             try:
-                signal[i] = np.mean(d[signal_head : signal_tail + 1])
+                sig[i] = np.mean(d[sig_head[i] - s : sig_tail[i] - s + 1])
             except IndexError as e:
                 print("analyze_sig (sig %d): %r" % (i, e))
 
             try:
-                reference[i] = np.mean(d[reference_head : reference_tail + 1])
+                ref[i] = np.mean(d[ref_head[i] - s : ref_tail[i] - s + 1])
             except IndexError as e:
                 print("analyze_sig (ref %d): %r" % (i, e))
 
         sweeps = data.tdc_status.sweeps
         if data.partial() == 0:
-            data.data0 = signal / sweeps
-            data.data0ref = reference / sweeps
+            data.data0 = sig / sweeps
+            data.data0ref = ref / sweeps
         else:  # assert data.partial() == 1
-            data.data1 = signal / sweeps
-            data.data1ref = reference / sweeps
+            data.data1 = sig / sweeps
+            data.data1ref = ref / sweeps
 
         return True
 
     def _analyze_partial_noroi(self, data: PODMRData) -> bool:
-        signal = np.zeros(len(data.xdata))
-        reference = np.zeros(len(data.xdata))
-        signal_head, signal_tail, reference_head, reference_tail = data.marker_indices
+        sig = np.zeros(len(data.xdata))
+        ref = np.zeros(len(data.xdata))
+        sig_head, sig_tail, ref_head, ref_tail = data.marker_indices
 
         for i in range(len(data.xdata)):
             try:
-                signal[i] = np.mean(data.raw_data[signal_head[i] : signal_tail[i] + 1])
+                sig[i] = np.mean(data.raw_data[sig_head[i] : sig_tail[i] + 1])
             except IndexError as e:
                 print("analyze_sig (sig %d): %r" % (i, e))
 
             try:
-                reference[i] = np.mean(data.raw_data[reference_head[i] : reference_tail[i] + 1])
+                ref[i] = np.mean(data.raw_data[ref_head[i] : ref_tail[i] + 1])
             except IndexError as e:
                 print("analyze_sig (ref %d): %r" % (i, e))
 
         sweeps = data.tdc_status.sweeps
         if data.partial() == 0:
-            data.data0 = signal / sweeps
-            data.data0ref = reference / sweeps
+            data.data0 = sig / sweeps
+            data.data0ref = ref / sweeps
         else:  # assert data.partial() == 1
-            data.data1 = signal / sweeps
-            data.data1ref = reference / sweeps
+            data.data1 = sig / sweeps
+            data.data1ref = ref / sweeps
 
         return True
 
     def _analyze_complementary_roi(self, data: PODMRData) -> bool:
-        signal = np.zeros(len(data.xdata) * 2)
-        reference = np.zeros(len(data.xdata) * 2)
-        signal_head, signal_tail, reference_head, reference_tail = self.get_indices_roi(data)
+        sig = np.zeros(len(data.xdata) * 2)
+        ref = np.zeros(len(data.xdata) * 2)
+        sig_head, sig_tail, ref_head, ref_tail = data.marker_indices
 
         for i, d in enumerate(data.raw_data):
+            s, _ = data.get_roi(i)
             try:
-                signal[i] = np.mean(d[signal_head : signal_tail + 1])
+                sig[i] = np.mean(d[sig_head[i] - s : sig_tail[i] - s + 1])
             except IndexError as e:
                 print("analyze_sig (sig %d): %r" % (i, e))
 
             try:
-                reference[i] = np.mean(d[reference_head : reference_tail + 1])
+                ref[i] = np.mean(d[ref_head[i] - s : ref_tail[i] - s + 1])
             except IndexError as e:
                 print("analyze_sig (ref %d): %r" % (i, e))
 
         sweeps = data.tdc_status.sweeps
-        data.data0 = signal[0::2] / sweeps
-        data.data1 = signal[1::2] / sweeps
-        data.data0ref = reference[0::2] / sweeps
-        data.data1ref = reference[1::2] / sweeps
+        data.data0 = sig[0::2] / sweeps
+        data.data1 = sig[1::2] / sweeps
+        data.data0ref = ref[0::2] / sweeps
+        data.data1ref = ref[1::2] / sweeps
 
         return True
 
     def _analyze_complementary_noroi(self, data: PODMRData) -> bool:
-        signal = np.zeros(len(data.xdata) * 2)
-        reference = np.zeros(len(data.xdata) * 2)
-        signal_head, signal_tail, reference_head, reference_tail = data.marker_indices
+        sig = np.zeros(len(data.xdata) * 2)
+        ref = np.zeros(len(data.xdata) * 2)
+        sig_head, sig_tail, ref_head, ref_tail = data.marker_indices
 
         for i in range(len(data.xdata) * 2):
             try:
-                signal[i] = np.mean(data.raw_data[signal_head[i] : signal_tail[i] + 1])
+                sig[i] = np.mean(data.raw_data[sig_head[i] : sig_tail[i] + 1])
             except IndexError as e:
                 print("analyze_sig (sig %d): %r" % (i, e))
 
             try:
-                reference[i] = np.mean(data.raw_data[reference_head[i] : reference_tail[i] + 1])
+                ref[i] = np.mean(data.raw_data[ref_head[i] : ref_tail[i] + 1])
             except IndexError as e:
                 print("analyze_sig (ref %d): %r" % (i, e))
 
         sweeps = data.tdc_status.sweeps
-        data.data0 = signal[0::2] / sweeps
-        data.data1 = signal[1::2] / sweeps
-        data.data0ref = reference[0::2] / sweeps
-        data.data1ref = reference[1::2] / sweeps
+        data.data0 = sig[0::2] / sweeps
+        data.data1 = sig[1::2] / sweeps
+        data.data0ref = ref[0::2] / sweeps
+        data.data1ref = ref[1::2] / sweeps
 
         return True
 

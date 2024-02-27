@@ -229,9 +229,27 @@ class RawPlotWidget(QtWidgets.QWidget):
         self.setLayout(vl)
 
     def plot_raw(self, data: PODMRData):
-        def plot_markers(start, stop):
-            brushes = ((255, 0, 0), (255, 128, 0), (0, 0, 255), (0, 128, 255))
-            for inds, brush in zip(data.marker_indices, brushes):
+        # sig_head, sig_tail, ref_head, ref_tail
+        BRUSHES = ((255, 0, 0), (255, 128, 0), (0, 0, 255), (0, 128, 255))
+
+        def plot_markers_roi(rx, ry, start, stop):
+            for inds, brush in zip(data.marker_indices, BRUSHES):
+                x = []
+                y = []
+                try:
+                    for i, ((roi_start, _), idx) in enumerate(
+                        zip(data.get_rois()[start:stop], inds[start:stop])
+                    ):
+                        x.append(rx[start + i][idx - roi_start])
+                        y.append(ry[start + i][idx - roi_start])
+                except IndexError:
+                    continue
+                self.raw_plot.plot(
+                    x, y, pen=None, symbolPen=None, symbol="o", symbolSize=8, symbolBrush=brush
+                )
+
+        def plot_markers(rx, ry, start, stop):
+            for inds, brush in zip(data.marker_indices, BRUSHES):
                 x = np.array([rx[i] for i in inds[start:stop]])
                 y = np.array([ry[i] for i in inds[start:stop]])
                 self.raw_plot.plot(
@@ -259,25 +277,27 @@ class RawPlotWidget(QtWidgets.QWidget):
         if self.allBox.isChecked():
             # show whole raw data
             if data.has_roi():
-                rx = np.concatenate(rx)
-                ry = np.concatenate(ry)
-            self.raw_plot.plot(rx, ry)
-            plot_markers(0, None)
+                self.raw_plot.plot(np.concatenate(rx), np.concatenate(ry))
+                plot_markers_roi(rx, ry, 0, None)
+            else:
+                self.raw_plot.plot(rx, ry)
+                plot_markers(rx, ry, 0, None)
             return
 
         lstart = self.indexBox.value()
         lstop = min(lstart + self.numBox.value() - 1, laser_pulses - 1)
 
         if data.has_roi():
-            rx = np.concatenate(rx[lstart : lstop + 1])
-            ry = np.concatenate(ry[lstart : lstop + 1])
-            self.raw_plot.plot(rx, ry)
+            self.raw_plot.plot(
+                np.concatenate(rx[lstart : lstop + 1]), np.concatenate(ry[lstart : lstop + 1])
+            )
+            plot_markers_roi(rx, ry, lstart, lstop + 1)
         else:
             margin = self.marginBox.value()
             head = data.marker_indices[0][lstart] - margin
             tail = data.marker_indices[3][lstop] + margin
             self.raw_plot.plot(rx[head:tail], ry[head:tail])
-        plot_markers(lstart, lstop + 1)
+            plot_markers(rx, ry, lstart, lstop + 1)
 
     def refresh(self, data: PODMRData):
         try:

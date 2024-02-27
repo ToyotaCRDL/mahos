@@ -257,12 +257,13 @@ class MCS(Instrument):
             return None
         data_roi = []
         for start, stop in roi:
-            d = data[start, stop]
             # fill up out-of-bounds in ROI with zeros
             if start < 0:
-                d = np.concatenate((np.zeros(abs(start), dtype=d.dtype), d))
+                d = np.concatenate((np.zeros(abs(start), dtype=data.dtype), data[:stop]))
+            else:
+                d = data[start:stop]
             if stop > len(data):
-                d = np.concatenate((d, np.zeros(stop - len(data), dtype=d.dtype)))
+                d = np.concatenate((d, np.zeros(stop - len(data), dtype=data.dtype)))
             data_roi.append(d)
         return data_roi
 
