@@ -15,6 +15,7 @@ available class(es):
 
 from __future__ import annotations
 from itertools import product
+import time
 
 import numpy as np
 from pipython import GCSDevice
@@ -418,6 +419,7 @@ class E727_3_USB_AO(E727_3_USB):
             and self.configure({})
             and self.start()
             and self.set_target_pos([0.0] * 3)
+            and time.sleep(0.1)
             and self.stop()
             and self.set_servo(False)
         )
