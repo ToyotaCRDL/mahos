@@ -10,7 +10,7 @@ Qt signal-based clients of Pulse ODMR.
 
 from .Qt import QtCore
 
-from ..msgs.podmr_msgs import PODMRData
+from ..msgs.podmr_msgs import PODMRData, PODMRStatus
 from ..msgs.podmr_msgs import UpdatePlotParamsReq, ValidateReq, DiscardReq
 from .client import QBasicMeasClient
 
@@ -18,6 +18,7 @@ from .client import QBasicMeasClient
 class QPODMRClient(QBasicMeasClient):
     """Qt-based client for PODMR."""
 
+    statusUpdated = QtCore.pyqtSignal(PODMRStatus)
     dataUpdated = QtCore.pyqtSignal(PODMRData)
     stopped = QtCore.pyqtSignal(PODMRData)
 

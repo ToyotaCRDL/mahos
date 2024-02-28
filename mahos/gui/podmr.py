@@ -27,10 +27,10 @@ from .ui.podmr_indicator import Ui_PODMRIndicator
 from .ui.podmr_autosave import Ui_PODMRAutoSave
 from .podmr_client import QPODMRClient
 
-from ..msgs.common_msgs import BinaryState, BinaryStatus
+from ..msgs.common_msgs import BinaryState
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import FloatParam
-from ..msgs.podmr_msgs import PODMRData, is_CPlike
+from ..msgs.podmr_msgs import PODMRStatus, PODMRData, is_CPlike
 from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientWidget
@@ -530,6 +530,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         self._finalizing = False
         self._has_fg = False
+        self._pg_freq = None
 
         self.init_radiobuttons()
         self.init_widgets()
@@ -605,11 +606,15 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.refdelayBox.setValue(2200)
         self.refwidthBox.setValue(2400)
 
-    def init_with_status(self, status: BinaryStatus):
+    def init_with_status(self, status: PODMRStatus):
         """initialize widget after receiving first status."""
 
         # only once.
         self.cli.statusUpdated.disconnect(self.init_with_status)
+
+        self._pg_freq = status.pg_freq
+        self.pgfreqLabel.setText(f"PG freq: {self._pg_freq*1e-9:.2f} GHz")
+        self.update_timing_box_step()
 
         self.init_widgets_with_params()
         self.init_connection()
@@ -1116,7 +1121,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.cli.stop()
 
     def request_start(self):
-        self.round_box_values()
+        self.round_timing_box_values()
 
         if self.validate_pulse():
             self.start()
@@ -1306,23 +1311,49 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
     def has_fg(self):
         return self._has_fg
 
-    def round_box_values(self):
-        """check and round to half-integer values of QDoubleSpinBox for timing parameters."""
-
-        widthboxes = (
+    def timing_boxes(self):
+        return (
             self.startBox,
             self.stepBox,
             self.tauconstBox,
+            self.tau2constBox,
             self.basewidthBox,
             self.ldelayBox,
             self.lwidthBox,
             self.mdelayBox,
-            self.iqdelayBox,
+            self.trigwidthBox,
+            self.initdelayBox,
+            self.finaldelayBox,
             self.tpwidthBox,
             self.tp2widthBox,
+            self.iqdelayBox,
         )
-        for b in widthboxes:
-            b.setValue(round_halfint(b.value()))
+
+    def update_timing_box_step(self):
+        if round(self._pg_freq) == round(2.0e9):
+            step = 0.5
+        elif round(self._pg_freq) == round(1.0e9):
+            step = 1.0
+        else:
+            print(f"Cannot determine timing box step with PG freq {self._pg_freq*1e-9:.2f} GHz")
+            step = 1.0
+
+        for b in self.timing_boxes():
+            b.setSingleStep(step)
+
+    def round_timing_box_values(self):
+        """check and round values of QDoubleSpinBox for timing parameters."""
+
+        if round(self._pg_freq) == round(2.0e9):
+            _round = round_halfint
+        elif round(self._pg_freq) == round(1.0e9):
+            _round = round
+        else:
+            print(f"Cannot determine round method with PG freq {self._pg_freq*1e-9:.2f} GHz")
+            _round = round
+
+        for b in self.timing_boxes():
+            b.setValue(_round(b.value()))
 
     METHODS = (
         "rabi",

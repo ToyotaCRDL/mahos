@@ -10,12 +10,12 @@ Logic and instrument control part of Pulse ODMR.
 
 from __future__ import annotations
 
-from ..msgs.common_msgs import Reply, Request, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Reply, Request, StateReq, BinaryState
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import GetParamDictLabelsReq, GetParamDictReq
 from ..msgs import podmr_msgs
-from ..msgs.podmr_msgs import PODMRData, UpdatePlotParamsReq, ValidateReq, DiscardReq
+from ..msgs.podmr_msgs import PODMRStatus, PODMRData, UpdatePlotParamsReq, ValidateReq, DiscardReq
 from ..util.timer import IntervalTimer
 from .tweaker import TweakerClient
 from .common_meas import BasicMeasClient, BasicMeasNode
@@ -63,7 +63,7 @@ class PODMR(BasicMeasNode):
             is switched at T // F. Thus, larger F results in "quicker start" of the phase
             modulation (depending on hardware, but its response may be a bit slow).
         :type pulser.split_fraction: int
-        :param pulser.pg_freq: pulse generator frequency (has preset)
+        :param pulser.pg_freq: (has preset) pulse generator frequency
         :type pulser.pg_freq: float
         :param pulser.reduce_start_divisor: (has preset) the divisor on start of reducing frequency
             reduce is done first by this value, and then repeated by 10.
@@ -218,7 +218,7 @@ class PODMR(BasicMeasNode):
             self.worker.work()
 
     def _publish(self, publish_data: bool, publish_other: bool):
-        self.status_pub.publish(BinaryStatus(state=self.state))
+        self.status_pub.publish(PODMRStatus(state=self.state, pg_freq=self.worker.conf["pg_freq"]))
         if publish_data:
             self.data_pub.publish(self.worker.data_msg())
         if publish_other:
