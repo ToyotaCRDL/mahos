@@ -29,6 +29,10 @@ class PulseStreamer(Instrument):
         When analog.channels[0] is L and analog.channels[1] is H, output A0 = -0.5 V, A1 = 0.0 V.
         It's also possible to use more than two channels.
     :type analog.values: dict[str, tuple[float, float]]
+    :param ext_ref_clock: external reference clock source.
+        Set 10 for 10 MHz or 125 for 125 MHz.
+        All the other values are considered `disable` (internal clock source is used).
+    :type ext_ref_clock: int
 
     """
 
@@ -48,13 +52,12 @@ class PulseStreamer(Instrument):
             self.analog_values = {}
 
         self.ps = pulsestreamer.PulseStreamer(self.conf["resource"])
+
         self.sequence = None
         self.n_runs = None
-
         # last total block length and offsets.
         self.length = 0
         self.offsets = None
-
         self._trigger_type = None
 
         self.logger.info(
@@ -62,6 +65,17 @@ class PulseStreamer(Instrument):
                 self.conf["resource"], self.ps.getSerial()
             )
         )
+
+        clk = conf.get("ext_ref_clock", 0)
+        if clk == 10:
+            self.ps.selectClock(pulsestreamer.ClockSource.EXT_10MHZ)
+            self.logger.info("External clock at 10 MHz.")
+        elif clk == 125:
+            self.ps.selectClock(pulsestreamer.ClockSource.EXT_125MHZ)
+            self.logger.info("External clock at 125 MHz.")
+        else:
+            self.ps.selectClock(pulsestreamer.ClockSource.INTERNAL)
+            self.logger.info("Internal clock.")
 
     def channels_to_ints(self, channels) -> list[int]:
         """NOTE: if channels is a container, channels in analog_channels are excluded."""
