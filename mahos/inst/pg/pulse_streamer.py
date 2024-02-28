@@ -284,7 +284,10 @@ class PulseStreamer(Instrument):
         elif key == "opc":  # for API compatibility
             return True
         elif key == "validate":  # for API compatibility
-            return True
+            if "blocks" in args:
+                return [0] * len(args["blocks"])
+            elif "blockseq" in args:
+                return [0]
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
