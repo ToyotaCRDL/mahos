@@ -311,6 +311,7 @@ class Pulser(Worker):
                 ("pg_freq", 2.0e9),
                 ("reduce_start_divisor", 2),
                 ("minimum_block_length", 1000),
+                ("divide_block", True),
             ],
         )
         loader.add_preset(
@@ -320,6 +321,7 @@ class Pulser(Worker):
                 ("pg_freq", 1.0e9),
                 ("reduce_start_divisor", 10),
                 ("minimum_block_length", 1),
+                ("divide_block", False),
             ],
         )
         loader.load_preset(self.conf, cli.class_name("pg"))
@@ -408,7 +410,10 @@ class Pulser(Worker):
         if data is None:
             data = self.data
         generate = self.generators[data.params["method"]].generate
-        return generate(data.xdata, data.get_pulse_params())
+        params = data.get_pulse_params()
+        if not self.conf.get("divide_block", False) and params["divide_block"]:
+            self.logger.warn("divide_block is recommended to be False.")
+        return generate(data.xdata, params)
 
     def validate_params(
         self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]
@@ -579,7 +584,7 @@ class Pulser(Worker):
         d["invertsweep"] = P.BoolParam(False)
         d["nomw"] = P.BoolParam(False)
         d["enable_reduce"] = P.BoolParam(False)
-        d["divide_block"] = P.BoolParam(True)
+        d["divide_block"] = P.BoolParam(self.conf.get("divide_block", False))
         d["partial"] = P.IntParam(-1, -1, 1)
 
         ## sweep params (tau / N)

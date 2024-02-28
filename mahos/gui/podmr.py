@@ -611,7 +611,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         # only once.
         self.cli.statusUpdated.disconnect(self.init_with_status)
 
-        self.update_inst_bounds()
+        self.init_widgets_with_params()
         self.init_connection()
         self.fit.init_with_status()
 
@@ -666,7 +666,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
     def update_indicator(self):
         self.indicator.update(self.data)
 
-    def update_inst_bounds(self):
+    def init_widgets_with_params(self):
         params = self.cli.get_param_dict("rabi")
         if "power" in params:
             power: FloatParam = params["power"]
@@ -696,6 +696,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.fg_freqBox.setValue(freq.value() * 1e-6)
         else:
             self._has_fg = False
+
+        self.divideblockBox.setChecked(params["divide_block"].value())
 
     def update_plot_enable(self, enable: bool):
         for w in (
@@ -948,7 +950,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.nomwBox.setChecked(p.get("nomw", False))
         self.invertinitBox.setChecked(p.get("invertinit", False))
         self.reduceBox.setChecked(p.get("enable_reduce", False))
-        self.divideblockBox.setChecked(p.get("divide_block", True))
+        self.divideblockBox.setChecked(p.get("divide_block", False))
         partial = p.get("partial")
         if partial in (0, 1):
             self.partialBox.setCurrentIndex(partial + 1)
