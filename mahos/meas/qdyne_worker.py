@@ -252,6 +252,7 @@ class Pulser(Worker):
                 ("pg_freq", 2.0e9),
                 ("reduce_start_divisor", 2),
                 ("minimum_block_length", 1000),
+                ("divide_block", True),
             ],
         )
         loader.add_preset(
@@ -261,6 +262,7 @@ class Pulser(Worker):
                 ("pg_freq", 1.0e9),
                 ("reduce_start_divisor", 10),
                 ("minimum_block_length", 1),
+                ("divide_block", False),
             ],
         )
         loader.load_preset(self.conf, cli.class_name("pg"))
@@ -532,7 +534,7 @@ class Pulser(Worker):
         ## common switches
         d["nomw"] = P.BoolParam(False)
         d["enable_reduce"] = P.BoolParam(False)
-        d["divide_block"] = P.BoolParam(True)
+        d["divide_block"] = P.BoolParam(self.conf.get("divide_block", False))
         # partial == -1 (complementary) is not allowed for Qdyne.
         d["partial"] = P.IntParam(0, 0, 1)
 

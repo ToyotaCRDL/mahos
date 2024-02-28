@@ -75,6 +75,8 @@ class Qdyne(BasicMeasNode):
         :type pulser.minimum_block_length: int
         :param pulser.block_base: (has preset) block base granularity of pulse generator.
         :type pulser.block_base: int
+        :param pulser.divide_block: (has preset) Default value of divide_block.
+        :type pulser.divide_block: bool
 
         """
 
