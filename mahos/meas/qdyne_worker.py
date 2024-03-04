@@ -104,7 +104,8 @@ class BlocksBuilder(object):
         # shaping blocks
         if divide:
             blocks = K.divide_long_operation(blocks, minimum_block_length, block_base)
-            blocks = K.divide_long_laser(blocks, minimum_block_length)
+            # divide_long_laser doesn't work due to trigger injection above.
+            # blocks = K.divide_long_laser(blocks, minimum_block_length)
         blocks = K.merge_short_blocks(blocks, minimum_block_length)
 
         blocks = blocks.simplify()
