@@ -33,6 +33,10 @@ class PulseStreamer(Instrument):
         Set 10 for 10 MHz or 125 for 125 MHz.
         All the other values are considered `disable` (internal clock source is used).
     :type ext_ref_clock: int
+    :param strict: (default: True) If True, check generated data strictly.
+        Since offset will not be allowed in strict mode, the pulse pattern data must have
+        total length of integer multiple of 8 ns.
+    :type strict: bool
 
     """
 
@@ -50,6 +54,7 @@ class PulseStreamer(Instrument):
         else:
             self.analog_channels = []
             self.analog_values = {}
+        self._strict = conf.get("strict", True)
 
         self.ps = pulsestreamer.PulseStreamer(self.conf["resource"])
 
@@ -142,6 +147,61 @@ class PulseStreamer(Instrument):
 
         return seq
 
+    def _scale_blocks(self, blocks: Blocks[Block], freq: float) -> Blocks[Block] | None:
+        """Return scaled blocks according to freq, or None if any failure."""
+
+        freq = round(freq)
+        base_freq = round(1.0e9)
+        if freq > base_freq:
+            self.logger.error("PulseStreamer's max freq is 1 GHz.")
+            return None
+        if base_freq % freq:
+            self.logger.error("freq must be a divisor of 1 GHz.")
+            return None
+        scale = base_freq // freq
+        if scale > 1:
+            self.logger.info(f"Scaling the blocks by {scale}")
+            return blocks.scale(scale)
+        else:
+            return blocks
+
+    def _adjust_blocks(self, blocks: Blocks[Block]) -> list[int] | None:
+        """(mutating) adjust block length so that total_length becomes N * 8 (ns).
+
+        :returns: list of offset values, or None if any failure.
+
+        """
+
+        remainder = blocks.total_length() % 8
+        if self._strict and remainder:
+            self.logger.error("blocks' total_length is not integer multiple of 8.")
+            return None
+        if not remainder:
+            return [0] * len(blocks)
+
+        lb = blocks[-1]
+        if lb.Nrep != 1:
+            msg = "blocks' total_length is not integer multiple of 8 and"
+            msg += f" last block's Nrep is not 1 ({lb.Nrep})."
+            self.logger.error(msg)
+            return None
+        dur = lb.pattern[-1].duration
+        offset = 8 - remainder
+        lb.update_duration(-1, dur + offset)
+        self.logger.warn(f"Adjusted last block by offset {offset}.")
+        return [0] * (len(blocks) - 1) + [offset]
+
+    def validate_blocks(self, blocks: Blocks[Block], freq: float) -> list[int] | None:
+        blocks = self._scale_blocks(blocks, freq)
+        if blocks is None:
+            return None
+        return self._adjust_blocks(blocks)
+
+    def validate_blockseq(self, blockseq: BlockSeq[Block], freq: float) -> list[int] | None:
+        # Since PulseStreamer doesn't have loop control mechanism,
+        # given BlockSeq is equivalent to collapsed one.
+        return self.validate_blocks(Blocks([blockseq.collapse()]), freq)
+
     def configure_blocks(
         self,
         blocks: Blocks[Block],
@@ -151,16 +211,9 @@ class PulseStreamer(Instrument):
     ) -> bool:
         """Make sequence from blocks."""
 
-        freq = round(freq)
-        base_freq = round(1.0e9)
-        if freq > base_freq:
-            return self.fail_with("PulseStreamer's max freq is 1 GHz.")
-        if base_freq % freq:
-            return self.fail_with("freq must be a divisor of 1 GHz.")
-        scale = base_freq // freq
-        if scale > 1:
-            self.logger.info(f"Scaling the blocks by {scale}")
-            blocks = blocks.scale(scale)
+        blocks = self._scale_blocks(blocks, freq)
+        if blocks is None:
+            return False
 
         trigger = self._extract_trigger_blocks(blocks)
         if trigger is None:
@@ -187,21 +240,24 @@ class PulseStreamer(Instrument):
         else:
             self.n_runs = int(n_runs)
 
+        self.offsets = self._adjust_blocks(blocks)
+        if self.offsets is None:
+            return False
+        self.length = blocks.total_length()
+
         try:
             self.sequence = self._generate_seq_blocks(blocks)
         except ValueError:
             self.logger.exception("Failed to generate sequence. Check channel name settings.")
             return False
 
-        self.length = blocks.total_length()
-        # offsets is for DTG-compatibility.
-        self.offsets = [0] * len(blocks)
-
         # sanity check
         if self.sequence.getDuration() != self.length:
             return self.fail_with("length is not correct. Debug _generate_seq_blocks().")
 
-        self.logger.info(f"Configured sequence. length: {self.length} trigger: {trigger}")
+        msg = f"Configured sequence. length: {self.length} offset: {self.offsets[-1]}"
+        msg += f" trigger: {trigger}"
+        self.logger.info(msg)
         return True
 
     def configure_blockseq(
@@ -284,10 +340,13 @@ class PulseStreamer(Instrument):
         elif key == "opc":  # for API compatibility
             return True
         elif key == "validate":  # for API compatibility
-            if "blocks" in args:
-                return [0] * len(args["blocks"])
-            elif "blockseq" in args:
-                return [0]
+            if "blocks" in args and "freq" in args:
+                return self.validate_blocks(args["blocks"], args["freq"])
+            elif "blockseq" in args and "freq" in args:
+                return self.validate_blockseq(args["blockseq"], args["freq"])
+            else:
+                self.logger.error(f"Invalid args for get(validate): {args}")
+                return None
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
