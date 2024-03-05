@@ -65,6 +65,7 @@ class PlotWidget(QtWidgets.QWidget):
         self._yunit: str = ""
         self.init_ui()
         self.init_view()
+        self._error_bar_items = []
 
     def sizeHint(self):
         return QtCore.QSize(1600, 1200)
@@ -153,8 +154,22 @@ class PlotWidget(QtWidgets.QWidget):
         self.img.setPos(data.params["start"], 0.0)
         self.img.setTransform(QtGui.QTransform.fromScale(data.step(), 1.0))
 
+    def add_error_bar(self, x, y, height, pen):
+        item = pg.ErrorBarItem(x=x, y=y, height=height, pen=pen)
+        self.plot.addItem(item)
+        self._error_bar_items.append(item)
+
+    def clear_error_bars(self):
+        if not self._error_bar_items:
+            return
+
+        for item in self._error_bar_items:
+            self.plot.removeItem(item)
+        self._error_bar_items = []
+
     def update_plot(self, data_list: list[tuple[ODMRData, bool, Colors]]):
-        self.plot.clear()
+        self.plot.clearPlots()
+        self.clear_error_bars()
 
         for data, show_fit, c in data_list:
             x = data.get_xdata()
@@ -183,9 +198,9 @@ class PlotWidget(QtWidgets.QWidget):
             pen_bg = pg.mkPen(c.color_bg, width=w)
 
             if ystd is not None:
-                self.plot.addItem(pg.ErrorBarItem(x=x, y=y, height=2 * ystd, pen=pen))
+                self.add_error_bar(x, y, 2 * ystd, pen)
             if ybg_std is not None:
-                self.plot.addItem(pg.ErrorBarItem(x=x, y=y_bg, height=2 * ybg_std, pen=pen_bg))
+                self.add_error_bar(x, y_bg, 2 * ybg_std, pen_bg)
 
             self.plot.plot(
                 x,
