@@ -48,7 +48,7 @@ class = "FG_mock"
 resource = "VISA::FG"
 
 [localhost.server.instrument.pg]
-module = "pg"
+module = "mock"
 class = "DTG5274_mock"
 [localhost.server.instrument.pg.conf]
 local_dir = "."

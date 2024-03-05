@@ -15,9 +15,11 @@ import enum
 import numpy as np
 
 from .instrument import Instrument
+from .pg_dtg_core.dtg_core import DTGCoreMixin
 from ..msgs.confocal_msgs import Axis
 from ..msgs.inst_camera_msgs import FrameResult
 from ..msgs.inst_tdc_msgs import RawEvents
+from ..msgs.inst_pg_msgs import Block, Blocks, BlockSeq
 from ..msgs import param_msgs as P
 
 
@@ -695,3 +697,130 @@ class Params_mock(Instrument):
 
     def get_param_dict_labels(self, group: str = "") -> list[str]:
         return ["labelA", "labelB"]
+
+
+class DTG5274_mock(Instrument, DTGCoreMixin):
+    def __init__(self, name, conf=None, prefix=None):
+        Instrument.__init__(self, name, conf, prefix)
+
+        self.check_required_conf(("local_dir",))
+        self.LOCAL_DIR = self.conf["local_dir"]
+        self.SCAFFOLD = self.conf.get("scaffold_filename", "scaffold.dtg")
+
+        self.CHANNELS = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7}
+        if "channels" in self.conf:
+            self.CHANNELS.update(self.conf["channels"])
+
+        # last total block length and offsets.
+        self.length = 0
+        self.offsets = None
+
+        self.logger.info(f"opened {name} (mock)")
+
+    def block_granularity(self, freq):
+        return 4
+
+    def max_block_len(self):
+        return 32000000
+
+    def min_block_len(self, freq):
+        return 960
+
+    def max_freq(self):
+        return 2.7e9
+
+    def configure_blocks(
+        self,
+        blocks: Blocks[Block],
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_name: str | None = None,
+        endless: bool = True,
+    ) -> bool:
+        """Generate tree using default sequence."""
+
+        tree = self._configure_tree_blocks(
+            blocks, freq, trigger_positive, scaffold_name=scaffold_name, endless=endless
+        )
+        return tree is not None
+
+    def configure_blockseq(
+        self,
+        blockseq: BlockSeq,
+        freq: float,
+        trigger_positive: bool = True,
+        scaffold_name: str | None = None,
+        endless: bool = True,
+    ) -> bool:
+        """Generate tree using explicit sequence."""
+
+        if blockseq.nest_depth() > 2:
+            return self.fail_with("maximum BlockSeq nest depth is 2 for DTG.")
+
+        tree = self._configure_tree_blockseq(
+            blockseq, freq, trigger_positive, scaffold_name=scaffold_name, endless=endless
+        )
+        return tree is not None
+
+    # Standard API
+
+    def start(self) -> bool:
+        self.logger.info("Start dummy DTG.")
+        return True
+
+    def stop(self) -> bool:
+        self.logger.info("Stop dummy DTG.")
+        return True
+
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+        if params.get("n_runs") is not None:
+            return self.fail_with("DTG does not support finite n_runs.")
+        if "blocks" in params and "freq" in params:
+            return self.configure_blocks(
+                params["blocks"],
+                params["freq"],
+                self._trigger_positive(params.get("trigger_type")),
+            )
+        elif "blockseq" in params and "freq" in params:
+            return self.configure_blockseq(
+                params["blockseq"],
+                params["freq"],
+                self._trigger_positive(params.get("trigger_type")),
+            )
+        else:
+            return self.fail_with("These params must be given: 'blocks' | 'blockseq' and 'freq'")
+
+    def set(self, key: str, value=None) -> bool:
+        if key == "trigger":
+            return True
+        elif key == "clear":
+            return True
+        else:
+            return self.fail_with(f"unknown set() key: {key}")
+
+    def get(self, key: str, args=None):
+        if key == "length":
+            return self.length  # length of last configure_blocks
+        elif key == "offsets":
+            if args is None:
+                return self.offsets  # offsets of last configure_blocks
+            elif "blocks" in args and "freq" in args:
+                return self.validate_blocks(args["blocks"], args["freq"])
+            elif "blockseq" in args and "freq" in args:
+                return self.validate_blockseq(args["blockseq"], args["freq"])
+            else:
+                self.logger.error(f"Invalid args for get(offsets): {args}")
+                return None
+        elif key == "opc":
+            return True
+        elif key == "validate":
+            if "blocks" in args and "freq" in args:
+                return self.validate_blocks(args["blocks"], args["freq"])
+            elif "blockseq" in args and "freq" in args:
+                return self.validate_blockseq(args["blockseq"], args["freq"])
+            else:
+                self.logger.error(f"Invalid args for get(validate): {args}")
+                return None
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
