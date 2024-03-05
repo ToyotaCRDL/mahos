@@ -6,8 +6,8 @@ Steps to install mahos:
 #. Check the `System requirements`_.
 #. `Create virtualenv`_ (this is optional, but recommended).
 #. `Clone the repository`_.
-#. Install `Requirements`_.
-#. Install `The mahos package`_.
+#. Install `Optional requirements`_.
+#. Install `The mahos package`_ (and requirements).
 
 System requirements
 -------------------
@@ -70,13 +70,11 @@ We call this directory the `repository directory`.
 - ``cd <preferred directory>`` [#f1]_
 - ``git clone https://github.com/ToyotaCRDL/mahos``
 
-Requirements
-------------
+Optional requirements
+---------------------
 
-#. Manual installations: there are some requirements installation of which is not quite straightforward.
-   Follow instructions in the subsections below.
-#. See ``requirements.txt`` in the `repository directory` for (remaining) required python packages.
-   You can install them with ``pip install -r requirements.txt``
+There are some optional requirements installation of which is not quite straightforward.
+If you want to install them, follow instructions in the subsections below.
 
 Graphviz
 ^^^^^^^^
@@ -116,6 +114,15 @@ The mahos package
 In the mahos `repository directory`, ``pip install -e .``
 
 Here, -e (editable) is optional but recommended.
+Basic requirements in ``requirements.txt`` are installed by this command.
+
+Inst requirements
+^^^^^^^^^^^^^^^^^
+
+There are additional requirements for instrument drivers in ``inst-requirements.txt``.
+
+- You can install all of them by ``pip install -e .[inst]`` or ``pip install -r inst-requirements.txt``
+- If you don't want to install unnecessary packages, manually pick and install what you need.
 
 Test
 ----

@@ -34,8 +34,8 @@ In short, we recommend editable installation with cloned repository
 because this library is under development:
 
 #. Clone this repo somewhere.
-#. Install the requirements: ``pip install -r requirements.txt``
-#. Install the ``mahos`` package: ``pip install -e .``
+#. Install the ``mahos`` package: ``pip install -e .`` or ``pip install -e .[inst]``
+   (the latter installs optional the packages for instrument drivers).
 
 Run
 ===

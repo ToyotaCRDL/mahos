@@ -17,6 +17,8 @@
    .. autosummary::
    
       ~DTG5078.block_granularity
+      ~DTG5078.max_block_len
+      ~DTG5078.max_freq
    
    
 
@@ -26,8 +28,6 @@
 
    .. autosummary::
    
-      ~DTG5078.MAX_BLOCK_LENGTH
-      ~DTG5078.MAX_FREQ
       ~DTG5078.MIN_BLOCK_LENGTH
    
    

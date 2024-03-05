@@ -16,6 +16,8 @@
 
    .. autosummary::
    
+      ~DTG5334.max_block_len
+      ~DTG5334.max_freq
    
    
 
@@ -25,8 +27,6 @@
 
    .. autosummary::
    
-      ~DTG5334.MAX_BLOCK_LENGTH
-      ~DTG5334.MAX_FREQ
       ~DTG5334.MIN_BLOCK_LENGTH
    
    

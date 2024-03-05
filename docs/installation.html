@@ -420,8 +420,8 @@ document.write(`
 <li><p>Check the <a class="reference internal" href="#system-requirements">System requirements</a>.</p></li>
 <li><p><a class="reference internal" href="#create-virtualenv">Create virtualenv</a> (this is optional, but recommended).</p></li>
 <li><p><a class="reference internal" href="#clone-the-repository">Clone the repository</a>.</p></li>
-<li><p>Install <a class="reference internal" href="#requirements">Requirements</a>.</p></li>
-<li><p>Install <a class="reference internal" href="#the-mahos-package">The mahos package</a>.</p></li>
+<li><p>Install <a class="reference internal" href="#optional-requirements">Optional requirements</a>.</p></li>
+<li><p>Install <a class="reference internal" href="#the-mahos-package">The mahos package</a> (and requirements).</p></li>
 </ol>
 <section id="system-requirements">
 <h2>System requirements<a class="headerlink" href="#system-requirements" title="Permalink to this heading">#</a></h2>
@@ -478,14 +478,10 @@ We call this directory the <cite>repository directory</cite>.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/ToyotaCRDL/mahos</span></code></p></li>
 </ul>
 </section>
-<section id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Manual installations: there are some requirements installation of which is not quite straightforward.
-Follow instructions in the subsections below.</p></li>
-<li><p>See <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> in the <cite>repository directory</cite> for (remaining) required python packages.
-You can install them with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></p></li>
-</ol>
+<section id="optional-requirements">
+<h2>Optional requirements<a class="headerlink" href="#optional-requirements" title="Permalink to this heading">#</a></h2>
+<p>There are some optional requirements installation of which is not quite straightforward.
+If you want to install them, follow instructions in the subsections below.</p>
 <section id="graphviz">
 <h3>Graphviz<a class="headerlink" href="#graphviz" title="Permalink to this heading">#</a></h3>
 <p>You need <a class="reference external" href="https://graphviz.org/download/">Graphviz</a> for <a class="reference internal" href="cli.html#mahos-graph"><span class="std std-ref">mahos graph</span></a> command.
@@ -518,7 +514,16 @@ There are several methods to install this, and the easiest are following.</p>
 <section id="the-mahos-package">
 <h2>The mahos package<a class="headerlink" href="#the-mahos-package" title="Permalink to this heading">#</a></h2>
 <p>In the mahos <cite>repository directory</cite>, <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code></p>
-<p>Here, -e (editable) is optional but recommended.</p>
+<p>Here, -e (editable) is optional but recommended.
+Basic requirements in <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> are installed by this command.</p>
+<section id="inst-requirements">
+<h3>Inst requirements<a class="headerlink" href="#inst-requirements" title="Permalink to this heading">#</a></h3>
+<p>There are additional requirements for instrument drivers in <code class="docutils literal notranslate"><span class="pre">inst-requirements.txt</span></code>.</p>
+<ul class="simple">
+<li><p>You can install all of them by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.[inst]</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">inst-requirements.txt</span></code></p></li>
+<li><p>If you don’t want to install unnecessary packages, manually pick and install what you need.</p></li>
+</ul>
+</section>
 </section>
 <section id="test">
 <h2>Test<a class="headerlink" href="#test" title="Permalink to this heading">#</a></h2>
@@ -617,7 +622,7 @@ pip<span class="w"> </span>install<span class="w"> </span>PyQt6
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-virtualenv">Create virtualenv</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#clone-the-repository">Clone the repository</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-requirements">Optional requirements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#graphviz">Graphviz</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#windows">Windows</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#linux">Linux</a></li>
@@ -626,7 +631,10 @@ pip<span class="w"> </span>install<span class="w"> </span>PyQt6
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#opencv">OpenCV</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-mahos-package">The mahos package</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-mahos-package">The mahos package</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inst-requirements">Inst requirements</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test">Test</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pyqt6">PyQt6</a></li>

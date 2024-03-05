@@ -18,25 +18,18 @@
    
       ~DTG5000.__init__
       ~DTG5000.block_granularity
-      ~DTG5000.channels_to_int
       ~DTG5000.check_error
       ~DTG5000.configure
       ~DTG5000.configure_blocks
       ~DTG5000.configure_blockseq
-      ~DTG5000.generate_tree
-      ~DTG5000.generate_tree_seq
       ~DTG5000.get
       ~DTG5000.get_sequencer_status
-      ~DTG5000.load_scaffold
       ~DTG5000.min_block_len
       ~DTG5000.set
       ~DTG5000.start
       ~DTG5000.start_loop
       ~DTG5000.start_once
       ~DTG5000.stop
-      ~DTG5000.validate_blocks
-      ~DTG5000.validate_blocks_seq
-      ~DTG5000.validate_blockseq
    
    
 
@@ -46,8 +39,5 @@
 
    .. autosummary::
    
-      ~DTG5000.MAX_BLOCK_NUM
-      ~DTG5000.MAX_SEQ_NUM
-      ~DTG5000.MAX_SUBSEQ_NUM
    
    

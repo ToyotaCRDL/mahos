@@ -17,6 +17,8 @@
    .. autosummary::
    
       ~DTG5274.block_granularity
+      ~DTG5274.max_block_len
+      ~DTG5274.max_freq
       ~DTG5274.min_block_len
    
    
@@ -27,8 +29,5 @@
 
    .. autosummary::
    
-      ~DTG5274.MAX_BLOCK_LENGTH
-      ~DTG5274.MAX_FREQ
-      ~DTG5274.MIN_BLOCK_LENGTH
    
    
