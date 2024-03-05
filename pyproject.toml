@@ -7,7 +7,7 @@ name = "mahos"
 version = "0.2.3"
 description = "Measurement Automation Handling and Orchestration System"
 readme = "README.rst"
-requires-python = ">=3.8, <3.12"
+requires-python = ">=3.8, <3.13"
 license = { text = "BSD License (BSD-3-Clause)" }
 keywords = [ "measurement automation", "laboratory automation", "instrumentation", ]
 authors = [
@@ -16,6 +16,7 @@ authors = [
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
+dynamic = ["dependencies", "optional-dependencies"]
 
 [project.urls]
 Homepage = "https://github.com/ToyotaCRDL/mahos"
@@ -31,6 +32,12 @@ zip-safe = false
 
 [tool.setuptools.packages.find]
 include = ["mahos*"]
+
+[tool.setuptools.dynamic.dependencies]
+file = ["requirements.txt"]
+
+[tool.setuptools.dynamic.optional-dependencies.inst]
+file = ["inst-requirements.txt"]
 
 [tool.black]
 line-length = 99
