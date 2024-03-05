@@ -630,6 +630,12 @@ document.write(`
 When analog.channels[0] is L and analog.channels[1] is L, output A0 = 0.5 V, A1 = 0.5 V.
 When analog.channels[0] is L and analog.channels[1] is H, output A0 = -0.5 V, A1 = 0.0 V.
 It’s also possible to use more than two channels.</p></li>
+<li><p><strong>ext_ref_clock</strong> (<em>int</em>) – external reference clock source.
+Set 10 for 10 MHz or 125 for 125 MHz.
+All the other values are considered <cite>disable</cite> (internal clock source is used).</p></li>
+<li><p><strong>strict</strong> (<em>bool</em>) – (default: True) If True, check generated data strictly.
+Since offset will not be allowed in strict mode, the pulse pattern data must have
+total length of integer multiple of 8 ns.</p></li>
 </ul>
 </dd>
 </dl>
@@ -673,6 +679,12 @@ It’s also possible to use more than two channels.</p></li>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trigger</span></code>()</p></td>
 <td><p>issue a software trigger.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_blocks</span></code>(blocks, freq)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_blockseq</span></code>(blockseq, freq)</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>

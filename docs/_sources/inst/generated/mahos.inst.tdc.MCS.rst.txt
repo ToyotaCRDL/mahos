@@ -29,6 +29,7 @@
       ~MCS.get_count
       ~MCS.get_data
       ~MCS.get_data_point
+      ~MCS.get_data_roi
       ~MCS.get_data_setting
       ~MCS.get_mcssetting
       ~MCS.get_range

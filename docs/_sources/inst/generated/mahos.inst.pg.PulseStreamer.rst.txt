@@ -27,6 +27,8 @@
       ~PulseStreamer.start
       ~PulseStreamer.stop
       ~PulseStreamer.trigger
+      ~PulseStreamer.validate_blocks
+      ~PulseStreamer.validate_blockseq
    
    
 

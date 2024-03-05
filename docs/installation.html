@@ -489,12 +489,13 @@ You can install them with <code class="docutils literal notranslate"><span class
 <section id="graphviz">
 <h3>Graphviz<a class="headerlink" href="#graphviz" title="Permalink to this heading">#</a></h3>
 <p>You need <a class="reference external" href="https://graphviz.org/download/">Graphviz</a> for <a class="reference internal" href="cli.html#mahos-graph"><span class="std std-ref">mahos graph</span></a> command.
-You can skip this if you don’t need <a class="reference internal" href="cli.html#mahos-graph"><span class="std std-ref">mahos graph</span></a> command.</p>
+You can skip this if you don’t need <a class="reference internal" href="cli.html#mahos-graph"><span class="std std-ref">mahos graph</span></a> command.
+See <a class="reference external" href="https://pygraphviz.github.io/documentation/stable/install.html">pygraphviz documentation</a> for details.</p>
 <section id="windows">
 <h4>Windows<a class="headerlink" href="#windows" title="Permalink to this heading">#</a></h4>
 <p>You have to install the <a class="reference internal" href="#for-c-extensions">C++ compiler</a> and the <a class="reference external" href="https://graphviz.org/download/#windows">graphviz binary</a> (version 2).
 And then, use following command to install pygraphviz.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--global-option<span class="w"> </span>build_ext<span class="w"> </span>--global-option<span class="w"> </span><span class="s2">&quot;-IC:\Program Files\Graphviz\include&quot;</span><span class="w"> </span>--global-option<span class="w"> </span><span class="s2">&quot;-LC:\Program Files\Graphviz\lib&quot;</span><span class="w"> </span>pygraphviz
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--use-pep517<span class="w"> </span>--config-settings<span class="o">=</span><span class="s2">&quot;--global-option=build_ext&quot;</span><span class="w"> </span>--config-settings<span class="o">=</span><span class="s2">&quot;--global-option=-IC:\Program Files\Graphviz\include&quot;</span><span class="w"> </span>--config-settings<span class="o">=</span><span class="s2">&quot;--global-option=-LC:\Program Files\Graphviz\lib&quot;</span><span class="w"> </span>pygraphviz
 </pre></div>
 </div>
 </section>

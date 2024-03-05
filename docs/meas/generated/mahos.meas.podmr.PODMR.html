@@ -625,11 +625,12 @@ document.write(`
 for MW phase modulation. the period (T) is split into (T // F, T - T // F) and MW phase
 is switched at T // F. Thus, larger F results in “quicker start” of the phase
 modulation (depending on hardware, but its response may be a bit slow).</p></li>
-<li><p><strong>pulser.pg_freq</strong> (<em>float</em>) – pulse generator frequency (has preset)</p></li>
+<li><p><strong>pulser.pg_freq</strong> (<em>float</em>) – (has preset) pulse generator frequency</p></li>
 <li><p><strong>pulser.reduce_start_divisor</strong> (<em>int</em>) – (has preset) the divisor on start of reducing frequency
 reduce is done first by this value, and then repeated by 10.</p></li>
 <li><p><strong>pulser.minimum_block_length</strong> (<em>int</em>) – (has preset) minimum block length in generated blocks</p></li>
 <li><p><strong>pulser.block_base</strong> (<em>int</em>) – (has preset) block base granularity of pulse generator.</p></li>
+<li><p><strong>pulser.divide_block</strong> (<em>bool</em>) – (has preset) Default value of divide_block.</p></li>
 </ul>
 </dd>
 </dl>

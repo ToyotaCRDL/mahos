@@ -21,6 +21,7 @@
       ~TDCInterface.configure_base_range_bin_save
       ~TDCInterface.configure_range_bin
       ~TDCInterface.get_data
+      ~TDCInterface.get_data_roi
       ~TDCInterface.get_range_bin
       ~TDCInterface.get_raw_events
       ~TDCInterface.get_status

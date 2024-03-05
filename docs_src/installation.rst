@@ -38,7 +38,7 @@ Skip this section if you prefer one of the following alternatives.
 
   pip install virtualenv
 
-If ``virtualenv`` command is not found by your shell, 
+If ``virtualenv`` command is not found by your shell,
 add the directory containing ``virtualenv`` to environment variable PATH.
 The pip-installed executable is usually placed on the directory below,
 but you should confirm that by pip's warning message on installation.
@@ -83,6 +83,7 @@ Graphviz
 
 You need `Graphviz <https://graphviz.org/download/>`_ for :ref:`mahos graph` command.
 You can skip this if you don't need :ref:`mahos graph` command.
+See `pygraphviz documentation <https://pygraphviz.github.io/documentation/stable/install.html>`_ for details.
 
 Windows
 .......
@@ -92,7 +93,7 @@ And then, use following command to install pygraphviz.
 
 .. code-block:: bash
 
-  pip install --global-option build_ext --global-option "-IC:\Program Files\Graphviz\include" --global-option "-LC:\Program Files\Graphviz\lib" pygraphviz
+  pip install --use-pep517 --config-settings="--global-option=build_ext" --config-settings="--global-option=-IC:\Program Files\Graphviz\include" --config-settings="--global-option=-LC:\Program Files\Graphviz\lib" pygraphviz
 
 Linux
 .....

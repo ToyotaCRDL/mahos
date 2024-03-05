@@ -37,13 +37,14 @@
       ~PODMRWidget.init_delay
       ~PODMRWidget.init_radiobuttons
       ~PODMRWidget.init_widgets
+      ~PODMRWidget.init_widgets_with_params
       ~PODMRWidget.init_with_status
       ~PODMRWidget.load_data
       ~PODMRWidget.refresh_plot
       ~PODMRWidget.request_start
       ~PODMRWidget.request_stop
       ~PODMRWidget.reset_tau_modes
-      ~PODMRWidget.round_box_values
+      ~PODMRWidget.round_timing_box_values
       ~PODMRWidget.save_data
       ~PODMRWidget.set_method
       ~PODMRWidget.set_plot_mode
@@ -53,16 +54,17 @@
       ~PODMRWidget.switch_fg
       ~PODMRWidget.switch_method
       ~PODMRWidget.switch_partial
+      ~PODMRWidget.timing_boxes
       ~PODMRWidget.update_Nstop
       ~PODMRWidget.update_buffer
       ~PODMRWidget.update_data
       ~PODMRWidget.update_indicator
-      ~PODMRWidget.update_inst_bounds
       ~PODMRWidget.update_plot_enable
       ~PODMRWidget.update_plot_params
       ~PODMRWidget.update_save_button
       ~PODMRWidget.update_state
       ~PODMRWidget.update_stop
+      ~PODMRWidget.update_timing_box_step
       ~PODMRWidget.update_widgets
       ~PODMRWidget.validate_pulse
    
