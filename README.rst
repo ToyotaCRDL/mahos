@@ -35,7 +35,7 @@ because this library is under development:
 
 #. Clone this repo somewhere.
 #. Install the ``mahos`` package: ``pip install -e .`` or ``pip install -e .[inst]``
-   (the latter installs optional the packages for instrument drivers).
+   (the latter installs optional packages for instrument drivers).
 
 Run
 ===
@@ -56,7 +56,7 @@ Test
 Cite
 ====
 
-It is appreciated you cite `this paper <https://doi.org/10.21105/joss.05938>`_ when you publish
+It would be much appreciated you would cite `this paper <https://doi.org/10.21105/joss.05938>`_ when you publish
 your research works based on MAHOS. The BibTeX snippet can be copied below.
 
 .. code-block:: bibtex
