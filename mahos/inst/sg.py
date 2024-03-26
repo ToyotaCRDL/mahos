@@ -532,7 +532,7 @@ class MG3710E(VisaInstrument):
 
     def __init__(self, name, conf, prefix=None):
         conf["write_termination"] = "\n"
-        conf["read_termination"] = "\n"
+        conf["read_termination"] = "\r\n"
         if "timeout" not in conf:
             conf["timeout"] = 20000.0
 
