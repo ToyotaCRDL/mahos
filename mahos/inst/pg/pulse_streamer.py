@@ -280,8 +280,14 @@ class PulseStreamer(Instrument):
 
         """
 
-        self.ps.startNow()
-        return True
+        if self._trigger_type in (TriggerType.IMMEDIATE, TriggerType.SOFTWARE):
+            self.ps.startNow()
+            return True
+        else:
+            msg = "Cannot issue software trigger in hardware trigger mode."
+            msg += "\nConsider using PulseStreamerDAQTrigger instread."
+            self.logger.error(msg)
+            return False
 
     # Standard API
 
@@ -404,7 +410,11 @@ class PulseStreamerDAQTrigger(PulseStreamer):
                 return self._do.set_output_pulse()
 
     def configure_blocks(
-        self, blocks, freq, trigger_type: TriggerType | None = None, n_runs: int | None = None
+        self,
+        blocks: Blocks[Block],
+        freq: float,
+        trigger_type: TriggerType | None = None,
+        n_runs: int | None = None,
     ) -> bool:
         """Make sequence from blocks."""
 

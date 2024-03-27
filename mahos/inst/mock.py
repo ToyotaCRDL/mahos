@@ -773,8 +773,8 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
         return True
 
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
-        if params.get("n_runs") is not None:
-            return self.fail_with("DTG does not support finite n_runs.")
+        if params.get("n_runs") not in (None, 1):
+            return self.fail_with("DTG only supports n_runs None or 1.")
         if "blocks" in params and "freq" in params:
             return self.configure_blocks(
                 params["blocks"],

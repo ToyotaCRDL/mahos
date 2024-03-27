@@ -29,7 +29,8 @@ class Sweeper(Worker):
 
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger, conf)
-        self.load_conf_preset(cli)
+        self.load_pg_conf_preset(cli)
+        self.load_sg_conf_preset(cli)
 
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
@@ -48,13 +49,12 @@ class Sweeper(Worker):
         self._minimum_block_length = self.conf["minimum_block_length"]
         self._block_base = self.conf["block_base"]
         self._start_delay = self.conf.get("start_delay", 0.0)
-        self._drop_first = self.conf.get("drop_first", 0)
         self._sg_first = self.conf.get("sg_first", False)
         self._continue_mw = False
 
         self.data = ODMRData()
 
-    def load_conf_preset(self, cli):
+    def load_pg_conf_preset(self, cli):
         loader = PresetLoader(self.logger, PresetLoader.Mode.FORWARD)
         loader.add_preset(
             "DTG",
@@ -68,13 +68,29 @@ class Sweeper(Worker):
         loader.add_preset(
             "PulseStreamer",
             [
-                ("block_base", 1),
-                ("pg_freq_cw", 1.0e6),
+                ("block_base", 8),
+                ("pg_freq_cw", 1.0e9),
                 ("pg_freq_pulse", 1.0e9),
                 ("minimum_block_length", 1),
             ],
         )
         loader.load_preset(self.conf, cli.class_name("pg"))
+
+    def load_sg_conf_preset(self, cli):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.FORWARD)
+        loader.add_preset(
+            "N5182B",
+            [
+                ("sg_first", False),
+            ],
+        )
+        loader.add_preset(
+            "MG3710E",
+            [
+                ("sg_first", True),
+            ],
+        )
+        loader.load_preset(self.conf, cli.class_name("sg"))
 
     def get_param_dict_labels(self) -> list:
         return ["cw", "pulse"]
@@ -202,6 +218,8 @@ class Sweeper(Worker):
 
     def configure_pg_CW_analog(self, params: dict) -> bool:
         freq = self.conf["pg_freq_cw"]
+        # gate / trigger pulse width
+        unit = round(freq * 1.0e-6)
         window = round(freq * params["timing"]["time_window"])
         delay = round(freq * params.get("delay", 0.0))
         bg_delay = round(freq * params.get("background_delay", 0.0))
@@ -209,13 +227,13 @@ class Sweeper(Worker):
             b = Block(
                 "CW-ODMR",
                 [
-                    (None, max(1, delay)),
-                    ("gate", 1),
+                    (None, max(unit, delay)),
+                    ("gate", unit),
                     (("laser", "mw"), window),
-                    (None, max(1, bg_delay)),
-                    ("gate", 1),
+                    (None, max(unit, bg_delay)),
+                    ("gate", unit),
                     ("laser", window),
-                    ("trigger", 1),
+                    ("trigger", unit),
                 ],
                 trigger=True,
             )
@@ -223,19 +241,23 @@ class Sweeper(Worker):
             b = Block(
                 "CW-ODMR",
                 [
-                    (None, max(1, delay)),
-                    ("gate", 1),
+                    (None, max(unit, delay)),
+                    ("gate", unit),
                     (("laser", "mw"), window),
-                    ("trigger", 1),
+                    ("trigger", unit),
                 ],
                 trigger=True,
             )
         self._adjust_block(b, 0)
         blocks = Blocks([b]).simplify()
-        return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
+        return self.pg.configure_blocks(
+            blocks, freq, trigger_type=TriggerType.HARDWARE_RISING, n_runs=1
+        )
 
     def configure_pg_CW_apd(self, params: dict) -> bool:
         freq = self.conf["pg_freq_cw"]
+        # gate / trigger pulse width
+        unit = round(freq * 1.0e-6)
         window = round(freq * params["timing"]["time_window"])
         delay = round(freq * params.get("delay", 0.0))
         bg_delay = round(freq * params.get("background_delay", 0.0))
@@ -243,14 +265,14 @@ class Sweeper(Worker):
             b = Block(
                 "CW-ODMR",
                 [
-                    (None, max(1, delay)),
-                    ("gate", 1),
+                    (None, max(unit, delay)),
+                    ("gate", unit),
                     (("laser", "mw"), window),
-                    ("gate", 1),
-                    (None, max(1, bg_delay)),
-                    ("gate", 1),
+                    ("gate", unit),
+                    (None, max(unit, bg_delay)),
+                    ("gate", unit),
                     ("laser", window),
-                    (("gate", "trigger"), 1),
+                    (("gate", "trigger"), unit),
                 ],
                 trigger=True,
             )
@@ -258,16 +280,18 @@ class Sweeper(Worker):
             b = Block(
                 "CW-ODMR",
                 [
-                    (None, max(1, delay)),
-                    ("gate", 1),
+                    (None, max(unit, delay)),
+                    ("gate", unit),
                     (("laser", "mw"), window),
-                    (("gate", "trigger"), 1),
+                    (("gate", "trigger"), unit),
                 ],
                 trigger=True,
             )
         self._adjust_block(b, 0)
         blocks = Blocks([b]).simplify()
-        return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
+        return self.pg.configure_blocks(
+            blocks, freq, trigger_type=TriggerType.HARDWARE_RISING, n_runs=1
+        )
 
     def _make_blocks_pulse_apd_nobg(
         self, delay, laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
@@ -417,7 +441,9 @@ class Sweeper(Worker):
                 delay, laser_delay, laser_width, mw_delay, mw_width, trigger_width, burst_num
             )
 
-        return self.pg.configure_blocks(blocks, freq, trigger_type=TriggerType.HARDWARE_RISING)
+        return self.pg.configure_blocks(
+            blocks, freq, trigger_type=TriggerType.HARDWARE_RISING, n_runs=1
+        )
 
     def configure_pg(self, params: dict) -> bool:
         if not (self.pg.stop() and self.pg.clear()):
@@ -448,10 +474,8 @@ class Sweeper(Worker):
         # this max rate is achieved if freq switching time was zero (it's non-zero in reality).
         rate = 2.0 / time_window
         num = params["num"]
-        drop = self._drop_first * 2  # double drops due to gate mode
         if params.get("background", False):
             num *= 2
-            drop *= 2
         buffer_size = num * self.conf.get("buffer_size_coeff", 20)
         params_pd = {
             "clock": self._pd_clock,
@@ -460,8 +484,11 @@ class Sweeper(Worker):
             "buffer_size": buffer_size,
             "rate": rate,
             "finite": False,
-            "every": self.conf.get("every", False),
-            "drop_first": drop,
+            "every": False,
+            # drop the first line because it contains invalid data at the first point
+            # (line will be [f_N, f_0, f_1, ..., f_N-1) in general, however,
+            #  SG is unknown state at the first point of the first line)
+            "drop_first": int(self._sg_first),
             "gate": True,
             "time_window": time_window,
         }
@@ -497,10 +524,8 @@ class Sweeper(Worker):
         clock_pd = self.clock.get_internal_output()
 
         num = params["num"]
-        drop = self._drop_first * oversamp
         if params.get("background", False):
             num *= 2
-            drop *= 2
         buffer_size = num * self.conf.get("buffer_size_coeff", 20)
         params_pd = {
             "clock": clock_pd,
@@ -509,8 +534,11 @@ class Sweeper(Worker):
             "buffer_size": buffer_size,
             "rate": rate,
             "finite": False,
-            "every": self.conf.get("every", False),
-            "drop_first": drop,
+            "every": False,
+            # drop the first line because it contains invalid data at the first point
+            # (line will be [f_N, f_0, f_1, ..., f_N-1) in general, however,
+            #  SG is unknown state at the first point of the first line)
+            "drop_first": int(self._sg_first),
             "clock_mode": True,
             "oversample": oversamp,
             "bounds": params.get("pd_bounds", (-10.0, 10.0)),
@@ -574,15 +602,30 @@ class Sweeper(Worker):
             self.logger.info("Started sweeper.")
         return True
 
+    def _roll_line(self, line):
+        """Fix the rolling of data due to sg_first operation.
+
+        When sg_first is True, the data will be like
+        [f_N, f0, f1, ..., f_N-1] instead of [f0, f1, ..., f_N].
+        Fix the former to the latter by rolling the array.
+
+        """
+
+        if self._sg_first:
+            return np.roll(line, -1)
+        else:
+            return line
+
     def _append_line_nobg(self, data, line):
+        line = self._roll_line(line)
         if data is None:
             return np.array(line, ndmin=2).T
         else:
             return np.append(data, np.array(line, ndmin=2).T, axis=1)
 
     def _append_line_bg(self, data, bg_data, line):
-        l_data = line[0::2]
-        l_bg = line[1::2]
+        l_data = self._roll_line(line[0::2])
+        l_bg = self._roll_line(line[1::2])
         if data is None:
             return np.array(l_data, ndmin=2).T, np.array(l_bg, ndmin=2).T
         else:

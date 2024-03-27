@@ -195,6 +195,7 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
             self.params["start"] == p["start"]
             and self.params["stop"] == p["stop"]
             and self.params["num"] == p["num"]
+            and self.measure_background() == p.get("background")
         )
 
     def _h5_write_fit_params(self, val):

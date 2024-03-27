@@ -50,9 +50,8 @@ class ODMR(BasicMeasNode):
 
         :param sweeper.start_delay: (default: 0.0) delay time (sec.) before starting SG/PG output.
         :type sweeper.start_delay: float
-        :param sweeper.drop_first: (default: 0) drop first N freq points.
-        :type sweeper.drop_first: int
-        :param sweeper.sg_first: (default: False) if True, turn on SG first and PG second.
+        :param sweeper.sg_first: (has preset) if True, turn on SG first and PG second.
+            This mode is for SGs which won't start the point sweep by software command.
         :type sweeper.sg_first: bool
 
         :param pulser.pg_freq_cw: (has preset) PG frequency for CW mode.
