@@ -359,7 +359,39 @@ class PulseStreamer(Instrument):
 
 
 class PulseStreamerDAQTrigger(PulseStreamer):
-    """PulseStreamer with DAQ trigger extension."""
+    """PulseStreamer with DAQ trigger extension.
+
+    This class enables software trigger (trigger() method) even when
+    trigger_type is set TriggerType.HARDWARE_RISING or TriggerType.HARDWARE_FALLING.
+    This is achieved by a little hardware modification.
+    You have to prepare logic 2-input AND / OR / NAND / NOR gate
+    (something like 74LS08, 74LS32 etc.), and connect as follows:
+
+    - Input1: DAQ Digital I/O line (specified by conf["do_line"])
+    - Input2: Trigger source of a hardware.
+    - Output: "Trigger In" connector of PulseStreamer.
+
+    Since the objective of this modification is to make logical or,
+    the recommended selection of gate circuit and conf["idle_logic"]
+    depends on the logic polarity of your trigger source (Input2).
+    The selection would be as follows.
+
+    If trigger source (Input2) is positive logic (active high):
+
+    - logic gate: OR / NOR.
+    - conf["idle_logic"]: False.
+
+    If trigger source (Input2) is negative logic (active low):
+
+    - logic gate: AND / NAND.
+    - conf["idle_logic"]: True.
+
+    :param do_line: DAQ line for DigitalOut
+    :type do_line: str
+    :param idle_logic: Idle state for DigitalOut. True (False) for High (Low).
+    :type idle_logic: bool
+
+    """
 
     def __init__(self, name, conf, prefix=None):
         PulseStreamer.__init__(self, name, conf, prefix=prefix)
