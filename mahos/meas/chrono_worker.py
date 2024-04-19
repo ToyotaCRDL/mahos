@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+
+"""
+Worker for Chrono.
+
+.. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
+.. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
+
+"""
+
+from __future__ import annotations
+import time
+
+from ..util.timer import IntervalTimer
+from ..msgs.chrono_msgs import ChronoData
+from ..inst.interface import InstrumentInterface
+from ..msgs import param_msgs as P
+from .common_worker import Worker
+
+
+class Collector(Worker):
+    def __init__(self, cli, logger, conf: dict):
+        Worker.__init__(self, cli, logger)
+
+        self.interval_sec = conf.get("interval_sec", 0.1)
+        self.insts = self.cli.insts()
+        self.add_instruments([InstrumentInterface(self.cli, inst) for inst in self.insts])
+        self.used_insts = []
+
+        self.mode_inst_labels = conf.get("mode", {"all": {inst: "" for inst in self.insts}})
+
+        self.data = ChronoData()
+        self.timer = None
+
+    def _get_labels(self, mode: str, inst: str) -> tuple[str, str]:
+        inst_labels = self.mode_inst_labels[mode]
+        if inst not in mode:
+            return "", ""
+        labels = inst_labels[inst]
+        if isinstance(labels, str):
+            return labels, ""
+        return labels
+
+    def get_param_dict(self, mode: str) -> P.ParamDict[str, P.ParamDict[str, P.PDValue]] | None:
+        if mode not in self.worker.mode_inst_labels:
+            self.logger.error(f"Invalid mode {mode}")
+            return None
+
+        pd = P.ParamDict()
+        pd["mode"] = P.StrParam(mode)
+        for inst in self.mode_inst_labels[mode].keys():
+            label, group = self._get_labels(mode, inst)
+            d = self.cli.get_param_dict(inst, label, group)
+            if d is None:
+                self.logger.error(f"Failed to generate param dict for {inst}.")
+                return None
+            pd[inst] = d
+        return pd
+
+    def start(self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]) -> bool:
+        if params is not None:
+            params = P.unwrap(params)
+
+        if "mode" not in params or params["mode"] not in self.mode_inst_labels:
+            self.logger.error("mode must be in params")
+            return False
+
+        self.used_insts = list(self.mode_inst_labels[params["mode"]].keys())
+
+        for inst in self.used_insts:
+            if not self.cli.lock(inst):
+                return self.fail_with_release(f"Failed to lock instrument {inst}")
+
+        for inst in self.used_insts:
+            if inst not in params:
+                return self.fail_with_release(f"Instrument {inst} is not contained in params.")
+            label, group = self._get_labels(params["mode"], inst)
+            if not self.cli.configure(inst, params[inst], label, group):
+                return self.fail_with_release(f"Failed to configure instrument {inst}")
+
+        for inst in self.used_insts:
+            if not self.cli.start(inst):
+                return self.fail_with_release(f"Failed to start instrument {inst}")
+
+        self.timer = IntervalTimer(self.interval_sec)
+
+        self.data = ChronoData(params)
+        self.data.start()
+        self.logger.info("Started collector.")
+
+        return True
+
+    def work(self) -> bool:
+        # TODO: treatment of time stamp is quite rough now
+        # TODO: max data length ?
+
+        if not self.data.running:
+            return False
+
+        if self.timer.check():
+            t_start = time.time()
+            data = []
+            for inst in self.used_insts:
+                d = self.cli.get(inst, "data")
+                if d is None:
+                    return False
+                data.append(d)
+            t_finish = time.time()
+            t = (t_start + t_finish) / 2.0
+            self.data.append(t, data)
+            return True
+        return False
+
+    def stop(self) -> bool:
+        # avoid double-stop (abort status can be broken)
+        if not self.data.running:
+            return False
+
+        success = all([self.cli.stop(inst) and self.cli.release(inst) for inst in self.used_insts])
+
+        self.timer = None
+        self.data.finalize()
+
+        if success:
+            self.logger.info("Stopped collector.")
+        else:
+            self.logger.error("Error stopping collector.")
+        return success
+
+    def data_msg(self) -> ChronoData:
+        return self.data

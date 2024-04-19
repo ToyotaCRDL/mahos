@@ -193,8 +193,8 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         self.refresh_plot()
 
     def update_param_table(self):
-        method = self.labelBox.currentText()
-        d = self.cli.get_param_dict(method)
+        label = self.labelBox.currentText()
+        d = self.cli.get_param_dict(label)
         self.paramTable.update_contents(d)
 
     def refresh_plot(self):

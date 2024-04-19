@@ -342,6 +342,11 @@ class MultiInstrumentClient(object):
                     gconf, name, context=context, prefix=prefix
                 )
 
+    def insts(self):
+        """Get list of managed instruments."""
+
+        return [self.inst_remap[n] if n in self.inst_remap else n for n in self.inst_to_nodename]
+
     def close(self, close_ctx=True):
         for cli in self.nodename_to_client.values():
             cli.close(close_ctx=close_ctx)
