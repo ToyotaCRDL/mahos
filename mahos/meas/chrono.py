@@ -35,9 +35,7 @@ class Chrono(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         BasicMeasNode.__init__(self, gconf, name, context=context)
 
-        self.insts = self.cli.insts()
         self.worker = Collector(self.cli, self.logger, self.conf["collector"])
-
         self.pub_timer = IntervalTimer(self.conf.get("pub_interval_sec", 0.5))
 
     def close_resources(self):
@@ -59,7 +57,7 @@ class Chrono(BasicMeasNode):
         return Reply(True)
 
     def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:
-        return Reply(True, ret=list(self.worker.mode_inst_labels.keys()))
+        return Reply(True, ret=self.worker.get_param_dict_labels())
 
     def get_param_dict(self, msg: GetParamDictReq) -> Reply:
         d = self.worker.get_param_dict(msg.label)
@@ -69,7 +67,7 @@ class Chrono(BasicMeasNode):
 
     def wait(self):
         self.logger.info("Waiting for instrument server...")
-        for inst in self.insts:
+        for inst in self.cli.insts():
             self.cli.wait(inst)
         self.logger.info("Server is up!")
 

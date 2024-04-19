@@ -113,7 +113,7 @@ class Agilent34410A(VisaInstrument):
                 nplc=params.get("nplc", 10), trigger=params.get("trigger", "IMM")
             )
         else:
-            self.logger.error("Unknown conf['mode']")
+            self.logger.error(f"unknown label: {label}")
             return False
 
     def start(self) -> bool:

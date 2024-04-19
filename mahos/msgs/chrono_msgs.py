@@ -19,18 +19,23 @@ class ChronoData(BasicMeasData):
         self.init_params(params)
         self.init_attrs()
 
-        self.data = []
+        self.data = {}
+        self.units = {}
         self.xdata = []
+
+    def set_units(self, units):
+        self.units = units
 
     def append(self, x, y):
         self.xdata.append(x)
-        self.data.append(y)
+        for name, value in y.items():
+            if name not in self.data:
+                self.data[name] = []
+            self.data[name].append(value)
 
     def init_axes(self):
         self.xlabel: str = "Time"
         self.xunit: str = "s"
-        self.ylabel: str = ""
-        self.yunit: str = ""
         self.xscale: str = "linear"
         self.yscale: str = "linear"
 

@@ -41,13 +41,16 @@ class Collector(Worker):
             return labels, ""
         return labels
 
-    def get_param_dict(self, mode: str) -> P.ParamDict[str, P.ParamDict[str, P.PDValue]] | None:
+    def get_param_dict_labels(self) -> list[str]:
+        return list(self.mode_inst_labels.keys())
+
+    def get_param_dict(self, mode: str) -> P.ParamDict[str, P.PDValue] | None:
         if mode not in self.worker.mode_inst_labels:
             self.logger.error(f"Invalid mode {mode}")
             return None
 
         pd = P.ParamDict()
-        pd["mode"] = P.StrParam(mode)
+        pd["mode"] = P.StrChoiceParam(mode, self.get_param_dict_labels())
         for inst in self.mode_inst_labels[mode].keys():
             label, group = self._get_labels(mode, inst)
             d = self.cli.get_param_dict(inst, label, group)
@@ -71,12 +74,14 @@ class Collector(Worker):
             if not self.cli.lock(inst):
                 return self.fail_with_release(f"Failed to lock instrument {inst}")
 
+        units = {}
         for inst in self.used_insts:
             if inst not in params:
                 return self.fail_with_release(f"Instrument {inst} is not contained in params.")
             label, group = self._get_labels(params["mode"], inst)
             if not self.cli.configure(inst, params[inst], label, group):
                 return self.fail_with_release(f"Failed to configure instrument {inst}")
+            units[inst] = self.cli.get(inst, "unit") or ""
 
         for inst in self.used_insts:
             if not self.cli.start(inst):
@@ -85,6 +90,7 @@ class Collector(Worker):
         self.timer = IntervalTimer(self.interval_sec)
 
         self.data = ChronoData(params)
+        self.data.set_units(units)
         self.data.start()
         self.logger.info("Started collector.")
 
@@ -97,19 +103,20 @@ class Collector(Worker):
         if not self.data.running:
             return False
 
-        if self.timer.check():
-            t_start = time.time()
-            data = []
-            for inst in self.used_insts:
-                d = self.cli.get(inst, "data")
-                if d is None:
-                    return False
-                data.append(d)
-            t_finish = time.time()
-            t = (t_start + t_finish) / 2.0
-            self.data.append(t, data)
-            return True
-        return False
+        if not self.timer.check():
+            return False
+
+        t_start = time.time()
+        data = {}
+        for inst in self.used_insts:
+            d = self.cli.get(inst, "data")
+            if d is None:
+                return False
+            data[inst] = d
+        t_finish = time.time()
+        t = (t_start + t_finish) / 2.0
+        self.data.append(t, data)
+        return True
 
     def stop(self) -> bool:
         # avoid double-stop (abort status can be broken)
