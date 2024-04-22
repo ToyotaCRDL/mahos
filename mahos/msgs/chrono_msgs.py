@@ -45,6 +45,17 @@ class ChronoData(BasicMeasData):
 
         return [u[0] for u in self.units]
 
+    def get_unit_to_insts(self) -> dict[str, list[str]]:
+        """Get a map from unit to list of corresponding inst."""
+
+        ret = {}
+        for inst, unit in self.units:
+            if unit not in ret:
+                ret[unit] = [inst]
+            else:
+                ret[unit].append(inst)
+        return ret
+
     def index(self, inst: str) -> int:
         """Get index of instrument name (data label)."""
 

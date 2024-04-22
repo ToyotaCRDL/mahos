@@ -14,6 +14,17 @@ import matplotlib as mpl
 from matplotlib.colors import to_hex
 
 
+def colors_tab10() -> list[str]:
+    """Get list of colors using mpl's tab10 colormap.
+
+    color is expressed in HTML (hex) format.
+
+    """
+
+    colors = mpl.colormaps.get("tab10").colors
+    return [to_hex(c) for c in colors]
+
+
 def colors_tab20_pair() -> list[tuple[str, str]]:
     """Get paired color using mpl's tab20 colormap.
 

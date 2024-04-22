@@ -830,6 +830,7 @@ class DMM_mock(Instrument):
     class Mode(enum.Enum):
         UNCONFIGURED = 0
         DCV = 1
+        DCI = 2
 
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
@@ -838,16 +839,23 @@ class DMM_mock(Instrument):
         self._mode = self.Mode.UNCONFIGURED
 
         # just for debug
-        self._DCV_bias = self.conf.get("DCV_bias", 0.0)
+        self._bias = self.conf.get("bias", 0.0)
 
     def configure_DCV(self) -> bool:
         self._mode = self.Mode.DCV
         self.logger.info("Configured for DC Voltage measurement.")
         return True
 
+    def configure_DCI(self) -> bool:
+        self._mode = self.Mode.DCI
+        self.logger.info("Configured for DC Current measurement.")
+        return True
+
     def get_data(self):
         if self._mode == self.Mode.DCV:
-            return np.random.normal(self._DCV_bias, 1.0, size=1)[0]
+            return np.random.normal(self._bias, 1.0, size=1)[0]
+        elif self._mode == self.Mode.DCI:
+            return np.random.normal(self._bias, 0.1, size=1)[0]
         else:
             self.logger.error("get_data() is called but not configured.")
             return None
@@ -855,6 +863,8 @@ class DMM_mock(Instrument):
     def get_unit(self) -> str:
         if self._mode == self.Mode.DCV:
             return "V"
+        elif self._mode == self.Mode.DCI:
+            return "A"
         else:
             self.logger.error("get_unit() is called but not configured.")
             return ""
@@ -876,6 +886,11 @@ class DMM_mock(Instrument):
                 nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
                 trigger=P.StrChoiceParam("IMM", ["IMM", "BUS", "EXT"]),
             )
+        elif label == "dci":
+            return P.ParamDict(
+                nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
+                trigger=P.StrChoiceParam("IMM", ["IMM", "BUS", "EXT"]),
+            )
         else:
             return self.fail_with(f"unknown label {label}")
 
@@ -883,17 +898,23 @@ class DMM_mock(Instrument):
         label = label.lower()
         if label == "dcv":
             return self.configure_DCV()
+        elif label == "dci":
+            return self.configure_DCI()
         else:
             self.fail_with(f"unknown label: {label}")
 
     def start(self) -> bool:
         if self._mode == self.Mode.DCV:
             return True
+        elif self._mode == self.Mode.DCI:
+            return True
         else:  # UNCONFIGURED
             return self.fail_with("start() is called but not configured.")
 
     def stop(self) -> bool:
         if self._mode == self.Mode.DCV:
+            return True
+        elif self._mode == self.Mode.DCI:
             return True
         else:  # UNCONFIGURED
             return self.fail_with("stop() is called but not configured.")

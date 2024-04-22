@@ -10,6 +10,7 @@ Common GUI for Chrono.
 
 from __future__ import annotations
 import os
+from itertools import cycle
 
 import pyqtgraph as pg
 
@@ -19,20 +20,21 @@ from .ui.chrono import Ui_Chrono
 from .client import QBasicMeasClient
 
 from ..msgs.common_msgs import BinaryState, BinaryStatus
-from ..msgs.common_meas_msgs import Buffer
 from ..msgs.chrono_msgs import ChronoData
 from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientWidget
 from .dialog import save_dialog, load_dialog, export_dialog
 from ..node.node import local_conf, join_name
+from ..util.plot import colors_tab10
 
 
 class PlotWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
 
-        self._axes_set = False
+        self._units = []
+        self._plots = []
         self.init_ui()
         self.init_view()
 
@@ -50,49 +52,34 @@ class PlotWidget(QtWidgets.QWidget):
         self.layout = pg.GraphicsLayout()
         self.graphicsView.setCentralItem(self.layout)
 
-        self.plot = self.layout.addPlot(row=0, col=0, lockAspect=False)
-        self.plot.showGrid(x=True, y=True)
-
     def set_axes(self, data: ChronoData):
-        if self._axes_set:
+        unit_to_insts = data.get_unit_to_insts()
+
+        if self._units == list(unit_to_insts.keys()):
             return
-        if not data.has_params():
-            return
 
-        self.plot.setLabel("bottom", data.xlabel, data.xunit)
-        self.plot.setLabel("left", data.ylabel, data.yunit)
-        self.plot.setLogMode(x=data.xscale == "log", y=data.yscale == "log")
-        self._axes_set = True
+        self._units = list(unit_to_insts.keys())
+        self._plots = []
+        self.layout.clear()
+        for i, unit in enumerate(unit_to_insts):
+            plot = self.layout.addPlot(row=i, col=0, lockAspect=False)
+            plot.showGrid(x=True, y=True)
 
-    def refresh(self, data_list: list[tuple[ChronoData, bool, str]], d: ChronoData):
-        self.plot.clearPlots()
+            plot.setLabel("bottom", data.xlabel, data.xunit)
+            plot.setLabel("left", unit, unit)
+            plot.addLegend()
+            self._plots.append(plot)
 
-        self.set_axes(d)
+    def refresh(self, data: ChronoData):
+        self.set_axes(data)
 
-        for d, show_fit, color in data_list:
-            x = d.get_xdata()
-            xfit = d.get_fit_xdata()
-            y = d.get_ydata()
-            yfit = d.get_fit_ydata()
-            if isinstance(y, tuple):
-                y = y[0]
-
-            if show_fit and xfit is not None and yfit is not None:
-                self.plot.plot(
-                    x, y, pen=None, symbolPen=None, symbol="o", symbolSize=4, symbolBrush=color
-                )
-                self.plot.plot(xfit, yfit, pen=color, width=1)
-            elif x is not None and y is not None:
-                self.plot.plot(
-                    x,
-                    y,
-                    pen=color,
-                    width=1,
-                    symbolPen=None,
-                    symbol="o",
-                    symbolSize=8,
-                    symbolBrush=color,
-                )
+        unit_to_insts = data.get_unit_to_insts()
+        x = data.get_xdata()
+        for plot, insts in zip(self._plots, unit_to_insts.values()):
+            plot.clearPlots()
+            for inst, color in zip(insts, cycle(colors_tab10())):
+                y = data.get_ydata(inst)
+                plot.plot(x, y, name=inst, pen=color, width=1)
 
 
 class ChronoWidget(ClientWidget, Ui_Chrono):
@@ -129,14 +116,12 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
             self.update_param_table()
 
         self.init_connection()
-        self.fit.init_with_status()
 
         # update initial GUI state
         self.update_state(status.state, last_state=BinaryState.IDLE)
 
         self.cli.stateUpdated.connect(self.update_state)
         self.cli.dataUpdated.connect(self.update_data)
-        self.cli.bufferUpdated.connect(self.update_buffer)
         self.cli.stopped.connect(self.finalize)
 
         self.setEnabled(True)
@@ -182,10 +167,6 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
         self.data = data
         self.refresh_plot()
         self.apply_widgets(self.data)
-
-    def update_buffer(self, buffer: Buffer[tuple[str, ChronoData]]):
-        self.fit.update_buffer(buffer)
-        self.refresh_plot()
 
     def update_param_table(self):
         label = self.labelBox.currentText()
@@ -245,10 +226,10 @@ class ChronoMainWindow(QtWidgets.QMainWindow):
 
         self.plot = PlotWidget(parent=self)
         self.meas = ChronoWidget(
-            gconf, target["meas"], target["gparams"], self.plot, context, parent=self
+            gconf, target["chrono"], target["gparams"], self.plot, context, parent=self
         )
 
-        self.setWindowTitle(f"MAHOS.ChronoGUI ({join_name(target['meas'])})")
+        self.setWindowTitle(f"MAHOS.ChronoGUI ({join_name(target['chrono'])})")
         self.setAnimated(False)
         self.setCentralWidget(self.meas)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)
