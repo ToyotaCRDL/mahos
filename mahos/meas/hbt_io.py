@@ -122,8 +122,6 @@ class HBTIO(object):
             self.logger.error(f"Unknown extension to export data: {filename}")
             return False
 
-        return data.data[:, 0], data.data[:, 1]
-
     def _export_data_csv(self, fn, data: HBTData):
         xdata = data.get_xdata()
         ydata = data.get_ydata()

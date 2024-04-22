@@ -34,7 +34,7 @@ class Collector(Worker):
 
     def _get_labels(self, mode: str, inst: str) -> tuple[str, str]:
         inst_labels = self.mode_inst_labels[mode]
-        if inst not in mode:
+        if inst not in inst_labels:
             return "", ""
         labels = inst_labels[inst]
         if isinstance(labels, str):
@@ -45,12 +45,13 @@ class Collector(Worker):
         return list(self.mode_inst_labels.keys())
 
     def get_param_dict(self, mode: str) -> P.ParamDict[str, P.PDValue] | None:
-        if mode not in self.worker.mode_inst_labels:
+        if mode not in self.mode_inst_labels:
             self.logger.error(f"Invalid mode {mode}")
             return None
 
         pd = P.ParamDict()
         pd["mode"] = P.StrChoiceParam(mode, self.get_param_dict_labels())
+        pd["max_len"] = P.IntParam(1000, 1, 100_000_000)
         for inst in self.mode_inst_labels[mode].keys():
             label, group = self._get_labels(mode, inst)
             d = self.cli.get_param_dict(inst, label, group)
@@ -74,14 +75,14 @@ class Collector(Worker):
             if not self.cli.lock(inst):
                 return self.fail_with_release(f"Failed to lock instrument {inst}")
 
-        units = {}
+        units = []
         for inst in self.used_insts:
             if inst not in params:
                 return self.fail_with_release(f"Instrument {inst} is not contained in params.")
             label, group = self._get_labels(params["mode"], inst)
             if not self.cli.configure(inst, params[inst], label, group):
                 return self.fail_with_release(f"Failed to configure instrument {inst}")
-            units[inst] = self.cli.get(inst, "unit") or ""
+            units.append((inst, self.cli.get(inst, "unit") or ""))
 
         for inst in self.used_insts:
             if not self.cli.start(inst):
@@ -98,7 +99,6 @@ class Collector(Worker):
 
     def work(self) -> bool:
         # TODO: treatment of time stamp is quite rough now
-        # TODO: max data length ?
 
         if not self.data.running:
             return False

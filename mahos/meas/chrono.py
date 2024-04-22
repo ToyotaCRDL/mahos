@@ -11,18 +11,21 @@ Generic Data-logging measurement for Time-series data.
 from __future__ import annotations
 
 from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..msgs import chrono_msgs
 from ..msgs.chrono_msgs import ChronoData
-from .common_meas import BasicMeasNode
-from ..node.client import StatusClient
+from .common_meas import BasicMeasClient, BasicMeasNode
 from ..util.timer import IntervalTimer
+from .tweaker import TweakerClient
 from .chrono_worker import Collector
+from .chrono_io import ChronoIO
 
 
-class ChronoClient(StatusClient):
-    """Simple Chrono Client."""
+class ChronoClient(BasicMeasClient):
+    """Node Client for Chrono."""
 
+    #: Message types for Chrono.
     M = chrono_msgs
 
 
@@ -35,7 +38,16 @@ class Chrono(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         BasicMeasNode.__init__(self, gconf, name, context=context)
 
+        if "tweaker" in self.conf["target"]:
+            self.tweaker_cli = TweakerClient(
+                gconf, self.conf["target"]["tweaker"], context=self.ctx, prefix=self.joined_name()
+            )
+            self.add_client(self.tweaker_cli)
+        else:
+            self.tweaker_cli = None
+
         self.worker = Collector(self.cli, self.logger, self.conf["collector"])
+        self.io = ChronoIO(self.logger)
         self.pub_timer = IntervalTimer(self.conf.get("pub_interval_sec", 0.5))
 
     def close_resources(self):
@@ -65,6 +77,32 @@ class Chrono(BasicMeasNode):
             return Reply(False, "Failed to generate param dict")
         return Reply(True, ret=d)
 
+    def save_data(self, msg: SaveDataReq) -> Reply:
+        success = self.io.save_data(msg.file_name, self.worker.data_msg(), msg.note)
+        if success and self.tweaker_cli is not None:
+            success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
+        return Reply(success)
+
+    def export_data(self, msg: ExportDataReq) -> Reply:
+        success = self.io.export_data(
+            msg.file_name, msg.data if msg.data else self.worker.data_msg(), msg.params
+        )
+        return Reply(success)
+
+    def load_data(self, msg: LoadDataReq) -> Reply:
+        data = self.io.load_data(msg.file_name)
+        if data is None:
+            return Reply(False)
+
+        if msg.to_buffer:
+            msg = "Cannot load data to buffer (buffer is not supported)."
+            self.logger.error(msg)
+            return Reply(False, msg)
+        if self.state == BinaryState.ACTIVE:
+            return Reply(False, "Cannot load data when active.")
+        self.worker.data = data
+        return Reply(True, ret=data)
+
     def wait(self):
         self.logger.info("Waiting for instrument server...")
         for inst in self.cli.insts():
@@ -75,16 +113,14 @@ class Chrono(BasicMeasNode):
         self.poll()
         updated = self._work()
         time_to_pub = self.pub_timer.check()
-        self._publish(updated or time_to_pub, time_to_pub)
+        self._publish(updated or time_to_pub)
 
     def _work(self) -> bool:
         if self.state == BinaryState.ACTIVE:
             return self.worker.work()
         return False
 
-    def _publish(self, publish_data: bool, publish_buffer: bool):
+    def _publish(self, publish_data: bool):
         self.status_pub.publish(BinaryStatus(state=self.state))
         if publish_data:
             self.data_pub.publish(self.worker.data_msg())
-        if publish_buffer:
-            self.buffer_pub.publish(self.buffer)

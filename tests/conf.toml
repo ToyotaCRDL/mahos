@@ -94,6 +94,18 @@ base_config = "default_expt"
 module = "mock"
 class = "Camera_mock"
 
+[localhost.server.instrument.dmm0]
+module = "mock"
+class = "DMM_mock"
+[localhost.server.instrument.dmm0.conf]
+DCV_bias = 0.0
+
+[localhost.server.instrument.dmm1]
+module = "mock"
+class = "DMM_mock"
+[localhost.server.instrument.dmm1.conf]
+DCV_bias = 1.0
+
 [localhost.server.instrument_overlay.scanner]
 module = "confocal_scanner_mock"
 class = "ConfocalScanner_mock"
@@ -296,6 +308,19 @@ param_dicts = ["paramX::labelA", "paramY::labelB"]
 [localhost.tweaker.target.servers]
 paramX = "localhost::server"
 paramY = "localhost::server"
+
+[localhost.chrono]
+module = "mahos.meas.chrono"
+class = "Chrono"
+target = { log = "localhost::log" }
+rep_endpoint = "tcp://127.0.0.1:5594"
+pub_endpoint = "tcp://127.0.0.1:5595"
+[localhost.chrono.collector.mode.all]
+dmm0 = "dcv"
+dmm1 = "dcv"
+[localhost.chrono.target.servers]
+dmm0 = "localhost::server"
+dmm1 = "localhost::server"
 
 [localhost.confocal_gui]
 module = "mahos.gui.confocal"

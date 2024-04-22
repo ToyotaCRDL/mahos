@@ -10,28 +10,68 @@ Message Types for the Chrono.
 
 from __future__ import annotations
 
+import numpy as np
+import msgpack
+
 from .common_meas_msgs import BasicMeasData
 
 
 class ChronoData(BasicMeasData):
     def __init__(self, params: dict | None = None):
+        """Note that set_units() must be called before collecting actual data."""
+
         self.set_version(0)
         self.init_params(params)
         self.init_attrs()
 
-        self.data = {}
-        self.units = {}
-        self.xdata = []
+        # not using dict for units and data here
+        # because assoc. array is easier to save to / load from HDF5 file
+        self.units: list[tuple[str, str]] = []
+        self.data: list[list[float]] = []
+        self.xdata: list[float] = []
 
-    def set_units(self, units):
+    def set_units(self, units: list[tuple[str, str]]):
+        """set units and initialize data.
+
+        units is list of (instrument name, unit name).
+
+        """
+
         self.units = units
+        self.data = [[] for _ in units]
 
-    def append(self, x, y):
+    def get_insts(self) -> list:
+        """Get list of recorded instrument names (data labels)."""
+
+        return [u[0] for u in self.units]
+
+    def index(self, inst: str) -> int:
+        """Get index of instrument name (data label)."""
+
+        return self.get_insts().index(inst)
+
+    def roll(self, data):
+        max_len = self.params.get("max_len", 0)
+        if max_len <= 0 or len(data) <= max_len:
+            return data
+        return data[len(data) - max_len :]
+
+    def append(self, x: float, y: dict[str, float]):
         self.xdata.append(x)
-        for name, value in y.items():
-            if name not in self.data:
-                self.data[name] = []
-            self.data[name].append(value)
+        self.xdata = self.roll(self.xdata)
+        for inst, value in y.items():
+            i = self.index(inst)
+            self.data[i].append(value)
+            self.data[i] = self.roll(self.data[i])
+
+    def get_xdata(self) -> np.ndarray:
+        return np.array(self.xdata)
+
+    def get_unit(self, inst: str) -> str:
+        return self.unit[self.index(inst)][1]
+
+    def get_ydata(self, inst: str) -> np.ndarray:
+        return np.array(self.data[self.index(inst)])
 
     def init_axes(self):
         self.xlabel: str = "Time"
@@ -41,3 +81,34 @@ class ChronoData(BasicMeasData):
 
     def has_data(self):
         return self.data and self.xdata
+
+    # h5
+    def _h5_write_units(self, val):
+        d = val.copy()
+        return np.void(msgpack.dumps(d))
+
+    def _h5_write_data(self, val):
+        return np.array(val)
+
+    def _h5_read_units(self, val):
+        return msgpack.loads(val.tobytes())
+
+    def _h5_read_data(self, val):
+        return np.array(val).tolist()
+
+    def _h5_attr_writers(self) -> dict:
+        return {"units": self._h5_write_units}
+
+    def _h5_dataset_writers(self) -> dict:
+        return {"xdata": self._h5_write_data, "data": self._h5_write_data}
+
+    def _h5_readers(self) -> dict:
+        return {
+            "units": self._h5_read_units,
+            "xdata": self._h5_read_data,
+            "data": self._h5_read_data,
+        }
+
+
+def update_data(data: ChronoData):
+    return data

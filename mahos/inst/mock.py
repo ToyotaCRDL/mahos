@@ -824,3 +824,76 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
+
+
+class DMM_mock(Instrument):
+    class Mode(enum.Enum):
+        UNCONFIGURED = 0
+        DCV = 1
+
+    def __init__(self, name, conf=None, prefix=None):
+        Instrument.__init__(self, name, conf=conf, prefix=prefix)
+
+        self._running = False
+        self._mode = self.Mode.UNCONFIGURED
+
+        # just for debug
+        self._DCV_bias = self.conf.get("DCV_bias", 0.0)
+
+    def configure_DCV(self) -> bool:
+        self._mode = self.Mode.DCV
+        self.logger.info("Configured for DC Voltage measurement.")
+        return True
+
+    def get_data(self):
+        if self._mode == self.Mode.DCV:
+            return np.random.normal(self._DCV_bias, 1.0, size=1)[0]
+        else:
+            self.logger.error("get_data() is called but not configured.")
+            return None
+
+    def get_unit(self) -> str:
+        if self._mode == self.Mode.DCV:
+            return "V"
+        else:
+            self.logger.error("get_unit() is called but not configured.")
+            return ""
+
+    def get(self, key: str, args=None):
+        if key == "opc":
+            return True
+        elif key == "data":
+            return self.get_data()
+        elif key == "unit":
+            return self.get_unit()
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
+        if label == "dcv":
+            return P.ParamDict(
+                nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
+                trigger=P.StrChoiceParam("IMM", ["IMM", "BUS", "EXT"]),
+            )
+        else:
+            return self.fail_with(f"unknown label {label}")
+
+    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+        label = label.lower()
+        if label == "dcv":
+            return self.configure_DCV()
+        else:
+            self.fail_with(f"unknown label: {label}")
+
+    def start(self) -> bool:
+        if self._mode == self.Mode.DCV:
+            return True
+        else:  # UNCONFIGURED
+            return self.fail_with("start() is called but not configured.")
+
+    def stop(self) -> bool:
+        if self._mode == self.Mode.DCV:
+            return True
+        else:  # UNCONFIGURED
+            return self.fail_with("stop() is called but not configured.")

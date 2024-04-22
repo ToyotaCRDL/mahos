@@ -11,6 +11,7 @@ Digital MultiMeter module.
 from __future__ import annotations
 import enum
 
+from ..msgs import param_msgs as P
 from .visa_instrument import VisaInstrument
 
 
@@ -63,7 +64,7 @@ class Agilent34410A(VisaInstrument):
         return True
 
     def configure_DCV(self, nplc: int = 10, trigger: str = "IMM") -> bool:
-        """Setup Continuous Wave output with fixed freq and power."""
+        """Setup DC Voltage (on-demand) measurement."""
 
         success = (
             self.rst_cls()
@@ -95,6 +96,13 @@ class Agilent34410A(VisaInstrument):
             self.logger.error("get_data() is called but not configured.")
             return None
 
+    def get_unit(self) -> str:
+        if self._mode == Mode.DCV:
+            return "V"
+        else:
+            self.logger.error("get_unit() is called but not configured.")
+            return ""
+
     # Standard API
 
     def get(self, key: str, args=None):
@@ -102,9 +110,20 @@ class Agilent34410A(VisaInstrument):
             return self.query_opc(delay=args)
         elif key == "data":
             return self.get_data()
+        elif key == "unit":
+            return self.get_unit()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
+
+    def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
+        if label == "dcv":
+            return P.ParamDict(
+                nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
+                trigger=P.StrChoiceParam("IMM", ["IMM", "BUS", "EXT"]),
+            )
+        else:
+            return self.fail_with(f"unknown label {label}")
 
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
         label = label.lower()
@@ -117,13 +136,13 @@ class Agilent34410A(VisaInstrument):
             return False
 
     def start(self) -> bool:
-        if self._mode != Mode.DCV:
+        if self._mode == Mode.DCV:
             return True
         else:  # UNCONFIGURED
             return self.fail_with("start() is called but not configured.")
 
     def stop(self) -> bool:
-        if self._mode != Mode.DCV:
+        if self._mode == Mode.DCV:
             return True
         else:  # UNCONFIGURED
             return self.fail_with("stop() is called but not configured.")

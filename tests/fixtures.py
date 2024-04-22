@@ -30,6 +30,7 @@ from mahos.meas.spectroscopy import Spectroscopy, SpectroscopyClient
 from mahos.meas.camera import Camera, CameraClient
 from mahos.meas.state_manager import StateManager, StateManagerClient
 from mahos.meas.tweaker import Tweaker, TweakerClient
+from mahos.meas.chrono import Chrono, ChronoClient
 
 
 script_dir = path.dirname(path.realpath(__file__))
@@ -39,6 +40,7 @@ gparams_name = "localhost::gparams"
 log_name = "localhost::log"
 manager_name = "localhost::manager"
 tweaker_name = "localhost::tweaker"
+chrono_name = "localhost::chrono"
 confocal_name = "localhost::confocal"
 tracker_name = "localhost::tracker"
 odmr_name = "localhost::odmr"
@@ -117,6 +119,7 @@ def gconf():
     local_conf(gconf, camera_name)["poll_timeout_ms"] = 50
     local_conf(gconf, manager_name)["poll_timeout_ms"] = 50
     local_conf(gconf, tweaker_name)["poll_timeout_ms"] = 50
+    local_conf(gconf, chrono_name)["poll_timeout_ms"] = 50
 
     # add conf for dummy
     n = split_name(dummy_name)
@@ -148,6 +151,11 @@ def manager_conf(gconf):
 @pytest.fixture
 def tweaker_conf(gconf):
     return local_conf(gconf, tweaker_name)
+
+
+@pytest.fixture
+def chrono_conf(gconf):
+    return local_conf(gconf, chrono_name)
 
 
 @pytest.fixture
@@ -278,6 +286,15 @@ def manager(ctx, gconf):
 def tweaker(ctx, gconf):
     proc, shutdown_ev = start_node_proc(ctx, Tweaker, gconf, tweaker_name)
     client = TweakerClient(gconf, tweaker_name)
+    yield client
+    client.close()
+    stop_proc(proc, shutdown_ev)
+
+
+@pytest.fixture
+def chrono(ctx, gconf):
+    proc, shutdown_ev = start_node_proc(ctx, Chrono, gconf, chrono_name)
+    client = ChronoClient(gconf, chrono_name)
     yield client
     client.close()
     stop_proc(proc, shutdown_ev)
