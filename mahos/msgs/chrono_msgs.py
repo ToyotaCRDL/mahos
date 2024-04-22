@@ -40,10 +40,15 @@ class ChronoData(BasicMeasData):
         self.units = units
         self.data = [[] for _ in units]
 
-    def get_insts(self) -> list:
+    def get_insts(self) -> list[str]:
         """Get list of recorded instrument names (data labels)."""
 
         return [u[0] for u in self.units]
+
+    def get_units(self) -> list[str]:
+        """Get list of units."""
+
+        return [u[1] for u in self.units]
 
     def get_unit_to_insts(self) -> dict[str, list[str]]:
         """Get a map from unit to list of corresponding inst."""

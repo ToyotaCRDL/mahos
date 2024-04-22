@@ -11,8 +11,8 @@ File I/O for Chrono.
 from __future__ import annotations
 from os import path
 from itertools import cycle
+from datetime import datetime
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 from ..msgs.chrono_msgs import ChronoData, update_data
@@ -45,8 +45,6 @@ class ChronoIO(object):
 
         :param filename: supported extensions: text: .txt and .csv. image: .png, .pdf, and .eps.
         :param data: single data or list of data
-        :param params.offset: offset along y-axis
-        :type params.offset: list[float]
         :param params.xmin: lower limit of x-axis
         :type params.xmin: float
         :param params.xmax: upper limit of x-axis
@@ -61,8 +59,6 @@ class ChronoIO(object):
         :type params.fontsize: float
         :param params.dpi: matplotlib dpi
         :type params.dpi: float
-        :param params.label: matplotlib labels
-        :type params.label: list[str]
         :param params.color: matplotlib colors for data
         :type params.color: list[str]
         :param params.linewidth: matplotlib linewidths for data
@@ -99,30 +95,34 @@ class ChronoIO(object):
     def _export_data_image(self, fn, data: ChronoData, params: dict):
         plt.rcParams["font.size"] = params.get("fontsize", 28)
 
-        label = params.get("label") or list[data.units.keys()]
-        offset = params.get("offset") or [0.0] * len(label)
-        color = cycle(params.get("color") or [f"C{i}" for i in range(10)])
-        marker = cycle(params.get("marker") or ["o", "s", "^", "p", "*", "D", "h", "."])
-
         fig = plt.figure(figsize=params.get("figsize", (12, 12)), dpi=params.get("dpi", 100))
-        ax = fig.add_subplot(111)
+        unit_to_insts = data.get_unit_to_insts()
+        x = [datetime.fromtimestamp(s) for s in data.get_xdata()]
+        if len(unit_to_insts) == 1:
+            axes = [fig.subplots()]
+        else:
+            axes = fig.subplots(len(unit_to_insts))
 
-        lines = []
-        x = data.get_xdata()
-        ys = data.get_ydata()
-        for l, ofs, col, mk in zip(label, offset, color, marker):
-            y = ys[l]
-            lw = 1.0 if params.get("linewidth") is None else params.get("linewidth")
-            lines.append(ax.plot(x, np.array(y) + ofs, label=l, color=col, linewidth=lw)[0])
+        for ax, (unit, insts) in zip(axes, unit_to_insts.items()):
+            color = cycle(params.get("color") or [f"C{i}" for i in range(10)])
+            marker = cycle(params.get("marker") or ["o", "s", "^", "p", "*", "D", "h", "."])
+            lines = []
 
-        # set_xlim and set_ylim should be called after all plots to auto-scale properly
-        ax.set_xlim(params.get("xmin"), params.get("xmax"))
-        ax.set_ylim(params.get("ymin"), params.get("ymax"))
+            for inst, col, mk in zip(insts, color, marker):
+                y = data.get_ydata(inst)
+                lw = 1.0 if params.get("linewidth") is None else params.get("linewidth")
+                lines.append(ax.plot(x, y, label=inst, color=col, linewidth=lw)[0])
 
-        if params.get("legend") is not None:
-            ax.legend(handles=lines, loc=params["legend"])
+            # set_xlim and set_ylim should be called after all plots to auto-scale properly
+            ax.set_xlim(params.get("xmin"), params.get("xmax"))
+            ax.set_ylim(params.get("ymin"), params.get("ymax"))
 
-        plt.xlabel(r"Time (s)")
+            leg = params.get("legend", "best")
+            if leg is not None:
+                ax.legend(handles=lines, loc=leg)
+
+            ax.set_xlabel(r"Time (s)")
+            ax.set_ylabel(f"{unit} ({unit})")
 
         plt.savefig(fn)
         plt.close()

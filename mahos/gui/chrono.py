@@ -65,7 +65,8 @@ class PlotWidget(QtWidgets.QWidget):
             plot = self.layout.addPlot(row=i, col=0, lockAspect=False)
             plot.showGrid(x=True, y=True)
 
-            plot.setLabel("bottom", data.xlabel, data.xunit)
+            ai = pg.DateAxisItem(text="Date time")
+            plot.setAxisItems({"bottom": ai})
             plot.setLabel("left", unit, unit)
             plot.addLegend()
             self._plots.append(plot)
@@ -135,7 +136,7 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
 
     def save_data(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = save_dialog(self, default_path, "" "")
+        fn = save_dialog(self, default_path, "Chrono", ".chrono")
         if not fn:
             return
 
@@ -149,7 +150,7 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
 
     def load_data(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = load_dialog(self, default_path, "", "")
+        fn = load_dialog(self, default_path, "Chrono", ".chrono")
         if not fn:
             return
 
