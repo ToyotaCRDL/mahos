@@ -19,7 +19,7 @@ from .common_worker import Worker
 
 
 class Collector(Worker):
-    def __init__(self, cli, logger, conf: dict):
+    def __init__(self, cli, logger, conf: dict, mode: dict | None = None):
         Worker.__init__(self, cli, logger)
 
         self.interval_sec = conf.get("interval_sec", 0.1)
@@ -27,7 +27,7 @@ class Collector(Worker):
         self.add_instruments([InstrumentInterface(self.cli, inst) for inst in self.insts])
         self.used_insts = []
 
-        self.mode_inst_labels = conf.get("mode", {"all": {inst: "" for inst in self.insts}})
+        self.mode_inst_labels = mode or {"all": {inst: "" for inst in self.insts}}
 
         self.data = ChronoData()
         self.timer = None

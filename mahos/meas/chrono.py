@@ -46,7 +46,7 @@ class Chrono(BasicMeasNode):
         else:
             self.tweaker_cli = None
 
-        self.worker = Collector(self.cli, self.logger, self.conf["collector"])
+        self.worker = Collector(self.cli, self.logger, self.conf["collector"], self.conf["mode"])
         self.io = ChronoIO(self.logger)
         self.pub_timer = IntervalTimer(self.conf.get("pub_interval_sec", 0.5))
 

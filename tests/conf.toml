@@ -327,17 +327,19 @@ class = "Chrono"
 target = { log = "localhost::log" }
 rep_endpoint = "tcp://127.0.0.1:5594"
 pub_endpoint = "tcp://127.0.0.1:5595"
-[localhost.chrono.collector.mode.all]
+[localhost.chrono.collector]
+interval_sec = 0.5
+[localhost.chrono.mode.all]
 dmm0 = "dcv"
 dmm1 = "dcv"
 dmm2 = "dcv"
 dmm3 = "dcv"
-[localhost.chrono.collector.mode.mix]
+[localhost.chrono.mode.mix]
 dmm0 = "dcv"
 dmm1 = "dci"
 dmm2 = "dci"
 dmm3 = "dcv"
-[localhost.chrono.collector.mode.few]
+[localhost.chrono.mode.few]
 dmm1 = "dcv"
 dmm2 = "dci"
 [localhost.chrono.target.servers]
