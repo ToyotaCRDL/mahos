@@ -5,6 +5,12 @@ Changelog
 [Unreleased]
 ------------
 
+Added
+^^^^^
+
+- meas: new measurement Chrono.
+- inst: new module dmm (for Digital Multi Meter).
+
 [0.2.3] - 2023-11-06
 --------------------
 
