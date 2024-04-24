@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Time to Digital Converter (Time Digitizer) module
+Fast ComTec MCS6 / MCS8 module
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -16,10 +16,9 @@ import os
 
 import numpy as np
 
-from .instrument import Instrument
-
-from ..msgs.inst_tdc_msgs import RawEvents
-from ..util.io import save_h5
+from ..instrument import Instrument
+from ...msgs.inst_tdc_msgs import RawEvents
+from ...util.io import save_h5
 
 
 def c_str(s: str) -> C.c_char_p:
@@ -499,7 +498,7 @@ class MCS(Instrument):
 
         return header, format_info, data
 
-    def configure_base_range_bin_save(
+    def configure_raw_events(
         self,
         base_config: str,
         trange: float,
@@ -512,12 +511,12 @@ class MCS(Instrument):
 
         """
 
-        if not self.configure_base_range_bin(base_config, trange, tbin):
+        if not self.configure_histogram(base_config, trange, tbin):
             return False
 
         return self.set_save_file_name(save_file)
 
-    def configure_base_range_bin(self, base_config: str, trange: float, tbin: float) -> bool:
+    def configure_histogram(self, base_config: str, trange: float, tbin: float) -> bool:
         """Load base config and set range and timebin in sec.
 
         Note that actual timebin maybe rounded.
@@ -565,25 +564,32 @@ class MCS(Instrument):
         return self.run_command("cont")
 
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
-        if all([k in params for k in ("base_config", "range", "bin", "save_file")]):
-            return self.configure_base_range_bin_save(
-                params["base_config"], params["range"], params["bin"], params["save_file"]
-            )
-        elif all([k in params for k in ("base_config", "range", "bin")]):
-            return self.configure_base_range_bin(
-                params["base_config"], params["range"], params["bin"]
-            )
-        elif all([k in params for k in ("range", "bin")]):
-            return self.configure_range_bin(params["range"], params["bin"])
+        if label == "histogram":
+            if all([k in params for k in ("base_config", "range", "bin")]):
+                return self.configure_histogram(
+                    params["base_config"], params["range"], params["bin"]
+                )
+        elif label == "raw_events":
+            if all([k in params for k in ("base_config", "range", "bin", "save_file")]):
+                return self.configure_raw_events(
+                    params["base_config"], params["range"], params["bin"], params["save_file"]
+                )
         else:
-            self.logger.error("invalid configure() params keys.")
-            return False
+            return self.fail_with(f"invalid label {label}")
+
+        return self.fail_with("invalid configure() params keys.")
 
     def set(self, key: str, value=None) -> bool:
         if key == "clear":
             return self.clear()
         elif key == "sweeps":
             return self.set_sweep_preset(value, bool(value))
+        elif key == "duration":
+            if value:
+                # TODO we can actually set duration limit. implement this.
+                return self.fail_with("Cannot set duration limit.")
+            else:
+                return True
         elif key == "save_file":
             return self.set_save_file_name(value)
         else:

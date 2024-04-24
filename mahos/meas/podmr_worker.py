@@ -349,12 +349,8 @@ class Pulser(Worker):
             return False
 
         # Detector
-        tdc_params = {
-            "base_config": "podmr",
-            "bin": params["timebin"],
-            "range": self.length / self.freq - self.eos_margin,
-        }
-        if not self.tdc.configure(tdc_params):
+        trange = self.length / self.freq - self.eos_margin
+        if not self.tdc.configure_histogram("podmr", trange, params["timebin"]):
             self.logger.error("Error configuring TDC.")
             return False
         if params["sweeps"] and not self.tdc.set_sweeps(params["sweeps"]):

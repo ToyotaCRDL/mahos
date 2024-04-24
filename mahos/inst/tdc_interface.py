@@ -20,21 +20,25 @@ from ..msgs.inst_tdc_msgs import RawEvents
 class TDCInterface(InstrumentInterface):
     """Interface for Time to Digital Converter."""
 
-    def configure_base_range_bin_save(
-        self, base_config: str, trange: float, tbin: float, save_file: str
+    def configure_raw_events(
+        self, base_config: str, save_file: str, trange: float = 0.0, tbin: float = 0.0
     ) -> bool:
-        """Load base config, set range and timebin in sec, and save file name.
+        """Configure for raw_events measurement.
 
-        Note that actual timebin maybe rounded.
-        Set tbin to 0.0 for minimum bin.
+        trange and tbin may not be required for some instruments.
 
         """
 
-        params = {"base_config": base_config, "range": trange, "bin": tbin, "save_file": save_file}
-        return self.configure(params)
+        params = {
+            "base_config": base_config,
+            "save_file": save_file,
+            "range": trange,
+            "bin": tbin,
+        }
+        return self.configure(params, label="raw_events")
 
-    def configure_base_range_bin(self, base_config: str, trange: float, tbin: float) -> bool:
-        """Load base config and set range and timebin in sec.
+    def configure_histogram(self, base_config: str, trange: float, tbin: float) -> bool:
+        """Configure for histogram measurement.
 
         Note that actual timebin maybe rounded.
         Set tbin to 0.0 for minimum bin.
@@ -42,18 +46,18 @@ class TDCInterface(InstrumentInterface):
         """
 
         params = {"base_config": base_config, "range": trange, "bin": tbin}
-        return self.configure(params)
+        return self.configure(params, label="histogram")
 
-    def configure_range_bin(self, trange: float, tbin: float) -> bool:
-        """Set range and binwidth according to trange and tbin in sec.
+    def configure_correlation(self, base_config: str, trange: float, tbin: float) -> bool:
+        """Configure for correlation measurement.
 
         Note that actual timebin maybe rounded.
         Set tbin to 0.0 for minimum bin.
 
         """
 
-        params = {"range": trange, "bin": tbin}
-        return self.configure(params)
+        params = {"base_config": base_config, "range": trange, "bin": tbin}
+        return self.configure(params, label="histogram")
 
     def clear(self) -> bool:
         """Clear the data."""
@@ -65,13 +69,18 @@ class TDCInterface(InstrumentInterface):
 
         return self.set("sweeps", sweeps)
 
+    def set_duration(self, duration: float) -> bool:
+        """set limit of measurement duration. duration == 0 means unlimited."""
+
+        return self.set("duration", duration)
+
     def set_save_file_name(self, name: str) -> bool:
         """set save file name."""
 
         return self.set("file_name", name)
 
     def get_range_bin(self) -> dict:
-        """Get range and bin."""
+        """Get range and bin in sec."""
 
         return self.get("range_bin")
 

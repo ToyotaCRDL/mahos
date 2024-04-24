@@ -291,21 +291,17 @@ class Pulser(Worker):
             return False
 
         # Detector
-        tdc_params = {
-            "base_config": "qdyne",
-            "range": self.length / self.freq,
-            "bin": 0.0,
-            "save_file": "qdyne_" + self.data.ident.hex,
-        }
-        if not self.tdc.configure(tdc_params):
+        trange = self.length / self.freq
+        save_file = "qdyne_" + self.data.ident.hex
+        if not self.tdc.configure_raw_events("qdyne", save_file, trange=trange, tbin=0.0):
             self.logger.error("Error configuring TDC.")
             return False
         if params["sweeps"] and not self.tdc.set_sweeps(params["sweeps"]):
             self.logger.error("Error setting sweeps for TDC.")
             return False
-        d = self.tdc.get_range_bin()
+        tbin = self.tdc.get_timebin()
 
-        self.data.set_instrument_params(d["bin"], self.freq, self.length, self.offsets)
+        self.data.set_instrument_params(tbin, self.freq, self.length, self.offsets)
         self.data.set_marker_indices()
 
         return True
