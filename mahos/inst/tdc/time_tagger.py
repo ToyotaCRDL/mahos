@@ -209,9 +209,27 @@ class TimeTagger(Instrument):
             try:
                 return self.meas[ch].getData()
             except IndexError:
+                self.logger.error(f"channel {ch} is out of bounds.")
                 return None
 
         return self.meas.getData()
+
+    def get_data_normalized(self, ch: int = 0) -> np.ndarray | None:
+        if isinstance(self.meas, list):
+            try:
+                return self.meas[ch].getDataNormalized()
+            except IndexError:
+                self.logger.error(f"channel {ch} is out of bounds.")
+                return None
+            except AttributeError:
+                self.logger.error("current measurement doesn't support data_normalized.")
+                return None
+
+        try:
+            return self.meas.getDataNormalized()
+        except AttributeError:
+            self.logger.error("current measurement doesn't support data_normalized.")
+            return None
 
     def get_data_roi(self, ch: int, roi: list[tuple[int, int]]) -> list[np.ndarray] | None:
         data = self.get_data(ch)
@@ -360,6 +378,8 @@ class TimeTagger(Instrument):
             return self.get_timebin()
         elif key == "data":
             return self.get_data(args)
+        elif key == "data_normalized":
+            return self.get_data_normalized(args)
         elif key == "data_roi":
             return self.get_data_roi(args["ch"], args["roi"])
         elif key == "status":

@@ -25,12 +25,14 @@ class UpdatePlotParamsReq(Request):
 
 class HBTData(BasicMeasData):
     def __init__(self, params: dict | None = None):
-        self.set_version(1)
+        self.set_version(2)
         self.init_params(params)
         self.init_attrs()
 
         self.data = None
+        self.data_normalized = None
         self.timebin = None
+        self.tdc_correlation = False
 
     def init_axes(self):
         self.xlabel: str = "Time"
@@ -57,36 +59,35 @@ class HBTData(BasicMeasData):
         if not self.has_data():
             return None
 
+        if self.tdc_correlation:
+            raise NotImplementedError("TODO")
         x = np.linspace(0.0, self.timebin * (len(self.data) - 1), num=len(self.data))
         if normalize:
             return x - self.get_t0()
         else:
             return x
 
-    def get_ydata(self, normalize: bool = False, fit: bool = False):
+    def get_ydata(self, normalize: bool = False):
         if normalize:
-            return self._get_normalized_ydata(fit)
-        return self.fit_data if fit else self.data
+            return self._get_normalized_ydata()
+        return self.data
 
-    def _get_normalized_ydata(self, fit: bool):
+    def _get_normalized_ydata(self):
+        if self.data_normalized is not None:
+            return self.data_normalized
+
         ref = self.get_reference()
         bg = ref * self.get_bg_ratio()
-        y = self.fit_data if fit else self.data
+        y = self.data
         if y is None:
             return None
         return (y - bg) / (ref - bg)
 
-    def get_fit_xdata(self, normalize: bool = False):
-        if self.fit_xdata is None:
-            return None
+    def get_fit_xdata(self):
+        return self.fit_xdata
 
-        if normalize:
-            return self.fit_xdata - self.get_t0()
-        else:
-            return self.fit_xdata
-
-    def get_fit_ydata(self, normalize: bool = False):
-        return self.get_ydata(normalize=normalize, fit=True)
+    def get_fit_ydata(self):
+        return self.fit_data
 
     def get_t0(self) -> float:
         return self.params["plot"]["t0"]
@@ -157,5 +158,20 @@ def update_data(data: HBTData):
         )
         data._saved = True
         data.set_version(1)
+
+    if data.version() == 1:
+        # normalize fit data
+        if data.fit_xdata is not None:
+            data.fit_xdata = data.fit_xdata - data.get_t0()
+        if data.fit_data is not None:
+            ref = data.get_reference()
+            bg = ref * data.get_bg_ratio()
+            data.fit_data = (data.fit_data - bg) / (ref - bg)
+
+        ## missing attributes
+        data.data_normalized = None
+        data.tdc_correlation = False
+
+        data.set_version(2)
 
     return data

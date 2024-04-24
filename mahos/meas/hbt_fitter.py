@@ -54,11 +54,6 @@ class Fitter(BaseFitter):
 
         return xdata, ydata
 
-    def set_fit_data(self, data: HBTData, fit_x, fit_y, raw_params, result_dict):
-        data.set_fit_data(
-            data.denormalize_xdata(fit_x), data.denormalize_ydata(fit_y), raw_params, result_dict
-        )
-
 
 def three_level_g2(x, t1, t2, alpha):
     return 1.0 - (1.0 + alpha) * np.exp(-np.abs(x) / t1) + alpha * np.exp(-np.abs(x) / t2)

@@ -89,7 +89,8 @@ class HBTIO(object):
         :type params.linewidth_fit: list[float]
         :param params.marker: matplotlib markers for data
         :type params.marker: list[str]
-        :param params.show_fit: set True to plot fit data
+        :param params.show_fit: set True to plot fit data.
+            normalize must be also True to show fit data.
         :type params.show_fit: bool
         :param params.legend: legend location (best|upper left|...). None to disable legend.
         :type params.legend: str|None
@@ -164,9 +165,14 @@ class HBTIO(object):
         for data, l, ofs, cf, col, mk in zip(data_list, label, offset, color_fit, color, marker):
             x = data.get_xdata(normalize=normalize) * coeff
             y = data.get_ydata(normalize=normalize)
-            xfit = data.get_fit_xdata(normalize=normalize)
-            yfit = data.get_fit_ydata(normalize=normalize)
-            if params.get("show_fit", True) and xfit is not None and yfit is not None:
+            xfit = data.get_fit_xdata()
+            yfit = data.get_fit_ydata()
+            if (
+                params.get("show_fit", True)
+                and normalize
+                and xfit is not None
+                and yfit is not None
+            ):
                 lw_fit = params.get("linewidth_fit", 1.0)
                 lw = 0.0 if params.get("linewidth") is None else params.get("linewidth")
                 ax.plot(

@@ -94,6 +94,11 @@ class TDCInterface(InstrumentInterface):
 
         return self.get("data", ch)
 
+    def get_data_normalized(self, ch: int) -> np.ndarray | None:
+        """Get normalized data of channel `ch`."""
+
+        return self.get("data_normalized", ch)
+
     def get_data_roi(self, ch: int, roi: list[tuple[int, int]]) -> list[np.ndarray] | None:
         """Get data of channel `ch` using ROI."""
 

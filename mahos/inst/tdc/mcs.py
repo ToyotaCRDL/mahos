@@ -605,6 +605,9 @@ class MCS(Instrument):
             if not isinstance(args, int):
                 self.logger.error('get("data", args): args must be int (channel).')
             return self.get_data(args)
+        elif key == "data_normalized":
+            self.logger.error("MCS doesn't support get('data_normalized')")
+            return None
         elif key == "data_roi":
             return self.get_data_roi(args["ch"], args["roi"])
         elif key == "status":

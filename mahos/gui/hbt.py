@@ -113,11 +113,13 @@ class PlotWidget(QtWidgets.QWidget):
         for data, show_fit, color in data_list:
             normalize = self.normalizeBox.isChecked()
             x = data.get_xdata(normalize=normalize)
-            xfit = data.get_fit_xdata(normalize=normalize)
             y = data.get_ydata(normalize=normalize)
-            yfit = data.get_fit_ydata(normalize=normalize)
+            xfit = data.get_fit_xdata()
+            yfit = data.get_fit_ydata()
 
-            if show_fit and xfit is not None and yfit is not None:
+            # because fit is saved as normalized data,
+            # it can be visualized only when normalize == True.
+            if show_fit and normalize and xfit is not None and yfit is not None:
                 self.plot.plot(
                     x, y, pen=None, symbolPen=None, symbol="o", symbolSize=4, symbolBrush=color
                 )

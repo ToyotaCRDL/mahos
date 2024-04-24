@@ -14,20 +14,49 @@ from ..util.timer import IntervalTimer
 from ..msgs.hbt_msgs import HBTData
 from ..msgs import param_msgs as P
 from ..inst.tdc_interface import TDCInterface
+from ..util.conf import PresetLoader
 from .common_worker import Worker
 
 
 class Listener(Worker):
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger)
+        self.load_conf_preset(cli)
+
         self.tdc = TDCInterface(cli, "tdc")
         self.add_instrument(self.tdc)
 
         self.interval_sec = conf.get("interval_sec", 1.0)
-        self._default_t0 = conf.get("default_t0_ns", 100.0) * 1e-9
+        self.tdc_correlation = self.conf.get("tdc_correlation", False)
+
+        if self.tdc_correlation and "t0_ns" in conf:
+            self.logger.warn("conf['t0_ns'] is irrelevant if conf['tdc_correlation'] is True.")
+        elif "default_t0_ns" in conf:
+            self.logger.warn("conf['default_t0_ns'] is deprecated. use 't0_ns' instead.")
+            self._t0 = conf.get("default_t0_ns", 100.0) * 1e-9
+        else:
+            self._t0 = conf.get("t0_ns", 100.0) * 1e-9
 
         self.data = HBTData()
         self.timer = None
+
+    def load_conf_preset(self, cli):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.FORWARD)
+        loader.add_preset(
+            "MCS",
+            [
+                ("tdc_correlation", False),
+                ("tdc_normalize", False),
+            ],
+        )
+        loader.add_preset(
+            "TimeTagger",
+            [
+                ("tdc_correlation", True),
+                ("tdc_normalize", True),
+            ],
+        )
+        loader.load_preset(self.conf, cli.class_name("tdc"))
 
     def update_plot_params(self, params: dict) -> bool:
         if not self.data.has_params():
@@ -37,8 +66,12 @@ class Listener(Worker):
         return True
 
     def get_param_dict(self) -> P.ParamDict[str, P.PDValue]:
+        if self.tdc_correlation:
+            t0 = P.FloatParam(0.0, 0.0, 0.0, unit="s", SI_prefix=True)
+        else:
+            t0 = P.FloatParam(self._t0, minimum=0.0, maximum=1e-6, unit="s", SI_prefix=True)
         plot_param = P.ParamDict(
-            t0=P.FloatParam(self._default_t0, minimum=0.0, maximum=1e-6, unit="s", SI_prefix=True),
+            t0=t0,
             ref_start=P.FloatParam(
                 -200e-9, minimum=-10e-6, maximum=10e-6, unit="s", SI_prefix=True
             ),
@@ -66,9 +99,11 @@ class Listener(Worker):
             if not ("range" in params and "bin" in params):
                 self.logger.error("Required params: range and bin.")
                 return False
-            c = {"base_config": "hbt", "range": params["range"], "bin": params["bin"]}
 
-            success &= self.tdc.configure(c)
+            if self.tdc_correlation:
+                success &= self.tdc.configure_correlation("hbt", params["range"], params["bin"])
+            else:
+                success &= self.tdc.configure_histogram("hbt", params["range"], params["bin"])
             timebin = self.tdc.get_timebin()
             success &= self.tdc.stop()
             # necessary to call clear() here?
@@ -88,6 +123,7 @@ class Listener(Worker):
             # new measurement.
             self.data = HBTData(params)
             self.data.set_bin(timebin)
+            self.data.tdc_correlation = self.tdc_correlation
             self.data.start()
             self.logger.info("Started listener.")
 
@@ -98,9 +134,15 @@ class Listener(Worker):
             return False
 
         if self.timer.check():
-            d = self.tdc.get_data(1)
+            ch = self.conf.get("tdc_channel", 1)
+            d = self.tdc.get_data(ch)
+            if self.conf.get("tdc_normalize", False):
+                d_normalized = self.tdc.get_data_normalized(ch)
+            else:
+                d_normalized = None
             if d is not None:
                 self.data.data = d
+                self.data.data_normalized = d_normalized
                 return True
         return False
 
