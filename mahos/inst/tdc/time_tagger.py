@@ -11,39 +11,25 @@ Swabian Instruments Time Tagger module
 from __future__ import annotations
 import os
 import time
-from typing import NamedTuple
 
 import numpy as np
 import TimeTagger as tt
 
 from ..instrument import Instrument
-from ...msgs.inst_tdc_msgs import RawEvents
+from ...msgs.inst_tdc_msgs import ChannelStatus, RawEvents
 from ...util.io import save_h5
-
-
-class Status(NamedTuple):
-    """The status for each channel of Histogram measurement.
-
-    Prepared for compatibility with MCS.
-
-    """
-
-    runtime: float
-    sweeps: int
-    starts: int
-    totalsum: int
-    started: bool
 
 
 class TimeTagger(Instrument):
     """Swabian Instruments Time Tagger
 
-    :param base_configs: Mapping from base config name to actual file name.
-        Used in configure_base_range_bin() etc. See load_config() for details.
+    :param base_configs: Mapping from base config name to channels and levels definitions.
+        Used in configure_histogram() etc.
     :type base_configs: dict[str, str]
-    :param ext_ref_clock: use external reference clock source.
-    :type ext_ref_clock: bool
-    :param raw_events_dir: (default: mcs_dir) The directory to save RawEvents data.
+    :param ext_ref_clock: (default: 0) external reference clock source.
+        0: internal clock, 10: 10 MHz ext clock, 500: 500 MHz ext clock.
+    :type ext_ref_clock: int
+    :param raw_events_dir: (default: user home) The directory to save RawEvents data.
     :type raw_events_dir: str
 
     """
@@ -55,9 +41,8 @@ class TimeTagger(Instrument):
         self.tagger = tt.createTimeTagger(self.conf.get("serial", ""))
         self.logger.info(f"Opened TimeTagger {self.tagger.getSerial()}")
 
-        self.resolution_ps = self.conf.get("resolution_ps", 10)
         self._base_configs = self.conf.get("base_configs", {})
-        self._raw_events_dir = os.path.expanduser(self.conf.get("raw_events_dir"))
+        self._raw_events_dir = os.path.expanduser(self.conf.get("raw_events_dir", "~"))
         self._remove_ttbin = self.conf.get("remove_ttbin", False)
         self.logger.debug(f"available base config names: {self._base_configs}")
 
@@ -124,6 +109,7 @@ class TimeTagger(Instrument):
                 )
             )
         self.counter = tt.Counter(self.sync.getTagger(), conf["channels"])
+        self._duration_ps = 0
         return True
 
     def configure_correlation(self, base_config: str, trange: float, tbin: float) -> bool:
@@ -149,6 +135,7 @@ class TimeTagger(Instrument):
             n_bins=n_bins,
         )
         self.counter = tt.Counter(self.sync.getTagger(), conf["channels"])
+        self._duration_ps = 0
         return True
 
     def configure_raw_events(self, base_config: str, save_file: str) -> bool:
@@ -171,6 +158,7 @@ class TimeTagger(Instrument):
             channels=conf["channels"],
         )
         self.counter = tt.Counter(self.sync.getTagger(), conf["channels"])
+        self._duration_ps = 0
 
         self._save_file_name = save_file
         # unit of raw event (or tbin) is always ps
@@ -184,8 +172,9 @@ class TimeTagger(Instrument):
         """round range and timebin in sec."""
 
         if tbin == 0.0:
-            tbin_ps = self.resolution_ps
-            n_bins = round(trange / tbin_ps * 1e12)
+            # set minimum bin, 1 ps
+            tbin_ps = 1
+            n_bins = round(trange * 1e12)
         else:
             tbin_ps = round(tbin * 1e12)
             n_bins = round(trange / tbin)
@@ -240,32 +229,28 @@ class TimeTagger(Instrument):
             data_roi.append(d)
         return data_roi
 
-    def get_status(self, ch: int) -> Status | None:
+    def get_status(self, ch: int) -> ChannelStatus | None:
         runtime = time.time() - self._tstart
         counts = self.counter.getDataTotalCounts()
-        started = self.sync.isRunning()
+        running = self.sync.isRunning()
         if isinstance(self.meas, list):
             # Histogram measurement
-            sweeps = starts = counts[0]
+            starts = counts[0]
             try:
-                totalsum = counts[1 + ch]
+                total = counts[1 + ch]
             except IndexError:
                 self.logger.error(f"ch {ch} is out of bounds.")
                 return None
-            return Status(
-                runtime=runtime, sweeps=sweeps, starts=starts, totalsum=totalsum, started=started
-            )
+            return ChannelStatus(running, runtime, total, starts)
         elif isinstance(self.meas, (tt.Correlation, tt.FileWriter)):
             # Correlation / Raw events measurement
-            sweeps = starts = 0
+            starts = 0
             try:
-                totalsum = counts[ch]
+                total = counts[ch]
             except IndexError:
                 self.logger.error(f"ch {ch} is out of bounds.")
                 return None
-            return Status(
-                runtime=runtime, sweeps=sweeps, starts=starts, totalsum=totalsum, started=started
-            )
+            return ChannelStatus(running, runtime, total, starts)
         else:
             self.logger.error("Measurement is not configured")
             return None

@@ -40,11 +40,10 @@ class UpdatePlotParamsReq(Request):
 
 
 class TDCStatus(T.NamedTuple):
-    runtime: float
-    sweeps: float
-    starts: float
-    stops0: float
-    stops1: float
+    runtime: int
+    sweeps: int
+    stops0: int
+    stops1: int
 
 
 def is_sweepN(method: str) -> bool:
@@ -152,6 +151,9 @@ class PODMRData(BasicMeasData):
         return np.array(val)
 
     def _h5_read_tdc_status(self, val):
+        if len(val) == 5:
+            # older version had 5 values
+            return TDCStatus(val[0], *val[2:])
         return TDCStatus(*val)
 
     def _h5_attr_writers(self) -> dict:
@@ -538,7 +540,8 @@ def update_data(data: PODMRData):
         # version 0 to 1
         ## tdc_status maybe raw tuple
         if data.tdc_status is not None:
-            data.tdc_status = TDCStatus(*data.tdc_status)
+            s = data.tdc_status
+            data.tdc_status = TDCStatus(s[0], *s[2:])
         ## rename fit_param -> fit_params
         data.fit_params = data.fit_param
         del data.fit_param

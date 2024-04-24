@@ -61,6 +61,9 @@ class QdyneData(BasicMeasData):
         return np.array(val)
 
     def _h5_read_tdc_status(self, val):
+        if len(val) == 5:
+            # older version had 5 values
+            return TDCStatus(val[0], *val[2:])
         return TDCStatus(*val)
 
     def _h5_attr_writers(self) -> dict:

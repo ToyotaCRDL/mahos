@@ -18,7 +18,7 @@ from .instrument import Instrument
 from .pg_dtg_core.dtg_core import DTGCoreMixin
 from ..msgs.confocal_msgs import Axis
 from ..msgs.inst_camera_msgs import FrameResult
-from ..msgs.inst_tdc_msgs import RawEvents
+from ..msgs.inst_tdc_msgs import ChannelStatus, RawEvents
 from ..msgs.inst_pg_msgs import Block, Blocks, BlockSeq
 from ..msgs import param_msgs as P
 
@@ -351,10 +351,8 @@ class MCS_mock(Instrument):
         self._range = 10
         self.resolution_sec = 0.2e-9
         self._bin = 0.2e-9
-        self._sweeps = 0.0
-        from .tdc import MCS
-
-        self.ACQSTATUS = MCS.ACQSTATUS
+        self._starts = 0
+        self._tstart = time.time()
         self._running = False
 
     def get_data(self, nDisplay: int):
@@ -377,13 +375,12 @@ class MCS_mock(Instrument):
             data_roi.append(d)
         return data_roi
 
-    def get_status(self, nDisplay: int):
-        status = self.ACQSTATUS()
-        self._sweeps += 1.0
-        status.started = int(self._running)
-        status.sweeps = self._sweeps
-
-        return status
+    def get_status(self, nDisplay: int) -> ChannelStatus:
+        runtime = time.time() - self._tstart
+        # dummy status
+        total = 0
+        self._starts += 1
+        return ChannelStatus(self._running, runtime, total, self._starts)
 
     def get_raw_events(self) -> RawEvents | None:
         return RawEvents(np.arange(0, 10_000_000, 10, dtype=np.uint64))
@@ -431,7 +428,8 @@ class MCS_mock(Instrument):
     def start(self) -> bool:
         self.logger.info("Started dummy MCS.")
         self._running = True
-        self._sweeps = 0.0
+        self._starts = 0
+        self._tstart = time.time()
         return True
 
     def resume(self) -> bool:

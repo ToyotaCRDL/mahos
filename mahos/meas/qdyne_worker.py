@@ -296,8 +296,11 @@ class Pulser(Worker):
         if not self.tdc.configure_raw_events("qdyne", save_file, trange=trange, tbin=0.0):
             self.logger.error("Error configuring TDC.")
             return False
-        if params["sweeps"] and not self.tdc.set_sweeps(params["sweeps"]):
-            self.logger.error("Error setting sweeps for TDC.")
+        if params.get("sweeps", 0) and not self.tdc.set_sweeps(params["sweeps"]):
+            self.logger.error("Error setting sweeps limit for TDC.")
+            return False
+        if params.get("duration", 0.0) and not self.tdc.set_duration(params["duration"]):
+            self.logger.error("Error setting duration limit for TDC.")
             return False
         tbin = self.tdc.get_timebin()
 
@@ -462,7 +465,8 @@ class Pulser(Worker):
         return self.tdc.stop() and self.wait_tdc_stop() and self.tdc.clear() and self.tdc.resume()
 
     def is_finished(self) -> bool:
-        return False
+        # TDC may stop running by itself if duration limit is set
+        return not self.get_tdc_running()
 
     def stop(self) -> bool:
         # avoid double-stop (abort status can be broken)
@@ -497,13 +501,13 @@ class Pulser(Worker):
         st0 = self.tdc.get_status(0)
         st1 = self.tdc.get_status(1)
 
-        return TDCStatus(st0.runtime, st0.sweeps, st0.starts, st0.totalsum, st1.totalsum)
+        return TDCStatus(round(st0.runtime), st0.starts, st0.total, st1.total)
 
     def get_tdc_running(self) -> bool:
         """return True if TDC is running."""
 
         st0 = self.tdc.get_status(0)
-        return bool(st0.started)
+        return st0.running if st0 is not None else False
 
     def wait_tdc_stop(self, timeout_sec=10.0, interval_sec=0.2) -> bool:
         """Wait for TDC status become not-running (stopped)."""
@@ -582,8 +586,9 @@ class Pulser(Worker):
             power=P.FloatParam(p_min, p_min, p_max, unit="dBm"),
             interval=P.FloatParam(1.0, 0.1, 10.0, unit="s"),
             # TODO: we won't respect sweeps for the time being.
-            # we must implement finite n_runs (using subsequencing?) for DTG.
-            sweeps=P.IntParam(0, 0, 9999999),
+            # we must implement finite n_runs (using subsequencing?) for PG.
+            sweeps=P.IntParam(0, 0, 9999999, doc="limit number of sweeps"),
+            duration=P.FloatParam(0.0, 0.0, 9999999, unit="s", doc="limit measurement duration"),
             ident=P.UUIDParam(optional=True, enable=False),
             remove_raw_data=P.BoolParam(
                 True, doc="If True, remove raw_data after finishing measurement"

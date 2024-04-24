@@ -12,7 +12,24 @@ from __future__ import annotations
 
 import numpy as np
 
-from .data_msgs import Data
+from .data_msgs import Message, Data
+
+
+class ChannelStatus(Message):
+    """Status of a (stop) channel.
+
+    :ivar running: Measurement is running.
+    :ivar runtime: Measurement runtime in sec.
+    :ivar total: Total count of (stop) events of this channel.
+    :ivar starts: Number of start events (0 if irrelevant in current measurement mode).
+
+    """
+
+    def __init__(self, running: bool, runtime: float, total: int, starts: int = 0):
+        self.running = running
+        self.runtime = runtime
+        self.total = total
+        self.starts = starts
 
 
 class RawEvents(Data):

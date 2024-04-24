@@ -17,7 +17,7 @@ import os
 import numpy as np
 
 from ..instrument import Instrument
-from ...msgs.inst_tdc_msgs import RawEvents
+from ...msgs.inst_tdc_msgs import ChannelStatus, RawEvents
 from ...util.io import save_h5
 
 
@@ -273,11 +273,11 @@ class MCS(Instrument):
         else:
             return None
 
-    def get_status(self, nDisplay: int) -> ACQSTATUS:
-        status = self.ACQSTATUS()
-        self.dll.GetStatusData(C.byref(status), nDisplay)
+    def get_status(self, nDisplay: int) -> ChannelStatus:
+        s = self.ACQSTATUS()
+        self.dll.GetStatusData(C.byref(s), nDisplay)
 
-        return status
+        return ChannelStatus(bool(s.started), s.runtime, round(s.totalsum), round(s.starts))
 
     def get_setting(self, nDisplay: int) -> ACQSETTING:
         setting = self.ACQSETTING()

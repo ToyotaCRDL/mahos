@@ -14,7 +14,7 @@ import numpy as np
 
 from .interface import InstrumentInterface
 
-from ..msgs.inst_tdc_msgs import RawEvents
+from ..msgs.inst_tdc_msgs import ChannelStatus, RawEvents
 
 
 class TDCInterface(InstrumentInterface):
@@ -70,7 +70,7 @@ class TDCInterface(InstrumentInterface):
         return self.set("sweeps", sweeps)
 
     def set_duration(self, duration: float) -> bool:
-        """set limit of measurement duration. duration == 0 means unlimited."""
+        """set limit of measurement duration. duration == 0.0 means unlimited."""
 
         return self.set("duration", duration)
 
@@ -99,7 +99,7 @@ class TDCInterface(InstrumentInterface):
 
         return self.get("data_roi", {"ch": ch, "roi": roi})
 
-    def get_status(self, ch: int):
+    def get_status(self, ch: int) -> ChannelStatus | None:
         """Get status of channel `ch`."""
 
         return self.get("status", ch)

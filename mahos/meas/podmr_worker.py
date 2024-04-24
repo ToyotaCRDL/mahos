@@ -74,7 +74,7 @@ class PODMRDataOperator(object):
         return data.marker_indices
 
     def analyze(self, data: PODMRData) -> bool:
-        if not data.has_raw_data() or data.marker_indices is None or data.tdc_status.sweeps < 1.0:
+        if not data.has_raw_data() or data.marker_indices is None or data.tdc_status.sweeps < 1:
             return False
 
         if data.is_partial():
@@ -353,8 +353,11 @@ class Pulser(Worker):
         if not self.tdc.configure_histogram("podmr", trange, params["timebin"]):
             self.logger.error("Error configuring TDC.")
             return False
-        if params["sweeps"] and not self.tdc.set_sweeps(params["sweeps"]):
-            self.logger.error("Error setting sweeps for TDC.")
+        if params.get("sweeps", 0) and not self.tdc.set_sweeps(params["sweeps"]):
+            self.logger.error("Error setting sweeps limit for TDC.")
+            return False
+        if params.get("duration", 0.0) and not self.tdc.set_duration(params["duration"]):
+            self.logger.error("Error setting duration limit for TDC.")
             return False
         d = self.tdc.get_range_bin()
 
@@ -508,9 +511,10 @@ class Pulser(Worker):
     def is_finished(self) -> bool:
         if not self.data.has_params() or not self.data.has_data():
             return False
-        if self.data.params.get("sweeps", 0) <= 0:
-            return False  # no sweeps limit defined.
-        return self.data.sweeps() >= self.data.params["sweeps"]
+        if self.data.params.get("sweeps", 0) > 0:
+            return self.data.sweeps() >= self.data.params["sweeps"]
+        # TDC may stop running by itself if duration limit is set
+        return not self.get_tdc_running()
 
     def stop(self) -> bool:
         # avoid double-stop (abort status can be broken)
@@ -546,13 +550,13 @@ class Pulser(Worker):
         st0 = self.tdc.get_status(0)
         st1 = self.tdc.get_status(1)
 
-        return TDCStatus(st0.runtime, st0.sweeps, st0.starts, st0.totalsum, st1.totalsum)
+        return TDCStatus(round(st0.runtime), st0.starts, st0.total, st1.total)
 
     def get_tdc_running(self) -> bool:
         """return True if TDC is running."""
 
         st0 = self.tdc.get_status(0)
-        return bool(st0.started)
+        return st0.running if st0 is not None else False
 
     def wait_tdc_stop(self, timeout_sec=60.0, interval_sec=0.2) -> bool:
         """Wait for TDC status become not-running (stopped)."""
@@ -663,7 +667,8 @@ class Pulser(Worker):
             power=P.FloatParam(p_min, p_min, p_max),
             timebin=P.FloatParam(3.2e-9, 0.1e-9, 100e-9),
             interval=P.FloatParam(1.0, 0.1, 10.0),
-            sweeps=P.IntParam(0, 0, 9999999),
+            sweeps=P.IntParam(0, 0, 9999999, doc="limit number of sweeps"),
+            duration=P.FloatParam(0.0, 0.0, 9999999, unit="s", doc="limit measurement duration"),
             ident=P.UUIDParam(optional=True, enable=False),
             roi_head=P.FloatParam(
                 -1e-9,
