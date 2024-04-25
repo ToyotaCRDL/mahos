@@ -11,6 +11,7 @@ Swabian Instruments Time Tagger module
 from __future__ import annotations
 import os
 import time
+import glob
 
 import numpy as np
 import TimeTagger as tt
@@ -26,11 +27,13 @@ class TimeTagger(Instrument):
     :param base_configs: Mapping from base config name to channels and levels definitions.
         Used in configure_histogram() etc.
     :type base_configs: dict[str, str]
-    :param ext_ref_clock: (default: 0) external reference clock source.
-        0: internal clock, 10: 10 MHz ext clock, 500: 500 MHz ext clock.
-    :type ext_ref_clock: int
     :param raw_events_dir: (default: user home) The directory to save RawEvents data.
     :type raw_events_dir: str
+    :param remove_ttbin: (default: True) Remove raw events (.ttbin) file after load.
+    :type remove_ttbin: bool
+    :param serial: (default: "") Serial string to discriminate multiple TimeTaggers.
+        Blank is fine if only one TimeTagger is connected.
+    :type serial: str
 
     """
 
@@ -43,7 +46,7 @@ class TimeTagger(Instrument):
 
         self._base_configs = self.conf.get("base_configs", {})
         self._raw_events_dir = os.path.expanduser(self.conf.get("raw_events_dir", "~"))
-        self._remove_ttbin = self.conf.get("remove_ttbin", False)
+        self._remove_ttbin = self.conf.get("remove_ttbin", True)
         self.logger.debug(f"available base configs: {self._base_configs}")
 
         if not os.path.exists(self._raw_events_dir):
@@ -56,27 +59,13 @@ class TimeTagger(Instrument):
         self.counter: tt.Counter | None = None
         self._duration_ps: int = 0
 
+        self._raw_events_start_ch = None
         self._save_file_name = None
         self._tstart = time.time()
         self.trange = self.tbin = 0.0
 
-        # self.set_reference_clock(conf.get("ext_ref_clock", 0))
-
     def log_from_time_tagger(self, level: int, msg: str):
         self.logger.debug("[TimeTagger lib] " + msg)
-
-    def set_reference_clock(self, clock_MHz: int) -> bool:
-        if clock_MHz == 10:
-            self.tagger.xtra_setClockSource(1)
-            self.logger.info("External clock at 10 MHz.")
-        elif clock_MHz == 500:
-            self.tagger.xtra_setClockSource(2)
-            self.logger.info("External clock at 500 MHz.")
-        else:
-            if clock_MHz != 0:
-                self.logger.warn(f"External clock {clock_MHz} is invalid.")
-            self.tagger.xtra_setClockSource(0)
-            self.logger.info("Internal clock.")
 
     def configure_histogram(self, base_config: str, trange: float, tbin: float) -> bool:
         """Configure histogram measurement.
@@ -144,6 +133,7 @@ class TimeTagger(Instrument):
     def configure_raw_events(self, base_config: str, save_file: str) -> bool:
         if base_config not in self._base_configs:
             return self.fail_with("Unknown base config name")
+        save_file_path = os.path.join(self._raw_events_dir, save_file)
 
         conf = self._base_configs[base_config]
         if not all(key in conf for key in ("channels", "levels")):
@@ -157,17 +147,21 @@ class TimeTagger(Instrument):
         self.sync = tt.SynchronizedMeasurements(self.tagger)
         self.meas = tt.FileWriter(
             self.sync.getTagger(),
-            filename=save_file,
+            filename=save_file_path,
             channels=conf["channels"],
         )
         self.counter = tt.Counter(self.sync.getTagger(), conf["channels"])
         self._duration_ps = 0
 
+        self._raw_events_start_ch = conf.get("start_channel")
         self._save_file_name = save_file
         # unit of raw event (or tbin) is always ps
         # trange has no meaning.
         self.tbin = 1e-12
         self.trange = 0.0
+        msg = f"Configured raw_events mode. start_ch: {self._raw_events_start_ch}"
+        msg += f" file: {save_file_path}"
+        self.logger.info(msg)
 
         return True
 
@@ -281,26 +275,54 @@ class TimeTagger(Instrument):
             self.logger.error("save file name has not been set.")
             return None
 
-        ttbin_name = os.path.splitext(self._save_file_name)[0] + ".ttbin"
+        ttbin_name = self._save_file_name + ".ttbin"
         ttbin_path = os.path.join(self._raw_events_dir, ttbin_name)
 
         # assuming all data can be load on memory
         reader = tt.FileReader(ttbin_path)
         events = []
+        start_stamp = None
         while reader.hasData():
-            events.append(np.array(reader.getData(1_000_000).getTimestamps(), dtype=np.int64))
+            data = reader.getData(1_000_000)
+            # stamps is np.int64 array
+            stamps = data.getTimestamps()
+            if self._raw_events_start_ch is not None:
+                if start_stamp is None:
+                    # find the first start event
+                    # data.getChannels() is np.int32 array
+                    indices = np.where(data.getChannels() == self._raw_events_start_ch)[0]
+                    if len(indices) == 0:
+                        self.logger.warn("Start stamp not found in this chunk")
+                        continue
+                    start_stamp = stamps[indices[0]]
+                    self.logger.info(f"Found Start stamp: {start_stamp}")
+
+                stamps = stamps[data.getChannels() != self._raw_events_start_ch]
+            events.append(stamps)
+
+        data = np.concatenate(events)
+        if self._raw_events_start_ch is not None:
+            if start_stamp is None:
+                return self.fail_with("Cannot find time stamp of start channel.")
+            data = data - start_stamp
+            data = data[data >= 0]
 
         self.logger.debug("Start sorting raw events")
-        data = np.concatenate(events)
         # in-place sort to reduce memory consumption? (effect not confirmed)
         data.sort()
         self.logger.debug("Finished sorting raw events")
 
-        h5_name = os.path.splitext(self._save_file_name)[0] + ".h5"
+        h5_name = self._save_file_name + ".h5"
         h5_path = os.path.join(self._raw_events_dir, h5_name)
 
         self.logger.info(f"Saving converted raw events to {h5_path}")
         success = save_h5(h5_path, RawEvents(data), RawEvents, self.logger, compression="lzf")
+
+        if self._remove_ttbin:
+            head = os.path.join(self._raw_events_dir, self._save_file_name)
+            for fn in glob.glob(head + "*.ttbin"):
+                os.remove(fn)
+
         if success:
             return h5_name
         else:
@@ -322,6 +344,7 @@ class TimeTagger(Instrument):
             self.sync.clear()
             self.sync.start()
         self._tstart = time.time()
+        self.logger.info("Started measurement.")
         return True
 
     def stop(self) -> bool:
@@ -330,6 +353,7 @@ class TimeTagger(Instrument):
         if self.sync is None:
             return self.fail_with("Measurement is not configured.")
         self.sync.stop()
+        self.logger.info("Stopped measurement.")
         return True
 
     def resume(self) -> bool:
@@ -339,6 +363,7 @@ class TimeTagger(Instrument):
             self.sync.startFor(self._duration_ps, clear=False)
         else:
             self.sync.start()
+        self.logger.info("Resumed measurement.")
         return True
 
     def configure(self, params: dict, label: str = "", group: str = "") -> bool:
