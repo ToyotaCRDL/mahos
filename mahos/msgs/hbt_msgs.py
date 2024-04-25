@@ -60,7 +60,12 @@ class HBTData(BasicMeasData):
             return None
 
         if self.tdc_correlation:
-            raise NotImplementedError("TODO")
+            N = len(self.data)
+            if N % 2:
+                return np.linspace(-(N // 2) * self.timebin, (N // 2) * self.timebin, num=N)
+            else:
+                return np.linspace(-(N // 2) * self.timebin, (N // 2 - 1) * self.timebin, num=N)
+
         x = np.linspace(0.0, self.timebin * (len(self.data) - 1), num=len(self.data))
         if normalize:
             return x - self.get_t0()
