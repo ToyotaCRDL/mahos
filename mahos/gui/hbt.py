@@ -144,6 +144,19 @@ class PlotWidget(QtWidgets.QWidget):
         if not data.has_data():
             return
 
+        if data.has_data_normalized():
+            for line in (self.startline, self.stopline, self.bgline):
+                line.setVisible(False)
+            if self.normalizeBox.isChecked():
+                self.refline.setVisible(True)
+                self.halfline.setVisible(True)
+                self.refline.setValue(1.0)
+                self.halfline.setValue(0.5)
+            else:
+                self.refline.setVisible(False)
+                self.halfline.setVisible(False)
+            return
+
         start, stop = data.get_reference_window()
         if self.normalizeBox.isChecked():
             ref = 1.0
@@ -155,11 +168,11 @@ class PlotWidget(QtWidgets.QWidget):
             bg = ref * data.get_bg_ratio()
         half = (ref - bg) / 2.0 + bg
 
-        self.startline.setValue(start)
-        self.stopline.setValue(stop)
-        self.bgline.setValue(bg)
-        self.refline.setValue(ref)
-        self.halfline.setValue(half)
+        lines = (self.startline, self.stopline, self.bgline, self.refline, self.halfline)
+        values = (start, stop, bg, ref, half)
+        for line, value in zip(lines, values):
+            line.setValue(value)
+            line.setVisible(True)
 
     def update_indicator(self, enabled):
         if enabled:
@@ -295,6 +308,7 @@ class HBTWidget(ClientWidget, Ui_HBT):
                 ("bg_ratio", self.bgratioBox, 100),  # to %
             ],
         )
+
         self.saveconfocalBox.setEnabled(self.confocal_cli is not None)
         self.saveconfocalBox.setChecked(self.confocal_cli is not None)
 
@@ -408,7 +422,7 @@ class HBTWidget(ClientWidget, Ui_HBT):
             # if binBox is disabled, state is ACTIVE
             # Don't update these when the state is IDLE
             self.binBox.setValue(tbin * 1e9)  # s to ns
-            self.windowBox.setValue(round(t[-1] * 1e9))
+            self.windowBox.setValue(round((t[-1] - t[0]) * 1e9))
             self.rangeLabel.setText(f"range: {data.get_range()}")
 
         if loaded and self.plotenableBox.isChecked():

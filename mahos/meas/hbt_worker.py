@@ -20,7 +20,7 @@ from .common_worker import Worker
 
 class Listener(Worker):
     def __init__(self, cli, logger, conf: dict):
-        Worker.__init__(self, cli, logger)
+        Worker.__init__(self, cli, logger, conf)
         self.load_conf_preset(cli)
 
         self.tdc = TDCInterface(cli, "tdc")
@@ -28,6 +28,7 @@ class Listener(Worker):
 
         self.interval_sec = conf.get("interval_sec", 1.0)
         self.tdc_correlation = self.conf.get("tdc_correlation", False)
+        self.tdc_normalize = self.conf.get("tdc_normalize", False)
 
         if self.tdc_correlation and "t0_ns" in conf:
             self.logger.warn("conf['t0_ns'] is irrelevant if conf['tdc_correlation'] is True.")
@@ -69,18 +70,21 @@ class Listener(Worker):
         if self.tdc_correlation:
             t0 = P.FloatParam(0.0, 0.0, 0.0, unit="s", SI_prefix=True)
         else:
-            t0 = P.FloatParam(self._t0, minimum=0.0, maximum=1e-6, unit="s", SI_prefix=True)
-        plot_param = P.ParamDict(
-            t0=t0,
-            ref_start=P.FloatParam(
-                -200e-9, minimum=-10e-6, maximum=10e-6, unit="s", SI_prefix=True
-            ),
-            ref_stop=P.FloatParam(0.0, minimum=-10e-6, maximum=10e-6, unit="s", SI_prefix=True),
-            bg_ratio=P.FloatParam(0.0, minimum=0.0, maximum=1.0),
-        )
+            t0 = P.FloatParam(self._t0, 0.0, 1e-6, unit="s", SI_prefix=True)
+        if self.tdc_normalize:
+            ref_start = P.FloatParam(0.0, 0.0, 0.0, unit="s", SI_prefix=True)
+            ref_stop = P.FloatParam(0.0, 0.0, 0.0, unit="s", SI_prefix=True)
+            bg_ratio = P.FloatParam(0.0, 0.0, 0.0)
+        else:
+            ref_start = P.FloatParam(-200e-9, -10e-6, 10e-6, unit="s", SI_prefix=True)
+            ref_stop = P.FloatParam(0.0, 10e-6, 10e-6, unit="s", SI_prefix=True)
+            bg_ratio = P.FloatParam(0.0, 0.0, 1.0)
+        plot_param = P.ParamDict(t0=t0, ref_start=ref_start, ref_stop=ref_stop, bg_ratio=bg_ratio)
         d = P.ParamDict(
-            bin=P.FloatParam(0.2e-9, minimum=1e-12, maximum=100e-9, unit="s", SI_prefix=True),
-            range=P.FloatParam(1011e-9, minimum=1e-9, maximum=100e-6, unit="s", SI_prefix=True),
+            bin=P.FloatParam(0.2e-9, 1e-12, 100e-9, unit="s", SI_prefix=True),
+            range=P.FloatParam(
+                self.conf.get("window_ns", 1011) * 1e-9, 0.1e-9, 100e-6, unit="s", SI_prefix=True
+            ),
             plot=plot_param,
             resume=P.BoolParam(False),
             ident=P.UUIDParam(optional=True, enable=False),
@@ -136,7 +140,7 @@ class Listener(Worker):
         if self.timer.check():
             ch = self.conf.get("tdc_channel", 1)
             d = self.tdc.get_data(ch)
-            if self.conf.get("tdc_normalize", False):
+            if self.tdc_normalize:
                 d_normalized = self.tdc.get_data_normalized(ch)
             else:
                 d_normalized = None

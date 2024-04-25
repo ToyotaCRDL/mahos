@@ -44,7 +44,7 @@ class TimeTagger(Instrument):
         self._base_configs = self.conf.get("base_configs", {})
         self._raw_events_dir = os.path.expanduser(self.conf.get("raw_events_dir", "~"))
         self._remove_ttbin = self.conf.get("remove_ttbin", False)
-        self.logger.debug(f"available base config names: {self._base_configs}")
+        self.logger.debug(f"available base configs: {self._base_configs}")
 
         # always use SynchronizedMeasurements to avoid autostart
         # on initialization of measurement class.
@@ -57,7 +57,7 @@ class TimeTagger(Instrument):
         self._tstart = time.time()
         self.trange = self.tbin = 0.0
 
-        self.set_reference_clock(conf.get("ext_ref_clock", 0))
+        # self.set_reference_clock(conf.get("ext_ref_clock", 0))
 
     def log_from_time_tagger(self, level: int, msg: str):
         self.logger.debug("[TimeTagger lib] " + msg)

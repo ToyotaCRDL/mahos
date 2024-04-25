@@ -57,7 +57,7 @@ class TDCInterface(InstrumentInterface):
         """
 
         params = {"base_config": base_config, "range": trange, "bin": tbin}
-        return self.configure(params, label="histogram")
+        return self.configure(params, label="correlation")
 
     def clear(self) -> bool:
         """Clear the data."""

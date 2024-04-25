@@ -47,6 +47,11 @@ class HBTData(BasicMeasData):
 
         return self.data is not None and self.timebin is not None
 
+    def has_data_normalized(self) -> bool:
+        """return True if has normalized data."""
+
+        return self.data_normalized is not None
+
     def update_plot_params(self, plot_params: dict):
         if not self.has_params():
             return
@@ -100,7 +105,9 @@ class HBTData(BasicMeasData):
     def get_bg_ratio(self) -> float:
         return self.params["plot"]["bg_ratio"]
 
-    def get_reference_window(self) -> tuple[float, float]:
+    def get_reference_window(self) -> tuple[float, float] | None:
+        if self.data_normalized is not None:
+            return None
         ref_start = self.params["plot"]["ref_start"]
         ref_stop = self.params["plot"]["ref_stop"]
         t = self.get_xdata()
@@ -110,7 +117,9 @@ class HBTData(BasicMeasData):
             ref_stop += np.max(t)
         return sorted([ref_start, ref_stop])
 
-    def get_reference(self) -> float:
+    def get_reference(self) -> float | None:
+        if self.data_normalized is not None:
+            return None
         t = self.get_xdata()
         y = self.get_ydata()
         ref_start, ref_stop = self.get_reference_window()
@@ -121,9 +130,13 @@ class HBTData(BasicMeasData):
         return np.mean(y[idx])
 
     def denormalize_xdata(self, xdata):
+        """Deprecated. Maybe deleted in the future."""
+
         return xdata + self.get_t0()
 
     def denormalize_ydata(self, ydata):
+        """Deprecated. Maybe deleted in the future."""
+
         ref = self.get_reference()
         bg = ref * self.get_bg_ratio()
         return (ref - bg) * ydata + bg
@@ -165,6 +178,10 @@ def update_data(data: HBTData):
         data.set_version(1)
 
     if data.version() == 1:
+        ## missing attributes
+        data.data_normalized = None
+        data.tdc_correlation = False
+
         # normalize fit data
         if data.fit_xdata is not None:
             data.fit_xdata = data.fit_xdata - data.get_t0()
@@ -172,10 +189,6 @@ def update_data(data: HBTData):
             ref = data.get_reference()
             bg = ref * data.get_bg_ratio()
             data.fit_data = (data.fit_data - bg) / (ref - bg)
-
-        ## missing attributes
-        data.data_normalized = None
-        data.tdc_correlation = False
 
         data.set_version(2)
 
