@@ -919,6 +919,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.binBox.setValue(p.get("timebin", 0.0) * 1e9)  # sec to ns
         self.intervalBox.setValue(int(round(p.get("interval", 0.0) * 1e3)))  # sec to ms
         self.sweepsBox.setValue(p.get("sweeps", 0))
+        self.durationBox.setValue(p.get("duration", 0))
         self.roiheadBox.setValue(p.get("roi_head", -1e-9) * 1e9)  # sec to ns
         self.roitailBox.setValue(p.get("roi_tail", -1e-9) * 1e9)  # sec to ns
 
@@ -1032,6 +1033,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["timebin"] = self.binBox.value() * 1e-9  # [ns] ==> [sec]
         params["interval"] = self.intervalBox.value() * 1e-3  # [ms] ==> [sec]
         params["sweeps"] = self.sweepsBox.value()
+        params["duration"] = float(self.durationBox.value())
         params["roi_head"] = self.roiheadBox.value() * 1e-9  # ns to sec
         params["roi_tail"] = self.roitailBox.value() * 1e-9  # ns to sec
 
@@ -1241,6 +1243,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.partialBox,
             self.intervalBox,
             self.sweepsBox,
+            self.durationBox,
             self.roiheadBox,
             self.roitailBox,
             self.invertsweepBox,
