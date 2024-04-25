@@ -77,13 +77,13 @@ class Listener(Worker):
             bg_ratio = P.FloatParam(0.0, 0.0, 0.0)
         else:
             ref_start = P.FloatParam(-200e-9, -10e-6, 10e-6, unit="s", SI_prefix=True)
-            ref_stop = P.FloatParam(0.0, 10e-6, 10e-6, unit="s", SI_prefix=True)
+            ref_stop = P.FloatParam(0.0, -10e-6, 10e-6, unit="s", SI_prefix=True)
             bg_ratio = P.FloatParam(0.0, 0.0, 1.0)
         plot_param = P.ParamDict(t0=t0, ref_start=ref_start, ref_stop=ref_stop, bg_ratio=bg_ratio)
         d = P.ParamDict(
             bin=P.FloatParam(0.2e-9, 1e-12, 100e-9, unit="s", SI_prefix=True),
             range=P.FloatParam(
-                self.conf.get("window_ns", 1011) * 1e-9, 0.1e-9, 100e-6, unit="s", SI_prefix=True
+                self.conf.get("range_ns", 1011) * 1e-9, 0.1e-9, 100e-6, unit="s", SI_prefix=True
             ),
             plot=plot_param,
             resume=P.BoolParam(False),

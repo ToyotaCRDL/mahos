@@ -46,6 +46,9 @@ class TimeTagger(Instrument):
         self._remove_ttbin = self.conf.get("remove_ttbin", False)
         self.logger.debug(f"available base configs: {self._base_configs}")
 
+        if not os.path.exists(self._raw_events_dir):
+            raise FileNotFoundError(f"raw_events_dir {self._raw_events_dir} doesn't exist")
+
         # always use SynchronizedMeasurements to avoid autostart
         # on initialization of measurement class.
         self.sync: tt.SynchronizedMeasurements | None = None
