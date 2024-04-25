@@ -19,9 +19,9 @@
       ~MCS.__init__
       ~MCS.clear
       ~MCS.configure
-      ~MCS.configure_base_range_bin
-      ~MCS.configure_base_range_bin_save
+      ~MCS.configure_histogram
       ~MCS.configure_range_bin
+      ~MCS.configure_raw_events
       ~MCS.convert_raw_events
       ~MCS.get
       ~MCS.get_binwidth

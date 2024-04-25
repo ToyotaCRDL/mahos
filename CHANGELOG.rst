@@ -10,6 +10,7 @@ Added
 
 - meas: new measurement Chrono.
 - inst: new module dmm (for Digital Multi Meter).
+- inst.tdc: new instrument TimeTagger (Swabian Instruments).
 
 [0.2.3] - 2023-11-06
 --------------------

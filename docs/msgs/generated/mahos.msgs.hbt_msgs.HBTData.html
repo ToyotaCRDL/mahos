@@ -474,6 +474,7 @@ document.write(`
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/tdc.html">mahos.inst.tdc</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc_interface.TDCInterface.html">mahos.inst.tdc_interface.TDCInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc.MCS.html">mahos.inst.tdc.MCS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc.TimeTagger.html">mahos.inst.tdc.TimeTagger</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../inst/InstrumentOverlay.html">mahos.inst.overlay.overlay.InstrumentOverlay</a></li>
@@ -629,10 +630,10 @@ document.write(`
 <td><p>Check if the measurement can be resumed with given new params.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">denormalize_xdata</span></code>(xdata)</p></td>
-<td><p></p></td>
+<td><p>Deprecated.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">denormalize_ydata</span></code>(ydata)</p></td>
-<td><p></p></td>
+<td><p>Deprecated.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bg_ratio</span></code>()</p></td>
 <td><p></p></td>
@@ -640,10 +641,10 @@ document.write(`
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bin</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fit_xdata</span></code>([normalize])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fit_xdata</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fit_ydata</span></code>([normalize])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fit_ydata</span></code>()</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_range</span></code>()</p></td>
@@ -661,19 +662,22 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_xdata</span></code>([normalize])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ydata</span></code>([normalize, fit])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ydata</span></code>([normalize])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_data</span></code>()</p></td>
 <td><p>return True if current data is valid (not empty).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_axes</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_data_normalized</span></code>()</p></td>
+<td><p>return True if has normalized data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_axes</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_bin</span></code>(timebin)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_bin</span></code>(timebin)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_plot_params</span></code>(plot_params)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_plot_params</span></code>(plot_params)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

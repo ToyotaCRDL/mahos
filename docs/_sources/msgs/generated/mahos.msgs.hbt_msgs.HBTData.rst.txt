@@ -31,6 +31,7 @@
       ~HBTData.get_xdata
       ~HBTData.get_ydata
       ~HBTData.has_data
+      ~HBTData.has_data_normalized
       ~HBTData.init_axes
       ~HBTData.set_bin
       ~HBTData.update_plot_params

@@ -474,6 +474,7 @@ document.write(`
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="../tdc.html">mahos.inst.tdc</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">mahos.inst.tdc_interface.TDCInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.tdc.MCS.html">mahos.inst.tdc.MCS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.tdc.TimeTagger.html">mahos.inst.tdc.TimeTagger</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../InstrumentOverlay.html">mahos.inst.overlay.overlay.InstrumentOverlay</a></li>
@@ -631,32 +632,38 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear</span></code>()</p></td>
 <td><p>Clear the data.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_base_range_bin</span></code>(base_config, ...)</p></td>
-<td><p>Load base config and set range and timebin in sec.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_correlation</span></code>(base_config, trange, tbin)</p></td>
+<td><p>Configure for correlation measurement.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_base_range_bin_save</span></code>(base_config, ...)</p></td>
-<td><p>Load base config, set range and timebin in sec, and save file name.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_histogram</span></code>(base_config, trange, tbin)</p></td>
+<td><p>Configure for histogram measurement.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_range_bin</span></code>(trange, tbin)</p></td>
-<td><p>Set range and binwidth according to trange and tbin in sec.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_raw_events</span></code>(base_config, save_file)</p></td>
+<td><p>Configure for raw_events measurement.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data</span></code>(ch)</p></td>
 <td><p>Get data of channel <cite>ch</cite>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_roi</span></code>(ch, roi)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_normalized</span></code>(ch)</p></td>
+<td><p>Get normalized data of channel <cite>ch</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_roi</span></code>(ch, roi)</p></td>
 <td><p>Get data of channel <cite>ch</cite> using ROI.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_range_bin</span></code>()</p></td>
-<td><p>Get range and bin.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_range_bin</span></code>()</p></td>
+<td><p>Get range and bin in sec.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_raw_events</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_raw_events</span></code>()</p></td>
 <td><p>Get raw events of last measurement.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_status</span></code>(ch)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_status</span></code>(ch)</p></td>
 <td><p>Get status of channel <cite>ch</cite>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_timebin</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_timebin</span></code>()</p></td>
 <td><p>Get time bin in sec.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_duration</span></code>(duration)</p></td>
+<td><p>set limit of measurement duration.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_save_file_name</span></code>(name)</p></td>
 <td><p>set save file name.</p></td>

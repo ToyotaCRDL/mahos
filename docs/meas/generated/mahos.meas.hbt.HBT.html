@@ -474,6 +474,7 @@ document.write(`
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/tdc.html">mahos.inst.tdc</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc_interface.TDCInterface.html">mahos.inst.tdc_interface.TDCInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc.MCS.html">mahos.inst.tdc.MCS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc.TimeTagger.html">mahos.inst.tdc.TimeTagger</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../inst/InstrumentOverlay.html">mahos.inst.overlay.overlay.InstrumentOverlay</a></li>
@@ -622,7 +623,11 @@ document.write(`
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>listener.interval_sec</strong> (<em>float</em>) – polling interval.</p></li>
-<li><p><strong>listener.default_t0_ns</strong> (<em>float</em>) – default value of t0 (time delay).</p></li>
+<li><p><strong>listener.tdc_correlation</strong> (<em>bool</em>) – (has preset) enable correlation measurement mode at TDC.</p></li>
+<li><p><strong>listener.tdc_normalize</strong> (<em>bool</em>) – (has preset) enable normalization at TDC.</p></li>
+<li><p><strong>listener.tdc_channel</strong> (<em>int</em>) – (default: 1) channel index for getting data from TDC.</p></li>
+<li><p><strong>listener.t0_ns</strong> (<em>float</em>) – default value of t0 (time delay).</p></li>
+<li><p><strong>listener.range_ns</strong> (<em>float</em>) – default value of measurement range (time window).</p></li>
 </ul>
 </dd>
 </dl>
