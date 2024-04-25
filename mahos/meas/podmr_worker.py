@@ -468,6 +468,7 @@ class Pulser(Worker):
             self.data = PODMRData(params)
             self.op.update_axes(self.data)
         else:
+            _last_duration = self.data.params.get("duration", 0.0)
             self.data.update_params(params)
 
         if not self.lock_instruments():
@@ -480,7 +481,7 @@ class Pulser(Worker):
         if resume:
             # update duration here because duration means duration of additional measurement.
             # this treatise is different from sweeps (sweeps limit is considered total).
-            if params.get("duration", 0.0):
+            if params.get("duration", 0.0) != _last_duration:
                 success = self.tdc.set_duration(params["duration"])
             else:
                 success = True
