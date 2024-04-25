@@ -1033,7 +1033,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["timebin"] = self.binBox.value() * 1e-9  # [ns] ==> [sec]
         params["interval"] = self.intervalBox.value() * 1e-3  # [ms] ==> [sec]
         params["sweeps"] = self.sweepsBox.value()
-        params["duration"] = float(self.durationBox.value())
+        params["duration"] = self.durationBox.value()
         params["roi_head"] = self.roiheadBox.value() * 1e-9  # ns to sec
         params["roi_tail"] = self.roitailBox.value() * 1e-9  # ns to sec
 

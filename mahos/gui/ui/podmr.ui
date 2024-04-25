@@ -522,12 +522,12 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QSpinBox" name="durationBox">
+             <widget class="QDoubleSpinBox" name="durationBox">
               <property name="suffix">
                <string> seconds (0 to inf)</string>
               </property>
               <property name="maximum">
-               <number>999999</number>
+               <double>999999.000000000000000</double>
               </property>
              </widget>
             </item>
