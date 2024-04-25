@@ -200,6 +200,8 @@ class TimeTagger(Instrument):
 
     def set_duration(self, duration: float) -> bool:
         self._duration_ps = round(duration * 1e12)
+        self.logger.info(f"Set duration limit of {self._duration_ps} ps")
+        return True
 
     def get_data(self, ch: int = 0) -> np.ndarray | None:
         if isinstance(self.meas, list):

@@ -478,7 +478,13 @@ class Pulser(Worker):
 
         # start instruments
         if resume:
-            success = self.tdc.resume()
+            # update duration here because duration means duration of additional measurement.
+            # this treatise is different from sweeps (sweeps limit is considered total).
+            if params.get("duration", 0.0):
+                success = self.tdc.set_duration(params["duration"])
+            else:
+                success = True
+            success &= self.tdc.resume()
         else:
             success = self.tdc.stop()
             success &= self.tdc.clear()

@@ -1204,9 +1204,9 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             # if binBox is disabled, state is ACTIVE
             # Don't update these when the state is IDLE
             if tbin is not None:
-                self.binBox.setValue(tbin * 1.0e9)  # sec to ns
+                self.binBox.setValue(tbin * 1e9)  # sec to ns
             if trange is not None:
-                self.rangeLabel.setText("range: {:d}".format(int(round(trange))))
+                self.rangeLabel.setText("range: {:.2f} us".format(trange * 1e6))
 
     def update_plot_params(self):
         if self.autoadjustBox.isChecked():

@@ -525,7 +525,7 @@ class PODMRData(BasicMeasData):
         p0 = self.params.copy()
         p1 = params.copy()
         for p in (p0, p1):
-            for k in ("instrument", "plot", "resume", "sweeps"):
+            for k in ("instrument", "plot", "resume", "sweeps", "duration"):
                 if k in p:
                     del p[k]
         # parameters contains small float values (several nano-seconds: ~ 1e-9).
