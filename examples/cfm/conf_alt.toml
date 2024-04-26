@@ -91,7 +91,6 @@ power_bounds = [-144.0, 19.0]
 freq_bounds = [9E3, 6E9]
 [localhost.server.instrument.sg.conf.point_trig_freq_sweep]
 trig = "EXT"
-ext_trig = "PULSE"
 sweep_out_ch = 2
 
 [localhost.server.instrument.fg]
@@ -108,22 +107,21 @@ idle_level = "CENTER"
 
 [localhost.server.instrument.pg]
 module = "pg"
-class = "PulseStreamer"
+class = "DTG5274"
 [localhost.server.instrument.pg.conf]
-resource = "192.168.0.11"
+resource = "GPIB0::2"
+local_dir = "C:\\DTG"
+remote_dir = "Z:"
+timeout = 180000.0
+start_delay_sec = 1.0
 [localhost.server.instrument.pg.conf.channels]
 laser = 6
 sync = 5
 gate = 4
 trigger = 3
 mw = 2
-[localhost.server.instrument.pg.conf.analog]
-channels = ["mw_i", "mw_q"]
-[localhost.server.instrument.pg.conf.analog.values]
-"00" = [-0.35, -0.35]
-"01" = [-0.35, 0.35]
-"10" = [0.35, -0.35]
-"11" = [0.35, 0.35]
+mw_i = 1
+mw_q = 0
 
 [localhost.server.instrument_overlay.scanner]
 module = "confocal_scanner"
@@ -146,20 +144,12 @@ pub_endpoint = "tcp://127.0.0.1:5762"
 
 [localhost.server_tdc.instrument.tdc]
 module = "tdc"
-class = "TimeTagger"
+class = "MCS"
 [localhost.server_tdc.instrument.tdc.conf]
-raw_events_dir = "C:\\tt_raw_events"
-remove_ttbin = true
-[localhost.server_tdc.instrument.tdc.conf.base_configs.podmr]
-channels = [1, 2, 3]
-levels = [0.5, 0.5, 0.5]
-[localhost.server_tdc.instrument.tdc.conf.base_configs.hbt]
-channels = [2, 3]
-levels = [0.5, 0.5]
-[localhost.server_tdc.instrument.tdc.conf.base_configs.qdyne]
-channels = [1, 2, 3]
-levels = [0.5, 0.5, 0.5]
-start_channel = 1
+resolution_sec = 0.2E-9
+[localhost.server_tdc.instrument.tdc.conf.base_configs]
+podmr = "PODMRA.SET"
+hbt = "HBTA.SET"
 
 # Dedicated server: spectrometer may be immature and rather independent.
 [localhost.server_spec]
@@ -232,7 +222,7 @@ class = "HBT"
 rep_endpoint = "tcp://127.0.0.1:5774"
 pub_endpoint = "tcp://127.0.0.1:5775"
 [localhost.hbt.listener]
-range_ns = 400
+t0_ns = 159.75
 [localhost.hbt.target]
 log = "localhost::log"
 [localhost.hbt.target.servers]
