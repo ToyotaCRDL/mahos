@@ -22,13 +22,23 @@ from ...util.io import save_h5
 
 
 class TimeTagger(Instrument):
-    """Swabian Instruments Time Tagger
+    """Swabian Instruments Time Tagger.
 
     :param base_configs: Mapping from base config name to channels and levels definitions.
         Used in configure_histogram() etc.
     :type base_configs: dict[str, str]
     :param raw_events_dir: (default: user home) The directory to save RawEvents data.
     :type raw_events_dir: str
+    :param ext_ref_clock: (default: 0) channel to use as external reference clock.
+        Because it uses "software clock" of Time Tagger, clock must be supplied to
+        one of input channel, not "CLK IN" connector.
+        Putting 0 disables the software clock feature.
+    :type ext_ref_clock: int
+    :param ext_ref_clock_level: (default: 0.0) threshold level in volts for
+        ext_ref_clock channel.
+    :type ext_ref_clock_level: float
+    :param ext_ref_clock_freq: (default: 10e6) frequency of ext_ref_clock.
+    :type ext_ref_clock_freq: float
     :param remove_ttbin: (default: True) Remove raw events (.ttbin) file after load.
     :type remove_ttbin: bool
     :param serial: (default: "") Serial string to discriminate multiple TimeTaggers.
@@ -64,8 +74,25 @@ class TimeTagger(Instrument):
         self._tstart = time.time()
         self.trange = self.tbin = 0.0
 
+        self.clock_ch = self.conf.get("ext_ref_clock", 0)
+        self.clock_level = self.conf.get("ext_ref_clock_level", 0.0)
+        self.clock_freq = self.conf.get("ext_ref_clock_freq", 10e6)
+        self.set_reference_clock(self.clock_ch, self.clock_level, self.clock_freq)
+
     def log_from_time_tagger(self, level: int, msg: str):
-        self.logger.debug("[TimeTagger lib] " + msg)
+        # TODO: want to log according to given level.
+        # But I don't know the definition of levels.
+        self.logger.info(f"[TimeTagger lib] level={level:d} {msg}")
+
+    def set_reference_clock(self, ch: int, level: float = 0.0, freq: float = 10e6) -> bool:
+        if ch:
+            self.tagger.setTriggerLevel(ch, level)
+            self.tagger.setSoftwareClock(ch, freq)
+            self.logger.info(f"Software reference clock at ch={ch} freq={freq*1e-6:.1f} MHz.")
+        else:
+            self.tagger.disableSoftwareClock()
+            self.logger.info("Disabled software reference clock.")
+        return True
 
     def configure_histogram(self, base_config: str, trange: float, tbin: float) -> bool:
         """Configure histogram measurement.

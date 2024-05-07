@@ -131,6 +131,7 @@ class = "TimeTagger"
 [localhost.server_tdc.instrument.tdc.conf]
 raw_events_dir = "C:\\tt_raw_events"
 remove_ttbin = true
+ext_ref_clock = 4
 [localhost.server_tdc.instrument.tdc.conf.base_configs.podmr]
 channels = [1, 2, 3]
 levels = [0.5, 0.5, 0.5]
