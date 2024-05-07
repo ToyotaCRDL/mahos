@@ -620,13 +620,20 @@ document.write(`
 <dl class="py class">
 <dt class="sig sig-object py" id="mahos.inst.tdc.TimeTagger">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.inst.tdc.</span></span><span class="sig-name descname"><span class="pre">TimeTagger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.tdc.TimeTagger" title="Permalink to this definition">#</a></dt>
-<dd><p>Swabian Instruments Time Tagger</p>
+<dd><p>Swabian Instruments Time Tagger.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base_configs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – Mapping from base config name to channels and levels definitions.
 Used in configure_histogram() etc.</p></li>
 <li><p><strong>raw_events_dir</strong> (<em>str</em>) – (default: user home) The directory to save RawEvents data.</p></li>
+<li><p><strong>ext_ref_clock</strong> (<em>int</em>) – (default: 0) channel to use as external reference clock.
+Because it uses “software clock” of Time Tagger, clock must be supplied to
+one of input channel, not “CLK IN” connector.
+Putting 0 disables the software clock feature.</p></li>
+<li><p><strong>ext_ref_clock_level</strong> (<em>float</em>) – (default: 0.0) threshold level in volts for
+ext_ref_clock channel.</p></li>
+<li><p><strong>ext_ref_clock_freq</strong> (<em>float</em>) – (default: 10e6) frequency of ext_ref_clock.</p></li>
 <li><p><strong>remove_ttbin</strong> (<em>bool</em>) – (default: True) Remove raw events (.ttbin) file after load.</p></li>
 <li><p><strong>serial</strong> (<em>str</em>) – (default: “”) Serial string to discriminate multiple TimeTaggers.
 Blank is fine if only one TimeTagger is connected.</p></li>
@@ -701,10 +708,13 @@ Blank is fine if only one TimeTagger is connected.</p></li>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_range_bin</span></code>(trange, tbin)</p></td>
 <td><p>round range and timebin in sec.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_reference_clock</span></code>(ch[, level, freq])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>()</p></td>
 <td><p>Clear and start a new measurement.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
 <td><p>Stop measurement if running.</p></td>
 </tr>
 </tbody>

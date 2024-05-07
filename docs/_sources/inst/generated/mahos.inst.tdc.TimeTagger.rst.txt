@@ -36,6 +36,7 @@
       ~TimeTagger.set
       ~TimeTagger.set_duration
       ~TimeTagger.set_range_bin
+      ~TimeTagger.set_reference_clock
       ~TimeTagger.start
       ~TimeTagger.stop
    
