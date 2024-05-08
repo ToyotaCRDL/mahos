@@ -481,7 +481,7 @@ class Pulser(Worker):
         if resume:
             # update duration here because duration means duration of additional measurement.
             # this treatise is different from sweeps (sweeps limit is considered total).
-            if params.get("duration", 0.0) != _last_duration:
+            if params is not None and params.get("duration", 0.0) != _last_duration:
                 success = self.tdc.set_duration(params["duration"])
             else:
                 success = True
