@@ -13,7 +13,7 @@ h5py ~= 3.9.0
 msgpack ~= 1.0.5
 toml ~= 0.10.2
 # GUI, visualization
-PyQt6 ~= 6.5.2
+PyQt6 ~= 6.7.0
 pyqtgraph ~= 0.13.3
 networkx ~= 2.7.1
 # dev tools
