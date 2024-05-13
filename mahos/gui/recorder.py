@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Common GUI for Chrono.
+Common GUI for Recorder.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -16,11 +16,11 @@ import pyqtgraph as pg
 
 from .Qt import QtCore, QtWidgets
 
-from .ui.chrono import Ui_Chrono
+from .ui.recorder import Ui_Recorder
 from .client import QBasicMeasClient
 
 from ..msgs.common_msgs import BinaryState, BinaryStatus
-from ..msgs.chrono_msgs import ChronoData
+from ..msgs.recorder_msgs import RecorderData
 from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientWidget
@@ -52,7 +52,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.layout = pg.GraphicsLayout()
         self.graphicsView.setCentralItem(self.layout)
 
-    def set_axes(self, data: ChronoData):
+    def set_axes(self, data: RecorderData):
         unit_to_insts = data.get_unit_to_insts()
 
         if self._units == list(unit_to_insts.keys()):
@@ -71,7 +71,7 @@ class PlotWidget(QtWidgets.QWidget):
             plot.addLegend()
             self._plots.append(plot)
 
-    def refresh(self, data: ChronoData):
+    def refresh(self, data: RecorderData):
         self.set_axes(data)
 
         unit_to_insts = data.get_unit_to_insts()
@@ -83,7 +83,7 @@ class PlotWidget(QtWidgets.QWidget):
                 plot.plot(x, y, name=inst, pen=color, width=1)
 
 
-class ChronoWidget(ClientWidget, Ui_Chrono):
+class RecorderWidget(ClientWidget, Ui_Recorder):
     def __init__(self, gconf: dict, name, gparams_name, plot: PlotWidget, context, parent=None):
         ClientWidget.__init__(self, parent)
         self.setupUi(self)
@@ -91,7 +91,7 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
         self.conf = local_conf(gconf, name)
 
         self.plot = plot
-        self.data = ChronoData()
+        self.data = RecorderData()
 
         self.cli = QBasicMeasClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
@@ -136,7 +136,7 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
 
     def save_data(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = save_dialog(self, default_path, "Chrono", ".chrono")
+        fn = save_dialog(self, default_path, "Recorder", ".record")
         if not fn:
             return
 
@@ -150,7 +150,7 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
 
     def load_data(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = load_dialog(self, default_path, "Chrono", ".chrono")
+        fn = load_dialog(self, default_path, "Recorder", ".record")
         if not fn:
             return
 
@@ -164,7 +164,7 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
         self.refresh_plot()
         self.apply_widgets(data)
 
-    def update_data(self, data: ChronoData):
+    def update_data(self, data: RecorderData):
         self.data = data
         self.refresh_plot()
         self.apply_widgets(self.data)
@@ -192,11 +192,11 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
     def request_start(self):
         self.cli.start(self.paramTable.params())
 
-    def apply_widgets(self, data: ChronoData):
+    def apply_widgets(self, data: RecorderData):
         if not data.has_data():
             return
 
-    def finalize(self, data: ChronoData):
+    def finalize(self, data: RecorderData):
         if self._finalizing:
             return
         self._finalizing = True
@@ -216,8 +216,8 @@ class ChronoWidget(ClientWidget, Ui_Chrono):
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
 
 
-class ChronoMainWindow(QtWidgets.QMainWindow):
-    """MainWindow with ChronoWidget and PlotWidget."""
+class RecorderMainWindow(QtWidgets.QMainWindow):
+    """MainWindow with RecorderWidget and PlotWidget."""
 
     def __init__(self, gconf: dict, name, context, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
@@ -226,11 +226,11 @@ class ChronoMainWindow(QtWidgets.QMainWindow):
         target = lconf["target"]
 
         self.plot = PlotWidget(parent=self)
-        self.meas = ChronoWidget(
-            gconf, target["chrono"], target["gparams"], self.plot, context, parent=self
+        self.meas = RecorderWidget(
+            gconf, target["recorder"], target["gparams"], self.plot, context, parent=self
         )
 
-        self.setWindowTitle(f"MAHOS.ChronoGUI ({join_name(target['chrono'])})")
+        self.setWindowTitle(f"MAHOS.RecorderGUI ({join_name(target['recorder'])})")
         self.setAnimated(False)
         self.setCentralWidget(self.meas)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)
@@ -248,8 +248,8 @@ class ChronoMainWindow(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.closeEvent(self, event)
 
 
-class ChronoGUI(GUINode):
-    """GUINode for Chrono using ChronoMainWindow."""
+class RecorderGUI(GUINode):
+    """GUINode for Recorder using RecorderMainWindow."""
 
     def init_widget(self, gconf: dict, name, context):
-        return ChronoMainWindow(gconf, name, context)
+        return RecorderMainWindow(gconf, name, context)

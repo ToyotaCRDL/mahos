@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mahos.inst.camera.ThorlabsCamera &#8212; MAHOS 0.2.3 documentation</title>
+    <title>mahos.meas.recorder.Recorder &#8212; MAHOS 0.2.3 documentation</title>
   
   
   
@@ -37,11 +37,11 @@
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'inst/generated/mahos.inst.camera.ThorlabsCamera';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'meas/generated/mahos.meas.recorder.Recorder';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="mahos.inst.camera.BaslerPylonCamera" href="mahos.inst.camera.BaslerPylonCamera.html" />
-    <link rel="prev" title="mahos.inst.camera_interface.CameraInterface" href="mahos.inst.camera_interface.CameraInterface.html" />
+    <link rel="next" title="mahos.meas.confocal.Confocal" href="mahos.meas.confocal.Confocal.html" />
+    <link rel="prev" title="mahos.meas.tweaker.Tweaker" href="mahos.meas.tweaker.Tweaker.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -395,129 +395,129 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../msgs/generated/mahos.msgs.camera_msgs.Image.html">mahos.msgs.camera_msgs.Image</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">mahos.inst</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../Instrument.html">mahos.inst.instrument.Instrument</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../InstrumentInterface.html">mahos.inst.interface.InstrumentInterface</a></li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="../camera.html">mahos.inst.camera</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.camera_interface.CameraInterface.html">mahos.inst.camera_interface.CameraInterface</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">mahos.inst.camera.ThorlabsCamera</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.camera.BaslerPylonCamera.html">mahos.inst.camera.BaslerPylonCamera</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../inst/index.html">mahos.inst</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../inst/Instrument.html">mahos.inst.instrument.Instrument</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../inst/InstrumentInterface.html">mahos.inst.interface.InstrumentInterface</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/camera.html">mahos.inst.camera</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.camera_interface.CameraInterface.html">mahos.inst.camera_interface.CameraInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.camera.ThorlabsCamera.html">mahos.inst.camera.ThorlabsCamera</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.camera.BaslerPylonCamera.html">mahos.inst.camera.BaslerPylonCamera</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../daq.html">mahos.inst.daq</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq_interface.ClockSourceInterface.html">mahos.inst.daq_interface.ClockSourceInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq_interface.AnalogOutInterface.html">mahos.inst.daq_interface.AnalogOutInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq_interface.BufferedReaderInterface.html">mahos.inst.daq_interface.BufferedReaderInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq_interface.AnalogInInterface.html">mahos.inst.daq_interface.AnalogInInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq_interface.BufferedEdgeCounterInterface.html">mahos.inst.daq_interface.BufferedEdgeCounterInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq_interface.DigitalOutInterface.html">mahos.inst.daq_interface.DigitalOutInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.ConfigurableTask.html">mahos.inst.daq.ConfigurableTask</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.ClockSource.html">mahos.inst.daq.ClockSource</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.ClockDivider.html">mahos.inst.daq.ClockDivider</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.AnalogOut.html">mahos.inst.daq.AnalogOut</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.AnalogIn.html">mahos.inst.daq.AnalogIn</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.BufferedEdgeCounter.html">mahos.inst.daq.BufferedEdgeCounter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.SingleShotTask.html">mahos.inst.daq.SingleShotTask</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.DigitalOut.html">mahos.inst.daq.DigitalOut</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/daq.html">mahos.inst.daq</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq_interface.ClockSourceInterface.html">mahos.inst.daq_interface.ClockSourceInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq_interface.AnalogOutInterface.html">mahos.inst.daq_interface.AnalogOutInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq_interface.BufferedReaderInterface.html">mahos.inst.daq_interface.BufferedReaderInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq_interface.AnalogInInterface.html">mahos.inst.daq_interface.AnalogInInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq_interface.BufferedEdgeCounterInterface.html">mahos.inst.daq_interface.BufferedEdgeCounterInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq_interface.DigitalOutInterface.html">mahos.inst.daq_interface.DigitalOutInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq.ConfigurableTask.html">mahos.inst.daq.ConfigurableTask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq.ClockSource.html">mahos.inst.daq.ClockSource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq.ClockDivider.html">mahos.inst.daq.ClockDivider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq.AnalogOut.html">mahos.inst.daq.AnalogOut</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq.AnalogIn.html">mahos.inst.daq.AnalogIn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq.BufferedEdgeCounter.html">mahos.inst.daq.BufferedEdgeCounter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq.SingleShotTask.html">mahos.inst.daq.SingleShotTask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.daq.DigitalOut.html">mahos.inst.daq.DigitalOut</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../fg.html">mahos.inst.fg</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.fg_interface.FGInterface.html">mahos.inst.fg_interface.FGInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.fg.DG2000.html">mahos.inst.fg.DG2000</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/fg.html">mahos.inst.fg</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.fg_interface.FGInterface.html">mahos.inst.fg_interface.FGInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.fg.DG2000.html">mahos.inst.fg.DG2000</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../lockin.html">mahos.inst.lockin</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.lockin.LI5640.html">mahos.inst.lockin.LI5640</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/lockin.html">mahos.inst.lockin</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.lockin.LI5640.html">mahos.inst.lockin.LI5640</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../pd.html">mahos.inst.pd</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pd_interface.PDInterface.html">mahos.inst.pd_interface.PDInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pd_interface.APDCounterInterface.html">mahos.inst.pd_interface.APDCounterInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pd.APDCounter.html">mahos.inst.pd.APDCounter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pd.AnalogPD.html">mahos.inst.pd.AnalogPD</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pd.LockinAnalogPD.html">mahos.inst.pd.LockinAnalogPD</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pd.LUCI10.html">mahos.inst.pd.LUCI10</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pd.LUCI_OE200.html">mahos.inst.pd.LUCI_OE200</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/pd.html">mahos.inst.pd</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pd_interface.PDInterface.html">mahos.inst.pd_interface.PDInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pd_interface.APDCounterInterface.html">mahos.inst.pd_interface.APDCounterInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pd.APDCounter.html">mahos.inst.pd.APDCounter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pd.AnalogPD.html">mahos.inst.pd.AnalogPD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pd.LockinAnalogPD.html">mahos.inst.pd.LockinAnalogPD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pd.LUCI10.html">mahos.inst.pd.LUCI10</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pd.LUCI_OE200.html">mahos.inst.pd.LUCI_OE200</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../pg.html">mahos.inst.pg</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg_interface.PGInterface.html">mahos.inst.pg_interface.PGInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.PulseStreamer.html">mahos.inst.pg.PulseStreamer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.PulseStreamerDAQTrigger.html">mahos.inst.pg.PulseStreamerDAQTrigger</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.DTG5000.html">mahos.inst.pg.DTG5000</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.DTG5078.html">mahos.inst.pg.DTG5078</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.DTG5274.html">mahos.inst.pg.DTG5274</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.DTG5334.html">mahos.inst.pg.DTG5334</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/pg.html">mahos.inst.pg</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg_interface.PGInterface.html">mahos.inst.pg_interface.PGInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.PulseStreamer.html">mahos.inst.pg.PulseStreamer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.PulseStreamerDAQTrigger.html">mahos.inst.pg.PulseStreamerDAQTrigger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.DTG5000.html">mahos.inst.pg.DTG5000</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.DTG5078.html">mahos.inst.pg.DTG5078</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.DTG5274.html">mahos.inst.pg.DTG5274</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.DTG5334.html">mahos.inst.pg.DTG5334</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../piezo.html">mahos.inst.piezo</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo_interface.PiezoInterface.html">mahos.inst.piezo_interface.PiezoInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo_interface.AOPiezoInterface.html">mahos.inst.piezo_interface.AOPiezoInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.BasePiezo3Axes.html">mahos.inst.piezo.BasePiezo3Axes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.E727_3_USB.html">mahos.inst.piezo.E727_3_USB</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.E727_3_USB_AO.html">mahos.inst.piezo.E727_3_USB_AO</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.piezo.AnalogPiezo3Axes.html">mahos.inst.piezo.AnalogPiezo3Axes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/piezo.html">mahos.inst.piezo</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo_interface.PiezoInterface.html">mahos.inst.piezo_interface.PiezoInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo_interface.AOPiezoInterface.html">mahos.inst.piezo_interface.AOPiezoInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.BasePiezo3Axes.html">mahos.inst.piezo.BasePiezo3Axes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.E727_3_USB.html">mahos.inst.piezo.E727_3_USB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.E727_3_USB_AO.html">mahos.inst.piezo.E727_3_USB_AO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.piezo.AnalogPiezo3Axes.html">mahos.inst.piezo.AnalogPiezo3Axes</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../sg.html">mahos.inst.sg</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.sg_interface.SGInterface.html">mahos.inst.sg_interface.SGInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.sg.N5182B.html">mahos.inst.sg.N5182B</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.sg.MG3710E.html">mahos.inst.sg.MG3710E</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.sg.DS_SG.html">mahos.inst.sg.DS_SG</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/sg.html">mahos.inst.sg</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.sg_interface.SGInterface.html">mahos.inst.sg_interface.SGInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.sg.N5182B.html">mahos.inst.sg.N5182B</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.sg.MG3710E.html">mahos.inst.sg.MG3710E</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.sg.DS_SG.html">mahos.inst.sg.DS_SG</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../spectrometer.html">mahos.inst.spectrometer</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.spectrometer_interface.SpectrometerInterface.html">mahos.inst.spectrometer_interface.SpectrometerInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.spectrometer.LightField.html">mahos.inst.spectrometer.LightField</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/spectrometer.html">mahos.inst.spectrometer</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.spectrometer_interface.SpectrometerInterface.html">mahos.inst.spectrometer_interface.SpectrometerInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.spectrometer.LightField.html">mahos.inst.spectrometer.LightField</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../tdc.html">mahos.inst.tdc</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.tdc_interface.TDCInterface.html">mahos.inst.tdc_interface.TDCInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.tdc.MCS.html">mahos.inst.tdc.MCS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.tdc.TimeTagger.html">mahos.inst.tdc.TimeTagger</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/tdc.html">mahos.inst.tdc</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc_interface.TDCInterface.html">mahos.inst.tdc_interface.TDCInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc.MCS.html">mahos.inst.tdc.MCS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.tdc.TimeTagger.html">mahos.inst.tdc.TimeTagger</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../InstrumentOverlay.html">mahos.inst.overlay.overlay.InstrumentOverlay</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../confocal_scanner.html">mahos.inst.overlay.confocal_scanner</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.confocal_scanner_interface.ConfocalScannerInterface.html">mahos.inst.overlay.confocal_scanner_interface.ConfocalScannerInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.confocal_scanner.ConfocalScannerAnalog.html">mahos.inst.overlay.confocal_scanner.ConfocalScannerAnalog</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.confocal_scanner.ConfocalScannerCommand.html">mahos.inst.overlay.confocal_scanner.ConfocalScannerCommand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../inst/InstrumentOverlay.html">mahos.inst.overlay.overlay.InstrumentOverlay</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/confocal_scanner.html">mahos.inst.overlay.confocal_scanner</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.overlay.confocal_scanner_interface.ConfocalScannerInterface.html">mahos.inst.overlay.confocal_scanner_interface.ConfocalScannerInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.overlay.confocal_scanner.ConfocalScannerAnalog.html">mahos.inst.overlay.confocal_scanner.ConfocalScannerAnalog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.overlay.confocal_scanner.ConfocalScannerCommand.html">mahos.inst.overlay.confocal_scanner.ConfocalScannerCommand</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../amplified_pd.html">mahos.inst.overlay.amplified_pd</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.amplified_pd.OE200_AI.html">mahos.inst.overlay.amplified_pd.OE200_AI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.amplified_pd.OE200_LI5640_AI.html">mahos.inst.overlay.amplified_pd.OE200_LI5640_AI</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/amplified_pd.html">mahos.inst.overlay.amplified_pd</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.overlay.amplified_pd.OE200_AI.html">mahos.inst.overlay.amplified_pd.OE200_AI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.overlay.amplified_pd.OE200_LI5640_AI.html">mahos.inst.overlay.amplified_pd.OE200_LI5640_AI</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.inst.server.InstrumentServer.html">mahos.inst.server.InstrumentServer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.inst.server.InstrumentClient.html">mahos.inst.server.InstrumentClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../inst/generated/mahos.inst.server.InstrumentServer.html">mahos.inst.server.InstrumentServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../inst/generated/mahos.inst.server.InstrumentClient.html">mahos.inst.server.InstrumentClient</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../meas/index.html">mahos.meas</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.common_meas.BasicMeasClient.html">mahos.meas.common_meas.BasicMeasClient</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.common_meas.BasicMeasNode.html">mahos.meas.common_meas.BasicMeasNode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.state_manager.StateManager.html">mahos.meas.state_manager.StateManager</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.tweaker.Tweaker.html">mahos.meas.tweaker.Tweaker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.recorder.Recorder.html">mahos.meas.recorder.Recorder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.confocal.Confocal.html">mahos.meas.confocal.Confocal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.confocal_tracker.ConfocalTracker.html">mahos.meas.confocal_tracker.ConfocalTracker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.odmr.ODMR.html">mahos.meas.odmr.ODMR</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.podmr.PODMR.html">mahos.meas.podmr.PODMR</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.spodmr.SPODMR.html">mahos.meas.spodmr.SPODMR</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.qdyne.Qdyne.html">mahos.meas.qdyne.Qdyne</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.iodmr.IODMR.html">mahos.meas.iodmr.IODMR</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.hbt.HBT.html">mahos.meas.hbt.HBT</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.spectroscopy.Spectroscopy.html">mahos.meas.spectroscopy.Spectroscopy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.camera.Camera.html">mahos.meas.camera.Camera</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/ConfocalIO.html">mahos.meas.confocal.ConfocalIO</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/ODMRIO.html">mahos.meas.odmr.ODMRIO</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/PODMRIO.html">mahos.meas.podmr.PODMRIO</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/SPODMRIO.html">mahos.meas.podmr.SPODMRIO</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/QdyneIO.html">mahos.meas.podmr.QdyneIO</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/IODMRIO.html">mahos.meas.podmr.IODMRIO</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/HBTIO.html">mahos.meas.hbt.HBTIO</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/SpectroscopyIO.html">mahos.meas.spectroscopy.SpectroscopyIO</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../meas/CameraIO.html">mahos.meas.camera.CameraIO</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">mahos.meas</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.common_meas.BasicMeasClient.html">mahos.meas.common_meas.BasicMeasClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.common_meas.BasicMeasNode.html">mahos.meas.common_meas.BasicMeasNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.state_manager.StateManager.html">mahos.meas.state_manager.StateManager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.tweaker.Tweaker.html">mahos.meas.tweaker.Tweaker</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">mahos.meas.recorder.Recorder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.confocal.Confocal.html">mahos.meas.confocal.Confocal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.confocal_tracker.ConfocalTracker.html">mahos.meas.confocal_tracker.ConfocalTracker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.odmr.ODMR.html">mahos.meas.odmr.ODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.podmr.PODMR.html">mahos.meas.podmr.PODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.spodmr.SPODMR.html">mahos.meas.spodmr.SPODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.qdyne.Qdyne.html">mahos.meas.qdyne.Qdyne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.iodmr.IODMR.html">mahos.meas.iodmr.IODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.hbt.HBT.html">mahos.meas.hbt.HBT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.spectroscopy.Spectroscopy.html">mahos.meas.spectroscopy.Spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.camera.Camera.html">mahos.meas.camera.Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ConfocalIO.html">mahos.meas.confocal.ConfocalIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ODMRIO.html">mahos.meas.odmr.ODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PODMRIO.html">mahos.meas.podmr.PODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SPODMRIO.html">mahos.meas.podmr.SPODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QdyneIO.html">mahos.meas.podmr.QdyneIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../IODMRIO.html">mahos.meas.podmr.IODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HBTIO.html">mahos.meas.hbt.HBTIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SpectroscopyIO.html">mahos.meas.spectroscopy.SpectroscopyIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CameraIO.html">mahos.meas.camera.CameraIO</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../gui/index.html">mahos.gui</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -580,8 +580,6 @@ document.write(`
 
 
 
-
-
 <nav aria-label="Breadcrumbs">
   <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
     
@@ -594,12 +592,9 @@ document.write(`
     <li class="breadcrumb-item"><a href="../../api.html" class="nav-link">API Reference</a></li>
     
     
-    <li class="breadcrumb-item"><i class="fa-solid fa-ellipsis"></i></li>
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">mahos.meas</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="../camera.html" class="nav-link">mahos.inst.camera</a></li>
-    
-    <li class="breadcrumb-item active" aria-current="page">mahos.inst.camera.ThorlabsCamera</li>
+    <li class="breadcrumb-item active" aria-current="page">mahos.meas.recorder.Recorder</li>
   </ul>
 </nav>
 </div>
@@ -616,55 +611,55 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="mahos-inst-camera-thorlabscamera">
-<h1>mahos.inst.camera.ThorlabsCamera<a class="headerlink" href="#mahos-inst-camera-thorlabscamera" title="Permalink to this heading">#</a></h1>
+  <section id="mahos-meas-recorder-recorder">
+<h1>mahos.meas.recorder.Recorder<a class="headerlink" href="#mahos-meas-recorder-recorder" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="mahos.inst.camera.ThorlabsCamera">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.inst.camera.</span></span><span class="sig-name descname"><span class="pre">ThorlabsCamera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.camera.ThorlabsCamera" title="Permalink to this definition">#</a></dt>
-<dd><p>Wrapper for Thorlabs Scientific Camera SDK.</p>
-<p>You need following:
-1. Install SDK’s Python wrapper library (thorlabs_tsi_sdk).
-2. Place SDK native DLLs somewhere.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dll_dir</strong> (<em>str</em>) – The directory path containing SDK DLLs.</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="mahos.meas.recorder.Recorder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.meas.recorder.</span></span><span class="sig-name descname"><span class="pre">Recorder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gconf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.meas.recorder.Recorder" title="Permalink to this definition">#</a></dt>
+<dd><p>Generic data-logging measurement for time-series data.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="mahos.inst.camera.ThorlabsCamera.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.camera.ThorlabsCamera.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="mahos.meas.recorder.Recorder.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gconf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.meas.recorder.Recorder.__init__" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mahos.inst.camera.ThorlabsCamera.__init__" title="mahos.inst.camera.ThorlabsCamera.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name[, conf, prefix])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mahos.meas.recorder.Recorder.__init__" title="mahos.meas.recorder.Recorder.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code>()</p></td>
-<td><p>Close instrument resources.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_state</span></code>(msg)</p></td>
+<td><p>Change state to msg.state.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure</span></code>(params[, label, group])</p></td>
-<td><p>Configure the instrument settings.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">close_resources</span></code>()</p></td>
+<td><p>Close custom resources.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_continuous</span></code>(exposure_time_sec[, ...])</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_data</span></code>(msg)</p></td>
+<td><p>Export data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(key[, args])</p></td>
-<td><p>Get an instrument setting or measurement data.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict</span></code>(msg)</p></td>
+<td><p>Get parameter dict.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_frame</span></code>()</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict_labels</span></code>(msg)</p></td>
+<td><p>Get parameter dict labels.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">poll_continuous</span></code>(ev)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_data</span></code>(msg)</p></td>
+<td><p>Load data.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>()</p></td>
-<td><p>Start the instrument operation.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>()</p></td>
+<td><p>Main procedure that will be looped.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
-<td><p>Stop the instrument operation.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_data</span></code>(msg)</p></td>
+<td><p>Save data.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">wait</span></code>()</p></td>
+<td><p>Wait until required resources are ready.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable table autosummary">
+<tbody>
 </tbody>
 </table>
 </dd></dl>
@@ -683,20 +678,20 @@ document.write(`
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mahos.inst.camera_interface.CameraInterface.html"
+       href="mahos.meas.tweaker.Tweaker.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">mahos.inst.camera_interface.CameraInterface</p>
+        <p class="prev-next-title">mahos.meas.tweaker.Tweaker</p>
       </div>
     </a>
     <a class="right-next"
-       href="mahos.inst.camera.BaslerPylonCamera.html"
+       href="mahos.meas.confocal.Confocal.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">mahos.inst.camera.BaslerPylonCamera</p>
+        <p class="prev-next-title">mahos.meas.confocal.Confocal</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -718,8 +713,8 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.camera.ThorlabsCamera"><code class="docutils literal notranslate"><span class="pre">ThorlabsCamera</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.camera.ThorlabsCamera.__init__"><code class="docutils literal notranslate"><span class="pre">ThorlabsCamera.__init__()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.meas.recorder.Recorder"><code class="docutils literal notranslate"><span class="pre">Recorder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.meas.recorder.Recorder.__init__"><code class="docutils literal notranslate"><span class="pre">Recorder.__init__()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -727,7 +722,7 @@ document.write(`
 
   <div class="sidebar-secondary-item">
   <div class="tocsection sourcelink">
-    <a href="../../_sources/inst/generated/mahos.inst.camera.ThorlabsCamera.rst.txt">
+    <a href="../../_sources/meas/generated/mahos.meas.recorder.Recorder.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

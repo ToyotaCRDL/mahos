@@ -8,7 +8,7 @@ Changelog
 Added
 ^^^^^
 
-- meas: new measurement Chrono.
+- meas: new generic measurement Recorder.
 - inst: new module dmm (for Digital Multi Meter).
 - inst.tdc: new instrument TimeTagger (Swabian Instruments).
 

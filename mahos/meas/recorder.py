@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Generic Data-logging measurement for Time-series data.
+Generic data-logging measurement for time-series data.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -13,27 +13,27 @@ from __future__ import annotations
 from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
-from ..msgs import chrono_msgs
-from ..msgs.chrono_msgs import ChronoData
+from ..msgs import recorder_msgs
+from ..msgs.recorder_msgs import RecorderData
 from .common_meas import BasicMeasClient, BasicMeasNode
 from ..util.timer import IntervalTimer
 from .tweaker import TweakerClient
-from .chrono_worker import Collector
-from .chrono_io import ChronoIO
+from .recorder_worker import Collector
+from .recorder_io import RecorderIO
 
 
-class ChronoClient(BasicMeasClient):
-    """Node Client for Chrono."""
+class RecorderClient(BasicMeasClient):
+    """Node Client for Recorder."""
 
-    #: Message types for Chrono.
-    M = chrono_msgs
+    #: Message types for Recorder.
+    M = recorder_msgs
 
 
-class Chrono(BasicMeasNode):
-    """Generic Data-logging measurement for Time-series data."""
+class Recorder(BasicMeasNode):
+    """Generic data-logging measurement for time-series data."""
 
-    CLIENT = ChronoClient
-    DATA = ChronoData
+    CLIENT = RecorderClient
+    DATA = RecorderData
 
     def __init__(self, gconf: dict, name, context=None):
         BasicMeasNode.__init__(self, gconf, name, context=context)
@@ -47,7 +47,7 @@ class Chrono(BasicMeasNode):
             self.tweaker_cli = None
 
         self.worker = Collector(self.cli, self.logger, self.conf["collector"], self.conf["mode"])
-        self.io = ChronoIO(self.logger)
+        self.io = RecorderIO(self.logger)
         self.pub_timer = IntervalTimer(self.conf.get("pub_interval_sec", 0.5))
 
     def close_resources(self):

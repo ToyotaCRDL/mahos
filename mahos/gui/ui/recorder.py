@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'chrono.ui'
+# Form implementation generated from reading ui file 'recorder.ui'
 #
 # Created by: PyQt6 UI code generator 6.5.2
 #
@@ -9,27 +9,27 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Chrono(object):
-    def setupUi(self, Chrono):
-        Chrono.setObjectName("Chrono")
-        Chrono.resize(957, 707)
-        self.verticalLayout = QtWidgets.QVBoxLayout(Chrono)
+class Ui_Recorder(object):
+    def setupUi(self, Recorder):
+        Recorder.setObjectName("Recorder")
+        Recorder.resize(957, 707)
+        self.verticalLayout = QtWidgets.QVBoxLayout(Recorder)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.startButton = QtWidgets.QPushButton(parent=Chrono)
+        self.startButton = QtWidgets.QPushButton(parent=Recorder)
         self.startButton.setObjectName("startButton")
         self.horizontalLayout.addWidget(self.startButton)
-        self.stopButton = QtWidgets.QPushButton(parent=Chrono)
+        self.stopButton = QtWidgets.QPushButton(parent=Recorder)
         self.stopButton.setObjectName("stopButton")
         self.horizontalLayout.addWidget(self.stopButton)
-        self.saveButton = QtWidgets.QPushButton(parent=Chrono)
+        self.saveButton = QtWidgets.QPushButton(parent=Recorder)
         self.saveButton.setObjectName("saveButton")
         self.horizontalLayout.addWidget(self.saveButton)
-        self.exportButton = QtWidgets.QPushButton(parent=Chrono)
+        self.exportButton = QtWidgets.QPushButton(parent=Recorder)
         self.exportButton.setObjectName("exportButton")
         self.horizontalLayout.addWidget(self.exportButton)
-        self.loadButton = QtWidgets.QPushButton(parent=Chrono)
+        self.loadButton = QtWidgets.QPushButton(parent=Recorder)
         self.loadButton.setObjectName("loadButton")
         self.horizontalLayout.addWidget(self.loadButton)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
@@ -37,27 +37,27 @@ class Ui_Chrono(object):
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.labelBox = QtWidgets.QComboBox(parent=Chrono)
+        self.labelBox = QtWidgets.QComboBox(parent=Recorder)
         self.labelBox.setObjectName("labelBox")
         self.horizontalLayout_2.addWidget(self.labelBox)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
-        self.paramTable = ParamTable(parent=Chrono)
+        self.paramTable = ParamTable(parent=Recorder)
         self.paramTable.setObjectName("paramTable")
         self.paramTable.setColumnCount(0)
         self.paramTable.setRowCount(0)
         self.verticalLayout.addWidget(self.paramTable)
 
-        self.retranslateUi(Chrono)
-        QtCore.QMetaObject.connectSlotsByName(Chrono)
+        self.retranslateUi(Recorder)
+        QtCore.QMetaObject.connectSlotsByName(Recorder)
 
-    def retranslateUi(self, Chrono):
+    def retranslateUi(self, Recorder):
         _translate = QtCore.QCoreApplication.translate
-        Chrono.setWindowTitle(_translate("Chrono", "Form"))
-        self.startButton.setText(_translate("Chrono", "Start"))
-        self.stopButton.setText(_translate("Chrono", "Stop"))
-        self.saveButton.setText(_translate("Chrono", "Save"))
-        self.exportButton.setText(_translate("Chrono", "Export"))
-        self.loadButton.setText(_translate("Chrono", "Load"))
+        Recorder.setWindowTitle(_translate("Recorder", "Form"))
+        self.startButton.setText(_translate("Recorder", "Start"))
+        self.stopButton.setText(_translate("Recorder", "Stop"))
+        self.saveButton.setText(_translate("Recorder", "Save"))
+        self.exportButton.setText(_translate("Recorder", "Export"))
+        self.loadButton.setText(_translate("Recorder", "Load"))
 from mahos.gui.param import ParamTable

@@ -321,28 +321,28 @@ param_dicts = ["paramX::labelA", "paramY::labelB"]
 paramX = "localhost::server"
 paramY = "localhost::server"
 
-[localhost.chrono]
-module = "mahos.meas.chrono"
-class = "Chrono"
+[localhost.recorder]
+module = "mahos.meas.recorder"
+class = "Recorder"
 target = { log = "localhost::log" }
 rep_endpoint = "tcp://127.0.0.1:5594"
 pub_endpoint = "tcp://127.0.0.1:5595"
-[localhost.chrono.collector]
+[localhost.recorder.collector]
 interval_sec = 0.5
-[localhost.chrono.mode.all]
+[localhost.recorder.mode.all]
 dmm0 = "dcv"
 dmm1 = "dcv"
 dmm2 = "dcv"
 dmm3 = "dcv"
-[localhost.chrono.mode.mix]
+[localhost.recorder.mode.mix]
 dmm0 = "dcv"
 dmm1 = "dci"
 dmm2 = "dci"
 dmm3 = "dcv"
-[localhost.chrono.mode.few]
+[localhost.recorder.mode.few]
 dmm1 = "dcv"
 dmm2 = "dci"
-[localhost.chrono.target.servers]
+[localhost.recorder.target.servers]
 dmm0 = "localhost::server"
 dmm1 = "localhost::server"
 dmm2 = "localhost::server"
@@ -415,11 +415,11 @@ class = "TweakerGUI"
 tweaker = "localhost::tweaker"
 gparams = "localhost::gparams"
 
-[localhost.chrono_gui]
-module = "mahos.gui.chrono"
-class = "ChronoGUI"
-[localhost.chrono_gui.target]
-chrono = "localhost::chrono"
+[localhost.recorder_gui]
+module = "mahos.gui.recorder"
+class = "RecorderGUI"
+[localhost.recorder_gui.target]
+recorder = "localhost::recorder"
 gparams = "localhost::gparams"
 
 [localhost.pulse_monitor]

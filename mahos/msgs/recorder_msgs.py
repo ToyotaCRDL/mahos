@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Message Types for the Chrono.
+Message Types for the Recorder.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -16,7 +16,7 @@ import msgpack
 from .common_meas_msgs import BasicMeasData
 
 
-class ChronoData(BasicMeasData):
+class RecorderData(BasicMeasData):
     def __init__(self, params: dict | None = None):
         """Note that set_units() must be called before collecting actual data."""
 
@@ -126,5 +126,5 @@ class ChronoData(BasicMeasData):
         }
 
 
-def update_data(data: ChronoData):
+def update_data(data: RecorderData):
     return data

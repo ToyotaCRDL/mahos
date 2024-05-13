@@ -1,0 +1,39 @@
+﻿mahos.meas.recorder.Recorder
+============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.meas.recorder
+
+.. autoclass:: Recorder
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Recorder.__init__
+      ~Recorder.change_state
+      ~Recorder.close_resources
+      ~Recorder.export_data
+      ~Recorder.get_param_dict
+      ~Recorder.get_param_dict_labels
+      ~Recorder.load_data
+      ~Recorder.main
+      ~Recorder.save_data
+      ~Recorder.wait
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+   
+   

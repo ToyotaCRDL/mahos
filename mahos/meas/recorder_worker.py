@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Worker for Chrono.
+Worker for Recorder.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -12,7 +12,7 @@ from __future__ import annotations
 import time
 
 from ..util.timer import IntervalTimer
-from ..msgs.chrono_msgs import ChronoData
+from ..msgs.recorder_msgs import RecorderData
 from ..inst.interface import InstrumentInterface
 from ..msgs import param_msgs as P
 from .common_worker import Worker
@@ -29,7 +29,7 @@ class Collector(Worker):
 
         self.mode_inst_labels = mode or {"all": {inst: "" for inst in self.insts}}
 
-        self.data = ChronoData()
+        self.data = RecorderData()
         self.timer = None
 
     def _get_labels(self, mode: str, inst: str) -> tuple[str, str]:
@@ -90,7 +90,7 @@ class Collector(Worker):
 
         self.timer = IntervalTimer(self.interval_sec)
 
-        self.data = ChronoData(params)
+        self.data = RecorderData(params)
         self.data.set_units(units)
         self.data.start()
         self.logger.info("Started collector.")
@@ -134,5 +134,5 @@ class Collector(Worker):
             self.logger.error("Error stopping collector.")
         return success
 
-    def data_msg(self) -> ChronoData:
+    def data_msg(self) -> RecorderData:
         return self.data

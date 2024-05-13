@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-File I/O for Chrono.
+File I/O for Recorder.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -15,32 +15,32 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 
-from ..msgs.chrono_msgs import ChronoData, update_data
+from ..msgs.recorder_msgs import RecorderData, update_data
 from ..node.log import DummyLogger
 from ..util.io import save_pickle_or_h5, load_pickle_or_h5
 
 
-class ChronoIO(object):
+class RecorderIO(object):
     def __init__(self, logger=None):
         if logger is None:  # use DummyLogger on interactive use
             self.logger = DummyLogger(self.__class__.__name__)
         else:
             self.logger = logger
 
-    def save_data(self, filename: str, data: ChronoData, note: str = "") -> bool:
+    def save_data(self, filename: str, data: RecorderData, note: str = "") -> bool:
         """Save data to filename. return True on success."""
 
         data.set_saved()
-        return save_pickle_or_h5(filename, data, ChronoData, self.logger, note=note)
+        return save_pickle_or_h5(filename, data, RecorderData, self.logger, note=note)
 
-    def load_data(self, filename: str) -> ChronoData | None:
+    def load_data(self, filename: str) -> RecorderData | None:
         """Load data from filename. return None if load is failed."""
 
-        d = load_pickle_or_h5(filename, ChronoData, self.logger)
+        d = load_pickle_or_h5(filename, RecorderData, self.logger)
         if d is not None:
             return update_data(d)
 
-    def export_data(self, filename: str, data: ChronoData, params: dict | None = None) -> bool:
+    def export_data(self, filename: str, data: RecorderData, params: dict | None = None) -> bool:
         """Export the data to text or image files.
 
         :param filename: supported extensions: text: .txt and .csv. image: .png, .pdf, and .eps.
@@ -73,8 +73,8 @@ class ChronoIO(object):
         if params is None:
             params = {}
 
-        if not isinstance(data, ChronoData):
-            self.logger.error(f"Given object ({data}) is not an ChronoData.")
+        if not isinstance(data, RecorderData):
+            self.logger.error(f"Given object ({data}) is not an RecorderData.")
             return False
 
         if params.get("plot"):
@@ -89,10 +89,10 @@ class ChronoIO(object):
             self.logger.error(f"Unknown extension to export data: {filename}")
             return False
 
-    def _export_data_csv(self, fn, data: ChronoData):
+    def _export_data_csv(self, fn, data: RecorderData):
         raise NotImplementedError("export data to csv (txt) is not implemented")
 
-    def _export_data_image(self, fn, data: ChronoData, params: dict):
+    def _export_data_image(self, fn, data: RecorderData, params: dict):
         plt.rcParams["font.size"] = params.get("fontsize", 28)
 
         fig = plt.figure(figsize=params.get("figsize", (12, 12)), dpi=params.get("dpi", 100))

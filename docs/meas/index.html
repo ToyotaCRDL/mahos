@@ -498,6 +498,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.common_meas.BasicMeasNode.html">mahos.meas.common_meas.BasicMeasNode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.state_manager.StateManager.html">mahos.meas.state_manager.StateManager</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.tweaker.Tweaker.html">mahos.meas.tweaker.Tweaker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.recorder.Recorder.html">mahos.meas.recorder.Recorder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.confocal.Confocal.html">mahos.meas.confocal.Confocal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.confocal_tracker.ConfocalTracker.html">mahos.meas.confocal_tracker.ConfocalTracker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.odmr.ODMR.html">mahos.meas.odmr.ODMR</a></li>
@@ -622,36 +623,39 @@ document.write(`
 <td><p>StateManager for meas nodes.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.tweaker.Tweaker.html#mahos.meas.tweaker.Tweaker" title="mahos.meas.tweaker.Tweaker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tweaker.Tweaker</span></code></a>(gconf, name[, context])</p></td>
-<td><p>Tweaker for manually-tuned Instrument's ParamDicts.</p></td>
+<td><p>Generic tweaker for manually-tunable Instrument's ParamDicts.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.confocal.Confocal.html#mahos.meas.confocal.Confocal" title="mahos.meas.confocal.Confocal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">confocal.Confocal</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.recorder.Recorder.html#mahos.meas.recorder.Recorder" title="mahos.meas.recorder.Recorder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recorder.Recorder</span></code></a>(gconf, name[, context])</p></td>
+<td><p>Generic data-logging measurement for time-series data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.confocal.Confocal.html#mahos.meas.confocal.Confocal" title="mahos.meas.confocal.Confocal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">confocal.Confocal</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.confocal_tracker.ConfocalTracker.html#mahos.meas.confocal_tracker.ConfocalTracker" title="mahos.meas.confocal_tracker.ConfocalTracker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">confocal_tracker.ConfocalTracker</span></code></a>(gconf, name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.confocal_tracker.ConfocalTracker.html#mahos.meas.confocal_tracker.ConfocalTracker" title="mahos.meas.confocal_tracker.ConfocalTracker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">confocal_tracker.ConfocalTracker</span></code></a>(gconf, name)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.odmr.ODMR.html#mahos.meas.odmr.ODMR" title="mahos.meas.odmr.ODMR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odmr.ODMR</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.odmr.ODMR.html#mahos.meas.odmr.ODMR" title="mahos.meas.odmr.ODMR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">odmr.ODMR</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.podmr.PODMR.html#mahos.meas.podmr.PODMR" title="mahos.meas.podmr.PODMR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">podmr.PODMR</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.podmr.PODMR.html#mahos.meas.podmr.PODMR" title="mahos.meas.podmr.PODMR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">podmr.PODMR</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.spodmr.SPODMR.html#mahos.meas.spodmr.SPODMR" title="mahos.meas.spodmr.SPODMR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spodmr.SPODMR</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.spodmr.SPODMR.html#mahos.meas.spodmr.SPODMR" title="mahos.meas.spodmr.SPODMR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spodmr.SPODMR</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.qdyne.Qdyne.html#mahos.meas.qdyne.Qdyne" title="mahos.meas.qdyne.Qdyne"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qdyne.Qdyne</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.qdyne.Qdyne.html#mahos.meas.qdyne.Qdyne" title="mahos.meas.qdyne.Qdyne"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qdyne.Qdyne</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.iodmr.IODMR.html#mahos.meas.iodmr.IODMR" title="mahos.meas.iodmr.IODMR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iodmr.IODMR</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.iodmr.IODMR.html#mahos.meas.iodmr.IODMR" title="mahos.meas.iodmr.IODMR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iodmr.IODMR</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.hbt.HBT.html#mahos.meas.hbt.HBT" title="mahos.meas.hbt.HBT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hbt.HBT</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.hbt.HBT.html#mahos.meas.hbt.HBT" title="mahos.meas.hbt.HBT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hbt.HBT</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.spectroscopy.Spectroscopy.html#mahos.meas.spectroscopy.Spectroscopy" title="mahos.meas.spectroscopy.Spectroscopy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spectroscopy.Spectroscopy</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.spectroscopy.Spectroscopy.html#mahos.meas.spectroscopy.Spectroscopy" title="mahos.meas.spectroscopy.Spectroscopy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spectroscopy.Spectroscopy</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/mahos.meas.camera.Camera.html#mahos.meas.camera.Camera" title="mahos.meas.camera.Camera"><code class="xref py py-obj docutils literal notranslate"><span class="pre">camera.Camera</span></code></a>(gconf, name[, context])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.camera.Camera.html#mahos.meas.camera.Camera" title="mahos.meas.camera.Camera"><code class="xref py py-obj docutils literal notranslate"><span class="pre">camera.Camera</span></code></a>(gconf, name[, context])</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
