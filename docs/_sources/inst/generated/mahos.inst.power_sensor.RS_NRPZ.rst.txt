@@ -1,0 +1,39 @@
+﻿mahos.inst.power\_sensor.RS\_NRPZ
+=================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.power_sensor
+
+.. autoclass:: RS_NRPZ
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RS_NRPZ.__init__
+      ~RS_NRPZ.check_error
+      ~RS_NRPZ.close
+      ~RS_NRPZ.configure
+      ~RS_NRPZ.configure_cont_average
+      ~RS_NRPZ.convert_power
+      ~RS_NRPZ.get
+      ~RS_NRPZ.get_data
+      ~RS_NRPZ.get_data_cont_avg
+      ~RS_NRPZ.get_param_dict
+      ~RS_NRPZ.get_param_dict_labels
+      ~RS_NRPZ.get_unit
+      ~RS_NRPZ.set_unit
+      ~RS_NRPZ.start
+      ~RS_NRPZ.stop
+   
+   
+
+   
+   
+   

@@ -22,6 +22,7 @@ Instrument modules
    pd
    pg
    piezo
+   power_sensor
    sg
    spectrometer
    tdc

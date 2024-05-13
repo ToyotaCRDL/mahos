@@ -25,6 +25,12 @@ but its state affects the sample / DUT and measurement result.
 Examples: programmable (variable gain) amplifiers for the sensors, thermostats, or power supply for electromagnet.
 The instrument should have :ref:`inst-params-interface` to be managed by the Tweaker.
 
+Recorder
+--------
+
+:class:`Recorder <mahos.meas.recorder.Recorder>` is a generic node for recording of time-series data from instruments.
+The instrument should provide several interfaces to be used by the Recorder.
+
 StateManager
 ------------
 

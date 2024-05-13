@@ -10,6 +10,7 @@ Added
 
 - meas: new generic measurement Recorder.
 - inst: new module dmm (for Digital Multi Meter).
+- inst: new module power_sensor (for RF / MW power sensor).
 - inst.tdc: new instrument TimeTagger (Swabian Instruments).
 
 [0.2.3] - 2023-11-06

@@ -20,7 +20,7 @@ from ..msgs import param_msgs as P
 
 
 class RS_NRPZ(Instrument):
-    """Wrapper Class of Rohde & Schwarz NRP-Z Power Sensor.
+    """Instrument for Rohde & Schwarz NRP-Z Power Sensor.
 
     Requires the DLL (rsnrpz_64.dll) which is installed along with
     `R&S NRP Toolkit <https://www.rohde-schwarz.com/jp/software/nrp-z2x1/>`_.

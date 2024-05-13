@@ -450,6 +450,11 @@ but its state affects the sample / DUT and measurement result.
 Examples: programmable (variable gain) amplifiers for the sensors, thermostats, or power supply for electromagnet.
 The instrument should have <a class="reference internal" href="arch_inst.html#inst-params-interface"><span class="std std-ref">ParamDict-based interface</span></a> to be managed by the Tweaker.</p>
 </section>
+<section id="recorder">
+<h2>Recorder<a class="headerlink" href="#recorder" title="Permalink to this heading">#</a></h2>
+<p><a class="reference internal" href="meas/generated/mahos.meas.recorder.Recorder.html#mahos.meas.recorder.Recorder" title="mahos.meas.recorder.Recorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Recorder</span></code></a> is a generic node for recording of time-series data from instruments.
+The instrument should provide several interfaces to be used by the Recorder.</p>
+</section>
 <section id="statemanager">
 <h2>StateManager<a class="headerlink" href="#statemanager" title="Permalink to this heading">#</a></h2>
 <p><a class="reference internal" href="meas/generated/mahos.meas.state_manager.StateManager.html#mahos.meas.state_manager.StateManager" title="mahos.meas.state_manager.StateManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">StateManager</span></code></a> is used as a manager of meas node states.
@@ -534,6 +539,7 @@ After a <cite>command</cite>, we can use <cite>restore</cite> request to recover
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basicmeasnode">BasicMeasNode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tweaker">Tweaker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recorder">Recorder</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#statemanager">StateManager</a></li>
 </ul>
   </nav></div>
