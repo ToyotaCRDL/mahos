@@ -23,7 +23,7 @@ def has_compatible_types(val, val_other) -> bool:
     builtin int and np.integer are considered compatible.
     builtin bool and np.bool_ are considered compatible.
 
-    For other types, equality of type(val) and type(val_other) is returned.
+    For other types, isinstance(val_other, type(val)) is returned.
 
     """
 
@@ -37,7 +37,7 @@ def has_compatible_types(val, val_other) -> bool:
         return isinstance(val_other, (int, np.integer))
     if isinstance(val, (bool, np.bool_)):
         return isinstance(val_other, (bool, np.bool_))
-    return type(val) == type(val_other)
+    return isinstance(val_other, type(val))
 
 
 def dict_equal(dic: dict, other: dict) -> bool:

@@ -116,6 +116,9 @@ class Agilent34410A(VisaInstrument):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
+    def get_param_dict_labels(self, group: str = "") -> list[str]:
+        return ["dcv"]
+
     def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
         if label == "dcv":
             return P.ParamDict(

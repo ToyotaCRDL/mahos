@@ -46,9 +46,9 @@ COLOURS = {
 
 def col(text, fg=None, bg=None, bold=False, uline=False):
     def parse(c):
-        if type(c) == str:
+        if isinstance(c, str):
             return COLOURS[c]
-        elif type(c) == int and 0 <= c <= 255:
+        elif isinstance(c, int) and 0 <= c <= 255:
             return c
         else:
             raise ValueError("Invalid color code {}".format(c))
