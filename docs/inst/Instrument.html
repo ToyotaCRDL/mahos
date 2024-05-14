@@ -643,14 +643,16 @@ Override these methods (with the same signature) to expose the instrument’s fu
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="mahos.inst.instrument.Instrument.start">
-<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.start" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.start" title="Permalink to this definition">#</a></dt>
 <dd><p>Start the instrument operation. Returns True on success.</p>
+<p>(if given) label specifies a subsystem of the instrument to start.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mahos.inst.instrument.Instrument.stop">
-<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.stop" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.stop" title="Permalink to this definition">#</a></dt>
 <dd><p>Stop the instrument operation. Returns True on success.</p>
+<p>(if given) label specifies a subsystem of the instrument to stop.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -665,14 +667,16 @@ called by user request (rather than implicit call on InstrumentServer’s exit).
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mahos.inst.instrument.Instrument.pause">
-<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">pause</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.pause" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">pause</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.pause" title="Permalink to this definition">#</a></dt>
 <dd><p>Pause the instrument operation. Returns True on success.</p>
+<p>(if given) label specifies a subsystem of the instrument to pause.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mahos.inst.instrument.Instrument.resume">
-<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">resume</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.resume" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">resume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.resume" title="Permalink to this definition">#</a></dt>
 <dd><p>Resume the instrument operation from pause. Returns True on success.</p>
+<p>(if given) label specifies a subsystem of the instrument to resume.</p>
 </dd></dl>
 
 <dl class="py method">
