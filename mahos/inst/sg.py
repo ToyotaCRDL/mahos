@@ -456,7 +456,7 @@ class N5182B(VisaInstrument):
             self.logger.error("Unknown conf['mode']")
             return False
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self._mode != Mode.POINT_TRIG_FREQ_SWEEP:
             msg = f"start() is only for point_trig_freq_sweep (current mode: {self._mode}).\n"
             msg += "use set_output(True) to turn on RF output."
@@ -466,7 +466,7 @@ class N5182B(VisaInstrument):
         self.logger.info("Started point_trig_freq_sweep.")
         return success
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if self._mode != Mode.POINT_TRIG_FREQ_SWEEP:
             msg = f"stop() is only for point_trig_freq_sweep (current mode: {self._mode}).\n"
             msg += "use set_output(False) to turn off RF output."
@@ -909,7 +909,7 @@ class MG3710E(VisaInstrument):
             self.logger.error("Unknown conf['mode']")
             return False
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self._mode != Mode.POINT_TRIG_FREQ_SWEEP:
             msg = f"start() is only for point_trig_freq_sweep (current mode: {self._mode}).\n"
             msg += "use set_output(True) to turn on RF output."
@@ -919,7 +919,7 @@ class MG3710E(VisaInstrument):
         self.logger.info("Started point_trig_freq_sweep.")
         return success
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if self._mode != Mode.POINT_TRIG_FREQ_SWEEP:
             msg = f"stop() is only for point_trig_freq_sweep (current mode: {self._mode}).\n"
             msg += "use set_output(False) to turn off RF output."

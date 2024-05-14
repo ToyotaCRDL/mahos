@@ -212,30 +212,50 @@ class InstrumentClient(StatusClient):
         rep = self.req.request(Req_T(self.ident, inst))
         return rep.success
 
+    def _labeled_call(self, inst: str, label: str, Req_T):
+        rep = self.req.request(Req_T(self.ident, inst, label))
+        return rep.success
+
     def shutdown(self, inst: str) -> bool:
         """Shutdown the instrument and get ready to power-off. Returns True on success."""
 
         return self._noarg_call(inst, ShutdownReq)
 
-    def start(self, inst: str) -> bool:
-        """Start the instrument operation. Returns True on success."""
+    def start(self, inst: str, label: str = "") -> bool:
+        """Start the instrument operation. Returns True on success.
 
-        return self._noarg_call(inst, StartReq)
+        (if given) label specifies a subsystem of the instrument to start.
 
-    def stop(self, inst: str) -> bool:
-        """Stop the instrument operation. Returns True on success."""
+        """
 
-        return self._noarg_call(inst, StopReq)
+        return self._labeled_call(inst, label, StartReq)
 
-    def pause(self, inst: str) -> bool:
-        """Pause the instrument operation. Returns True on success."""
+    def stop(self, inst: str, label: str = "") -> bool:
+        """Stop the instrument operation. Returns True on success.
 
-        return self._noarg_call(inst, PauseReq)
+        (if given) label specifies a subsystem of the instrument to stop.
 
-    def resume(self, inst: str) -> bool:
-        """Resume the instrument operation. Returns True on success."""
+        """
 
-        return self._noarg_call(inst, ResumeReq)
+        return self._labeled_call(inst, label, StopReq)
+
+    def pause(self, inst: str, label: str = "") -> bool:
+        """Pause the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to pause.
+
+        """
+
+        return self._labeled_call(inst, label, PauseReq)
+
+    def resume(self, inst: str, label: str = "") -> bool:
+        """Resume the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to resume.
+
+        """
+
+        return self._labeled_call(inst, label, ResumeReq)
 
     def reset(self, inst: str) -> bool:
         """Reset the instrument settings. Returns True on success."""
@@ -416,28 +436,44 @@ class MultiInstrumentClient(object):
         return self.get_client(inst).shutdown(inst)
 
     @remap_inst
-    def start(self, inst: str) -> bool:
-        """Start the instrument operation. Returns True on success."""
+    def start(self, inst: str, label: str = "") -> bool:
+        """Start the instrument operation. Returns True on success.
 
-        return self.get_client(inst).start(inst)
+        (if given) label specifies a subsystem of the instrument to start.
 
-    @remap_inst
-    def stop(self, inst: str) -> bool:
-        """Stop the instrument operation. Returns True on success."""
+        """
 
-        return self.get_client(inst).stop(inst)
+        return self.get_client(inst).start(inst, label)
 
     @remap_inst
-    def pause(self, inst: str) -> bool:
-        """Pause the instrument operation. Returns True on success."""
+    def stop(self, inst: str, label: str = "") -> bool:
+        """Stop the instrument operation. Returns True on success.
 
-        return self.get_client(inst).pause(inst)
+        (if given) label specifies a subsystem of the instrument to stop.
+
+        """
+
+        return self.get_client(inst).stop(inst, label)
 
     @remap_inst
-    def resume(self, inst: str) -> bool:
-        """Resume the instrument operation. Returns True on success."""
+    def pause(self, inst: str, label: str = "") -> bool:
+        """Pause the instrument operation. Returns True on success.
 
-        return self.get_client(inst).resume(inst)
+        (if given) label specifies a subsystem of the instrument to pause.
+
+        """
+
+        return self.get_client(inst).pause(inst, label)
+
+    @remap_inst
+    def resume(self, inst: str, label: str = "") -> bool:
+        """Resume the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to resume.
+
+        """
+
+        return self.get_client(inst).resume(inst, label)
 
     @remap_inst
     def reset(self, inst: str) -> bool:
@@ -508,22 +544,28 @@ class InstrumentServer(Node):
     """
 
     _noarg_calls = (
-        StartReq,
-        StopReq,
         ShutdownReq,
-        PauseReq,
-        ResumeReq,
         ResetReq,
         GetParamDictLabelsReq,
     )
     _noarg_func_names = {
-        "StartReq": "start",
-        "StopReq": "stop",
         "ShutdownReq": "shutdown",
-        "PauseReq": "pause",
-        "ResumeReq": "resume",
         "ResetReq": "reset",
         "GetParamDictLabelsReq": "get_param_dict_labels",
+    }
+    _labeled_calls = (
+        StartReq,
+        StopReq,
+        PauseReq,
+        ResumeReq,
+        GetParamDictReq,
+    )
+    _labeled_func_names = {
+        "StartReq": "start",
+        "StopReq": "stop",
+        "PauseReq": "pause",
+        "ResumeReq": "resume",
+        "GetParamDictReq": "get_param_dict",
     }
     _std_funcs = (
         "start",
@@ -649,14 +691,14 @@ class InstrumentServer(Node):
             return self._handle_call(msg)
         elif isinstance(msg, self._noarg_calls):
             return self._handle_noarg_calls(msg)
+        elif isinstance(msg, self._labeled_calls):
+            return self._handle_labeled_calls(msg)
         elif isinstance(msg, ConfigureReq):
             return self._handle_configure(msg)
         elif isinstance(msg, SetReq):
             return self._handle_set(msg)
         elif isinstance(msg, GetReq):
             return self._handle_get(msg)
-        elif isinstance(msg, GetParamDictReq):
-            return self._handle_get_param_dict(msg)
         elif isinstance(msg, HelpReq):
             return self._handle_help(msg)
         elif isinstance(msg, LockReq):
@@ -699,6 +741,11 @@ class InstrumentServer(Node):
         func = self._noarg_func_names[msg.__class__.__name__]
         return self._call(msg.inst, msg.ident, func, None)
 
+    def _handle_labeled_calls(self, msg) -> Reply:
+        args = {"label": msg.label}
+        func = self._labeled_func_names[msg.__class__.__name__]
+        return self._call(msg.inst, msg.ident, func, args)
+
     def _handle_configure(self, msg: ConfigureReq) -> Reply:
         args = {"params": msg.params, "label": msg.label}
         return self._call(msg.inst, msg.ident, "configure", args)
@@ -712,10 +759,6 @@ class InstrumentServer(Node):
         else:
             args = {"key": msg.key, "args": msg.args}
         return self._call(msg.inst, msg.ident, "get", args)
-
-    def _handle_get_param_dict(self, msg: GetParamDictReq) -> Reply:
-        args = {"label": msg.label}
-        return self._call(msg.inst, msg.ident, "get_param_dict", args)
 
     def _handle_help(self, msg: HelpReq) -> Reply:
         inst = self._get(msg.inst)

@@ -98,10 +98,10 @@ class ConfocalScanner_mock(InstrumentOverlay):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         self.logger.info("Starting mock scanner.")
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self.logger.info("Stopping mock scaner.")
         return True

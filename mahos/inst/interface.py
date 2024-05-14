@@ -60,23 +60,39 @@ class InstrumentInterface(object):
 
         return self.cli.shutdown(self.inst)
 
-    def start(self) -> bool:
-        """Start the instrument operation. Returns True on success."""
+    def start(self, label: str = "") -> bool:
+        """Start the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to start.
+
+        """
 
         return self.cli.start(self.inst)
 
-    def stop(self) -> bool:
-        """Stop the instrument operation. Returns True on success."""
+    def stop(self, label: str = "") -> bool:
+        """Stop the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to stop.
+
+        """
 
         return self.cli.stop(self.inst)
 
-    def pause(self) -> bool:
-        """Pause the instrument operation. Returns True on success."""
+    def pause(self, label: str = "") -> bool:
+        """Pause the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to pause.
+
+        """
 
         return self.cli.pause(self.inst)
 
-    def resume(self) -> bool:
-        """Resume the instrument operation. Returns True on success."""
+    def resume(self, label: str = "") -> bool:
+        """Resume the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to resume.
+
+        """
 
         return self.cli.resume(self.inst)
 

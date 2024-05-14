@@ -365,7 +365,7 @@ class TimeTagger(Instrument):
     def close(self):
         tt.freeTimeTagger(self.tagger)
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         """Clear and start a new measurement."""
 
         if self.sync is None:
@@ -379,7 +379,7 @@ class TimeTagger(Instrument):
         self.logger.info("Started measurement.")
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         """Stop measurement if running."""
 
         if self.sync is None:
@@ -388,7 +388,7 @@ class TimeTagger(Instrument):
         self.logger.info("Stopped measurement.")
         return True
 
-    def resume(self) -> bool:
+    def resume(self, label: str = "") -> bool:
         """Resume measurement."""
 
         if self._duration_ps:

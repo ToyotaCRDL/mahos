@@ -276,10 +276,10 @@ class E727_3_USB(BasePiezo3Axes):
     def close(self):
         self.close_usb()
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         return True
 
     def configure(self, params: dict, label: str = "") -> bool:
@@ -432,10 +432,10 @@ class E727_3_USB_AO(E727_3_USB):
     def configure(self, params: dict, label: str = "") -> bool:
         return self._ao.configure(params)
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         return self._ao.start()
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         return self._ao.stop()
 
     def get(self, key: str, args=None):
@@ -660,10 +660,10 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
     def configure(self, params: dict, label: str = "") -> bool:
         return self._ao.configure(params)
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         return self._ao.start()
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         return self._ao.stop()
 
     def set(self, key: str, value=None) -> bool:

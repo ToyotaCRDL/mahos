@@ -188,7 +188,7 @@ class RS_NRPZ(Instrument):
             self.dll.rsnrpz_close(session)
             self.logger.info(f"Closed session {session}")
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         """Start measurement."""
 
         if self._running:
@@ -201,7 +201,7 @@ class RS_NRPZ(Instrument):
         else:  # self.Mode.UNCONFIGURED
             return self.fail_with("Must be configured before start().")
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         """Stop measurement."""
 
         if not self._running:

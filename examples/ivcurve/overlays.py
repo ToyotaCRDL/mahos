@@ -45,11 +45,11 @@ class IVSweeper(InstrumentOverlay):
             range_=params.get("range", 0), navg=params.get("navg", 1)
         )
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         self._running = True
         return self.source.start()
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self._running = False
         return self.source.set_voltage(0.0) and self.source.stop()
 

@@ -200,12 +200,12 @@ class DTG5000(VisaInstrument, DTGCoreMixin):
 
     # Standard API
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         """Set all outputs on and start sequencer."""
 
         return self.start_loop()
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self.inst.write("TBAS:RUN OFF")
         self.inst.write("OUTP:STAT:ALL OFF")
         self.logger.info("Stopped sequencer and set output all-off.")

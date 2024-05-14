@@ -138,13 +138,13 @@ class Agilent34410A(VisaInstrument):
             self.logger.error(f"unknown label: {label}")
             return False
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self._mode == Mode.DCV:
             return True
         else:  # UNCONFIGURED
             return self.fail_with("start() is called but not configured.")
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if self._mode == Mode.DCV:
             return True
         else:  # UNCONFIGURED

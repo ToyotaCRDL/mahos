@@ -127,7 +127,7 @@ class ConfigurableTask(Instrument):
     def close(self):
         self.stop()
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self.running:
             self.logger.warn("start() is called while running.")
             return True
@@ -140,7 +140,7 @@ class ConfigurableTask(Instrument):
         self.logger.debug("Started Task.")
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if not self.running:
             return True
         self.running = False
@@ -1272,7 +1272,7 @@ class SingleShotTask(Instrument):
     def close(self):
         self.stop()
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self.running:
             return True
         self.running = True
@@ -1280,7 +1280,7 @@ class SingleShotTask(Instrument):
         self.task.StartTask()
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if not self.running:
             return True
         self.running = False

@@ -88,7 +88,7 @@ class IODMRSweeperCommand(InstrumentOverlay):
 
         return True
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self.running:
             self.logger.warn("start() is called while running.")
             return True
@@ -106,7 +106,7 @@ class IODMRSweeperCommand(InstrumentOverlay):
 
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if not self.running:
             return True
         self.running = False

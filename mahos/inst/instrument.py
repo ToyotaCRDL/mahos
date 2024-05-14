@@ -104,14 +104,22 @@ class Instrument(object):
 
     # Standard API
 
-    def start(self) -> bool:
-        """Start the instrument operation. Returns True on success."""
+    def start(self, label: str = "") -> bool:
+        """Start the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to start.
+
+        """
 
         self.logger.error("start() is called but not implemented.")
         return False
 
-    def stop(self) -> bool:
-        """Stop the instrument operation. Returns True on success."""
+    def stop(self, label: str = "") -> bool:
+        """Stop the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to stop.
+
+        """
 
         self.logger.error("stop() is called but not implemented.")
         return False
@@ -130,14 +138,22 @@ class Instrument(object):
         self.close_once()
         return True
 
-    def pause(self) -> bool:
-        """Pause the instrument operation. Returns True on success."""
+    def pause(self, label: str = "") -> bool:
+        """Pause the instrument operation. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to pause.
+
+        """
 
         self.logger.warn("pause() is called but not implemented. falling back to stop().")
         return self.stop()
 
-    def resume(self) -> bool:
-        """Resume the instrument operation from pause. Returns True on success."""
+    def resume(self, label: str = "") -> bool:
+        """Resume the instrument operation from pause. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to resume.
+
+        """
 
         self.logger.warn("resume() is called but not implemented. falling back to start().")
         return self.start()

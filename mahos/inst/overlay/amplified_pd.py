@@ -151,10 +151,10 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
             self.update_gain()
             return self.pd.configure(params, label)
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         return self.pd.start()
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         return self.pd.stop()
 
 
@@ -242,10 +242,10 @@ class OE200_AI(InstrumentOverlay):
         else:
             return self.pd.configure(params, label)
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         return self.pd.start()
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         return self.pd.stop()
 
 
@@ -394,8 +394,8 @@ class OE200_LI5640_AI(InstrumentOverlay):
             self.update_gain()
             return self.pd.configure(params, label)
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         return self.pd.start()
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         return self.pd.stop()

@@ -548,17 +548,17 @@ class MCS(Instrument):
 
     # Standard API
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         """Clear data and start a new acquisition."""
 
         return self.run_command("start")
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         """Stop acqusition if running."""
 
         return self.run_command("halt")
 
-    def resume(self) -> bool:
+    def resume(self, label: str = "") -> bool:
         """Resume acqusition."""
 
         return self.run_command("cont")

@@ -295,14 +295,14 @@ class PulseStreamer(Instrument):
         self.ps.reset()
         return True
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self.sequence is None or self.n_runs is None:
             return self.fail_with("No sequence defined. configure() first.")
         self.ps.stream(self.sequence, self.n_runs)
         self.logger.info("Start streaming.")
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self.ps.constant()
         self.logger.info("Stop streaming and outputting constant all-zero.")
         return True

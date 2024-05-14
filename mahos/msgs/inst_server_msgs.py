@@ -55,6 +55,13 @@ class NoArgReq(Request):
         self.inst = inst
 
 
+class LabeledReq(Request):
+    def __init__(self, ident: Ident, inst: str, label: str = ""):
+        self.ident = ident
+        self.inst = inst
+        self.label = label
+
+
 class LockReq(NoArgReq):
     """acquire the lock of instrument `inst`."""
 
@@ -89,25 +96,25 @@ class ShutdownReq(NoArgReq):
     pass
 
 
-class StartReq(NoArgReq):
+class StartReq(LabeledReq):
     """call start() of instrument `inst`."""
 
     pass
 
 
-class StopReq(NoArgReq):
+class StopReq(LabeledReq):
     """call stop() of instrument `inst`."""
 
     pass
 
 
-class PauseReq(NoArgReq):
+class PauseReq(LabeledReq):
     """call pause() of instrument `inst`."""
 
     pass
 
 
-class ResumeReq(NoArgReq):
+class ResumeReq(LabeledReq):
     """call resume() of instrument `inst`."""
 
     pass
@@ -157,13 +164,10 @@ class HelpReq(Request):
         self.func = func
 
 
-class GetParamDictReq(Request):
+class GetParamDictReq(LabeledReq):
     """get ParamDict for `label` of instrument `inst`."""
 
-    def __init__(self, ident: Ident, inst: str, label: str = ""):
-        self.ident = ident
-        self.inst = inst
-        self.label = label
+    pass
 
 
 class GetParamDictLabelsReq(Request):

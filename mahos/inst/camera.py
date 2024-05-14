@@ -117,7 +117,7 @@ class ThorlabsCamera(Instrument):
         else:
             return self.fail_with(f"Unknown mode {mode}.")
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self.running:
             self.logger.warn("start() is called while running.")
             return True
@@ -141,7 +141,7 @@ class ThorlabsCamera(Instrument):
         else:
             return False
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if not self.running:
             return True
         self.running = False
@@ -661,7 +661,7 @@ class BaslerPylonCamera(Instrument):
         else:
             return self.fail_with(f"Unknown mode {mode}.")
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self._running:
             self.logger.warn("start() is called while running.")
             return True
@@ -691,7 +691,7 @@ class BaslerPylonCamera(Instrument):
         else:  # self.Mode.UNCONFIGURED
             return self.fail_with("Must be configured before start().")
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if not self._running:
             return True
 

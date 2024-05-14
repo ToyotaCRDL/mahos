@@ -278,7 +278,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
 
         return True
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self.running:
             self.logger.warn("start() is called while running.")
             return True
@@ -302,7 +302,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
 
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if not self.running:
             return True
         self.running = False
@@ -475,7 +475,7 @@ class ConfocalScannerCommand(InstrumentOverlay, ConfocalScannerMixin):
 
         return True
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         self.init_inst()
 
         self.tim = time.perf_counter()
@@ -483,7 +483,7 @@ class ConfocalScannerCommand(InstrumentOverlay, ConfocalScannerMixin):
 
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self.logger.info("Stopping scaner.")
         for pd in self.pds:
             pd.stop()

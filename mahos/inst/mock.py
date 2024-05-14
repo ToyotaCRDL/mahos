@@ -36,11 +36,11 @@ class Clock_mock(Instrument):
     def configure(self, params: dict, label: str = "") -> bool:
         return True
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         self.logger.info("Started dummy clock.")
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self.logger.info("Stopped dummy clock.")
         return True
 
@@ -161,10 +161,10 @@ class SG_mock(Instrument):
     def configure(self, params: dict, label: str = "") -> bool:
         return True
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         return True
 
 
@@ -277,10 +277,10 @@ class Piezo_mock(Instrument):
         self.close_once()
         return True
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         return True
 
     def configure(self, params: dict, label: str = "") -> bool:
@@ -325,11 +325,11 @@ class Counter_mock(Instrument):
         self.stamp = params.get("stamp", False)
         return True
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         self.logger.info("Started dummy counting.")
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self.logger.info("Stopped dummy counting.")
         return True
 
@@ -425,19 +425,19 @@ class MCS_mock(Instrument):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         self.logger.info("Started dummy MCS.")
         self._running = True
         self._starts = 0
         self._tstart = time.time()
         return True
 
-    def resume(self) -> bool:
+    def resume(self, label: str = "") -> bool:
         self.logger.info("Resumed dummy MCS.")
         self._running = True
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self.logger.info("Stopped dummy MCS.")
         self._running = False
         return True
@@ -621,7 +621,7 @@ class Camera_mock(Instrument):
         else:
             return self.fail_with(f"Unknown mode {mode}.")
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self._running:
             self.logger.warn("start() is called while running.")
             return True
@@ -636,7 +636,7 @@ class Camera_mock(Instrument):
         else:
             return False
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if not self._running:
             return True
 
@@ -760,11 +760,11 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
 
     # Standard API
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         self.logger.info("Start dummy DTG.")
         return True
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         self.logger.info("Stop dummy DTG.")
         return True
 
@@ -899,7 +899,7 @@ class DMM_mock(Instrument):
         else:
             self.fail_with(f"unknown label: {label}")
 
-    def start(self) -> bool:
+    def start(self, label: str = "") -> bool:
         if self._mode == self.Mode.DCV:
             return True
         elif self._mode == self.Mode.DCI:
@@ -907,7 +907,7 @@ class DMM_mock(Instrument):
         else:  # UNCONFIGURED
             return self.fail_with("start() is called but not configured.")
 
-    def stop(self) -> bool:
+    def stop(self, label: str = "") -> bool:
         if self._mode == self.Mode.DCV:
             return True
         elif self._mode == self.Mode.DCI:
