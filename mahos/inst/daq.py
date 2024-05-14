@@ -196,7 +196,7 @@ class ClockSource(ConfigurableTask):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         self.task = D.Task()
 
         if not self.check_required_params(params, ("freq", "samples")):
@@ -258,7 +258,7 @@ class ClockDivider(ConfigurableTask):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         self.task = D.Task()
 
         if not self.check_required_params(params, ("source", "ratio", "samples")):
@@ -417,7 +417,7 @@ class AnalogOut(ConfigurableTask):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         self.clock_mode = params.get("clock_mode", False)
         if self.clock_mode:
             if not self.check_required_params(params, ("clock", "samples")):
@@ -923,7 +923,7 @@ class AnalogIn(ConfigurableTask):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         self.clock_mode = params.get("clock_mode", False)
 
         if self.clock_mode:
@@ -1168,7 +1168,7 @@ class BufferedEdgeCounter(ConfigurableTask):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if not self.check_required_params(params, ("clock", "cb_samples", "samples")):
             return False
         clock = params["clock"]

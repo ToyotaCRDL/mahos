@@ -144,7 +144,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
     def close(self):
         self.stop()
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if not self.check_required_params(
             params,
             (
@@ -439,7 +439,7 @@ class ConfocalScannerCommand(InstrumentOverlay, ConfocalScannerMixin):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if not self.check_required_params(
             params,
             (

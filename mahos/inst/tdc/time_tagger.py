@@ -398,7 +398,7 @@ class TimeTagger(Instrument):
         self.logger.info("Resumed measurement.")
         return True
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if label == "histogram":
             if all([k in params for k in ("base_config", "range", "bin")]):
                 return self.configure_histogram(

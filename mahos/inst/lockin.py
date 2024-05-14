@@ -733,7 +733,7 @@ class LI5640(VisaInstrument):
     def get_param_dict_labels(self) -> list[str]:
         return [""]
 
-    def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
         d = P.ParamDict(
             phase_offset=P.FloatParam(
                 self.get_phase_offset(), -180.0, 180.0, unit="deg", doc="phase offset in degrees"
@@ -818,7 +818,7 @@ class LI5640(VisaInstrument):
         )
         return d
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         for key, val in P.unwrap(params).items():
             if key in self.PARAM_NAMES:
                 getattr(self, "set_" + key)(val)

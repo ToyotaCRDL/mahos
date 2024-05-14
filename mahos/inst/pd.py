@@ -89,7 +89,7 @@ class APDCounter(BufferedEdgeCounter):
 
         return cps * cf - self._dark_count
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if "time_window" not in params:
             self.logger.error("config must be given: time_window.")
             return False
@@ -483,10 +483,8 @@ class LUCI_OE200(LUCI10):
     def get_param_dict_labels(self) -> list[str]:
         return [""]
 
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group`."""
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label`."""
 
         return P.ParamDict(
             low_noise=P.BoolParam(
@@ -500,7 +498,7 @@ class LUCI_OE200(LUCI10):
             DC_coupling=P.BoolParam(self.DC_coupling, doc="True for DC, False for AC coupling"),
         )
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         return self.configure_gain_coupling(
             params["low_noise"], params["gain_exponent"], params["DC_coupling"]
         )

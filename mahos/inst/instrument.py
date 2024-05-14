@@ -166,16 +166,14 @@ class Instrument(object):
         self.logger.error("get() is called but not implemented.")
         return None
 
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group`."""
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label`."""
 
         self.logger.error("get_param_dict() is called but not implemented.")
         return None
 
     def get_param_dict_labels(self) -> list[str]:
-        """Get list of available ParamDict labels pertaining to `group`."""
+        """Get list of available ParamDict labels."""
 
         self.logger.error("get_param_dict_labels() is called but not implemented.")
         return []

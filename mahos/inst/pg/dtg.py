@@ -211,7 +211,7 @@ class DTG5000(VisaInstrument, DTGCoreMixin):
         self.logger.info("Stopped sequencer and set output all-off.")
         return True
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if params.get("n_runs") not in (None, 1):
             return self.fail_with("DTG only supports n_runs None or 1.")
         if "blocks" in params and "freq" in params:

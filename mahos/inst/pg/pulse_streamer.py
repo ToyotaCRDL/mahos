@@ -307,7 +307,7 @@ class PulseStreamer(Instrument):
         self.logger.info("Stop streaming and outputting constant all-zero.")
         return True
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if "blocks" in params and "freq" in params:
             return self.configure_blocks(
                 params["blocks"],

@@ -33,7 +33,7 @@ class Clock_mock(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         return True
 
     def start(self) -> bool:
@@ -158,7 +158,7 @@ class SG_mock(Instrument):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         return True
 
     def start(self) -> bool:
@@ -209,7 +209,7 @@ class FG_mock(Instrument):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         return True
 
 
@@ -283,7 +283,7 @@ class Piezo_mock(Instrument):
     def stop(self) -> bool:
         return True
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         return True
 
     def set(self, key: str, value=None):
@@ -320,7 +320,7 @@ class Counter_mock(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         self.samples = params["cb_samples"]
         self.stamp = params.get("stamp", False)
         return True
@@ -387,7 +387,7 @@ class MCS_mock(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         self.logger.info(f"Dummy conf for MCS: {params}")
         if "range" in params and "bin" in params:
             tbin = params["bin"] or self.resolution_sec
@@ -542,7 +542,7 @@ class Spectrometer_mock(Instrument):
         else:
             return self.fail_with(f"Unknown set() key: {key}.")
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         success = True
         if params.get("base_config"):
             success &= self.set_base_config(params["base_config"])
@@ -609,7 +609,7 @@ class Camera_mock(Instrument):
             self.logger.error("get_frame() is called but not running.")
             return FrameResult(frame=None)
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if not self.check_required_params(params, ("mode",)):
             return False
 
@@ -667,7 +667,7 @@ class Params_mock(Instrument):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if label == "labelA":
             self.paramA = params["paramA"]
             self.paramB = params["paramB"]
@@ -680,9 +680,7 @@ class Params_mock(Instrument):
             self.logger.error(f"Unknown label {label}")
             return True
 
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
         if label == "labelA":
             return P.ParamDict(
                 paramA=P.IntParam(self.paramA, 0, 10), paramB=P.FloatParam(self.paramB, 0.0, 1.0)
@@ -770,7 +768,7 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
         self.logger.info("Stop dummy DTG.")
         return True
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if params.get("n_runs") not in (None, 1):
             return self.fail_with("DTG only supports n_runs None or 1.")
         if "blocks" in params and "freq" in params:
@@ -878,7 +876,7 @@ class DMM_mock(Instrument):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
         if label == "dcv":
             return P.ParamDict(
                 nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
@@ -892,7 +890,7 @@ class DMM_mock(Instrument):
         else:
             return self.fail_with(f"unknown label {label}")
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         label = label.lower()
         if label == "dcv":
             return self.configure_DCV()

@@ -13,6 +13,12 @@ Added
 - inst: new module power_sensor (for RF / MW power sensor).
 - inst.tdc: new instrument TimeTagger (Swabian Instruments).
 
+Changed
+^^^^^^^
+
+- argument "group" has been removed from get_param_dict_labels(), get_param_dict(),
+  and configure() in meas / inst APIs.
+
 [0.2.3] - 2023-11-06
 --------------------
 

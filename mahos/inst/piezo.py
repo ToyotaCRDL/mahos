@@ -282,7 +282,7 @@ class E727_3_USB(BasePiezo3Axes):
     def stop(self) -> bool:
         return True
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         return True
 
     def set(self, key: str, value=None) -> bool:
@@ -429,7 +429,7 @@ class E727_3_USB_AO(E727_3_USB):
 
         return success
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         return self._ao.configure(params)
 
     def start(self) -> bool:
@@ -657,7 +657,7 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
         if hasattr(self, "_ai"):
             self._ai.close_once()
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         return self._ao.configure(params)
 
     def start(self) -> bool:

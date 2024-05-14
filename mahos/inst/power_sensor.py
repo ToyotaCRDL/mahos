@@ -216,7 +216,7 @@ class RS_NRPZ(Instrument):
     def get_param_dict_labels(self) -> list[str]:
         return ["cont_avg"]
 
-    def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
         if label == "cont_avg":
             return P.ParamDict(
                 unit=P.StrChoiceParam("dBm", ["dBm", "dBW", "mW", "W"]),
@@ -232,7 +232,7 @@ class RS_NRPZ(Instrument):
         else:
             return self.fail_with(f"unknown label {label}")
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if label == "cont_avg":
             return self.configure_cont_average(params)
         else:

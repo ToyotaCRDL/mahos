@@ -199,7 +199,7 @@ class LightField(Instrument):
         else:
             return self.fail_with(f"Unknown set() key: {key}.")
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         success = True
         if params.get("base_config"):
             success &= self.set_base_config(params["base_config"])

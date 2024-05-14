@@ -119,7 +119,7 @@ class Agilent34410A(VisaInstrument):
     def get_param_dict_labels(self) -> list[str]:
         return ["dcv"]
 
-    def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
         if label == "dcv":
             return P.ParamDict(
                 nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
@@ -128,7 +128,7 @@ class Agilent34410A(VisaInstrument):
         else:
             return self.fail_with(f"unknown label {label}")
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         label = label.lower()
         if label == "dcv":
             return self.configure_DCV(

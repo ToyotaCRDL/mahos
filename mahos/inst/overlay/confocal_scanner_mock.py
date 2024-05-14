@@ -45,7 +45,7 @@ class ConfocalScanner_mock(InstrumentOverlay):
 
     # Standard API
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         self.params = params
 
         req_keys = (

@@ -131,19 +131,17 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
     def get_param_dict_labels(self) -> list[str]:
         return ["li5640"]
 
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group`."""
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label` in."""
 
         if label == "li5640":
-            return self.li5640.get_param_dict(label, group)
+            return self.li5640.get_param_dict(label)
         else:
-            return self.pd.get_param_dict(label, group)
+            return self.pd.get_param_dict(label)
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if label == "li5640":
-            success = self.li5640.configure(params, label, group)
+            success = self.li5640.configure(params, label)
             #  configure() may change the gain.
             self.update_gain()
             return success
@@ -151,7 +149,7 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
             #  update the gain with PD configuration so as to secure the correct gain
             #  before subsequent (clock_mode) measurement.
             self.update_gain()
-            return self.pd.configure(params, label, group)
+            return self.pd.configure(params, label)
 
     def start(self) -> bool:
         return self.pd.start()
@@ -230,21 +228,19 @@ class OE200_AI(InstrumentOverlay):
     def get_param_dict_labels(self) -> list[str]:
         return ["luci"]
 
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group`."""
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label`."""
 
         if label == "luci":
-            return self.luci.get_param_dict(label, group)
+            return self.luci.get_param_dict(label)
         else:
-            return self.pd.get_param_dict(label, group)
+            return self.pd.get_param_dict(label)
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if label == "luci":
-            return self.luci.configure(params, label, group)
+            return self.luci.configure(params, label)
         else:
-            return self.pd.configure(params, label, group)
+            return self.pd.configure(params, label)
 
     def start(self) -> bool:
         return self.pd.start()
@@ -374,23 +370,21 @@ class OE200_LI5640_AI(InstrumentOverlay):
     def get_param_dict_labels(self) -> list[str]:
         return ["luci", "li5640"]
 
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group`."""
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label`."""
 
         if label == "luci":
-            return self.luci.get_param_dict(label, group)
+            return self.luci.get_param_dict(label)
         elif label == "li5640":
-            return self.li5640.get_param_dict(label, group)
+            return self.li5640.get_param_dict(label)
         else:
-            return self.pd.get_param_dict(label, group)
+            return self.pd.get_param_dict(label)
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         if label == "luci":
-            return self.luci.configure(params, label, group)
+            return self.luci.configure(params, label)
         elif label == "li5640":
-            success = self.li5640.configure(params, label, group)
+            success = self.li5640.configure(params, label)
             #  configure() may change the gain.
             self.update_gain()
             return success
@@ -398,7 +392,7 @@ class OE200_LI5640_AI(InstrumentOverlay):
             #  update the gain with PD configuration so as to secure the correct gain
             #  before subsequent (clock_mode) measurement.
             self.update_gain()
-            return self.pd.configure(params, label, group)
+            return self.pd.configure(params, label)
 
     def start(self) -> bool:
         return self.pd.start()

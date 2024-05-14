@@ -466,10 +466,8 @@ class DG2000(VisaInstrument):
             ),
         )
 
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group`."""
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label`."""
 
         if label == "cw_ch1":
             return self._cw_param_dict(1)
@@ -500,7 +498,7 @@ class DG2000(VisaInstrument):
         # "gate" and "cw" doesn't provide ParamDict
         return ["cw_ch1", "cw_ch2", "output"]
 
-    def configure(self, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, params: dict, label: str = "") -> bool:
         params = P.unwrap(params)
 
         if label == "gate":
