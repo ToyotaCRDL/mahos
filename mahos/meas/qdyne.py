@@ -14,6 +14,7 @@ from ..msgs.common_msgs import Reply, Request, StateReq, BinaryState, BinaryStat
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import GetParamDictLabelsReq, GetParamDictReq
+from ..msgs.param_msgs import remove_label_prefix
 from ..msgs import qdyne_msgs
 from ..msgs.qdyne_msgs import QdyneData, ValidateReq, DiscardReq
 from .qdyne_io import QdyneIO
@@ -131,13 +132,11 @@ class Qdyne(BasicMeasNode):
         return Reply(True)
 
     def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:
-        if msg.group == "fit":
-            return Reply(False, "fit is not implemented.")
-        else:
-            return Reply(True, ret=self.worker.get_param_dict_labels())
+        return Reply(True, ret=self.worker.get_param_dict_labels())
 
     def get_param_dict(self, msg: GetParamDictReq) -> Reply:
-        if msg.group == "fit":
+        is_fit, label = remove_label_prefix("fit", msg.label)
+        if is_fit:
             return Reply(False, "fit is not implemented.")
         else:
             d = self.worker.get_param_dict(msg.label)

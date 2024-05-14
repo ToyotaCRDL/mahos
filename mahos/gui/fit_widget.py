@@ -19,6 +19,7 @@ import matplotlib as mpl
 from .ui.fitWidget import Ui_FitWidget
 
 from ..msgs.common_meas_msgs import BasicMeasData, Buffer
+from ..msgs.param_msgs import filter_label_prefix, join_labels
 
 
 _colors = [mpl.colors.to_hex(c) for c in mpl.colormaps.get("tab10").colors]
@@ -56,7 +57,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
         self.clearbufButton.clicked.connect(self.request_clear_buf)
         self.bufferTable.cellClicked.connect(self.update_index)
 
-        labels = self.cli.get_param_dict_labels("fit")
+        labels = filter_label_prefix("fit", self.cli.get_param_dict_labels())
         self.labelBox.addItems(labels)
         self.labelBox.currentIndexChanged.connect(self.update_param_table)
         if labels:
@@ -139,7 +140,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
 
     def update_param_table(self):
         method = self.labelBox.currentText()
-        d = self.cli.get_param_dict(method, "fit")
+        d = self.cli.get_param_dict(join_labels("fit", method))
         self.paramTable.update_contents(d)
 
     def update_index(self, row: int, col: int):

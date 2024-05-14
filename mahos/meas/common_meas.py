@@ -53,33 +53,24 @@ class BasicMeasClientBase(NodeClient):
 class ParamDictReqMixin(object):
     """Implements get_param_dict_labels() and get_param_dict()."""
 
-    def get_param_dict_labels(self, group: str = "") -> list[str]:
-        """Get list of available ParamDict labels pertaining to `group`.
+    def get_param_dict_labels(self) -> list[str]:
+        """Get list of available ParamDict labels."""
 
-        :param group: measurement method group name.
-                      can be empty if target node provides only one group.
-
-        """
-
-        rep = self.req.request(P.GetParamDictLabelsReq(group))
+        rep = self.req.request(P.GetParamDictLabelsReq())
         if rep.success:
             return rep.ret
         else:
             return []
 
-    def get_param_dict(
-        self, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
         """Get ParamDict for a measurement with `label`.
 
         :param label: param dict label (measurement method etc.).
                       can be empty if target node provides only one label.
-        :param group: param dict group name.
-                      can be empty if target node provides only one group.
 
         """
 
-        rep = self.req.request(P.GetParamDictReq(label, group))
+        rep = self.req.request(P.GetParamDictReq(label))
         if rep.success:
             return rep.ret
         else:

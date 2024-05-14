@@ -496,7 +496,7 @@ class DG2000(VisaInstrument):
                 align_phase=P.BoolParam(True),
             )
 
-    def get_param_dict_labels(self, group: str = "") -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         # "gate" and "cw" doesn't provide ParamDict
         return ["cw_ch1", "cw_ch2", "output"]
 

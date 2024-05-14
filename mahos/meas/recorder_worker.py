@@ -27,34 +27,24 @@ class Collector(Worker):
         self.add_instruments(*[InstrumentInterface(self.cli, inst) for inst in self.insts])
         self.used_insts = []
 
-        self.mode_inst_labels = mode or {"all": {inst: "" for inst in self.insts}}
+        self.mode_inst_label = mode or {"all": {inst: "" for inst in self.insts}}
 
         self.data = RecorderData()
         self.timer = None
 
-    def _get_labels(self, mode: str, inst: str) -> tuple[str, str]:
-        inst_labels = self.mode_inst_labels[mode]
-        if inst not in inst_labels:
-            return "", ""
-        labels = inst_labels[inst]
-        if isinstance(labels, str):
-            return labels, ""
-        return labels
-
     def get_param_dict_labels(self) -> list[str]:
-        return list(self.mode_inst_labels.keys())
+        return list(self.mode_inst_label.keys())
 
     def get_param_dict(self, mode: str) -> P.ParamDict[str, P.PDValue] | None:
-        if mode not in self.mode_inst_labels:
+        if mode not in self.mode_inst_label:
             self.logger.error(f"Invalid mode {mode}")
             return None
 
         pd = P.ParamDict()
         pd["mode"] = P.StrChoiceParam(mode, self.get_param_dict_labels())
         pd["max_len"] = P.IntParam(1000, 1, 100_000_000)
-        for inst in self.mode_inst_labels[mode].keys():
-            label, group = self._get_labels(mode, inst)
-            d = self.cli.get_param_dict(inst, label, group)
+        for inst, label in self.mode_inst_label[mode].items():
+            d = self.cli.get_param_dict(inst, label)
             if d is None:
                 self.logger.error(f"Failed to generate param dict for {inst}.")
                 return None
@@ -65,11 +55,11 @@ class Collector(Worker):
         if params is not None:
             params = P.unwrap(params)
 
-        if "mode" not in params or params["mode"] not in self.mode_inst_labels:
+        if "mode" not in params or params["mode"] not in self.mode_inst_label:
             self.logger.error("mode must be in params")
             return False
 
-        self.used_insts = list(self.mode_inst_labels[params["mode"]].keys())
+        self.used_insts = list(self.mode_inst_label[params["mode"]].keys())
 
         for inst in self.used_insts:
             if not self.cli.lock(inst):
@@ -79,8 +69,8 @@ class Collector(Worker):
         for inst in self.used_insts:
             if inst not in params:
                 return self.fail_with_release(f"Instrument {inst} is not contained in params.")
-            label, group = self._get_labels(params["mode"], inst)
-            if not self.cli.configure(inst, params[inst], label, group):
+            label = self.mode_inst_label[params["mode"]][inst]
+            if not self.cli.configure(inst, params[inst], label):
                 return self.fail_with_release(f"Failed to configure instrument {inst}")
             units.append((inst, self.cli.get(inst, "unit") or ""))
 

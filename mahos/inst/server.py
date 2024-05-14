@@ -242,10 +242,10 @@ class InstrumentClient(StatusClient):
 
         return self._noarg_call(inst, ResetReq)
 
-    def configure(self, inst: str, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, inst: str, params: dict, label: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        rep = self.req.request(ConfigureReq(self.ident, inst, params, label, group))
+        rep = self.req.request(ConfigureReq(self.ident, inst, params, label))
         return rep.success
 
     def set(self, inst: str, key: str, value=None) -> bool:
@@ -274,36 +274,29 @@ class InstrumentClient(StatusClient):
         rep = self.req.request(HelpReq(inst, func))
         return rep.message
 
-    def get_param_dict(
-        self, inst: str, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group`.
+    def get_param_dict(self, inst: str, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label` of instrument `inst`.
 
         :param inst: instrument name.
         :param label: param dict label.
                       can be empty if target inst provides only one ParamDict.
-        :param group: param dict group.
-                      can be empty if target inst provides only one group.
 
         """
 
-        rep = self.req.request(GetParamDictReq(self.ident, inst, label, group))
+        rep = self.req.request(GetParamDictReq(self.ident, inst, label))
         if rep.success:
             return rep.ret
         else:
             return None
 
-    def get_param_dict_labels(self, inst: str, group: str = "") -> list[str]:
-        """Get list of available ParamDict labels pertaining to `group`.
+    def get_param_dict_labels(self, inst: str) -> list[str]:
+        """Get list of available ParamDict labels.
 
         :param inst: instrument name.
-        :param group: ParamDict group name.
-                      can be empty if target inst provides only one group.
-
 
         """
 
-        rep = self.req.request(GetParamDictLabelsReq(self.ident, inst, group))
+        rep = self.req.request(GetParamDictLabelsReq(self.ident, inst))
         if rep.success:
             return rep.ret
         else:
@@ -453,10 +446,10 @@ class MultiInstrumentClient(object):
         return self.get_client(inst).reset(inst)
 
     @remap_inst
-    def configure(self, inst: str, params: dict, label: str = "", group: str = "") -> bool:
+    def configure(self, inst: str, params: dict, label: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
 
-        return self.get_client(inst).configure(inst, params, label, group)
+        return self.get_client(inst).configure(inst, params, label)
 
     @remap_inst
     def set(self, inst: str, key: str, value=None) -> bool:
@@ -482,31 +475,26 @@ class MultiInstrumentClient(object):
         return self.get_client(inst).help(inst, func)
 
     @remap_inst
-    def get_param_dict(
-        self, inst: str, label: str = "", group: str = ""
-    ) -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in `group` of instrument `inst`.
+    def get_param_dict(self, inst: str, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label` of instrument `inst`.
 
         :param inst: instrument name.
         :param label: param dict label.
                       can be empty if target inst provides only one ParamDict.
-        :param group: param dict group.
-                      can be empty if target inst provides only one group.
 
         """
 
-        return self.get_client(inst).get_param_dict(inst, label, group)
+        return self.get_client(inst).get_param_dict(inst, label)
 
     @remap_inst
-    def get_param_dict_labels(self, inst: str, group: str = "") -> list[str]:
-        """Get list of available ParamDict labels pertaining to `group`.
+    def get_param_dict_labels(self, inst: str) -> list[str]:
+        """Get list of available ParamDict labels.
 
-        :param group: ParamDict group name.
-                      can be empty if target inst provides only one group.
+        :param inst: instrument name.
 
         """
 
-        return self.get_client(inst).get_param_dict_labels(inst, group)
+        return self.get_client(inst).get_param_dict_labels(inst)
 
 
 class InstrumentServer(Node):
@@ -519,7 +507,15 @@ class InstrumentServer(Node):
 
     """
 
-    _noarg_calls = (StartReq, StopReq, ShutdownReq, PauseReq, ResumeReq, ResetReq)
+    _noarg_calls = (
+        StartReq,
+        StopReq,
+        ShutdownReq,
+        PauseReq,
+        ResumeReq,
+        ResetReq,
+        GetParamDictLabelsReq,
+    )
     _noarg_func_names = {
         "StartReq": "start",
         "StopReq": "stop",
@@ -527,6 +523,7 @@ class InstrumentServer(Node):
         "PauseReq": "pause",
         "ResumeReq": "resume",
         "ResetReq": "reset",
+        "GetParamDictLabelsReq": "get_param_dict_labels",
     }
     _std_funcs = (
         "start",
@@ -660,8 +657,6 @@ class InstrumentServer(Node):
             return self._handle_get(msg)
         elif isinstance(msg, GetParamDictReq):
             return self._handle_get_param_dict(msg)
-        elif isinstance(msg, GetParamDictLabelsReq):
-            return self._handle_get_param_dict_labels(msg)
         elif isinstance(msg, HelpReq):
             return self._handle_help(msg)
         elif isinstance(msg, LockReq):
@@ -705,7 +700,7 @@ class InstrumentServer(Node):
         return self._call(msg.inst, msg.ident, func, None)
 
     def _handle_configure(self, msg: ConfigureReq) -> Reply:
-        args = {"params": msg.params, "label": msg.label, "group": msg.group}
+        args = {"params": msg.params, "label": msg.label}
         return self._call(msg.inst, msg.ident, "configure", args)
 
     def _handle_set(self, msg: SetReq) -> Reply:
@@ -719,12 +714,8 @@ class InstrumentServer(Node):
         return self._call(msg.inst, msg.ident, "get", args)
 
     def _handle_get_param_dict(self, msg: GetParamDictReq) -> Reply:
-        args = {"label": msg.label, "group": msg.group}
+        args = {"label": msg.label}
         return self._call(msg.inst, msg.ident, "get_param_dict", args)
-
-    def _handle_get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:
-        args = {"group": msg.group}
-        return self._call(msg.inst, msg.ident, "get_param_dict_labels", args)
 
     def _handle_help(self, msg: HelpReq) -> Reply:
         inst = self._get(msg.inst)

@@ -480,7 +480,7 @@ class LUCI_OE200(LUCI10):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def get_param_dict_labels(self, group: str) -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         return [""]
 
     def get_param_dict(

@@ -120,6 +120,7 @@ def gconf():
     local_conf(gconf, manager_name)["poll_timeout_ms"] = 50
     local_conf(gconf, tweaker_name)["poll_timeout_ms"] = 50
     local_conf(gconf, recorder_name)["poll_timeout_ms"] = 50
+    local_conf(gconf, recorder_name)["collector"]["interval_sec"] = 0.05
 
     # add conf for dummy
     n = split_name(dummy_name)

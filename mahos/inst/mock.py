@@ -693,7 +693,7 @@ class Params_mock(Instrument):
             self.logger.error(f"Unknown label {label}")
             return None
 
-    def get_param_dict_labels(self, group: str = "") -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         return ["labelA", "labelB"]
 
 

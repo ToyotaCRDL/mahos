@@ -14,6 +14,7 @@ from ..msgs.common_msgs import Reply, Request, StateReq, BinaryState, BinaryStat
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import GetParamDictLabelsReq, GetParamDictReq
+from ..msgs.param_msgs import prefix_labels, remove_label_prefix
 from ..msgs import spodmr_msgs
 from ..msgs.spodmr_msgs import SPODMRData, UpdatePlotParamsReq, ValidateReq
 from ..util.timer import IntervalTimer
@@ -142,16 +143,18 @@ class SPODMR(BasicMeasNode):
         return Reply(success)
 
     def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:
-        if msg.group == "fit":
-            return Reply(True, ret=self.fitter.get_param_dict_labels())
-        else:
-            return Reply(True, ret=self.worker.get_param_dict_labels())
+        labels = (
+            prefix_labels("fit", self.fitter.get_param_dict_labels())
+            + self.worker.get_param_dict_labels()
+        )
+        return Reply(True, ret=labels)
 
     def get_param_dict(self, msg: GetParamDictReq) -> Reply:
-        if msg.group == "fit":
-            d = self.fitter.get_param_dict(msg.label)
+        is_fit, label = remove_label_prefix("fit", msg.label)
+        if is_fit:
+            d = self.fitter.get_param_dict(label)
         else:
-            d = self.worker.get_param_dict(msg.label)
+            d = self.worker.get_param_dict(label)
 
         if d is None:
             return Reply(False, "Failed to generate param dict.")

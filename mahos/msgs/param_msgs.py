@@ -34,6 +34,9 @@ from ..util.unit import SI_scale
 from ..util.comp import dict_isclose, has_compatible_types
 
 
+LABEL_DELIM = "::"
+
+
 class Param(object):
     """Base class for all Param types."""
 
@@ -571,13 +574,65 @@ def isclose(
 class GetParamDictReq(Request):
     """Request to get ParamDict."""
 
-    def __init__(self, label: str = "", group: str = ""):
+    def __init__(self, label: str = ""):
         self.label = label
-        self.group = group
 
 
 class GetParamDictLabelsReq(Request):
     """Request to get list names of available ParamDicts."""
 
-    def __init__(self, group: str = ""):
-        self.group = group
+    pass
+
+
+def join_labels(*labels: list[str]) -> str:
+    if len(labels) == 1 and isinstance(labels[0], (list, tuple)):
+        return LABEL_DELIM.join(labels[0])
+    return LABEL_DELIM.join(labels)
+
+
+def split_label(label: str) -> list[str]:
+    return label.split(LABEL_DELIM)
+
+
+def _labels_arg(labels):
+    if len(labels) == 1 and isinstance(labels[0], (list, tuple)):
+        return labels[0]
+    else:
+        return labels
+
+
+def prefix_labels(prefix: str, *labels: list[str]) -> list[str]:
+    """prefix given labels."""
+
+    return [join_labels(prefix, l) for l in _labels_arg(labels)]
+
+
+def filter_label_prefix(prefix: str, *labels: list[str]) -> list[str]:
+    """return only labels with prefix. prefix is removed from returned labels."""
+
+    ret = []
+    for l in _labels_arg(labels):
+        s = split_label(l)
+        if s[0] == prefix:
+            ret.append(join_labels(s[1:]))
+    return ret
+
+
+def filter_out_label_prefix(prefix: str, *labels: list[str]) -> list[str]:
+    """return only labels without given prefix."""
+
+    ret = []
+    for l in _labels_arg(labels):
+        s = split_label(l)
+        if s[0] != prefix:
+            ret.append(l)
+    return ret
+
+
+def remove_label_prefix(prefix: str, label: str) -> tuple[bool, str]:
+    """remove given prefix (and delimiter) from label."""
+
+    if label.startswith(prefix + LABEL_DELIM):
+        return True, label[len(prefix + LABEL_DELIM) :]
+    else:
+        return False, label

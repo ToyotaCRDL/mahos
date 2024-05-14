@@ -128,7 +128,7 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
         else:
             return self.li5640.get(key, args)
 
-    def get_param_dict_labels(self, group: str) -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         return ["li5640"]
 
     def get_param_dict(
@@ -227,7 +227,7 @@ class OE200_AI(InstrumentOverlay):
         else:
             return self.luci.get(key, args)
 
-    def get_param_dict_labels(self, group: str) -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         return ["luci"]
 
     def get_param_dict(
@@ -371,7 +371,7 @@ class OE200_LI5640_AI(InstrumentOverlay):
         else:
             return self.li5640.get(key, args)
 
-    def get_param_dict_labels(self, group: str) -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         return ["luci", "li5640"]
 
     def get_param_dict(

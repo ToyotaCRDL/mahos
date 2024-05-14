@@ -23,9 +23,6 @@ from ..node.client import StatusClient
 from ..inst.server import MultiInstrumentClient
 
 
-PARAM_DICT_ID_DELIM = "::"
-
-
 class TweakerClient(StatusClient):
     """Simple Tweaker Client."""
 
@@ -79,16 +76,14 @@ class Tweaker(Node):
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
 
-    def _parse_param_dict_id(self, pid: str) -> tuple[str, str, str]:
-        """returns (inst, group, label)."""
+    def _parse_param_dict_id(self, pid: str) -> tuple[str, str]:
+        """returns (inst, label)."""
 
-        ids = pid.split(PARAM_DICT_ID_DELIM)
+        ids = P.split_label(pid)
         if len(ids) == 1:
-            return (ids[0], "", "")
+            return (ids[0], "")
         elif len(ids) == 2:
-            return (ids[0], "", ids[1])
-        elif len(ids) == 3:
-            return (ids[0], ids[1], ids[2])
+            return ids
         else:
             raise ValueError(f"Invalid param_dict_id: {pid}")
 
@@ -118,8 +113,8 @@ class Tweaker(Node):
         if param_dict_id not in self._param_dicts:
             self.logger.error(f"Unknown ParamDict id: {param_dict_id}")
             return None
-        inst, group, label = self._parse_param_dict_id(param_dict_id)
-        d = self.cli.get_param_dict(inst, label, group)
+        inst, label = self._parse_param_dict_id(param_dict_id)
+        d = self.cli.get_param_dict(inst, label)
         if d is None:
             self.logger.error(f"Failed to read ParamDict {param_dict_id}")
         return d
@@ -127,8 +122,8 @@ class Tweaker(Node):
     def _write(self, param_dict_id: dict, params: P.ParamDict[str, P.PDValue]) -> Reply:
         if param_dict_id not in self._param_dicts:
             return self.fail_with(f"Unknown ParamDict id: {param_dict_id}")
-        inst, group, label = self._parse_param_dict_id(param_dict_id)
-        success = self.cli.configure(inst, P.unwrap(params), label, group)
+        inst, label = self._parse_param_dict_id(param_dict_id)
+        success = self.cli.configure(inst, P.unwrap(params), label)
         if success:
             self._param_dicts[param_dict_id] = params
             return Reply(True)

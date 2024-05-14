@@ -730,7 +730,7 @@ class LI5640(VisaInstrument):
         else:
             return self.fail_with("Unknown set() key.")
 
-    def get_param_dict_labels(self, group: str = "") -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         return [""]
 
     def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:

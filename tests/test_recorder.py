@@ -14,7 +14,7 @@ from util import get_some, expect_value, save_load_test
 from fixtures import ctx, gconf, server, recorder, server_conf, recorder_conf
 
 
-def expect_recorder(cli: RecorderClient, poll_timeout_ms, inst: str, length: int = 10):
+def expect_recorder(cli: RecorderClient, poll_timeout_ms, inst: str, length: int = 3):
     def get():
         data = cli.get_data()
         if data is not None and data.has_data():

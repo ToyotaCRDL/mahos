@@ -213,7 +213,7 @@ class RS_NRPZ(Instrument):
         else:  # self.Mode.UNCONFIGURED
             return self.fail_with("stop() is called but mode is unconfigured.")
 
-    def get_param_dict_labels(self, group: str = "") -> list[str]:
+    def get_param_dict_labels(self) -> list[str]:
         return ["cont_avg"]
 
     def get_param_dict(self, label: str = "", group: str = "") -> P.ParamDict[str, P.PDValue]:

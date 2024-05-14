@@ -21,6 +21,7 @@ from .client import QBasicMeasClient
 from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.common_meas_msgs import BasicMeasData
+from ..msgs.param_msgs import filter_out_label_prefix
 from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientWidget
@@ -127,7 +128,7 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         # only once.
         self.cli.statusUpdated.disconnect(self.init_with_status)
 
-        labels = self.cli.get_param_dict_labels()
+        labels = filter_out_label_prefix("fit", self.cli.get_param_dict_labels())
         self.labelBox.addItems(labels)
         self.labelBox.currentIndexChanged.connect(self.update_param_table)
         if labels:
