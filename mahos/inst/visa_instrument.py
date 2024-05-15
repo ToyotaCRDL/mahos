@@ -90,5 +90,5 @@ class VisaInstrument(Instrument):
             self.logger.info("Closing Visa Resource {}.".format(self.inst.resource_name))
             self.inst.close()
 
-    def reset(self) -> bool:
+    def reset(self, label: str = "") -> bool:
         return self.rst_cls()

@@ -408,7 +408,7 @@ class DG2000(VisaInstrument):
 
     # Standard API
 
-    def reset(self) -> bool:
+    def reset(self, label: str = "") -> bool:
         success = self.rst_cls()
         self.update_all_bounds()
         return success

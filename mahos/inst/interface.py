@@ -67,7 +67,7 @@ class InstrumentInterface(object):
 
         """
 
-        return self.cli.start(self.inst)
+        return self.cli.start(self.inst, label)
 
     def stop(self, label: str = "") -> bool:
         """Stop the instrument operation. Returns True on success.
@@ -76,7 +76,7 @@ class InstrumentInterface(object):
 
         """
 
-        return self.cli.stop(self.inst)
+        return self.cli.stop(self.inst, label)
 
     def pause(self, label: str = "") -> bool:
         """Pause the instrument operation. Returns True on success.
@@ -85,7 +85,7 @@ class InstrumentInterface(object):
 
         """
 
-        return self.cli.pause(self.inst)
+        return self.cli.pause(self.inst, label)
 
     def resume(self, label: str = "") -> bool:
         """Resume the instrument operation. Returns True on success.
@@ -94,12 +94,16 @@ class InstrumentInterface(object):
 
         """
 
-        return self.cli.resume(self.inst)
+        return self.cli.resume(self.inst, label)
 
-    def reset(self) -> bool:
-        """Reset the instrument settings. Returns True on success."""
+    def reset(self, label: str = "") -> bool:
+        """Reset the instrument settings. Returns True on success.
 
-        return self.cli.reset(self.inst)
+        (if given) label specifies a subsystem of the instrument to reset.
+
+        """
+
+        return self.cli.reset(self.inst, label)
 
     def configure(self, params: dict, label: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""

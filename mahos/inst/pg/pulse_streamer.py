@@ -291,7 +291,7 @@ class PulseStreamer(Instrument):
 
     # Standard API
 
-    def reset(self) -> bool:
+    def reset(self, label: str = "") -> bool:
         self.ps.reset()
         return True
 

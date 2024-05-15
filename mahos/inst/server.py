@@ -257,10 +257,14 @@ class InstrumentClient(StatusClient):
 
         return self._labeled_call(inst, label, ResumeReq)
 
-    def reset(self, inst: str) -> bool:
-        """Reset the instrument settings. Returns True on success."""
+    def reset(self, inst: str, label: str = "") -> bool:
+        """Reset the instrument settings. Returns True on success.
 
-        return self._noarg_call(inst, ResetReq)
+        (if given) label specifies a subsystem of the instrument to reset.
+
+        """
+
+        return self._labeled_call(inst, label, ResetReq)
 
     def configure(self, inst: str, params: dict, label: str = "") -> bool:
         """Configure the instrument settings. Returns True on success."""
@@ -476,10 +480,14 @@ class MultiInstrumentClient(object):
         return self.get_client(inst).resume(inst, label)
 
     @remap_inst
-    def reset(self, inst: str) -> bool:
-        """Reset the instrument settings. Returns True on success."""
+    def reset(self, inst: str, label: str = "") -> bool:
+        """Reset the instrument settings. Returns True on success.
 
-        return self.get_client(inst).reset(inst)
+        (if given) label specifies a subsystem of the instrument to reset.
+
+        """
+
+        return self.get_client(inst).reset(inst, label)
 
     @remap_inst
     def configure(self, inst: str, params: dict, label: str = "") -> bool:
@@ -545,12 +553,10 @@ class InstrumentServer(Node):
 
     _noarg_calls = (
         ShutdownReq,
-        ResetReq,
         GetParamDictLabelsReq,
     )
     _noarg_func_names = {
         "ShutdownReq": "shutdown",
-        "ResetReq": "reset",
         "GetParamDictLabelsReq": "get_param_dict_labels",
     }
     _labeled_calls = (
@@ -558,6 +564,7 @@ class InstrumentServer(Node):
         StopReq,
         PauseReq,
         ResumeReq,
+        ResetReq,
         GetParamDictReq,
     )
     _labeled_func_names = {
@@ -565,6 +572,7 @@ class InstrumentServer(Node):
         "StopReq": "stop",
         "PauseReq": "pause",
         "ResumeReq": "resume",
+        "ResetReq": "reset",
         "GetParamDictReq": "get_param_dict",
     }
     _std_funcs = (

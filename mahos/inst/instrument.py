@@ -104,6 +104,20 @@ class Instrument(object):
 
     # Standard API
 
+    def shutdown(self) -> bool:
+        """Shutdown the instrument and get ready to hard power-off. Returns True on success.
+
+        Although default implementation is fall-back to close(),
+        a different behaviour can be implemented.
+        This function is meant to be a bit harder operation than close() and
+        called by user request (rather than implicit call on InstrumentServer's exit).
+
+        """
+
+        self.logger.warn("shutdown() is called but not implemented. falling back to close_once().")
+        self.close_once()
+        return True
+
     def start(self, label: str = "") -> bool:
         """Start the instrument operation. Returns True on success.
 
@@ -123,20 +137,6 @@ class Instrument(object):
 
         self.logger.error("stop() is called but not implemented.")
         return False
-
-    def shutdown(self) -> bool:
-        """Shutdown the instrument and get ready to hard power-off. Returns True on success.
-
-        Although default implementation is fall-back to close(),
-        a different behaviour can be implemented.
-        This function is meant to be a bit harder operation than close() and
-        called by user request (rather than implicit call on InstrumentServer's exit).
-
-        """
-
-        self.logger.warn("shutdown() is called but not implemented. falling back to close_once().")
-        self.close_once()
-        return True
 
     def pause(self, label: str = "") -> bool:
         """Pause the instrument operation. Returns True on success.
@@ -158,8 +158,12 @@ class Instrument(object):
         self.logger.warn("resume() is called but not implemented. falling back to start().")
         return self.start(label=label)
 
-    def reset(self) -> bool:
-        """Reset the instrument settings. Returns True on success."""
+    def reset(self, label: str = "") -> bool:
+        """Reset the instrument settings. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument to reset.
+
+        """
 
         self.logger.error("reset() is called but not implemented.")
         return False

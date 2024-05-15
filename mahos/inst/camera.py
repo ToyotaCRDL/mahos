@@ -231,7 +231,7 @@ class BaslerPylonCamera(Instrument):
             self.camera.Close()
         self.logger.info("Loaded 'Default' Preset.")
 
-    def reset(self) -> bool:
+    def reset(self, label: str = "") -> bool:
         self.load_default()
         return True
 

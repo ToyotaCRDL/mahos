@@ -120,7 +120,7 @@ class ResumeReq(LabeledReq):
     pass
 
 
-class ResetReq(NoArgReq):
+class ResetReq(LabeledReq):
     """call reset() of instrument `inst`."""
 
     pass
