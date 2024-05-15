@@ -124,7 +124,7 @@ class ConfigurableTask(Instrument):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         self.stop()
 
     def start(self, label: str = "") -> bool:
@@ -1269,7 +1269,7 @@ class SingleShotTask(Instrument):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         self.stop()
 
     def start(self, label: str = "") -> bool:

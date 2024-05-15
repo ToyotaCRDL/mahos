@@ -58,7 +58,7 @@ class ThorlabsCamera(Instrument):
         self._frame_rate_control = self.conf.get("frame_rate_control", True)
         self.running = False
 
-    def close(self):
+    def close_resources(self):
         if hasattr(self, "camera"):
             self.camera.dispose()
         if hasattr(self, "sdk"):
@@ -217,7 +217,7 @@ class BaslerPylonCamera(Instrument):
 
         self.logger.info("Opened Camera: " + self.camera.GetDeviceInfo().GetModelName())
 
-    def close(self):
+    def close_resources(self):
         if hasattr(self, "camera"):
             self.camera.Close()
 

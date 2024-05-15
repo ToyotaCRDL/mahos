@@ -141,7 +141,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         self.stop()
 
     def configure(self, params: dict, label: str = "") -> bool:

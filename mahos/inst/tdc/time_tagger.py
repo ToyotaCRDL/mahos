@@ -362,7 +362,7 @@ class TimeTagger(Instrument):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         tt.freeTimeTagger(self.tagger)
 
     def start(self, label: str = "") -> bool:

@@ -63,7 +63,7 @@ class LightField(Instrument):
         else:
             self._current_base_config = None
 
-    def close(self):
+    def close_resources(self):
         if hasattr(self, "auto"):
             # This will close the LightField window.
             self.auto.Dispose()

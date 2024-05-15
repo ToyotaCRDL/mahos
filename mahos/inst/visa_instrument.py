@@ -83,7 +83,7 @@ class VisaInstrument(Instrument):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         """Close visa resource explicitly."""
 
         if hasattr(self, "inst"):

@@ -273,7 +273,7 @@ class E727_3_USB(BasePiezo3Axes):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         self.close_usb()
 
     def start(self, label: str = "") -> bool:
@@ -388,7 +388,7 @@ class E727_3_USB_AO(E727_3_USB):
 
     def close_ao(self):
         if hasattr(self, "_ao"):
-            self._ao.close_once()
+            self._ao.close()
 
     def move(self) -> bool:
         return self._ao.set_output_once(self.um_to_volt(self.get_target()))
@@ -409,7 +409,7 @@ class E727_3_USB_AO(E727_3_USB):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         self.close_ao()
         self.close_usb()
 
@@ -420,7 +420,7 @@ class E727_3_USB_AO(E727_3_USB):
         time.sleep(0.1)
         success &= self.stop() and self.set_servo(False)
 
-        self.close_once()
+        self.close()
 
         if success:
             self.logger.info("Ready to power-off.")
@@ -646,16 +646,16 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         if hasattr(self, "_ao"):
-            self._ao.close_once()
+            self._ao.close()
         if self._ai_clock:
             self._ai.stop()
             self._clock.stop()
         if hasattr(self, "_clock"):
-            self._clock.close_once()
+            self._clock.close()
         if hasattr(self, "_ai"):
-            self._ai.close_once()
+            self._ai.close()
 
     def configure(self, params: dict, label: str = "") -> bool:
         return self._ao.configure(params)

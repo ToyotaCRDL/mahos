@@ -417,9 +417,9 @@ class PulseStreamerDAQTrigger(PulseStreamer):
 
     def close_do(self):
         if hasattr(self, "_do"):
-            self._do.close_once()
+            self._do.close()
 
-    def close(self):
+    def close_resources(self):
         self.close_do()
 
     def trigger(self) -> bool:

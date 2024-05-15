@@ -683,7 +683,7 @@ class InstrumentServer(Node):
     def close_resources(self):
         for inst in self._insts.values():
             if inst is not None:
-                inst.close_once()
+                inst.close()
 
     def _get(self, inst: str) -> Instrument | InstrumentOverlay:
         if inst in self._insts:

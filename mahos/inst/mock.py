@@ -274,7 +274,7 @@ class Piezo_mock(Instrument):
 
     def shutdown(self) -> bool:
         self.logger.info("Shutdown piezo")
-        self.close_once()
+        self.close()
         return True
 
     def start(self, label: str = "") -> bool:

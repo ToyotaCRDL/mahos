@@ -183,7 +183,7 @@ class RS_NRPZ(Instrument):
 
     # Standard API
 
-    def close(self):
+    def close_resources(self):
         for session in self._sessions:
             self.dll.rsnrpz_close(session)
             self.logger.info(f"Closed session {session}")

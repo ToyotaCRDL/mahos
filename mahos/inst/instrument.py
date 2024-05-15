@@ -67,7 +67,7 @@ class Instrument(object):
         return self.full_name()
 
     def __del__(self):
-        self.close_once()
+        self.close()
 
     def fail_with(self, msg: str) -> bool:
         """Log error and return False."""
@@ -75,8 +75,12 @@ class Instrument(object):
         self.logger.error(msg)
         return False
 
-    def close_once(self):
-        """Close instrument resources.
+    @T.final
+    def close(self):
+        """Close instrument resources (only once).
+
+        Do not override this method. Override close_resources() instead
+        to implement custom closing behaviour.
 
         - This function checks self._closed and avoid double-close.
         - This function is called when InstrumentServer is exiting.
@@ -85,13 +89,13 @@ class Instrument(object):
 
         if self._closed:
             return
-        self.close()
+        self.close_resources()
         self._closed = True
 
-    def close(self):
+    def close_resources(self):
         """Close instrument resources.
 
-        Implement custom close behaviour overriding this method.
+        Implement custom closing behaviour overriding this method.
 
         """
 
@@ -114,8 +118,8 @@ class Instrument(object):
 
         """
 
-        self.logger.warn("shutdown() is called but not implemented. falling back to close_once().")
-        self.close_once()
+        self.logger.warn("shutdown() is called but not implemented. falling back to close().")
+        self.close()
         return True
 
     def start(self, label: str = "") -> bool:
