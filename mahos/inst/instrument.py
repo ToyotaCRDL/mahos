@@ -134,7 +134,7 @@ class Instrument(object):
 
         """
 
-        self.logger.warn("shutdown() is called but not implemented. falling back to _close().")
+        self.logger.warn("shutdown() is called but not implemented. falling back to close_once().")
         self.close_once()
         return True
 
@@ -146,7 +146,7 @@ class Instrument(object):
         """
 
         self.logger.warn("pause() is called but not implemented. falling back to stop().")
-        return self.stop()
+        return self.stop(label=label)
 
     def resume(self, label: str = "") -> bool:
         """Resume the instrument operation from pause. Returns True on success.
@@ -156,7 +156,7 @@ class Instrument(object):
         """
 
         self.logger.warn("resume() is called but not implemented. falling back to start().")
-        return self.start()
+        return self.start(label=label)
 
     def reset(self) -> bool:
         """Reset the instrument settings. Returns True on success."""
