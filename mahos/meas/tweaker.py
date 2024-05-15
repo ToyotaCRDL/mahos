@@ -17,7 +17,7 @@ from ..msgs.common_msgs import Reply
 from ..msgs import param_msgs as P
 from ..msgs import tweaker_msgs
 from ..msgs.tweaker_msgs import TweakerStatus, ReadReq, ReadAllReq, WriteReq, WriteAllReq
-from ..msgs.tweaker_msgs import SaveReq, LoadReq
+from ..msgs.tweaker_msgs import StartReq, StopReq, SaveReq, LoadReq
 from ..node.node import Node
 from ..node.client import StatusClient
 from ..inst.server import MultiInstrumentClient
@@ -43,6 +43,14 @@ class TweakerClient(StatusClient):
 
     def write(self, param_dict_id: str, params: P.ParamDict[str, P.PDValue]) -> bool:
         rep = self.req.request(WriteReq(param_dict_id, params))
+        return rep.success
+
+    def start(self, param_dict_id: str) -> bool:
+        rep = self.req.request(StartReq(param_dict_id))
+        return rep.success
+
+    def stop(self, param_dict_id: str) -> bool:
+        rep = self.req.request(StopReq(param_dict_id))
         return rep.success
 
     def save(self, filename: str, group: str = "") -> bool:
@@ -72,6 +80,8 @@ class Tweaker(Node):
 
         #: dict[param_dict_id, ParamDict | None]
         self._param_dicts = {pd: None for pd in self.conf["param_dicts"]}
+        #: dict[param_dict_id, None | True | False]
+        self._start_stop_states = {pd: None for pd in self.conf["param_dicts"]}
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
@@ -138,8 +148,22 @@ class Tweaker(Node):
             all([self._write(pid, params).success for pid, params in msg.param_dicts.items()])
         )
 
+    def start(self, msg: StartReq) -> Reply:
+        inst, label = self._parse_param_dict_id(msg.param_dict_id)
+        success = self.cli.start(inst, label)
+        if success:
+            self._start_stop_states[msg.param_dict_id] = True
+        return Reply(success)
+
+    def stop(self, msg: StopReq) -> Reply:
+        inst, label = self._parse_param_dict_id(msg.param_dict_id)
+        success = self.cli.stop(inst, label)
+        if success:
+            self._start_stop_states[msg.param_dict_id] = False
+        return Reply(success)
+
     def save(self, msg: SaveReq) -> Reply:
-        """Save tweaker state (param_dicts) to file using h5."""
+        """Save tweaker state (param_dicts and start_stop_state) to file using h5."""
 
         mode = "r+" if os.path.exists(msg.filename) else "w"
         with h5py.File(msg.filename, mode) as f:
@@ -155,6 +179,14 @@ class Tweaker(Node):
                     continue
                 group = g.create_group(pid)
                 params.to_h5(group)
+
+                state = self._start_stop_states[pid]
+                #  Do not save unknown state (= None) because
+                #  it might be just irrelevant for given instrument.
+                if state is True:
+                    group.attrs["__start_stop__"] = True
+                elif state is False:
+                    group.attrs["__start_stop__"] = False
 
         self.logger.info(f"Saved {msg.filename}.")
         return Reply(True)
@@ -194,6 +226,10 @@ class Tweaker(Node):
             return self.write(msg)
         elif isinstance(msg, WriteAllReq):
             return self.write_all(msg)
+        elif isinstance(msg, StartReq):
+            return self.start(msg)
+        elif isinstance(msg, StopReq):
+            return self.stop(msg)
         elif isinstance(msg, SaveReq):
             return self.save(msg)
         elif isinstance(msg, LoadReq):

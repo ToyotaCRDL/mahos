@@ -1,0 +1,74 @@
+[global]
+req_timeout_ms = 60000
+poll_timeout_ms = 100
+
+[localhost.log]
+module = "mahos.node.log_broker"
+class = "LogBroker"
+target = { log = "localhost::log" }
+xpub_endpoint = "tcp://127.0.0.1:5555"
+xsub_endpoint = "tcp://127.0.0.1:5556"
+
+[localhost.gparams]
+module = "mahos.node.global_params"
+class = "GlobalParams"
+target = { log = "localhost::log" }
+rep_endpoint = "tcp://127.0.0.1:5557"
+pub_endpoint = "tcp://127.0.0.1:5558"
+
+[localhost.server]
+module = "mahos.inst.server"
+class = "InstrumentServer"
+target = { log = "localhost::log" }
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5559"
+pub_endpoint = "tcp://127.0.0.1:5560"
+
+[localhost.server.instrument.source]
+module = "instruments"
+class = "VoltageSource_mock"
+[localhost.server.instrument.source.conf]
+resource = "VISA::DUMMY0"
+
+[localhost.server.instrument.meter]
+module = "instruments"
+class = "Multimeter_mock"
+[localhost.server.instrument.meter.conf]
+resource = "VISA::DUMMY1"
+
+[localhost.tweaker]
+module = "mahos.meas.tweaker"
+class = "Tweaker"
+target = { log = "localhost::log" }
+rep_endpoint = "tcp://127.0.0.1:5561"
+pub_endpoint = "tcp://127.0.0.1:5562"
+param_dicts = ["source::ch1", "source::ch2"]
+[localhost.tweaker.target.servers]
+source = "localhost::server"
+
+[localhost.recorder]
+module = "mahos.meas.recorder"
+class = "Recorder"
+target = { log = "localhost::log" }
+rep_endpoint = "tcp://127.0.0.1:5563"
+pub_endpoint = "tcp://127.0.0.1:5564"
+[localhost.recorder.mode.voltage]
+meter = "voltage"
+[localhost.recorder.mode.current]
+meter = "current"
+[localhost.recorder.target.servers]
+meter = "localhost::server"
+
+[localhost.tweaker_gui]
+module = "mahos.gui.tweaker"
+class = "TweakerGUI"
+[localhost.tweaker_gui.target]
+tweaker = "localhost::tweaker"
+gparams = "localhost::gparams"
+
+[localhost.recorder_gui]
+module = "mahos.gui.recorder"
+class = "RecorderGUI"
+[localhost.recorder_gui.target]
+recorder = "localhost::recorder"
+gparams = "localhost::gparams"

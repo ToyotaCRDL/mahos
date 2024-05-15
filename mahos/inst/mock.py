@@ -667,6 +667,14 @@ class Params_mock(Instrument):
 
     # Standard API
 
+    def start(self, label: str = "") -> bool:
+        self.logger.info(f"Start {label}")
+        return True
+
+    def stop(self, label: str = "") -> bool:
+        self.logger.info(f"Stop {label}")
+        return True
+
     def configure(self, params: dict, label: str = "") -> bool:
         if label == "labelA":
             self.paramA = params["paramA"]

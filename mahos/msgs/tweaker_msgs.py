@@ -54,6 +54,28 @@ class WriteAllReq(Request):
         self.param_dicts = param_dicts
 
 
+class StartReq(Request):
+    """Start instrument operation pertaining to a ParamDict.
+
+    Typical application is turning on the output.
+
+    """
+
+    def __init__(self, param_dict_id: str):
+        self.param_dict_id = param_dict_id
+
+
+class StopReq(Request):
+    """Stop instrument operation pertaining to a ParamDict.
+
+    Typical application is turning off the output.
+
+    """
+
+    def __init__(self, param_dict_id: str):
+        self.param_dict_id = param_dict_id
+
+
 class SaveReq(Request):
     """Save current parameters to a file"""
 

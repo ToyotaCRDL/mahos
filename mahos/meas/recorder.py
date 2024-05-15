@@ -46,7 +46,9 @@ class Recorder(BasicMeasNode):
         else:
             self.tweaker_cli = None
 
-        self.worker = Collector(self.cli, self.logger, self.conf["collector"], self.conf["mode"])
+        self.worker = Collector(
+            self.cli, self.logger, self.conf.get("collector", {}), self.conf["mode"]
+        )
         self.io = RecorderIO(self.logger)
         self.pub_timer = IntervalTimer(self.conf.get("pub_interval_sec", 0.5))
 
