@@ -57,7 +57,7 @@ class DigitalOutWidget(ClientTopWidget):
             gl.addWidget(label, i, 0)
             gl.addWidget(button, i, 1)
         self.setLayout(gl)
-        self.setWindowTitle(f"MAHOS[F].DigitalOutGUI ({join_name(name)})")
+        self.setWindowTitle(f"MAHOS.DigitalOutGUI ({join_name(name)})")
 
     def sizeHint(self):
         return QtCore.QSize(500, 250 * len(self.buttons))
