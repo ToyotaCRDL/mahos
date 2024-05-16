@@ -11,7 +11,7 @@ Message Types for Camera stream.
 from __future__ import annotations
 
 from .data_msgs import Data
-from .inst_camera_msgs import FrameResult
+from .inst.camera_msgs import FrameResult
 
 
 class Image(Data):

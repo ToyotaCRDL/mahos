@@ -8,7 +8,7 @@ Test patterns for test_podmr.
 
 """
 
-from mahos.msgs.inst_pg_msgs import Block
+from mahos.msgs.inst.pg_msgs import Block
 
 patterns = {
     "rabi": (

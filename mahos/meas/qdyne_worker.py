@@ -20,8 +20,8 @@ from ..util.io import load_h5
 from ..util.conv import real_fft
 from ..msgs import param_msgs as P
 from ..msgs.pulse_msgs import PulsePattern
-from ..msgs.inst_pg_msgs import Block, Blocks
-from ..msgs.inst_tdc_msgs import RawEvents
+from ..msgs.inst.pg_msgs import Block, Blocks
+from ..msgs.inst.tdc_msgs import RawEvents
 from ..msgs.qdyne_msgs import QdyneData, TDCStatus
 from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface

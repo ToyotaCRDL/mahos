@@ -15,7 +15,7 @@ import re
 import numpy as np
 from itertools import chain
 
-from ...msgs.inst_pg_msgs import Block, Blocks, BlockSeq
+from ...msgs.inst.pg_msgs import Block, Blocks, BlockSeq
 
 
 def round_pulses(

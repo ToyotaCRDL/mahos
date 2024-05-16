@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from .interface import InstrumentInterface
 
-from ..msgs.inst_pg_msgs import TriggerType, Block, Blocks, BlockSeq
+from ..msgs.inst.pg_msgs import TriggerType, Block, Blocks, BlockSeq
 
 
 class PGInterface(InstrumentInterface):

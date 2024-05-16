@@ -15,12 +15,12 @@ from inspect import signature, getdoc, getfile
 from functools import wraps
 
 from ..msgs.common_msgs import Request, Reply
-from ..msgs import inst_server_msgs
 from ..msgs import param_msgs as P
-from ..msgs.inst_server_msgs import Ident, ServerStatus, LockReq, ReleaseReq, CheckLockReq, CallReq
-from ..msgs.inst_server_msgs import ShutdownReq, StartReq, StopReq, PauseReq, ResumeReq
-from ..msgs.inst_server_msgs import ResetReq, ConfigureReq, SetReq, GetReq, HelpReq
-from ..msgs.inst_server_msgs import GetParamDictReq, GetParamDictLabelsReq
+from ..msgs.inst import server_msgs
+from ..msgs.inst.server_msgs import Ident, ServerStatus, LockReq, ReleaseReq, CheckLockReq, CallReq
+from ..msgs.inst.server_msgs import ShutdownReq, StartReq, StopReq, PauseReq, ResumeReq
+from ..msgs.inst.server_msgs import ResetReq, ConfigureReq, SetReq, GetReq, HelpReq
+from ..msgs.inst.server_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..node.node import Node, NodeName, split_name
 from ..node.client import StatusClient
 from ..util.graph import sort_dependency
@@ -129,7 +129,7 @@ class InstrumentClient(StatusClient):
 
     """
 
-    M = inst_server_msgs
+    M = server_msgs
 
     def __init__(self, gconf: dict, name, context=None, prefix=None, status_handler=None):
         """Instrument RPC Client."""

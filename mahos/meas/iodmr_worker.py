@@ -15,7 +15,7 @@ import numpy as np
 
 from ..msgs.iodmr_msgs import IODMRData
 from ..msgs import param_msgs as P
-from ..msgs.inst_pg_msgs import TriggerType, Block, Blocks
+from ..msgs.inst.pg_msgs import TriggerType, Block, Blocks
 from ..inst.overlay.iodmr_sweeper_interface import IODMRSweeperInterface
 from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface

@@ -11,7 +11,7 @@ Message Types for the pulse pattern for visualization and debug.
 from __future__ import annotations
 import uuid
 
-from .inst_pg_msgs import Block, Blocks, BlockSeq
+from .inst.pg_msgs import Block, Blocks, BlockSeq
 from .common_msgs import Message
 
 

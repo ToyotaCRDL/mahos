@@ -17,9 +17,9 @@ import numpy as np
 from .instrument import Instrument
 from .pg_dtg_core.dtg_core import DTGCoreMixin
 from ..msgs.confocal_msgs import Axis
-from ..msgs.inst_camera_msgs import FrameResult
-from ..msgs.inst_tdc_msgs import ChannelStatus, RawEvents
-from ..msgs.inst_pg_msgs import Block, Blocks, BlockSeq
+from ..msgs.inst.camera_msgs import FrameResult
+from ..msgs.inst.tdc_msgs import ChannelStatus, RawEvents
+from ..msgs.inst.pg_msgs import Block, Blocks, BlockSeq
 from ..msgs import param_msgs as P
 
 

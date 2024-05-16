@@ -13,7 +13,7 @@ from __future__ import annotations
 import pulsestreamer
 
 from ..instrument import Instrument
-from ...msgs.inst_pg_msgs import TriggerType, Block, Blocks, BlockSeq
+from ...msgs.inst.pg_msgs import TriggerType, Block, Blocks, BlockSeq
 
 
 class PulseStreamer(Instrument):

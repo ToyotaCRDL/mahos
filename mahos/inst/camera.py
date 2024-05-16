@@ -19,7 +19,7 @@ from pypylon import pylon
 
 from .instrument import Instrument
 from ..util.locked_queue import LockedQueue
-from ..msgs.inst_camera_msgs import FrameResult
+from ..msgs.inst.camera_msgs import FrameResult
 
 
 class ThorlabsCamera(Instrument):

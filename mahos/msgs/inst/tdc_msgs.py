@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .data_msgs import Message, Data
+from ..data_msgs import Message, Data
 
 
 class ChannelStatus(Message):

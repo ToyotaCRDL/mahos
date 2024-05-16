@@ -17,7 +17,7 @@ import copy
 import numpy as np
 from numpy.typing import NDArray
 
-from .common_msgs import Message
+from ..common_msgs import Message
 
 
 class TriggerType(enum.Enum):

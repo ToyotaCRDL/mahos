@@ -11,7 +11,7 @@ Common measurement Workers.
 from __future__ import annotations
 import typing as T
 
-from ..msgs.inst_pg_msgs import Block, Blocks
+from ..msgs.inst.pg_msgs import Block, Blocks
 from ..inst.interface import InstrumentInterface
 from ..inst.pg_interface import PGInterface
 from ..inst.server import MultiInstrumentClient

@@ -13,7 +13,7 @@ import copy
 import uuid
 from pprint import pformat
 
-from .common_msgs import Message, Request, Status
+from ..common_msgs import Message, Request, Status
 
 
 class ServerStatus(Status):

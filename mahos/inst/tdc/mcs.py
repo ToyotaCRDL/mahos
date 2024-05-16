@@ -17,7 +17,7 @@ import os
 import numpy as np
 
 from ..instrument import Instrument
-from ...msgs.inst_tdc_msgs import ChannelStatus, RawEvents
+from ...msgs.inst.tdc_msgs import ChannelStatus, RawEvents
 from ...util.io import save_h5
 
 

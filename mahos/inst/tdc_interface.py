@@ -14,7 +14,7 @@ import numpy as np
 
 from .interface import InstrumentInterface
 
-from ..msgs.inst_tdc_msgs import ChannelStatus, RawEvents
+from ..msgs.inst.tdc_msgs import ChannelStatus, RawEvents
 
 
 class TDCInterface(InstrumentInterface):

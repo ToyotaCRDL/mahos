@@ -12,7 +12,7 @@ import typing as T
 
 import numpy as np
 
-from .inst_common_msgs import GetResult
+from .common_msgs import GetResult
 
 
 class FrameResult(GetResult):

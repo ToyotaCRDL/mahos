@@ -21,7 +21,7 @@ from .global_params_client import QGlobalParamsClient
 from .log_client import QLogSubscriber
 from .inst_client import QInstrumentSubscriber
 from .manager_client import QManagerSubscriber
-from ..msgs.inst_server_msgs import ServerStatus, Ident
+from ..msgs.inst.server_msgs import ServerStatus, Ident
 from ..msgs.global_params_msgs import GlobalParamsStatus
 
 

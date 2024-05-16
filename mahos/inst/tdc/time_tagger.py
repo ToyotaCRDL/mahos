@@ -17,7 +17,7 @@ import numpy as np
 import TimeTagger as tt
 
 from ..instrument import Instrument
-from ...msgs.inst_tdc_msgs import ChannelStatus, RawEvents
+from ...msgs.inst.tdc_msgs import ChannelStatus, RawEvents
 from ...util.io import save_h5
 
 

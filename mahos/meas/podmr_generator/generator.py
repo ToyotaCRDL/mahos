@@ -15,7 +15,7 @@ import re
 import numpy as np
 from . import generator_kernel as K
 
-from ...msgs.inst_pg_msgs import Channels
+from ...msgs.inst.pg_msgs import Channels
 
 
 class PatternGenerator(object):

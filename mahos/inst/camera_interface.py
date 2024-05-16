@@ -11,7 +11,7 @@ Typed Interface for Camera.
 from __future__ import annotations
 
 from .interface import InstrumentInterface
-from ..msgs.inst_camera_msgs import FrameResult
+from ..msgs.inst.camera_msgs import FrameResult
 
 
 class CameraInterface(InstrumentInterface):

@@ -10,7 +10,7 @@ Qt signal-based client of InstrumentServer.
 
 from .Qt import QtCore
 
-from ..msgs.inst_server_msgs import ServerStatus
+from ..msgs.inst.server_msgs import ServerStatus
 from .client import QStatusSubscriber
 
 

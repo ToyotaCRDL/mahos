@@ -15,7 +15,7 @@ import numpy as np
 from ..msgs.camera_msgs import Image
 from ..msgs import param_msgs as P
 from ..inst.camera_interface import CameraInterface
-from ..msgs.inst_camera_msgs import FrameResult
+from ..msgs.inst.camera_msgs import FrameResult
 from .common_worker import Worker
 
 

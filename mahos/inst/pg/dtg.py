@@ -13,7 +13,7 @@ from os import path
 import time
 
 from ..visa_instrument import VisaInstrument
-from ...msgs.inst_pg_msgs import Block, Blocks, BlockSeq
+from ...msgs.inst.pg_msgs import Block, Blocks, BlockSeq
 
 from ..pg_dtg_core import dtg_io
 from ..pg_dtg_core.dtg_core import DTGCoreMixin

@@ -15,7 +15,7 @@ import numpy as np
 
 from ..msgs.odmr_msgs import ODMRData
 from ..msgs import param_msgs as P
-from ..msgs.inst_pg_msgs import Block, Blocks, TriggerType
+from ..msgs.inst.pg_msgs import Block, Blocks, TriggerType
 from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface
 from ..inst.pd_interface import PDInterface
