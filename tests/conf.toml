@@ -33,6 +33,10 @@ class = "Params_mock"
 module = "mock"
 class = "Params_mock"
 
+[localhost.server.instrument.paramZ]
+module = "mock"
+class = "Params_mock"
+
 [localhost.server.instrument.sg]
 module = "mock"
 class = "SG_mock"
@@ -165,7 +169,7 @@ interval_sec = 0.01
 interval_sec = 0.2
 [localhost.confocal.target]
 log = "localhost::log"
-tweaker = "localhost::tweaker"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
 [localhost.confocal.target.servers]
 clock = "localhost::server"
 scanner = "localhost::server"
@@ -194,7 +198,7 @@ pub_endpoint = "tcp://127.0.0.1:5575"
 pd_clock = "/Dummy"
 [localhost.odmr.target]
 log = "localhost::log"
-tweaker = "localhost::tweaker"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
 [localhost.odmr.target.servers]
 sg = "localhost::server"
 pg = "localhost::server"
@@ -208,7 +212,7 @@ rep_endpoint = "tcp://127.0.0.1:5576"
 pub_endpoint = "tcp://127.0.0.1:5577"
 [localhost.hbt.target]
 log = "localhost::log"
-tweaker = "localhost::tweaker"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
 [localhost.hbt.target.servers]
 tdc = "localhost::server"
 
@@ -220,7 +224,7 @@ rep_endpoint = "tcp://127.0.0.1:5578"
 pub_endpoint = "tcp://127.0.0.1:5579"
 [localhost.podmr.target]
 log = "localhost::log"
-tweaker = "localhost::tweaker"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
 [localhost.podmr.target.servers]
 tdc = "localhost::server"
 sg = "localhost::server"
@@ -237,7 +241,7 @@ pub_endpoint = "tcp://127.0.0.1:5581"
 pd_trigger = "/Dummy"
 [localhost.spodmr.target]
 log = "localhost::log"
-tweaker = "localhost::tweaker"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
 [localhost.spodmr.target.servers]
 tdc = "localhost::server"
 sg = "localhost::server"
@@ -263,7 +267,7 @@ rep_endpoint = "tcp://127.0.0.1:5584"
 pub_endpoint = "tcp://127.0.0.1:5585"
 [localhost.spectroscopy.target]
 log = "localhost::log"
-tweaker = "localhost::tweaker"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
 [localhost.spectroscopy.target.servers]
 spectrometer = "localhost::server"
 
@@ -274,7 +278,7 @@ rep_endpoint = "tcp://127.0.0.1:5586"
 pub_endpoint = "tcp://127.0.0.1:5587"
 [localhost.camera.target]
 log = "localhost::log"
-tweaker = "localhost::tweaker"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
 [localhost.camera.target.servers]
 camera = "localhost::server"
 
@@ -286,7 +290,7 @@ rep_endpoint = "tcp://127.0.0.1:5588"
 pub_endpoint = "tcp://127.0.0.1:5589"
 [localhost.qdyne.target]
 log = "localhost::log"
-tweaker = "localhost::tweaker"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
 [localhost.qdyne.target.servers]
 tdc = "localhost::server"
 sg = "localhost::server"
@@ -321,12 +325,29 @@ param_dicts = ["paramX::labelA", "paramY::labelB"]
 paramX = "localhost::server"
 paramY = "localhost::server"
 
-[localhost.recorder]
-module = "mahos.meas.recorder"
-class = "Recorder"
+[localhost.tweaker2]
+module = "mahos.meas.tweaker"
+class = "Tweaker"
 target = { log = "localhost::log" }
 rep_endpoint = "tcp://127.0.0.1:5594"
 pub_endpoint = "tcp://127.0.0.1:5595"
+param_dicts = ["paramZ::labelA"]
+[localhost.tweaker2.target.servers]
+paramZ = "localhost::server"
+
+[localhost.recorder]
+module = "mahos.meas.recorder"
+class = "Recorder"
+rep_endpoint = "tcp://127.0.0.1:5596"
+pub_endpoint = "tcp://127.0.0.1:5597"
+[localhost.recorder.target]
+log = "localhost::log"
+tweakers = ["localhost::tweaker", "localhost::tweaker2"]
+[localhost.recorder.target.servers]
+dmm0 = "localhost::server"
+dmm1 = "localhost::server"
+dmm2 = "localhost::server"
+dmm3 = "localhost::server"
 [localhost.recorder.collector]
 interval_sec = 0.5
 [localhost.recorder.mode.all]
@@ -342,11 +363,6 @@ dmm3 = "dcv"
 [localhost.recorder.mode.few]
 dmm1 = "dcv"
 dmm2 = "dci"
-[localhost.recorder.target.servers]
-dmm0 = "localhost::server"
-dmm1 = "localhost::server"
-dmm2 = "localhost::server"
-dmm3 = "localhost::server"
 
 [localhost.confocal_gui]
 module = "mahos.gui.confocal"
@@ -413,6 +429,13 @@ module = "mahos.gui.tweaker"
 class = "TweakerGUI"
 [localhost.tweaker_gui.target]
 tweaker = "localhost::tweaker"
+gparams = "localhost::gparams"
+
+[localhost.tweaker2_gui]
+module = "mahos.gui.tweaker"
+class = "TweakerGUI"
+[localhost.tweaker2_gui.target]
+tweaker = "localhost::tweaker2"
 gparams = "localhost::gparams"
 
 [localhost.recorder_gui]

@@ -18,7 +18,6 @@ from ..msgs.param_msgs import prefix_labels, remove_label_prefix
 from ..msgs import podmr_msgs
 from ..msgs.podmr_msgs import PODMRStatus, PODMRData, UpdatePlotParamsReq, ValidateReq, DiscardReq
 from ..util.timer import IntervalTimer
-from .tweaker import TweakerClient
 from .common_meas import BasicMeasClient, BasicMeasNode
 from .common_worker import DummyWorker, Switch
 from .podmr_worker import Pulser, PODMRDataOperator
@@ -86,13 +85,6 @@ class PODMR(BasicMeasNode):
             self.switch = Switch(self.cli, self.logger, "podmr")
         else:
             self.switch = DummyWorker()
-        if "tweaker" in self.conf["target"]:
-            self.tweaker_cli = TweakerClient(
-                gconf, self.conf["target"]["tweaker"], context=self.ctx, prefix=self.joined_name()
-            )
-            self.add_client(self.tweaker_cli)
-        else:
-            self.tweaker_cli = None
 
         self.worker = Pulser(self.cli, self.logger, self.conf.get("pulser", {}))
         self.fitter = PODMRFitter(self.logger)
@@ -161,8 +153,9 @@ class PODMR(BasicMeasNode):
 
     def save_data(self, msg: SaveDataReq) -> Reply:
         success = self.io.save_data(msg.file_name, self.worker.data_msg(), msg.params, msg.note)
-        if success and self.tweaker_cli is not None:
-            success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
+        if success:
+            for tweaker_name, cli in self.tweaker_clis.items():
+                success &= cli.save(msg.file_name, "__" + tweaker_name + "__")
         return Reply(success)
 
     def export_data(self, msg: ExportDataReq) -> Reply:

@@ -19,7 +19,7 @@ import msgpack
 from .common_msgs import Message
 
 
-_H5_RESERVED_ATTRS = ("_description", "_type", "_save_time", "_version_h5_base", "_inst_params")
+_H5_RESERVED_ATTRS = ("_description", "_type", "_save_time", "_version_h5_base")
 
 
 class Data(Message):
@@ -145,7 +145,8 @@ class Data(Message):
         # 4. _version_h5_base is the version of base HDF5 IO (Data.to_h5() and Data.of_h5()).
         #    In other words, the version of how the Data attribute is converted to / from h5
         #    by default, not through custom h5_writers / h5_readers.
-        # 5. _inst_params is a reserved group name for inst ParamDicts managed by Tweaker.
+        # 5. __<tweaker name>__ is a reserved group name for ParamDicts managed by Tweakers.
+        #    Don't check this below as this kind of special attribute name won't be used.
 
         if any((hasattr(self, s) for s in _H5_RESERVED_ATTRS)):
             raise RuntimeError("Attributes are not allowed: " + ", ".join(_H5_RESERVED_ATTRS))
@@ -245,7 +246,7 @@ class Data(Message):
             # because key name may be changed by version update of Data.
 
             if isinstance(val, h5py.Group):
-                # _inst_params Group is contained if inst ParamDicts are attached by Tweaker.
+                # __<tweaker name>__ Group is contained if ParamDicts are attached by a Tweaker.
                 pass
             elif key in readers:
                 setattr(data, key, readers[key](val))
@@ -323,7 +324,7 @@ class Data(Message):
         res = []
         for key, val in group.items():
             if isinstance(val, h5py.Group):
-                # _inst_params Group is contained if inst ParamDicts are attached by Tweaker.
+                # __<tweaker name>__ Group is contained if ParamDicts are attached by a Tweaker.
                 continue
             res.append((key, "{:s} {:s}".format(val.dtype.name, str(val.shape))))
 

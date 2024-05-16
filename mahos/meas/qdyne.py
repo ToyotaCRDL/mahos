@@ -19,7 +19,6 @@ from ..msgs import qdyne_msgs
 from ..msgs.qdyne_msgs import QdyneData, ValidateReq, DiscardReq
 from .qdyne_io import QdyneIO
 from ..util.timer import IntervalTimer
-from .tweaker import TweakerClient
 from .common_meas import BasicMeasClient, BasicMeasNode
 from .common_worker import DummyWorker, Switch
 from .qdyne_worker import Pulser
@@ -89,13 +88,6 @@ class Qdyne(BasicMeasNode):
             self.switch = Switch(self.cli, self.logger, "podmr")
         else:
             self.switch = DummyWorker()
-        if "tweaker" in self.conf["target"]:
-            self.tweaker_cli = TweakerClient(
-                gconf, self.conf["target"]["tweaker"], context=self.ctx, prefix=self.joined_name()
-            )
-            self.add_client(self.tweaker_cli)
-        else:
-            self.tweaker_cli = None
 
         self.worker = Pulser(self.cli, self.logger, self.conf.get("pulser", {}))
         self.io = QdyneIO(self.logger)
@@ -148,8 +140,9 @@ class Qdyne(BasicMeasNode):
 
     def save_data(self, msg: SaveDataReq) -> Reply:
         success = self.io.save_data(msg.file_name, self.worker.data, msg.params, msg.note)
-        if success and self.tweaker_cli is not None:
-            success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
+        if success:
+            for tweaker_name, cli in self.tweaker_clis.items():
+                success &= cli.save(msg.file_name, "__" + tweaker_name + "__")
         return Reply(success)
 
     def export_data(self, msg: ExportDataReq) -> Reply:

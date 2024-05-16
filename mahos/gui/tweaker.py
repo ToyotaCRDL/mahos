@@ -39,6 +39,7 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         self.add_clients(self.cli, self.gparams_cli)
 
         self._verbose = verbose
+        self._group_name = "__" + name + "__"
 
         self.setEnabled(False)
 
@@ -155,7 +156,7 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
             group = ""
         else:
             # ParamDicts written within measurement Data
-            group = "_inst_params"
+            group = self._group_name
 
         self.update_all(self.cli.load(fn, group))
 

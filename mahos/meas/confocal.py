@@ -22,7 +22,7 @@ from ..node.node import Node
 from ..node.client import NodeClient
 from ..inst.server import MultiInstrumentClient
 from ..util.timer import IntervalTimer
-from .tweaker import TweakerClient
+from .tweaker import TweakSaver
 from .common_meas import BaseMeasClientMixin
 from .common_worker import DummyWorker, PulseGen_CW, Switch
 from .confocal_worker import Piezo, Tracer, Scanner
@@ -300,13 +300,12 @@ class Confocal(Node):
             self.pg = PulseGen_CW(self.cli, self.logger)
         else:
             self.pg = DummyWorker()
-        if "tweaker" in self.conf["target"]:
-            self.tweaker_cli = TweakerClient(
-                gconf, self.conf["target"]["tweaker"], context=self.ctx, prefix=self.joined_name()
-            )
-            self.add_client(self.tweaker_cli)
-        else:
-            self.tweaker_cli = None
+
+        self.tweaker_clis: dict[str, TweakSaver] = {}
+        for tweaker in self.conf["target"].get("tweakers", []):
+            cli = TweakSaver(gconf, tweaker, context=self.ctx, prefix=self.joined_name())
+            self.tweaker_clis[tweaker] = cli
+            self.add_client(cli)
 
         self.scanner = Scanner(self.cli, self.logger, self.conf.get("scanner", {}))
         self.piezo = Piezo(self.cli, self.logger, self.conf.get("piezo", {}))
@@ -478,8 +477,9 @@ class Confocal(Node):
                 return self.fail_with(f"{msg.direction.name} buffer is empty")
 
         success = self.io.save_image(msg.file_name, img, msg.note)
-        if success and self.tweaker_cli is not None:
-            success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
+        if success:
+            for tweaker_name, cli in self.tweaker_clis.items():
+                success &= cli.save(msg.file_name, "__" + tweaker_name + "__")
         return Reply(success)
 
     def export_image(self, msg: ExportImageReq) -> Reply:
@@ -515,8 +515,9 @@ class Confocal(Node):
 
     def save_trace(self, msg: SaveTraceReq) -> Reply:
         success = self.io.save_trace(msg.file_name, self.tracer.trace_msg(), msg.note)
-        if success and self.tweaker_cli is not None:
-            success &= self.tweaker_cli.save(msg.file_name, "_inst_params")
+        if success:
+            for tweaker_name, cli in self.tweaker_clis.items():
+                success &= cli.save(msg.file_name, "__" + tweaker_name + "__")
         return Reply(success)
 
     def export_trace(self, msg: ExportTraceReq) -> Reply:

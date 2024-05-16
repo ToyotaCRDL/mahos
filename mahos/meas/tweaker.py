@@ -19,7 +19,7 @@ from ..msgs import tweaker_msgs
 from ..msgs.tweaker_msgs import TweakerStatus, ReadReq, ReadAllReq, WriteReq, WriteAllReq
 from ..msgs.tweaker_msgs import StartReq, StopReq, SaveReq, LoadReq
 from ..node.node import Node
-from ..node.client import StatusClient
+from ..node.client import NodeClient, StatusClient
 from ..inst.server import MultiInstrumentClient
 
 
@@ -63,6 +63,20 @@ class TweakerClient(StatusClient):
         rep = self.req.request(LoadReq(filename, group))
         if rep.success:
             return rep.ret
+
+
+class TweakSaver(NodeClient):
+    """TweakerClient with limited capability, only save request."""
+
+    M = tweaker_msgs
+
+    def __init__(self, gconf: dict, name, context=None, prefix=None):
+        NodeClient.__init__(self, gconf, name, context=context, prefix=prefix)
+        self.req = self.add_req(gconf)
+
+    def save(self, filename: str, group: str = "") -> bool:
+        rep = self.req.request(SaveReq(filename, group))
+        return rep.success
 
 
 class Tweaker(Node):

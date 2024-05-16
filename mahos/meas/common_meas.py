@@ -19,6 +19,7 @@ from ..inst.server import MultiInstrumentClient
 from ..node.node import Node, NodeName
 from ..node.client import NodeClient, StateClientMixin
 from ..node.comm import Context
+from .tweaker import TweakSaver
 
 
 class BasicMeasClientBase(NodeClient):
@@ -190,6 +191,13 @@ class BasicMeasNode(Node):
             prefix=self.joined_name(),
         )
         self.add_client(self.cli)
+
+        self.tweaker_clis: dict[str, TweakSaver] = {}
+        for tweaker in self.conf["target"].get("tweakers", []):
+            cli = TweakSaver(gconf, tweaker, context=self.ctx, prefix=self.joined_name())
+            self.tweaker_clis[tweaker] = cli
+            self.add_client(cli)
+
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
         self.data_pub = self.add_pub(b"data")
