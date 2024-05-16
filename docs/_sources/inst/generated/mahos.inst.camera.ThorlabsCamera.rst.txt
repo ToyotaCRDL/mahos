@@ -17,7 +17,7 @@
    .. autosummary::
    
       ~ThorlabsCamera.__init__
-      ~ThorlabsCamera.close
+      ~ThorlabsCamera.close_resources
       ~ThorlabsCamera.configure
       ~ThorlabsCamera.configure_continuous
       ~ThorlabsCamera.get

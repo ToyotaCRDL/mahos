@@ -23,6 +23,8 @@
       ~Tweaker.read
       ~Tweaker.read_all
       ~Tweaker.save
+      ~Tweaker.start
+      ~Tweaker.stop
       ~Tweaker.wait
       ~Tweaker.write
       ~Tweaker.write_all

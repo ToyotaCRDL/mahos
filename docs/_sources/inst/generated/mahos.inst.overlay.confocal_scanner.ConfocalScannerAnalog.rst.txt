@@ -17,7 +17,7 @@
    .. autosummary::
    
       ~ConfocalScannerAnalog.__init__
-      ~ConfocalScannerAnalog.close
+      ~ConfocalScannerAnalog.close_resources
       ~ConfocalScannerAnalog.configure
       ~ConfocalScannerAnalog.get
       ~ConfocalScannerAnalog.get_capability

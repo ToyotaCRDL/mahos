@@ -18,7 +18,7 @@
    
       ~RS_NRPZ.__init__
       ~RS_NRPZ.check_error
-      ~RS_NRPZ.close
+      ~RS_NRPZ.close_resources
       ~RS_NRPZ.configure
       ~RS_NRPZ.configure_cont_average
       ~RS_NRPZ.convert_power

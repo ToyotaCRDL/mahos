@@ -17,8 +17,8 @@
    .. autosummary::
    
       ~E727_3_USB_AO.__init__
-      ~E727_3_USB_AO.close
       ~E727_3_USB_AO.close_ao
+      ~E727_3_USB_AO.close_resources
       ~E727_3_USB_AO.configure
       ~E727_3_USB_AO.get
       ~E727_3_USB_AO.get_scan_buffer_size

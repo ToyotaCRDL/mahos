@@ -23,6 +23,8 @@
       ~TweakerWidget.request_read
       ~TweakerWidget.request_read_all
       ~TweakerWidget.request_save
+      ~TweakerWidget.request_start
+      ~TweakerWidget.request_stop
       ~TweakerWidget.request_write
       ~TweakerWidget.request_write_all
       ~TweakerWidget.update_all

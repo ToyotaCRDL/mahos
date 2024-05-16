@@ -18,7 +18,7 @@
    
       ~TimeTagger.__init__
       ~TimeTagger.clear
-      ~TimeTagger.close
+      ~TimeTagger.close_resources
       ~TimeTagger.configure
       ~TimeTagger.configure_correlation
       ~TimeTagger.configure_histogram

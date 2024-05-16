@@ -20,7 +20,7 @@
       ~AnalogPiezo3Axes.ai_um_to_volt
       ~AnalogPiezo3Axes.ai_um_to_volt_raw
       ~AnalogPiezo3Axes.ai_volt_to_um
-      ~AnalogPiezo3Axes.close
+      ~AnalogPiezo3Axes.close_resources
       ~AnalogPiezo3Axes.configure
       ~AnalogPiezo3Axes.get
       ~AnalogPiezo3Axes.get_pos

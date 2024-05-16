@@ -17,7 +17,7 @@
    .. autosummary::
    
       ~E727_3_USB.__init__
-      ~E727_3_USB.close
+      ~E727_3_USB.close_resources
       ~E727_3_USB.close_usb
       ~E727_3_USB.configure
       ~E727_3_USB.get

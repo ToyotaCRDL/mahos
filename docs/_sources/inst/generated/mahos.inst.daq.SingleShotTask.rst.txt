@@ -17,7 +17,7 @@
    .. autosummary::
    
       ~SingleShotTask.__init__
-      ~SingleShotTask.close
+      ~SingleShotTask.close_resources
       ~SingleShotTask.start
       ~SingleShotTask.stop
    

@@ -681,8 +681,9 @@ called by user request (rather than implicit call on InstrumentServer’s exit).
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mahos.inst.instrument.Instrument.reset">
-<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.reset" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Instrument.</span></span><span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mahos.inst.instrument.Instrument.reset" title="Permalink to this definition">#</a></dt>
 <dd><p>Reset the instrument settings. Returns True on success.</p>
+<p>(if given) label specifies a subsystem of the instrument to reset.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -726,7 +727,7 @@ called by user request (rather than implicit call on InstrumentServer’s exit).
 <td><p>Check if required keys (<cite>req_keys</cite>) are defined in <cite>params</cite>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code>()</p></td>
-<td><p>Close instrument resources.</p></td>
+<td><p>Close instrument resources (only once).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fail_with</span></code>(msg)</p></td>
 <td><p>Log error and return False.</p></td>

@@ -17,7 +17,7 @@
    .. autosummary::
    
       ~BaslerPylonCamera.__init__
-      ~BaslerPylonCamera.close
+      ~BaslerPylonCamera.close_resources
       ~BaslerPylonCamera.configure
       ~BaslerPylonCamera.configure_continuous
       ~BaslerPylonCamera.configure_hard_trigger

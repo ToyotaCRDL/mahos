@@ -17,8 +17,8 @@
    .. autosummary::
    
       ~PulseStreamerDAQTrigger.__init__
-      ~PulseStreamerDAQTrigger.close
       ~PulseStreamerDAQTrigger.close_do
+      ~PulseStreamerDAQTrigger.close_resources
       ~PulseStreamerDAQTrigger.configure_blocks
       ~PulseStreamerDAQTrigger.trigger
    

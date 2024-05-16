@@ -17,7 +17,7 @@
    .. autosummary::
    
       ~ConfigurableTask.__init__
-      ~ConfigurableTask.close
+      ~ConfigurableTask.close_resources
       ~ConfigurableTask.get_device_type
       ~ConfigurableTask.join
       ~ConfigurableTask.start
