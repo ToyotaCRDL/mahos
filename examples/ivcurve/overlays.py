@@ -30,7 +30,7 @@ class IVSweeper(InstrumentOverlay):
         for v in self._voltages:
             self.source.set_voltage(v)
             time.sleep(self._delay_sec)
-            currents.append(self.meter.get_meas(v))
+            currents.append(self.meter.get_data(v))
 
         return np.array(currents)
 

@@ -53,7 +53,7 @@ class Multimeter_mock(Instrument):
         self.logger.info(f"Dummy config range: {range_:d} navg: {navg:d}")
         return True
 
-    def get_meas(self, volt: float = 0.0) -> float:
+    def get_data(self, volt: float = 0.0) -> float:
         R = 50.0
         I = volt / R
         return I + self._rng.normal(scale=1.0 / R)
@@ -69,8 +69,8 @@ class Multimeter_mock(Instrument):
             return False
 
     def get(self, key: str, args=None):
-        if key == "meas":
-            return self.get_meas(args)
+        if key == "data":
+            return self.get_data(args)
         else:
             self.logger.error(f"Unknown get() key: {key}")
             return None
@@ -94,11 +94,11 @@ class MultimeterInterface(InstrumentInterface):
 
         return self.configure({"mode": "current", "range": range_, "navg": navg})
 
-    def get_meas(self, volt: float = 0.0) -> float:
+    def get_data(self, volt: float = 0.0) -> float:
         """Get measured value.
 
         volt is voltage for dummy value generation (will be removed for real instruments).
 
         """
 
-        return self.get("meas", args=volt)
+        return self.get("data", args=volt)

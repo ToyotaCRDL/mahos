@@ -70,7 +70,7 @@ class Sweeper(Worker):
         for v in self._voltages:
             self.source.set_voltage(v)
             time.sleep(self.data.params.get("delay_sec", 0.0))
-            i = self.meter.get_meas(v)
+            i = self.meter.get_data(v)
             if i is None:
                 self.logger.error("Got invalid current.")
                 return None
