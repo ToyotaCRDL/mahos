@@ -636,22 +636,21 @@ via same interface with instrument (usually via Instrument <a class="reference i
 </dd></dl>
 
 <p>InstrumentOverlay is subclass of <a class="reference internal" href="Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">mahos.inst.instrument.Instrument</span></code></a>.
-See <a class="reference internal" href="Instrument.html#instrument-api"><span class="std std-ref">Standard Instrument APIs</span></a> for APIs..</p>
+See <a class="reference internal" href="Instrument.html#instrument-api"><span class="std std-ref">Standard Instrument APIs</span></a> for APIs.</p>
 <p class="rubric">Additional Methods</p>
-<p>On initialization of InstrumentOverlay, we should add used instruments using <code class="xref py py-meth docutils literal notranslate"><span class="pre">InstrumentOverlay.add_instrument()</span></code> or <code class="xref py py-meth docutils literal notranslate"><span class="pre">InstrumentOverlay.add_instruments()</span></code>.</p>
-<table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(name[, conf, prefix])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_instrument</span></code>(inst)</p></td>
-<td><p>Add instrument.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_instruments</span></code>(*insts)</p></td>
-<td><p>Add instruments.</p></td>
-</tr>
-</tbody>
-</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="mahos.inst.overlay.overlay.InstrumentOverlay.__init__">
+<span class="sig-prename descclassname"><span class="pre">InstrumentOverlay.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.overlay.overlay.InstrumentOverlay.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Init Instrument and internal instrument list (_instruments).</p>
+<p>Instruments should be added on initialization by add_instruments() in inherited class.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mahos.inst.overlay.overlay.InstrumentOverlay.add_instruments">
+<span class="sig-prename descclassname"><span class="pre">InstrumentOverlay.</span></span><span class="sig-name descname"><span class="pre">add_instruments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">insts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><span class="pre">Instrument</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.overlay.overlay.InstrumentOverlay.add_instruments" title="Permalink to this definition">#</a></dt>
+<dd><p>Add instruments. If None is contained, it is silently ignored.</p>
+</dd></dl>
+
 </section>
 
 
@@ -701,7 +700,11 @@ See <a class="reference internal" href="Instrument.html#instrument-api"><span cl
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.overlay.overlay.InstrumentOverlay"><code class="docutils literal notranslate"><span class="pre">InstrumentOverlay</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.overlay.overlay.InstrumentOverlay"><code class="docutils literal notranslate"><span class="pre">InstrumentOverlay</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.overlay.overlay.InstrumentOverlay.__init__"><code class="docutils literal notranslate"><span class="pre">InstrumentOverlay.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.overlay.overlay.InstrumentOverlay.add_instruments"><code class="docutils literal notranslate"><span class="pre">InstrumentOverlay.add_instruments()</span></code></a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

@@ -13,9 +13,14 @@ Start
 
 Start `server` and `ivcurve`.
 
-* Raw: ``mahos launch -i server ivcurve``
-* Overlay: ``mahos launch -c conf_overlay.toml -i server ivcurve``
-* Inproc: ``mahos run -c conf_thread_partial.toml -t server_ivcurve``
+- Raw: ``mahos launch server ivcurve``
+- Overlay: ``mahos launch -c conf_overlay.toml server ivcurve``
+- Inproc: ``mahos run -c conf_thread_partial.toml -t server_ivcurve``
+
+Run measurement using shell.
+
+- ``mahos shell -c conf.toml``
+- ``cli.start(cli.get_param_dict())``
 
 Measure
 ^^^^^^^

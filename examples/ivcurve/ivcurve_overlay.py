@@ -30,7 +30,7 @@ class Sweeper(Worker):
     def __init__(self, cli, logger):
         Worker.__init__(self, cli, logger)
         self.sweeper = IVSweeperInterface(cli, "sweeper")
-        self.add_instrument(self.sweeper)
+        self.add_instruments(self.sweeper)
 
         self.data = self.new_data({})
 

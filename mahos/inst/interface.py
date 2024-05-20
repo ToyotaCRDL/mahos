@@ -111,12 +111,20 @@ class InstrumentInterface(object):
         return self.cli.configure(self.inst, params, label)
 
     def set(self, key: str, value=None, label: str = "") -> bool:
-        """Set an instrument setting or commanding value. Returns True on success."""
+        """Set an instrument setting or commanding value. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument.
+
+        """
 
         return self.cli.set(self.inst, key, value)
 
     def get(self, key: str, args=None, label: str = ""):
-        """Get an instrument setting or commanding value."""
+        """Get an instrument setting or commanding value.
+
+        (if given) label specifies a subsystem of the instrument.
+
+        """
 
         return self.cli.get(self.inst, key, args)
 

@@ -23,9 +23,22 @@ class Worker(object):
 
     Implements minimal interfaces (start() and stop()), and convenient functions.
 
+    :ivar cli: the instrument client.
+    :type cli: MultiInstrumentClient
+    :ivar logger: logger from parent node.
+    :ivar conf: worker's local config.
+    :type conf: dict
+
     """
 
     def __init__(self, cli: MultiInstrumentClient, logger, conf: dict | None = None):
+        """Init client (cli), logger, conf, and internal instrument list (_instruments).
+
+        InstrumentInterfaces should be added on initialization by add_instruments()
+        in inherited class.
+
+        """
+
         # conf is optional because simple Worker doesn't have any
 
         self.cli = cli
