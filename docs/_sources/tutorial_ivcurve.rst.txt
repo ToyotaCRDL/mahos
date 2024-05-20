@@ -134,7 +134,7 @@ The `VoltageSource_mock` is an example of :class:`Instrument <mahos.inst.instrum
        def stop(self, label: str = "") -> bool:
            return self.set_output(False)
 
-       def set(self, key: str, value=None) -> bool:
+       def set(self, key: str, value=None, label: str = "") -> bool:
            if key == "volt":
                return self.set_voltage(value)
            else:
