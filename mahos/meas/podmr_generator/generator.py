@@ -9,7 +9,6 @@ Pattern generators for Pulse ODMR.
 """
 
 from __future__ import annotations
-import typing as T
 import re
 
 import numpy as np
@@ -37,7 +36,7 @@ class PatternGenerator(object):
         self.print_fn = print_fn
         self.method = method
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         """Return list of names of required pulse params."""
 
         return []
@@ -110,7 +109,7 @@ class PatternGenerator(object):
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -131,7 +130,7 @@ class RabiGenerator(PatternGenerator):
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -182,13 +181,13 @@ class T1Generator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["180pulse", "flip_head"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -244,13 +243,13 @@ class FIDGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -310,13 +309,13 @@ class SpinEchoGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse", "readY"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -376,13 +375,13 @@ class DRamseyGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -442,13 +441,13 @@ class TEchoGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -516,13 +515,13 @@ class TRSEGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse", "tauconst"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -588,7 +587,7 @@ class DDGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         params = ["90pulse", "180pulse", "Nconst", "readY"]
         if self.method in ("xy8", "xy16"):
             params.append("supersample")
@@ -597,7 +596,7 @@ class DDGenerator(PatternGenerator):
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -633,7 +632,7 @@ class DDGenerator(PatternGenerator):
     def _generate_normal(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -719,7 +718,7 @@ class DDGenerator(PatternGenerator):
     def _generate_supersample(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -861,13 +860,13 @@ class DDNGenerator(PatternGenerator):
     def is_sweepN(self) -> bool:
         return True
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse", "tauconst", "readY"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -963,13 +962,13 @@ class PiTrainGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["tauconst", "Nconst"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -1032,13 +1031,13 @@ class SEHalfPiSweepGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["180pulse", "tauconst"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -1106,13 +1105,13 @@ class RecoveryGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["180pulse", "invertinit"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -1171,13 +1170,13 @@ class SpinLockGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "iq_delay"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -1243,13 +1242,13 @@ class XY8CorrelationGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse", "tauconst", "Nconst", "reinitX", "readY"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -1353,13 +1352,13 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
     def is_sweepN(self) -> bool:
         return True
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse", "tauconst", "Nconst", "reinitX", "readY"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -1479,7 +1478,7 @@ class DDGateGenerator(PatternGenerator):
         p = "^({c:s}):({c:s}):({c:s}):({c:s}),({c:s}):({c:s}):({c:s}):({c:s})$".format(c=c)
         self.ddphase_pattern = re.compile(p)
 
-    def parse_phase_for_ddgate(self, phase) -> T.Tuple[T.List[Channels], T.List[Channels]]:
+    def parse_phase_for_ddgate(self, phase) -> tuple[list[Channels], list[Channels]]:
         """parse string representation of phase into mw on/off and phase (mw, mw_x, mw_y etc.).
 
         :returns: (channels0, channels1). first element is phase (mw_x etc.) in all the channels.
@@ -1504,13 +1503,13 @@ class DDGateGenerator(PatternGenerator):
 
         return pih_ch0, pih_ch1
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse", "tauconst", "Nconst", "N2const", "N3const", "ddphase"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -1608,13 +1607,13 @@ class DDNGateGenerator(DDGateGenerator):
     def is_sweepN(self) -> bool:
         return True
 
-    def pulse_params(self) -> T.List[str]:
+    def pulse_params(self) -> list[str]:
         return ["90pulse", "180pulse", "tauconst", "tau2const", "Nconst", "ddphase"]
 
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,
@@ -1697,7 +1696,7 @@ class CWODMRGenerator(PatternGenerator):
     def _generate(
         self,
         xdata,
-        common_pulses: T.List[float],
+        common_pulses: list[float],
         pulse_params: list,
         partial: int,
         nomw: bool,

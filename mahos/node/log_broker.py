@@ -8,6 +8,7 @@ Global log broker.
 
 """
 
+from __future__ import annotations
 import typing as T
 from os import path
 import copy
@@ -34,7 +35,7 @@ class LogEntry(T.NamedTuple):
     body: str
 
 
-def parse_log(msg) -> T.Optional[LogEntry]:
+def parse_log(msg) -> LogEntry | None:
     def report_parse_err():
         print("Received invalid log: ", msg)
         return None
@@ -85,7 +86,7 @@ def _level_to_int(levelname: str) -> int:
     return logging.NOTSET
 
 
-def should_show(filter_levelname: str, log: T.Optional[LogEntry]) -> bool:
+def should_show(filter_levelname: str, log: LogEntry | None) -> bool:
     """Return True if `log` should be shown with `filter_level_name`."""
 
     if log is None:
@@ -103,7 +104,7 @@ _LEVEL_TO_TERM_COLOR = {
 }
 
 
-def _level_to_term_color(levelname: str) -> T.Optional[str]:
+def _level_to_term_color(levelname: str) -> str | None:
     return _LEVEL_TO_TERM_COLOR[_level_to_int(levelname)]
 
 
@@ -117,7 +118,7 @@ _LEVEL_TO_HTML_COLOR = {
 }
 
 
-def _level_to_html_color(levelname: str) -> T.Optional[str]:
+def _level_to_html_color(levelname: str) -> str | None:
     return _LEVEL_TO_HTML_COLOR[_level_to_int(levelname)]
 
 

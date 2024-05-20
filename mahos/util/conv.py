@@ -10,6 +10,7 @@ Defines generic conversion functions.
 
 """
 
+from __future__ import annotations
 import typing as T
 
 import numpy as np
@@ -31,7 +32,7 @@ K = T.TypeVar("K")
 V = T.TypeVar("V")
 
 
-def invert_mapping(d: T.Mapping[K, V]) -> T.Dict[V, T.List[K]]:
+def invert_mapping(d: T.Mapping[K, V]) -> dict[V, list[K]]:
     """Invert given mapping.
 
     New values (original keys) are stored as lists

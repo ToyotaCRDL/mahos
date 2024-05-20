@@ -8,11 +8,11 @@ Fixed-size Queue with lock for threading.
 
 """
 
+from __future__ import annotations
 import time
 from threading import Lock
 from collections import deque
 import copy
-import typing as T
 
 
 class LockedQueue(object):
@@ -60,7 +60,7 @@ class LockedQueue(object):
             else:
                 return None
 
-    def pop_block(self, timeout_sec: T.Optional[float] = None, interval_sec: float = 0.001):
+    def pop_block(self, timeout_sec: float | None = None, interval_sec: float = 0.001):
         """pop single data from queue, blocking if the queue is empty.
 
         returns None if queue is still empty after timeout_sec.
@@ -79,7 +79,7 @@ class LockedQueue(object):
                 return None
             time.sleep(interval_sec)
 
-    def pop_all_block(self, timeout_sec: T.Optional[float] = None, interval_sec: float = 0.001):
+    def pop_all_block(self, timeout_sec: float | None = None, interval_sec: float = 0.001):
         """pop all data from queue, blocking if the queue is empty.
 
         returns None if queue is still empty after timeout_sec.

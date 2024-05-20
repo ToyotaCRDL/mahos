@@ -8,6 +8,7 @@ Logic and instrument control part of confocal microscope.
 
 """
 
+from __future__ import annotations
 import typing as T
 
 from ..msgs.common_msgs import Reply, StateReq, ShutdownReq
@@ -66,19 +67,17 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
         rep = self.req.request(ShutdownReq())
         return rep.success
 
-    def move(self, ax: T.Union[Axis, T.List[Axis]], pos: T.Union[float, T.List[float]]) -> bool:
+    def move(self, ax: Axis | list[Axis], pos: float | list[float]) -> bool:
         rep = self.req.request(MoveReq(ax, pos))
         return rep.success
 
     def save_image(
-        self, file_name, direction: T.Optional[ScanDirection] = None, note: str = ""
+        self, file_name, direction: ScanDirection | None = None, note: str = ""
     ) -> bool:
         rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
         return rep.success
 
-    def export_image(
-        self, file_name, direction: T.Optional[ScanDirection] = None, params=None
-    ) -> bool:
+    def export_image(self, file_name, direction: ScanDirection | None = None, params=None) -> bool:
         rep = self.req.request(ExportImageReq(file_name, direction, params))
         return rep.success
 
@@ -86,7 +85,7 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
         rep = self.req.request(ExportViewReq(file_name, params))
         return rep.success
 
-    def load_image(self, file_name) -> T.Optional[Image]:
+    def load_image(self, file_name) -> Image | None:
         rep = self.req.request(LoadImageReq(file_name))
         if rep.success:
             return rep.ret
@@ -101,7 +100,7 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
         rep = self.req.request(ExportTraceReq(file_name, params=params))
         return rep.success
 
-    def load_trace(self, file_name) -> T.Optional[Trace]:
+    def load_trace(self, file_name) -> Trace | None:
         rep = self.req.request(LoadTraceReq(file_name))
         if rep.success:
             return rep.ret
@@ -131,7 +130,7 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
     def clear_buffer(self, direction: ScanDirection):
         return self._command_buffer(direction, BufferCommand.CLEAR)
 
-    def get_all_buffer(self, direction: ScanDirection) -> T.List[Image]:
+    def get_all_buffer(self, direction: ScanDirection) -> list[Image]:
         rep = self.req.request(CommandBufferReq(direction, BufferCommand.GET_ALL))
         if rep.success:
             return rep.ret
@@ -153,14 +152,12 @@ class ConfocalIORequester(NodeClient):
         self.req = self.add_req(gconf)
 
     def save_image(
-        self, file_name, direction: T.Optional[ScanDirection] = None, note: str = ""
+        self, file_name, direction: ScanDirection | None = None, note: str = ""
     ) -> bool:
         rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
         return rep.success
 
-    def export_image(
-        self, file_name, direction: T.Optional[ScanDirection] = None, params=None
-    ) -> bool:
+    def export_image(self, file_name, direction: ScanDirection | None = None, params=None) -> bool:
         rep = self.req.request(ExportImageReq(file_name, direction, params))
         return rep.success
 
@@ -168,7 +165,7 @@ class ConfocalIORequester(NodeClient):
         rep = self.req.request(ExportViewReq(file_name, params))
         return rep.success
 
-    def load_image(self, file_name) -> T.Optional[Image]:
+    def load_image(self, file_name) -> Image | None:
         rep = self.req.request(LoadImageReq(file_name))
         if rep.success:
             return rep.ret
@@ -183,7 +180,7 @@ class ConfocalIORequester(NodeClient):
         rep = self.req.request(ExportTraceReq(file_name, params=params))
         return rep.success
 
-    def load_trace(self, file_name) -> T.Optional[Trace]:
+    def load_trace(self, file_name) -> Trace | None:
         rep = self.req.request(LoadTraceReq(file_name))
         if rep.success:
             return rep.ret
@@ -208,7 +205,7 @@ class ImageBuffer(object):
     def append(self, img: Image):
         self._buf(img.direction).append(img)
 
-    def pop(self, direction: ScanDirection) -> T.Optional[Image]:
+    def pop(self, direction: ScanDirection) -> Image | None:
         try:
             return self._buf(direction).pop()
         except IndexError:
@@ -217,16 +214,16 @@ class ImageBuffer(object):
     def clear(self, direction: ScanDirection):
         self._buf(direction).clear()
 
-    def get_all(self, direction: ScanDirection) -> T.List[Image]:
+    def get_all(self, direction: ScanDirection) -> list[Image]:
         return self._buf(direction)
 
-    def latest(self, direction: ScanDirection) -> T.Optional[Image]:
+    def latest(self, direction: ScanDirection) -> Image | None:
         try:
             return self._buf(direction)[-1]
         except IndexError:
             return None
 
-    def latest_all(self) -> T.List[T.Optional[Image]]:
+    def latest_all(self) -> list[Image | None]:
         return [self.latest(d) for d in (ScanDirection.XY, ScanDirection.XZ, ScanDirection.YZ)]
 
 

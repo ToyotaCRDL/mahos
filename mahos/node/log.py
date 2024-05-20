@@ -8,9 +8,9 @@ ZMQ-based loggers for mahos Nodes.
 
 """
 
+from __future__ import annotations
 import sys
 import io
-import typing as T
 import logging
 import traceback
 
@@ -209,8 +209,8 @@ def get_topic_logger(prefix, name):
 
 
 def init_topic_logger(
-    topic: str, prefix: T.Optional[str] = None
-) -> T.Tuple[T.Union[TopicLogger, DummyLogger], str]:
+    topic: str, prefix: str | None = None
+) -> tuple[TopicLogger | DummyLogger, str]:
     """Initialize TopicLogger and return (TopicLogger, full_name).
 
     If prefix is None, return (DummyLogger, topic).

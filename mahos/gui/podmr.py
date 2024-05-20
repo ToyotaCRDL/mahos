@@ -1115,7 +1115,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
     def get_fg_mode(self):
         return [m for b, m in self.get_fg_mode_dict() if b.isChecked()][0]
 
-    def get_plottable_data(self) -> T.List[T.Tuple[PODMRData, bool, Colors]]:
+    def get_plottable_data(self) -> list[tuple[PODMRData, bool, Colors]]:
         return self.fit.get_plottable_data(self.data)
 
     # State managements
@@ -1411,7 +1411,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         else:
             print(f"[ERROR] unknown tau mode: {mode}")
 
-    def reset_tau_modes(self, modes: T.List[str]):
+    def reset_tau_modes(self, modes: list[str]):
         prev_mode = self.taumodeBox.currentText()
         if (prev_mode == "total" and "total" not in modes) or (
             prev_mode == "freq" and "freq" not in modes

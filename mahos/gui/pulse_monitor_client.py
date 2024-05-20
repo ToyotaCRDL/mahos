@@ -8,7 +8,7 @@ Qt signal-based clients of Pulse-based meas nodes.
 
 """
 
-import typing as T
+from __future__ import annotations
 
 from .Qt import QtCore
 
@@ -52,5 +52,5 @@ class QPulseClient(QNodeClient):
         self._pulse = pulse
         self.pulseUpdated.emit(pulse)
 
-    def get_pulse(self) -> T.Optional[PulsePattern]:
+    def get_pulse(self) -> PulsePattern | None:
         return self._pulse

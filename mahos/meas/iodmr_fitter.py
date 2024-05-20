@@ -8,6 +8,7 @@ Fitter for Imaging ODMR.
 
 """
 
+from __future__ import annotations
 import typing as T
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import json
@@ -72,7 +73,7 @@ def _fit(
     dip: bool = True,
     n_workers: int = 1,
     print_fn=print,
-) -> T.List[ModelResult]:
+) -> list[ModelResult]:
     f, H, W = image.shape
     img = image.reshape((f, H * W), order="C")
     num = img.shape[1]
@@ -125,7 +126,7 @@ fit_quad = partial(_fit, OF.fit_quad, _fit_quad_dumps)
 
 
 class IODMRFitResult(object):
-    def __init__(self, params: dict, result: T.List[ModelResult]):
+    def __init__(self, params: dict, result: list[ModelResult]):
         self.params = params
         self.result = result
 
@@ -187,7 +188,7 @@ class IODMRFitResult(object):
             image.append(line)
         return np.array(image)
 
-    def make_image_B(self) -> T.Optional[NDArray]:
+    def make_image_B(self) -> NDArray | None:
         """Make image of B field."""
 
         if self.params["method"] == "nvba":
@@ -206,7 +207,7 @@ class IODMRFitResult(object):
         else:
             return None
 
-    def make_image_freq(self) -> T.Optional[NDArray]:
+    def make_image_freq(self) -> NDArray | None:
         if self.params["method"] == "single":
             return self.make_image(lambda r: r.best_values["center"])
         else:
@@ -230,7 +231,7 @@ class IODMRFitter(object):
         else:
             self.logger = logger
 
-    def fit(self, params: dict) -> T.Optional[IODMRFitResult]:
+    def fit(self, params: dict) -> IODMRFitResult | None:
         """Perform fitting."""
 
         _, h, w = self.data.data_sum.shape

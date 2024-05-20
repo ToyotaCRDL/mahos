@@ -8,7 +8,7 @@ Base class GUINode and the runners.
 
 """
 
-import typing as T
+from __future__ import annotations
 import sys
 import multiprocessing as mp
 import threading as mt
@@ -25,7 +25,7 @@ from .breeze_resources import dark
 class GUINode(NodeBase):
     """GUINode is a variant of Nodes for Qt-based GUI frontends."""
 
-    def __init__(self, gconf: dict, name: NodeName, context: T.Optional[Context] = None):
+    def __init__(self, gconf: dict, name: NodeName, context: Context | None = None):
         NodeBase.__init__(self, gconf, name)
 
         self.app = QtWidgets.QApplication(sys.argv)
@@ -33,7 +33,7 @@ class GUINode(NodeBase):
 
         self.widget = self.init_widget(gconf, name, context)
 
-    def init_widget(self, gconf: dict, name: NodeName, context: T.Optional[Context]):
+    def init_widget(self, gconf: dict, name: NodeName, context: Context | None):
         """Initialize top widget and return it. Every GUINode subclass must implement this."""
 
         raise NotImplementedError("Implement init_widget")

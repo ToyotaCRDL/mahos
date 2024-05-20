@@ -145,7 +145,7 @@ This method does the calculation, send a log message, and return the answer (Lin
 
            self.add_rep(self.handle_multiply)
 
-       def handle_multiply(self, req: T.Tuple[int, int]) -> int:
+       def handle_multiply(self, req: tuple[int, int]) -> int:
            a, b = req
            rep = a * b
            self.logger.info(f"{a} * {b} = {rep}")

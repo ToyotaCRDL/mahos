@@ -8,14 +8,14 @@ Statistical Data Processing Utilities.
 
 """
 
-import typing as T
+from __future__ import annotations
 
 import numpy as np
 
 
 def filter_outlier_2d(
     data: np.ndarray, n: float = 4.0, axis: int = 0, both=False
-) -> T.Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """filter outlier in 2D array data.
 
     This function look for outliers along one axis.

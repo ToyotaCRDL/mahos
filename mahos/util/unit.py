@@ -15,7 +15,7 @@ The function is redefined here because we sometimes want to avoid importing pyqt
 
 """
 
-import typing as T
+from __future__ import annotations
 import math
 import decimal
 
@@ -27,7 +27,7 @@ def _clip(val, vmin, vmax):
     return vmin if val < vmin else vmax if val > vmax else val
 
 
-def SI_scale(x: T.Union[float, int, decimal.Decimal], min_val=1e-25, use_unicode=True):
+def SI_scale(x: float | int | decimal.Decimal, min_val=1e-25, use_unicode=True):
     """
     Return the recommended scale factor and SI prefix string for x.
 

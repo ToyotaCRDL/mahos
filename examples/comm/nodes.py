@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import typing as T
+from __future__ import annotations
 
 import datetime
 
@@ -50,7 +50,7 @@ class Multiplier(Node):
 
         self.add_rep(self.handle_multiply)
 
-    def handle_multiply(self, req: T.Tuple[int, int]) -> int:
+    def handle_multiply(self, req: tuple[int, int]) -> int:
         a, b = req
         rep = a * b
         self.logger.info(f"{a} * {b} = {rep}")

@@ -8,7 +8,7 @@ Qt signal-based clients of Confocal.
 
 """
 
-import typing as T
+from __future__ import annotations
 
 from .Qt import QtCore
 
@@ -90,7 +90,7 @@ class QConfocalClient(QStateReqClient):
         rep = self.req.request(ShutdownReq())
         return rep.success
 
-    def move(self, ax: T.Union[Axis, T.List[Axis]], pos: T.Union[float, T.List[float]]) -> bool:
+    def move(self, ax: Axis | list[Axis], pos: float | list[float]) -> bool:
         rep = self.req.request(MoveReq(ax, pos))
         return rep.success
 
@@ -102,14 +102,12 @@ class QConfocalClient(QStateReqClient):
             return None
 
     def save_image(
-        self, file_name, direction: T.Optional[ScanDirection] = None, note: str = ""
+        self, file_name, direction: ScanDirection | None = None, note: str = ""
     ) -> bool:
         rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
         return rep.success
 
-    def export_image(
-        self, file_name, direction: T.Optional[ScanDirection] = None, params=None
-    ) -> bool:
+    def export_image(self, file_name, direction: ScanDirection | None = None, params=None) -> bool:
         rep = self.req.request(ExportImageReq(file_name, direction, params))
         return rep.success
 
@@ -134,7 +132,7 @@ class QConfocalClient(QStateReqClient):
     def clear_buffer(self, direction: ScanDirection):
         return self._command_buffer(direction, BufferCommand.CLEAR)
 
-    def get_all_buffer(self, direction: ScanDirection) -> T.List[Image]:
+    def get_all_buffer(self, direction: ScanDirection) -> list[Image]:
         rep = self.req.request(CommandBufferReq(direction, BufferCommand.GET_ALL))
         if rep.success:
             return rep.ret
@@ -275,11 +273,11 @@ class QConfocalTrackerClient(QStateClient):
     statusUpdated = QtCore.pyqtSignal(BinaryStatus)
     stateUpdated = QtCore.pyqtSignal(BinaryState, BinaryState)
 
-    def save_params(self, conf, file_name: T.Optional[str] = None) -> bool:
+    def save_params(self, conf, file_name: str | None = None) -> bool:
         rep = self.req.request(SaveParamsReq(conf, file_name=file_name))
         return rep.success
 
-    def load_params(self, file_name: T.Optional[str] = None) -> T.Optional[dict]:
+    def load_params(self, file_name: str | None = None) -> dict | None:
         rep = self.req.request(LoadParamsReq(file_name))
         if rep.success:
             return rep.ret

@@ -8,7 +8,7 @@ Message Types for Camera Instruments.
 
 """
 
-import typing as T
+from __future__ import annotations
 
 import numpy as np
 
@@ -26,7 +26,7 @@ class FrameResult(GetResult):
 
     def __init__(
         self,
-        frame: T.Optional[np.ndarray] = None,
+        frame: np.ndarray | None = None,
         count: int = 0,
         time: float = 0.0,
         invalid: bool = False,

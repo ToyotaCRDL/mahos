@@ -8,7 +8,7 @@ mahos graph command.
 
 """
 
-import typing as T
+from __future__ import annotations
 import argparse
 import enum
 
@@ -94,7 +94,7 @@ def add_edge(G, joined_name, target, exclude):
                 )
 
 
-def make_graph(gconf: dict, style: LabelStyle, exclude: T.List[str]) -> nx.DiGraph:
+def make_graph(gconf: dict, style: LabelStyle, exclude: list[str]) -> nx.DiGraph:
     G = nx.DiGraph()
     for host, node in host_nodes(gconf):
         joined_name = join_name((host, node))

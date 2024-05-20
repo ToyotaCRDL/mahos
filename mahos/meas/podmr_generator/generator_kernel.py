@@ -9,7 +9,6 @@ Core functions for pattern generators for Pulse ODMR
 """
 
 from __future__ import annotations
-import typing as T
 import re
 
 import numpy as np
@@ -161,7 +160,7 @@ def build_blocks(
     invertY=False,
     minimum_block_length: int = 1000,
     block_base: int = 4,
-) -> T.Tuple[Blocks[Block], T.List[int]]:
+) -> tuple[Blocks[Block], list[int]]:
     """Build up the blocks by adding init and final blocks.
 
     final is kind of dummy. however, should be much larger than
@@ -429,7 +428,7 @@ def merge_short_blocks(blocks: Blocks[Block], length: int) -> Blocks[Block]:
     return new_blocks
 
 
-def extract_laser_timing(blocks: Blocks[Block]) -> T.List[int]:
+def extract_laser_timing(blocks: Blocks[Block]) -> list[int]:
     laser_timing = []
     t = 0
     for b in blocks:

@@ -12,7 +12,6 @@ from __future__ import annotations
 import os
 from functools import partial
 import uuid
-import typing as T
 import enum
 
 from . import Qt
@@ -1088,7 +1087,7 @@ class MoveBinder(QtCore.QObject):
     def __init__(
         self,
         cli: QConfocalClient,
-        pos: T.Tuple[float, float, float],
+        pos: tuple[float, float, float],
         interval_ms: int,
         parent=None,
     ):
@@ -1672,7 +1671,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self.XZ.move_crosshair_Y(val)
         self.YZ.move_crosshair_Y(val)
 
-    def _scan_file_pre_ext(self, direction: T.Optional[ScanDirection] = None):
+    def _scan_file_pre_ext(self, direction: ScanDirection | None = None):
         ext = ".scan"
         if direction is None:
             direction = self.cli.get_direction()
@@ -1699,7 +1698,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
     def export_image_yz(self):
         self.export_image(ScanDirection.YZ)
 
-    def save_image(self, direction: T.Optional[ScanDirection] = None):
+    def save_image(self, direction: ScanDirection | None = None):
         default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = save_dialog(self, default_path, "Last Scan", self._scan_file_pre_ext(direction))
         if not fn:
@@ -1710,7 +1709,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self.cli.save_image(fn, direction=direction, note=note)
         return fn
 
-    def export_image(self, direction: T.Optional[ScanDirection] = None):
+    def export_image(self, direction: ScanDirection | None = None):
         default_path = str(self.gparams_cli.get_param("work_dir"))
         fn = export_dialog(
             self, default_path, "Last Scan", (".png", ".pdf", ".eps", ".csv", ".txt")

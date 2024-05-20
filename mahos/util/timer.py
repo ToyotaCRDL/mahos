@@ -8,7 +8,7 @@ Timing utility functions and classes.
 
 """
 
-import typing as T
+from __future__ import annotations
 import time
 import math
 
@@ -18,7 +18,7 @@ def _round_down(x: float, n_digits: int) -> float:
     return math.floor(x * k) / k
 
 
-def seconds_to_hms(t: float, n_digits: int = 1) -> T.Tuple[int, int, T.Union[float, int]]:
+def seconds_to_hms(t: float, n_digits: int = 1) -> tuple[int, int, float | int]:
     """Convert time in seconds `t` to triple of (hours, minutes, secs).
 
     This is useful for displaying purpose.
@@ -90,7 +90,7 @@ class StopWatch(object):
         self.start = start
         self.last = self.start
 
-    def elapsed(self) -> T.Tuple[float, float]:
+    def elapsed(self) -> tuple[float, float]:
         now = time.time()
         total = now - self.start
         lap = now - self.last

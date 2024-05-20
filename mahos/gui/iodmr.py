@@ -8,9 +8,9 @@ GUI frontend of Imaging ODMR.
 
 """
 
+from __future__ import annotations
 import uuid
 import os
-import typing as T
 
 import numpy as np
 import pyqtgraph as pg
@@ -167,7 +167,7 @@ class DataStore(object):
     """IODMRData with some convenient methods"""
 
     def __init__(self):
-        self.data: T.Optional[IODMRData] = None
+        self.data: IODMRData | None = None
 
     def set_data(self, data: IODMRData):
         self.data = data
@@ -352,7 +352,7 @@ class IODMRMainWindow(ClientMainWindow):
 
         self.setEnabled(False)
 
-    def init_view(self, roi_style: T.Optional[dict] = None):
+    def init_view(self, roi_style: dict | None = None):
         s = roi_style or {}
         z = s.get("size", 100)
         w = s.get("width", 2.0)
