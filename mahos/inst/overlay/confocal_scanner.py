@@ -321,7 +321,7 @@ class ConfocalScannerAnalog(InstrumentOverlay, ConfocalScannerMixin):
 
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "line":
             return self.get_line()
         elif key == "capability":
@@ -489,7 +489,7 @@ class ConfocalScannerCommand(InstrumentOverlay, ConfocalScannerMixin):
             pd.stop()
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "line":
             return self.get_line()
         elif key == "capability":

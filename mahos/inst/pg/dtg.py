@@ -229,7 +229,7 @@ class DTG5000(VisaInstrument, DTGCoreMixin):
         else:
             return self.fail_with("These params must be given: 'blocks' | 'blockseq' and 'freq'")
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "trigger":
             return self.trg()
         elif key == "clear":
@@ -238,7 +238,7 @@ class DTG5000(VisaInstrument, DTGCoreMixin):
             self.logger.error(f"unknown set() key: {key}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "length":
             return self.length  # length of last configure_blocks
         elif key == "offsets":

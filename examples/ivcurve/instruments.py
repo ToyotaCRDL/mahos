@@ -30,7 +30,7 @@ class VoltageSource_mock(Instrument):
     def stop(self, label: str = "") -> bool:
         return self.set_output(False)
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "volt":
             return self.set_voltage(value)
         else:
@@ -68,7 +68,7 @@ class Multimeter_mock(Instrument):
             self.logger.error(f"Unknown mode: {mode}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.get_data(args)
         else:

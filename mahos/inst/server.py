@@ -272,16 +272,24 @@ class InstrumentClient(StatusClient):
         rep = self.req.request(ConfigureReq(self.ident, inst, params, label))
         return rep.success
 
-    def set(self, inst: str, key: str, value=None) -> bool:
-        """Set an instrument setting or commanding value. Returns True on success."""
+    def set(self, inst: str, key: str, value=None, label: str = "") -> bool:
+        """Set an instrument setting or commanding value. Returns True on success.
 
-        rep = self.req.request(SetReq(self.ident, inst, key, value))
+        (if given) label specifies a subsystem of the instrument.
+
+        """
+
+        rep = self.req.request(SetReq(self.ident, inst, key, value=value, label=label))
         return rep.success
 
-    def get(self, inst: str, key: str, args=None):
-        """Get an instrument setting or commanding value."""
+    def get(self, inst: str, key: str, args=None, label: str = ""):
+        """Get an instrument setting or commanding value.
 
-        rep = self.req.request(GetReq(self.ident, inst, key, args=args))
+        (if given) label specifies a subsystem of the instrument.
+
+        """
+
+        rep = self.req.request(GetReq(self.ident, inst, key, args=args, label=label))
         if rep.success:
             return rep.ret
         else:
@@ -496,16 +504,24 @@ class MultiInstrumentClient(object):
         return self.get_client(inst).configure(inst, params, label)
 
     @remap_inst
-    def set(self, inst: str, key: str, value=None) -> bool:
-        """Set an instrument setting or commanding value. Returns True on success."""
+    def set(self, inst: str, key: str, value=None, label: str = "") -> bool:
+        """Set an instrument setting or commanding value. Returns True on success.
 
-        return self.get_client(inst).set(inst, key, value)
+        (if given) label specifies a subsystem of the instrument.
+
+        """
+
+        return self.get_client(inst).set(inst, key, value, label)
 
     @remap_inst
-    def get(self, inst: str, key: str, args=None):
-        """Get an instrument setting or commanding value."""
+    def get(self, inst: str, key: str, args=None, label: str = ""):
+        """Get an instrument setting or commanding value.
 
-        return self.get_client(inst).get(inst, key, args)
+        (if given) label specifies a subsystem of the instrument.
+
+        """
+
+        return self.get_client(inst).get(inst, key, args, label)
 
     @remap_inst
     def help(self, inst: str, func: str | None = None) -> str:
@@ -759,13 +775,17 @@ class InstrumentServer(Node):
         return self._call(msg.inst, msg.ident, "configure", args)
 
     def _handle_set(self, msg: SetReq) -> Reply:
-        return self._call(msg.inst, msg.ident, "set", {"key": msg.key, "value": msg.value})
+        args = {"key": msg.key, "value": msg.value}
+        if msg.label:
+            args["label"] = msg.label
+        return self._call(msg.inst, msg.ident, "set", args)
 
     def _handle_get(self, msg: GetReq) -> Reply:
-        if msg.args is None:
-            args = {"key": msg.key}
-        else:
-            args = {"key": msg.key, "args": msg.args}
+        args = {"key": msg.key}
+        if msg.args is not None:
+            args["args"] = msg.args
+        if msg.label:
+            args["label"] = msg.label
         return self._call(msg.inst, msg.ident, "get", args)
 
     def _handle_help(self, msg: HelpReq) -> Reply:

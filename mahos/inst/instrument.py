@@ -178,14 +178,22 @@ class Instrument(object):
         self.logger.error("configure() is called but not implemented.")
         return False
 
-    def set(self, key: str, value=None) -> bool:
-        """Set an instrument setting or commanding value. Returns True on success."""
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        """Set an instrument setting or commanding value. Returns True on success.
+
+        (if given) label specifies a subsystem of the instrument.
+
+        """
 
         self.logger.error("set() is called but not implemented.")
         return False
 
-    def get(self, key: str, args=None):
-        """Get an instrument setting or measurement data."""
+    def get(self, key: str, args=None, label: str = ""):
+        """Get an instrument setting or measurement data.
+
+        (if given) label specifies a subsystem of the instrument.
+
+        """
 
         self.logger.error("get() is called but not implemented.")
         return None

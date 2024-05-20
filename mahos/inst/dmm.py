@@ -105,7 +105,7 @@ class Agilent34410A(VisaInstrument):
 
     # Standard API
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "opc":
             return self.query_opc(delay=args)
         elif key == "data":

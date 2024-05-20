@@ -163,7 +163,7 @@ class LightField(Instrument):
 
     # Standard API
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.capture()
         elif key == "config":
@@ -187,7 +187,7 @@ class LightField(Instrument):
             self.logger.error(f"Unknown get() key: {key}.")
             return None
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "base_config":
             return self.set_base_config(value)
         elif key == "exposure_time":

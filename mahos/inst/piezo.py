@@ -169,7 +169,7 @@ class BasePiezo3Axes(Instrument):
 
         return [self.limit[ax] for ax in Axis]
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "target":
             return self.get_target()
         elif key == "range":
@@ -285,7 +285,7 @@ class E727_3_USB(BasePiezo3Axes):
     def configure(self, params: dict, label: str = "") -> bool:
         return True
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         key = key.lower()
         if key == "target":
             return self.set_target(value)
@@ -299,7 +299,7 @@ class E727_3_USB(BasePiezo3Axes):
             self.logger.error(f"unknown set() key: {key}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "pos":
             return self.get_pos()
         elif key == "pos_ont":
@@ -438,7 +438,7 @@ class E727_3_USB_AO(E727_3_USB):
     def stop(self, label: str = "") -> bool:
         return self._ao.stop()
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key in ("onboard_buffer_size", "scan_buffer_size"):
             return self._ao.get_onboard_buffer_size()
         elif key == "buffer_size":
@@ -666,7 +666,7 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
     def stop(self, label: str = "") -> bool:
         return self._ao.stop()
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         key = key.lower()
         if key == "target":
             return self.set_target(value)
@@ -674,7 +674,7 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
             self.logger.error(f"unknown set() key: {key}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key in ("onboard_buffer_size", "scan_buffer_size"):
             return self._ao.get_onboard_buffer_size()
         elif key == "buffer_size":

@@ -111,7 +111,7 @@ class APDCounter(BufferedEdgeCounter):
 
     # Standard API
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "correct":
             return np.array([self.correct_cps(x) for x in args])
         elif key == "correction_factor":
@@ -164,7 +164,7 @@ class AnalogPD(AnalogIn):
     def read_on_demand(self, oversample: int = 1) -> float | np.ndarray:
         return self._convert(AnalogIn.read_on_demand(self, oversample))
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         key = key.lower()
         if key == "gain":
             if isinstance(value, (float, int, np.floating, np.integer)):
@@ -179,7 +179,7 @@ class AnalogPD(AnalogIn):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key in ("data", "all_data"):
             return AnalogIn.get(self, key, args)
         elif key == "unit":
@@ -238,7 +238,7 @@ class LockinAnalogPD(AnalogIn):
     def read_on_demand(self, oversample: int = 1) -> np.cdouble:
         return self._convert(AnalogIn.read_on_demand(self, oversample))
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         key = key.lower()
         if key == "gain":
             if isinstance(value, (float, int, np.floating, np.integer)):
@@ -253,7 +253,7 @@ class LockinAnalogPD(AnalogIn):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key in ("data", "all_data"):
             return AnalogIn.get(self, key, args)
         elif key == "unit":
@@ -366,7 +366,7 @@ class LUCI10(Instrument):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         key = key.lower()
         if key == "led":
             return self.set_led(value)
@@ -375,7 +375,7 @@ class LUCI10(Instrument):
         else:
             return self.fail_with(f"Unknown set() key: {key}.")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "devices":
             return self.get_devices()
         elif key == "id":
@@ -459,7 +459,7 @@ class LUCI_OE200(LUCI10):
         self.DC_coupling = DC_coupling
         return self._update_gain(low_noise, gain_exponent) and self._write_settings()
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         key = key.lower()
         if key == "led":
             return self.set_led(value)
@@ -473,7 +473,7 @@ class LUCI_OE200(LUCI10):
         else:
             return self.fail_with(f"Unknown set() key: {key}.")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key in ("devices", "id", "pin", "product"):
             return LUCI10.get(self, key, args)
         else:

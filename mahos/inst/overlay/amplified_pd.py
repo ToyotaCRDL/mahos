@@ -108,7 +108,7 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         # no set() key for pd
 
         success = self.li5640.set(key, value)
@@ -116,7 +116,7 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
         self.update_gain()
         return success
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self._convert_data(self.pd.get(key, args))
         elif key == "all_data":
@@ -211,11 +211,11 @@ class OE200_AI(InstrumentOverlay):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         # no set() key for AnalogIn
         return self.luci.set(key, value)
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self._convert_data(self.pd.get(key, args))
         elif key == "all_data":
@@ -342,7 +342,7 @@ class OE200_LI5640_AI(InstrumentOverlay):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         # no set() key for pd
         key = key.lower()
         if key in ("led", "gain", "coupling"):
@@ -353,7 +353,7 @@ class OE200_LI5640_AI(InstrumentOverlay):
             self.update_gain()
             return success
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self._convert_data(self.pd.get(key, args))
         elif key == "all_data":

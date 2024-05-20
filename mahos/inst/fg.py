@@ -413,7 +413,7 @@ class DG2000(VisaInstrument):
         self.update_all_bounds()
         return success
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "opc":
             return self.query_opc(delay=args)
         elif key == "bounds":
@@ -422,7 +422,7 @@ class DG2000(VisaInstrument):
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "output":
             if isinstance(value, dict):
                 if "on" in value and "ch" in value:

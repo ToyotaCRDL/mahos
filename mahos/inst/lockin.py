@@ -703,14 +703,14 @@ class LI5640(VisaInstrument):
 
     # Standard API
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "opc":
             return self.query_opc(delay=args)
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "init":
             return self.set_initialize()
         elif key == "auto":

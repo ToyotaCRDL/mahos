@@ -123,7 +123,7 @@ class IODMRSweeperCommand(InstrumentOverlay):
 
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "frames":
             return self.get_frames()
         elif key == "bounds":

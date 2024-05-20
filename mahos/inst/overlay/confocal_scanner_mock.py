@@ -85,7 +85,7 @@ class ConfocalScanner_mock(InstrumentOverlay):
 
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "line":
             return self.get_line()
         elif key == "capability":

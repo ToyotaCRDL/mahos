@@ -155,7 +155,7 @@ class ThorlabsCamera(Instrument):
         else:
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "frame":
             return self.get_frame()
         else:
@@ -710,13 +710,13 @@ class BaslerPylonCamera(Instrument):
         else:  # self.Mode.UNCONFIGURED
             return self.fail_with("stop() is called but mode is unconfigured.")
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "exposure_time":
             self.set_exposure_time(value)
         else:
             return self.fail_with(f"Unknown set() key: {key}")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "frame":
             return self.get_frame(timeout_sec=args)
         else:

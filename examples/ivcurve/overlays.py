@@ -53,7 +53,7 @@ class IVSweeper(InstrumentOverlay):
         self._running = False
         return self.source.set_voltage(0.0) and self.source.stop()
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "sweep":
             return self.sweep_once()
         else:

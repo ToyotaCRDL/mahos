@@ -417,7 +417,7 @@ class TimeTagger(Instrument):
 
         return self.fail_with("invalid configure() params keys.")
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "clear":
             return self.clear()
         elif key == "sweeps":
@@ -431,7 +431,7 @@ class TimeTagger(Instrument):
             self.logger.error(f"unknown set() key: {key}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "range_bin":
             return self.get_range_bin()
         elif key == "bin":

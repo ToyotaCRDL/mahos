@@ -44,7 +44,7 @@ class Clock_mock(Instrument):
         self.logger.info("Stopped dummy clock.")
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "internal_output":
             return self.get_internal_output()
         else:
@@ -132,7 +132,7 @@ class SG_mock(Instrument):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "output":
             return self.set_output(value)
         elif key == "dm_source":
@@ -149,7 +149,7 @@ class SG_mock(Instrument):
             self.logger.error(f"unknown set() key: {key}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "opc":
             return True
         elif key == "bounds":
@@ -186,7 +186,7 @@ class FG_mock(Instrument):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "output":
             if isinstance(value, dict):
                 if "on" in value and "ch" in value:
@@ -200,7 +200,7 @@ class FG_mock(Instrument):
         else:
             return self.fail_with("Unknown set() key.")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "opc":
             return True
         elif key == "bounds":
@@ -286,14 +286,14 @@ class Piezo_mock(Instrument):
     def configure(self, params: dict, label: str = "") -> bool:
         return True
 
-    def set(self, key: str, value=None):
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "target":
             return self.set_target(value)
         else:
             self.logger.error(f"unknown set() key: {key}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "pos":
             return self.get_pos()
         elif key == "pos_ont":
@@ -333,7 +333,7 @@ class Counter_mock(Instrument):
         self.logger.info("Stopped dummy counting.")
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.get_data()
         elif key == "all_data":
@@ -395,7 +395,7 @@ class MCS_mock(Instrument):
             self._bin = tbin
         return True
 
-    def set(self, key: str, value=None):
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "clear":
             return True
         elif key == "sweeps":
@@ -404,7 +404,7 @@ class MCS_mock(Instrument):
             self.logger.error(f"unknown set() key: {key}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "range_bin":
             return {"range": self._range, "bin": self._bin}
         elif key == "bin":
@@ -506,7 +506,7 @@ class Spectrometer_mock(Instrument):
     def get_grating_center_wavelength(self) -> float:
         return self._center_wavelength
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.capture()
         elif key == "config":
@@ -530,7 +530,7 @@ class Spectrometer_mock(Instrument):
             self.logger.error(f"Unknown get() key: {key}.")
             return None
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "base_config":
             return self.set_base_config(value)
         elif key == "exposure_time":
@@ -646,7 +646,7 @@ class Camera_mock(Instrument):
         else:  # self.Mode.UNCONFIGURED
             return self.fail_with("stop() is called but mode is unconfigured.")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "frame":
             return self.get_frame()
         else:
@@ -794,7 +794,7 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
         else:
             return self.fail_with("These params must be given: 'blocks' | 'blockseq' and 'freq'")
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "trigger":
             return True
         elif key == "clear":
@@ -802,7 +802,7 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
         else:
             return self.fail_with(f"unknown set() key: {key}")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "length":
             return self.length  # length of last configure_blocks
         elif key == "offsets":
@@ -873,7 +873,7 @@ class DMM_mock(Instrument):
             self.logger.error("get_unit() is called but not configured.")
             return ""
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "opc":
             return True
         elif key == "data":

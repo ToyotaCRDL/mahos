@@ -238,7 +238,7 @@ class RS_NRPZ(Instrument):
         else:
             return self.fail_with(f"unknown label: {label}")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.get_data(args)
         elif key == "unit":

@@ -138,7 +138,7 @@ class Multimeter_mock(Instrument):
         else:
             return self.fail_with(f"Unknown label: {label}")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.get_data()
         elif key == "unit":

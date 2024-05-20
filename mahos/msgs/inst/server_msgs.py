@@ -139,21 +139,23 @@ class ConfigureReq(Request):
 class SetReq(Request):
     """call set() of instrument `inst`."""
 
-    def __init__(self, ident: Ident, inst: str, key: str, value=None):
+    def __init__(self, ident: Ident, inst: str, key: str, value=None, label: str = ""):
         self.ident = ident
         self.inst = inst
         self.key = key
         self.value = value
+        self.label = label
 
 
 class GetReq(Request):
     """call get() of instrument `inst`."""
 
-    def __init__(self, ident: Ident, inst: str, key: str, args=None):
+    def __init__(self, ident: Ident, inst: str, key: str, args=None, label: str = ""):
         self.ident = ident
         self.inst = inst
         self.key = key
         self.args = args
+        self.label = label
 
 
 class HelpReq(Request):

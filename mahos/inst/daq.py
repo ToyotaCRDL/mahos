@@ -232,7 +232,7 @@ class ClockSource(ConfigurableTask):
 
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "internal_output":
             return self.get_internal_output()
         else:
@@ -293,7 +293,7 @@ class ClockDivider(ConfigurableTask):
 
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "internal_output":
             return self.get_internal_output()
         else:
@@ -452,13 +452,13 @@ class AnalogOut(ConfigurableTask):
 
         return True
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "voltage":
             return self.set_output_once(value)
         else:
             return self.fail_with(f"unknown set() key: {key}")
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "onboard_buffer_size":
             return self.get_onboard_buffer_size()
         elif key == "buffer_size":
@@ -931,7 +931,7 @@ class AnalogIn(ConfigurableTask):
         else:
             return self.configure_on_demand(params)
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             if not self.clock_mode:
                 return self.read_on_demand()
@@ -1241,7 +1241,7 @@ class BufferedEdgeCounter(ConfigurableTask):
 
         return True
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             if args:
                 return self.pop_block()
@@ -1386,7 +1386,7 @@ class DigitalOut(SingleShotTask):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key.startswith("out"):
             return self.set_output(value)
         elif key == "command":
@@ -1446,7 +1446,7 @@ class DOPulser(SingleShotTask):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "low":
             return self.set_output_low()
         elif key == "high":
@@ -1537,14 +1537,14 @@ class DIPoller(SingleShotTask):
 
     # Standard API
 
-    def set(self, key: str, value=None) -> bool:
+    def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "sample":
             return self.set_sample_per_ch(value)
         else:
             self.logger.error(f"unknown set() key: {key}")
             return False
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "pos":
             return self.wait_all_pos()
         elif key == "neg":
@@ -1580,7 +1580,7 @@ class DICounter(SingleShotTask):
 
     # Standard API
 
-    def get(self, key: str, args=None):
+    def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.get_data()
         else:
