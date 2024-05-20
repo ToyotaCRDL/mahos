@@ -371,6 +371,7 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Tutorial 1: Communication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial_ivcurve.html">Tutorial 2: Basic Measurement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_manual_op.html">Tutorial 3: Manual Operation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial_next_steps.html">Tutorial: Next Steps</a></li>
 </ul>
 </div>
@@ -431,6 +432,7 @@ document.write(`
                   
   <section id="tutorial-1-communication">
 <h1>Tutorial 1: Communication<a class="headerlink" href="#tutorial-1-communication" title="Permalink to this heading">#</a></h1>
+<p>In this tutorial chapter, we will learn basic concepts about inter-process communication on mahos.</p>
 <section id="preparation">
 <h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this heading">#</a></h2>
 <p>Before starting this, <a class="reference internal" href="installation.html"><span class="doc">install</span></a> the library and dependencies.</p>
@@ -455,7 +457,7 @@ It is successful if you see something like below in the second terminal.</p>
 <p>You can test one-to-many communication by repeating <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">echo</span> <span class="pre">-t</span> <span class="pre">time</span> <span class="pre">clock</span></code> in another terminal,
 where you’d see the same output.
 Hit Ctrl-C in the terminals to stop them.</p>
-<p>Lets’s see what was happening here.
+<p>Let’s see what was happening here.
 The first command <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">run</span> <span class="pre">clock</span></code> was abbreviated form of <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">run</span> <span class="pre">-c</span> <span class="pre">conf.toml</span> <span class="pre">-H</span> <span class="pre">localhost</span> <span class="pre">clock</span></code> or <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">run</span> <span class="pre">-c</span> <span class="pre">conf.toml</span> <span class="pre">localhost::clock</span></code>.
 <code class="docutils literal notranslate"><span class="pre">localhost</span></code> is a hostname (computer name).
 This will be important for multi-computer configuration,

@@ -1,6 +1,9 @@
 Tutorial 2: Basic Measurement
 =============================
 
+In this tutorial chapter, we will learn how basic measurement system is constructed on mahos
+(with mock instruments).
+
 Preparation
 -----------
 

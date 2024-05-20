@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>inst layer &#8212; MAHOS 0.2.3 documentation</title>
+    <title>Tutorial 3: Manual Operation &#8212; MAHOS 0.2.3 documentation</title>
   
   
   
@@ -37,11 +37,11 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'arch_inst';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial_manual_op';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="meas layer" href="arch_meas.html" />
-    <link rel="prev" title="Node, Client, and Communication" href="arch_node.html" />
+    <link rel="next" title="Tutorial: Next Steps" href="tutorial_next_steps.html" />
+    <link rel="prev" title="Tutorial 2: Basic Measurement" href="tutorial_ivcurve.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -137,14 +137,14 @@
                     </li>
                 
 
-                    <li class="nav-item">
+                    <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="tutorial.html">
                         Tutorial
                       </a>
                     </li>
                 
 
-                    <li class="nav-item current active">
+                    <li class="nav-item">
                       <a class="nav-link nav-internal" href="arch.html">
                         Architecture
                       </a>
@@ -284,14 +284,14 @@ document.write(`
                     </li>
                 
 
-                    <li class="nav-item">
+                    <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="tutorial.html">
                         Tutorial
                       </a>
                     </li>
                 
 
-                    <li class="nav-item current active">
+                    <li class="nav-item">
                       <a class="nav-link nav-internal" href="arch.html">
                         Architecture
                       </a>
@@ -369,10 +369,10 @@ document.write(`
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="arch_node.html">Node, Client, and Communication</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">inst layer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="arch_meas.html">meas layer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="arch_gui.html">gui layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_comm.html">Tutorial 1: Communication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_ivcurve.html">Tutorial 2: Basic Measurement</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Tutorial 3: Manual Operation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_next_steps.html">Tutorial: Next Steps</a></li>
 </ul>
 </div>
 </nav></div>
@@ -411,9 +411,9 @@ document.write(`
       </a>
     </li>
     
-    <li class="breadcrumb-item"><a href="arch.html" class="nav-link">Architecture</a></li>
+    <li class="breadcrumb-item"><a href="tutorial.html" class="nav-link">Tutorial</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">inst layer</li>
+    <li class="breadcrumb-item active" aria-current="page">Tutorial 3: Manual Operation</li>
   </ul>
 </nav>
 </div>
@@ -430,75 +430,39 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="inst-layer">
-<h1>inst layer<a class="headerlink" href="#inst-layer" title="Permalink to this heading">#</a></h1>
-<p>The inst layer is lowest-lying layer providing instrument drivers, implementated in <a class="reference internal" href="inst/index.html#mahos-inst"><span class="std std-ref">mahos.inst</span></a> package.</p>
-<section id="instrumentserver">
-<h2>InstrumentServer<a class="headerlink" href="#instrumentserver" title="Permalink to this heading">#</a></h2>
-<p>The core of inst layer is <a class="reference internal" href="inst/generated/mahos.inst.server.InstrumentServer.html#mahos.inst.server.InstrumentServer" title="mahos.inst.server.InstrumentServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentServer</span></code></a> node.
-As this node is designed to serve <a class="reference internal" href="glossary.html#term-RPC"><span class="xref std std-term">RPC</span></a> of arbitrary the instrument drivers,
-one doesn’t need to implement a <a class="reference internal" href="glossary.html#term-node"><span class="xref std std-term">node</span></a> to add a new driver.</p>
+  <section id="tutorial-3-manual-operation">
+<h1>Tutorial 3: Manual Operation<a class="headerlink" href="#tutorial-3-manual-operation" title="Permalink to this heading">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This tutorial document is incomplete, however, the example code works fine.</p>
+</div>
+<p>In this tutorial chapter, we will learn basic usage and construction of manually-operated instruments.</p>
+<section id="preparation">
+<h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this heading">#</a></h2>
+<p>Before starting this, <a class="reference internal" href="installation.html"><span class="doc">install</span></a> the library and dependencies.</p>
+<p>It is recommended to finish <a class="reference internal" href="tutorial_comm.html"><span class="doc">Tutorial 1: Communication</span></a> and <a class="reference internal" href="tutorial_ivcurve.html"><span class="doc">Tutorial 2: Basic Measurement</span></a> before this.</p>
+<p>Find the <code class="docutils literal notranslate"><span class="pre">examples/manual_op</span></code> directory in the mahos repository.
+We will use the files in it for this tutorial.
+You can copy this directory to somewhere in your computer if you want.</p>
 </section>
-<section id="instrument">
-<h2>Instrument<a class="headerlink" href="#instrument" title="Permalink to this heading">#</a></h2>
-<p>An instrument driver is implemented as a subclass of <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instrument</span></code></a>.
-The instrument should provide <a class="reference internal" href="inst/Instrument.html#instrument-api"><span class="std std-ref">Standard Instrument APIs</span></a> by overriding methods like <code class="docutils literal notranslate"><span class="pre">start()</span></code>.</p>
+<section id="running-the-mock">
+<h2>Running the mock<a class="headerlink" href="#running-the-mock" title="Permalink to this heading">#</a></h2>
+<p>In a terminal, <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">log</span></code> to show log messages.
+In another terminal, run all the nodes defined in our <code class="docutils literal notranslate"><span class="pre">conf.toml</span></code> by command <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span></code>.
+You will see two GUI windows popping out.
+These windows correspond to generic measurement nodes.
+One is <a class="reference internal" href="meas/generated/mahos.meas.tweaker.Tweaker.html#mahos.meas.tweaker.Tweaker" title="mahos.meas.tweaker.Tweaker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tweaker</span></code></a> for manual-tuning of instrument parameters.
+Another is <a class="reference internal" href="meas/generated/mahos.meas.recorder.Recorder.html#mahos.meas.recorder.Recorder" title="mahos.meas.recorder.Recorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Recorder</span></code></a> for simple time-series data collection.</p>
 </section>
-<section id="instrumentoverlay">
-<h2>InstrumentOverlay<a class="headerlink" href="#instrumentoverlay" title="Permalink to this heading">#</a></h2>
-<p><a class="reference internal" href="inst/InstrumentOverlay.html#mahos.inst.overlay.overlay.InstrumentOverlay" title="mahos.inst.overlay.overlay.InstrumentOverlay"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentOverlay</span></code></a> is a mechanism to define <cite>virtual instrument</cite> using multiple instruments.
-The role is similar to <a class="reference internal" href="arch_meas.html"><span class="doc">meas layer</span></a>; however, overlay works on the same process / thread with each instrument and has direct reference to the <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instrument</span></code></a> instances.
-Thus, core procedures should be implemented as overlay when it needs strictly synchronous behaviour or the best performance (in terms of latency).
-It is also useful to define application-specific parametrization or fundamental modification to single instrument.</p>
+<section id="tweaker">
+<h2>Tweaker<a class="headerlink" href="#tweaker" title="Permalink to this heading">#</a></h2>
+<p>TODO: explain <a class="reference internal" href="meas/generated/mahos.meas.tweaker.Tweaker.html#mahos.meas.tweaker.Tweaker" title="mahos.meas.tweaker.Tweaker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tweaker</span></code></a>.</p>
+<p>To use Tweaker, instrument must provide <a class="reference internal" href="arch_inst.html#inst-params-interface"><span class="std std-ref">ParamDict-based interface</span></a>,
+which is the counterpart to <a class="reference internal" href="arch_inst.html#inst-instrument-interface"><span class="std std-ref">InstrumentInterface</span></a> explaned in <a class="reference internal" href="tutorial_ivcurve.html"><span class="doc">Tutorial 2: Basic Measurement</span></a>.</p>
 </section>
-<section id="interfacing">
-<h2>Interfacing<a class="headerlink" href="#interfacing" title="Permalink to this heading">#</a></h2>
-<p>The <a class="reference internal" href="inst/Instrument.html#instrument-api"><span class="std std-ref">Standard Instrument APIs</span></a> is a primary interface between Instrument and the user code.
-However, one cannot understand the usage of <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.set" title="mahos.inst.instrument.Instrument.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set</span></code></a>,
-<a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.get" title="mahos.inst.instrument.Instrument.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get</span></code></a>, and <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.configure" title="mahos.inst.instrument.Instrument.configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure</span></code></a> from their signatures.
-Though this may be overcomed by the documentations, following two methods are provided for better interfacing.</p>
-<section id="instrumentinterface">
-<span id="inst-instrument-interface"></span><h3>InstrumentInterface<a class="headerlink" href="#instrumentinterface" title="Permalink to this heading">#</a></h3>
-<p>A “functional” interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
-<a class="reference internal" href="inst/InstrumentInterface.html#mahos.inst.interface.InstrumentInterface" title="mahos.inst.interface.InstrumentInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentInterface</span></code></a>.
-This is useful for interfacing with the codes (measurement logics in <a class="reference internal" href="arch_meas.html"><span class="doc">meas layer</span></a>), and configuration with small number of parameters.</p>
-</section>
-<section id="paramdict-based-interface">
-<span id="inst-params-interface"></span><h3>ParamDict-based interface<a class="headerlink" href="#paramdict-based-interface" title="Permalink to this heading">#</a></h3>
-<p>Another interface is “object-oriented” one.
-Instrument can report available parameters by returning a <a class="reference internal" href="msgs/param_msgs.html#mahos.msgs.param_msgs.ParamDict" title="mahos.msgs.param_msgs.ParamDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParamDict</span></code></a>
-from <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.get_param_dict" title="mahos.inst.instrument.Instrument.get_param_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_param_dict</span></code></a>.
-The users can modify the parameters in it, and send back with <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.configure" title="mahos.inst.instrument.Instrument.configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure</span></code></a>.
-This is useful if the number of parameters is large (so that providing as a method signature is cumbersome).
-Another benefit is that instrument can tell the bounds (minimum or maximum) of numeric parameters.
-<a class="reference internal" href="arch_meas.html#meas-tweaker"><span class="std std-ref">Tweaker</span></a> node assumes this interface.</p>
-</section>
-</section>
-<section id="lock-mechanism">
-<h2>Lock mechanism<a class="headerlink" href="#lock-mechanism" title="Permalink to this heading">#</a></h2>
-<p>It is dangerous if one client can operate an instrument while another client is using it.
-InstrumentServer has a lock mechanism to achieve exclusive <a class="reference internal" href="glossary.html#term-RPC"><span class="xref std std-term">RPC</span></a>;
-one client can prevent the other clients from operating an instrument by acquiring lock.
-The lock can be used for <a class="reference internal" href="#instrumentoverlay">InstrumentOverlay</a> as well.
-The lock for overlay is nearly equivalent to the locks for all the instruments referred by the overlay.
-An example is shown in the figure below.</p>
-<figure class="align-default" id="id1">
-<a class="reference internal image-reference" href="_images/mahos-instrument-lock.svg"><img alt="Example of lock operations on InstrumentServer" src="_images/mahos-instrument-lock.svg" width="90%" /></a>
-<figcaption>
-<p><span class="caption-text">Example of lock operations on InstrumentServer</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
-</figcaption>
-</figure>
-<p>As in (a), server1 has inst1, inst2, and inst3.
-The overlay1 refers to inst1 and inst2.
-The lock states are changed by request as follows.</p>
-<ul class="simple">
-<li><p>(a): Nothing is locked in initial state.</p></li>
-<li><p>(b): client1 sends a lock request for overlay1 (Lock(overlay1)), which succeeds as both inst1 and inst2 are free.</p></li>
-<li><p>(c): client2 sends Lock(inst3), which succeeds too.</p></li>
-<li><p>(d): client2 sends Lock(inst1), which fails because inst1 has been locked by client1 since (b).</p></li>
-<li><p>(e): client2 sends release request for overlay1 (Release(overlay1)); inst1 and inst2 are released.</p></li>
-<li><p>(f): client2 sends Lock(inst1) again, which succeeds this time.</p></li>
-</ul>
+<section id="recorder">
+<h2>Recorder<a class="headerlink" href="#recorder" title="Permalink to this heading">#</a></h2>
+<p>TODO: explain <a class="reference internal" href="meas/generated/mahos.meas.recorder.Recorder.html#mahos.meas.recorder.Recorder" title="mahos.meas.recorder.Recorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Recorder</span></code></a>.</p>
 </section>
 </section>
 
@@ -514,20 +478,20 @@ The lock states are changed by request as follows.</p>
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="arch_node.html"
+       href="tutorial_ivcurve.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Node, Client, and Communication</p>
+        <p class="prev-next-title">Tutorial 2: Basic Measurement</p>
       </div>
     </a>
     <a class="right-next"
-       href="arch_meas.html"
+       href="tutorial_next_steps.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">meas layer</p>
+        <p class="prev-next-title">Tutorial: Next Steps</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -549,21 +513,16 @@ The lock states are changed by request as follows.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentserver">InstrumentServer</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrument">Instrument</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentoverlay">InstrumentOverlay</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interfacing">Interfacing</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentinterface">InstrumentInterface</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paramdict-based-interface">ParamDict-based interface</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lock-mechanism">Lock mechanism</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preparation">Preparation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-mock">Running the mock</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tweaker">Tweaker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recorder">Recorder</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
   <div class="tocsection sourcelink">
-    <a href="_sources/arch_inst.rst.txt">
+    <a href="_sources/tutorial_manual_op.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

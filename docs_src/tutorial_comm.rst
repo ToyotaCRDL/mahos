@@ -1,6 +1,8 @@
 Tutorial 1: Communication
 =========================
 
+In this tutorial chapter, we will learn basic concepts about inter-process communication on mahos.
+
 Preparation
 -----------
 
@@ -32,7 +34,7 @@ You can test one-to-many communication by repeating ``mahos echo -t time clock``
 where you'd see the same output.
 Hit Ctrl-C in the terminals to stop them.
 
-Lets's see what was happening here.
+Let's see what was happening here.
 The first command ``mahos run clock`` was abbreviated form of ``mahos run -c conf.toml -H localhost clock`` or ``mahos run -c conf.toml localhost::clock``.
 ``localhost`` is a hostname (computer name).
 This will be important for multi-computer configuration,

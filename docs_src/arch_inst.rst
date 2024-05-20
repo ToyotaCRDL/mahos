@@ -32,6 +32,8 @@ However, one cannot understand the usage of :meth:`set <mahos.inst.instrument.In
 :meth:`get <mahos.inst.instrument.Instrument.get>`, and :meth:`configure <mahos.inst.instrument.Instrument.configure>` from their signatures.
 Though this may be overcomed by the documentations, following two methods are provided for better interfacing.
 
+.. _inst-instrument-interface:
+
 InstrumentInterface
 ^^^^^^^^^^^^^^^^^^^
 

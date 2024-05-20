@@ -633,7 +633,11 @@ document.write(`
 2. Place SDK native DLLs somewhere.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dll_dir</strong> (<em>str</em>) – The directory path containing SDK DLLs.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dll_dir</strong> (<em>str</em>) – The directory path containing SDK DLLs.</p></li>
+<li><p><strong>serial</strong> (<em>str</em>) – (default: “”) Serial string to discriminate multiple cameras.
+Blank is fine if only one Thorlabs camera is connected.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">

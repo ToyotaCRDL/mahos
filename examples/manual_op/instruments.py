@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
 import enum
 
 import numpy as np
@@ -52,7 +53,8 @@ class VoltageSource_mock(Instrument):
         if label in ("ch1", "ch2"):
             return self.configure_voltage(params.get("voltage", 0.0), label)
         else:
-            return self.fail_with(f"invalid label {label}")
+            self.logger.error(f"invalid label {label}")
+            return False
 
 
 class Multimeter_mock(Instrument):
@@ -136,7 +138,8 @@ class Multimeter_mock(Instrument):
         elif label == "voltage":
             return self.configure_voltage_meas(params.get("range", "auto"), params.get("navg", 1))
         else:
-            return self.fail_with(f"Unknown label: {label}")
+            self.logger.error(f"Unknown label: {label}")
+            return False
 
     def get(self, key: str, args=None, label: str = ""):
         if key == "data":
