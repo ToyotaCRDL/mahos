@@ -15,6 +15,7 @@ from ..msgs.inst.pg_msgs import Block, Blocks
 from ..inst.interface import InstrumentInterface
 from ..inst.pg_interface import PGInterface
 from ..inst.server import MultiInstrumentClient
+from ..util.conv import args_to_list
 
 
 class Worker(object):
@@ -59,16 +60,13 @@ class Worker(object):
         else:
             return True
 
-    def add_instrument(self, inst: InstrumentInterface):
-        self._instruments.append(inst)
-
     def add_instruments(self, *insts: InstrumentInterface | None):
         """Add instruments. If None is contained, it is silently ignored."""
 
-        self._instruments.extend([i for i in insts if i is not None])
+        self._instruments.extend([i for i in args_to_list(insts) if i is not None])
 
     def lock_instruments(self) -> bool:
-        """lock all the instruments registered by add_instrument[s]().
+        """lock all the instruments registered by add_instruments().
 
         :returns: True on success.
 
@@ -77,7 +75,7 @@ class Worker(object):
         return all([inst.lock() for inst in self._instruments])
 
     def release_instruments(self) -> bool:
-        """release all the instruments registered by add_instrument[s]().
+        """release all the instruments registered by add_instruments().
 
         :returns: True on success.
 
@@ -132,7 +130,7 @@ class PulseGen_CW(Worker):
     def __init__(self, cli, logger):
         Worker.__init__(self, cli, logger)
         self.pg = PGInterface(cli, "pg")
-        self.add_instrument(self.pg)
+        self.add_instruments(self.pg)
         self.running = False
 
     def start(self) -> bool:
@@ -177,7 +175,7 @@ class Switch(Worker):
     def __init__(self, cli, logger, command_name):
         Worker.__init__(self, cli, logger)
         self.switch = InstrumentInterface(cli, "switch")
-        self.add_instrument(self.switch)
+        self.add_instruments(self.switch)
 
         self.command_name = command_name
         self.running = False

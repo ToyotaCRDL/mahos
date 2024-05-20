@@ -61,7 +61,7 @@ class ISweeperOverlay(ISweeperBase):
     def __init__(self, cli, logger):
         Worker.__init__(self, cli, logger)
         self.sweeper = IODMRSweeperInterface(cli, "isweeper")
-        self.add_instrument(self.sweeper)
+        self.add_instruments(self.sweeper)
 
         self.data = IODMRData()
 

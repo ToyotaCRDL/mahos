@@ -24,7 +24,7 @@ class Repeater(Worker):
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger)
         self.spectrometer = SpectrometerInterface(cli, "spectrometer")
-        self.add_instrument(self.spectrometer)
+        self.add_instruments(self.spectrometer)
 
         self.data = SpectroscopyData()
 

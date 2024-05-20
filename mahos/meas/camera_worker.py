@@ -25,7 +25,7 @@ class Poller(Worker):
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger)
         self.camera = CameraInterface(cli, "camera")
-        self.add_instrument(self.camera)
+        self.add_instruments(self.camera)
 
         self._transform_conf = conf
 

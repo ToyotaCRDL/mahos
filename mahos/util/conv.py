@@ -32,6 +32,25 @@ K = T.TypeVar("K")
 V = T.TypeVar("V")
 
 
+def args_to_list(args: tuple[list[V] | tuple[V, ...]] | list[V] | tuple[V, ...] | V) -> list[V]:
+    """Convert possibly nested (dim = 2) / raw (dim = 0) arguments to list of values (dim = 1).
+
+    Useful for functions accepting variable-length args (*args).
+    Conversion examples:
+    - [[v0, v1, ...]] -> [v0, v1, ...]
+    - [v0, v1, ...] -> [v0, v1, ...]
+    - v0 -> [v0]
+
+    """
+
+    if len(args) == 1:
+        if isinstance(args[0], (list, tuple)):
+            return list(args[0])
+        else:
+            return [args[0]]
+    return args
+
+
 def invert_mapping(d: T.Mapping[K, V]) -> dict[V, list[K]]:
     """Invert given mapping.
 

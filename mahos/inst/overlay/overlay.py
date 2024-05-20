@@ -11,6 +11,7 @@ Base class InstrumentOverlay for the instrument overlay.
 from __future__ import annotations
 
 from ..instrument import Instrument
+from ...util.conv import args_to_list
 
 
 class InstrumentOverlay(Instrument):
@@ -34,15 +35,10 @@ class InstrumentOverlay(Instrument):
         Instrument.__init__(self, name, conf, prefix)
         self._instruments: list[Instrument] = []
 
-    def add_instrument(self, inst: Instrument):
-        """Add instrument."""
-
-        self._instruments.append(inst)
-
     def add_instruments(self, *insts: Instrument | None):
         """Add instruments. If None is contained, it is silently ignored."""
 
-        self._instruments.extend([i for i in insts if i is not None])
+        self._instruments.extend([i for i in args_to_list(insts) if i is not None])
 
     def is_closed(self) -> bool:
         if self._closed:

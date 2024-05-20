@@ -24,7 +24,7 @@ class Collector(Worker):
 
         self.interval_sec = conf.get("interval_sec", 0.1)
         self.insts = self.cli.insts()
-        self.add_instruments(*[InstrumentInterface(self.cli, inst) for inst in self.insts])
+        self.add_instruments([InstrumentInterface(self.cli, inst) for inst in self.insts])
         self.used_insts = []
 
         self.mode_inst_label = mode or {"all": {inst: "" for inst in self.insts}}

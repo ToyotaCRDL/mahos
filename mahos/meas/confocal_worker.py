@@ -29,7 +29,7 @@ class Piezo(Worker):
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger)
         self.piezo = PiezoInterface(cli, "piezo")
-        self.add_instrument(self.piezo)
+        self.add_instruments(self.piezo)
 
         self.interval_sec = conf.get("interval_sec", 0.5)
 
@@ -276,7 +276,7 @@ class Scanner(Worker):
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger)
         self.scanner = ConfocalScannerInterface(cli, "scanner")
-        self.add_instrument(self.scanner)
+        self.add_instruments(self.scanner)
         self._conf = conf
 
         self.image = Image()

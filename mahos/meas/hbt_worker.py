@@ -24,7 +24,7 @@ class Listener(Worker):
         self.load_conf_preset(cli)
 
         self.tdc = TDCInterface(cli, "tdc")
-        self.add_instrument(self.tdc)
+        self.add_instruments(self.tdc)
 
         self.interval_sec = conf.get("interval_sec", 1.0)
         self.tdc_correlation = self.conf.get("tdc_correlation", False)

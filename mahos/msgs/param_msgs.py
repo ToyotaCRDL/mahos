@@ -32,6 +32,7 @@ import h5py
 from .common_msgs import Request
 from ..util.unit import SI_scale
 from ..util.comp import dict_isclose, has_compatible_types
+from ..util.conv import args_to_list
 
 
 LABEL_DELIM = "::"
@@ -584,45 +585,36 @@ class GetParamDictLabelsReq(Request):
     pass
 
 
-def join_labels(*labels: list[str]) -> str:
-    if len(labels) == 1 and isinstance(labels[0], (list, tuple)):
-        return LABEL_DELIM.join(labels[0])
-    return LABEL_DELIM.join(labels)
+def join_labels(*labels: str) -> str:
+    return LABEL_DELIM.join(args_to_list(labels))
 
 
 def split_label(label: str) -> list[str]:
     return label.split(LABEL_DELIM)
 
 
-def _labels_arg(labels):
-    if len(labels) == 1 and isinstance(labels[0], (list, tuple)):
-        return labels[0]
-    else:
-        return labels
-
-
-def prefix_labels(prefix: str, *labels: list[str]) -> list[str]:
+def prefix_labels(prefix: str, *labels: str) -> list[str]:
     """prefix given labels."""
 
-    return [join_labels(prefix, l) for l in _labels_arg(labels)]
+    return [join_labels(prefix, l) for l in args_to_list(labels)]
 
 
-def filter_label_prefix(prefix: str, *labels: list[str]) -> list[str]:
+def filter_label_prefix(prefix: str, *labels: str) -> list[str]:
     """return only labels with prefix. prefix is removed from returned labels."""
 
     ret = []
-    for l in _labels_arg(labels):
+    for l in args_to_list(labels):
         s = split_label(l)
         if s[0] == prefix:
             ret.append(join_labels(s[1:]))
     return ret
 
 
-def filter_out_label_prefix(prefix: str, *labels: list[str]) -> list[str]:
+def filter_out_label_prefix(prefix: str, *labels: str) -> list[str]:
     """return only labels without given prefix."""
 
     ret = []
-    for l in _labels_arg(labels):
+    for l in args_to_list(labels):
         s = split_label(l)
         if s[0] != prefix:
             ret.append(l)
