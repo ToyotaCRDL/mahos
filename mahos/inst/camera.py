@@ -31,6 +31,9 @@ class ThorlabsCamera(Instrument):
 
     :param dll_dir: The directory path containing SDK DLLs.
     :type dll_dir: str
+    :param serial: (default: "") Serial string to discriminate multiple cameras.
+        Blank is fine if only one Thorlabs camera is connected.
+    :type serial: str
 
     """
 
@@ -46,12 +49,34 @@ class ThorlabsCamera(Instrument):
 
         self.sdk = TLCameraSDK()
         cameras = self.sdk.discover_available_cameras()
+
         if not cameras:
             self.logger.error("No camera detected.")
             raise ValueError("No camera detected.")
+        if len(cameras) == 1:
+            if "serial" in self.conf and self.conf["serial"] != cameras[0]:
+                self.logger.warn(
+                    "Given serial {} looks wrong. Opening available one {} anyway.".format(
+                        self.conf["serial"], cameras[0]
+                    )
+                )
+            self.camera = self.sdk.open_camera(cameras[0])
+            self.logger.info(f"Opened camera {self.camera.model} ({cameras[0]})")
+        else:
+            if "serial" not in self.conf:
+                msg = "Must specify conf['serial'] as multiple cameras are detected."
+                msg += "\nAvailable serials: " + ", ".join(cameras)
+                self.logger.error(msg)
+                raise ValueError(msg)
+            if self.conf["serial"] not in cameras:
+                msg = "Specified serial {} is not available. (not in ({}))".format(
+                    self.conf["serial"], ", ".join(cameras)
+                )
+                self.logger.error(msg)
+                raise ValueError(msg)
+            self.camera = self.sdk.open_camera(self.conf["serial"])
+            self.logger.info(f"Opened camera {self.camera.model} ({self.conf['serial']})")
 
-        # TODO: multiple cameras
-        self.camera = self.sdk.open_camera(cameras[0])
         self._mode = None
         self._queue_size = self.conf.get("queue_size", 8)
         self._queue = LockedQueue(self._queue_size)
