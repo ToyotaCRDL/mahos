@@ -100,15 +100,24 @@ class Thorlabs_KCube_DCServo(Instrument):
             Decimal.ToDouble(self.device.AdvancedMotorLimits.LengthMaximum),
         ]
         self.logger.info(f"Limits: {self.limits[0]:.3f} {self.limits[1]:.3f}")
+        self.range = self.conf.get("range", self.limits)
+        if self.range[0] < self.limits[0]:
+            msg = f"Given range is out of limit: {self.range[0]} < {self.limits[0]}"
+            self.logger.error(msg)
+            raise ValueError(msg)
+        if self.range[1] > self.limits[1]:
+            msg = f"Given range is out of limit: {self.range[1]} > {self.limits[1]}"
+            self.logger.error(msg)
+            raise ValueError(msg)
 
         if self.is_homed():
             # move to current position to update target pos (self.device.TargetPosition).
             # (target pos becomes always 0 after establishing new connection.)
             self.move(self.get_pos())
-            target = self.get_target_pos()
+            target = self.get_target()
             self.logger.info(f"Device is homed. Current target pos: {target:.3f}")
         else:
-            # after homing target pos will be 0 and it's gonna be fine.
+            # target being 0 is fine because homing will be performed later.
             self.logger.warn("Device is not homed. Homing is necessary.")
 
     def done_callback(self, task_id: int):
@@ -137,6 +146,9 @@ class Thorlabs_KCube_DCServo(Instrument):
         return True
 
     def move(self, pos: float) -> bool:
+        if not self.is_homed():
+            return self.fail_with("Cannot move because this device has not been homed yet.")
+
         try:
             with self.lock:
                 self.task_id = self.device.MoveTo(Decimal(pos), Action[UInt64](self.done_callback))
@@ -150,7 +162,7 @@ class Thorlabs_KCube_DCServo(Instrument):
     def get_pos(self) -> float:
         return Decimal.ToDouble(self.device.Position)
 
-    def get_target_pos(self) -> float:
+    def get_target(self) -> float:
         return Decimal.ToDouble(self.device.TargetPosition)
 
     def get_status(self) -> dict:
@@ -159,10 +171,31 @@ class Thorlabs_KCube_DCServo(Instrument):
         # IsInMotion and IsMoving looks same.
         return {
             "homed": self.device.Status.IsHomed,
-            "in_motion": self.device.Status.IsInMotion,
             "moving": self.device.Status.IsMoving,
+            # "in_motion": self.device.Status.IsInMotion,
             # "settled": self.device.Status.IsSettled,
         }
+
+    def get_all(self) -> dict[str, [float, bool]]:
+        """Get all important info about this device packed in a dict.
+
+        :returns pos: current position.
+        :returns target: target position.
+        :returns range: travel range.
+        :returns homed: True if device is homed.
+        :returns moving: True if device is moving.
+
+        """
+
+        d = self.get_status()
+        d["pos"] = self.get_pos()
+        d["target"] = self.get_target()
+        d["range"] = self.get_range()
+
+        return d
+
+    def get_range(self) -> tuple[float, float]:
+        return self.range
 
     def is_homed(self) -> bool:
         return self.device.Status.IsHomed
@@ -182,15 +215,15 @@ class Thorlabs_KCube_DCServo(Instrument):
         return self.home()
 
     def get_param_dict_labels(self) -> list[str]:
-        return ["position"]
+        return ["pos"]
 
     def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
         """Get ParamDict for `label`."""
 
-        if label == "position":
+        if label == "pos":
             return P.ParamDict(
                 target=P.FloatParam(
-                    self.get_target_pos(), self.limits[0], self.limits[1], doc="target position"
+                    self.get_target(), self.limits[0], self.limits[1], doc="target position"
                 )
             )
         else:
@@ -204,10 +237,16 @@ class Thorlabs_KCube_DCServo(Instrument):
             return self.fail_with(f"unknown set() key: {key}")
 
     def get(self, key: str, args=None, label: str = ""):
-        if key == "pos":
+        if key == "all":
+            return self.get_all()
+        elif key == "pos":
             return self.get_pos()
+        elif key == "target":
+            return self.get_target()
         elif key == "status":
             return self.get_status()
+        elif key == "range":
+            return self.get_range()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
