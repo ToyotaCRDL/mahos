@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Qt signal-based client of PositionTweaker.
+Qt signal-based client of PosTweaker.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -12,17 +12,17 @@ from __future__ import annotations
 
 from .Qt import QtCore
 
-from ..msgs.position_tweaker_msgs import PositionTweakerStatus, SetTargetReq
-from ..msgs.position_tweaker_msgs import HomeReq, HomeAllReq, LoadReq
+from ..msgs.pos_tweaker_msgs import PosTweakerStatus, SetTargetReq
+from ..msgs.pos_tweaker_msgs import HomeReq, HomeAllReq, LoadReq
 from ..msgs.tweaker_msgs import SaveReq
 from ..node.node import get_value
 from .client import QStatusSubscriber
 
 
-class QPositionTweakerClient(QStatusSubscriber):
-    """Qt-based client for PositionTweaker."""
+class QPosTweakerClient(QStatusSubscriber):
+    """Qt-based client for PosTweaker."""
 
-    statusUpdated = QtCore.pyqtSignal(PositionTweakerStatus)
+    statusUpdated = QtCore.pyqtSignal(PosTweakerStatus)
 
     def __init__(self, gconf: dict, name, context=None, parent=None, rep_endpoint="rep_endpoint"):
         QStatusSubscriber.__init__(self, gconf, name, context=context, parent=parent)

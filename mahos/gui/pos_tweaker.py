@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-GUI frontend for PositionTweaker.
+GUI frontend for PosTweaker.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -14,9 +14,9 @@ from .Qt import QtWidgets, QtGui
 
 # from .Qt import QtCore
 
-from ..msgs.position_tweaker_msgs import PositionTweakerStatus
+from ..msgs.pos_tweaker_msgs import PosTweakerStatus
 from ..node.global_params import GlobalParamsClient
-from .position_tweaker_client import QPositionTweakerClient
+from .pos_tweaker_client import QPosTweakerClient
 from .gui_node import GUINode
 from .common_widget import ClientTopWidget
 from ..node.node import local_conf, join_name
@@ -43,7 +43,7 @@ class AxisWidgets(object):
         self.homed_label = homed_label
 
     def fmt_pos(self, target: float, pos: float):
-        return f"{pos:.3f} (target: {target:.3f})"
+        return f"{pos:.3f} ({target:.3f})"
 
     def fmt_moving(self, moving: bool):
         return "Moving" if moving else "Stopped"
@@ -54,20 +54,21 @@ class AxisWidgets(object):
     def update(self, state: dict[str, [float, bool]]):
         self.pos_label.setText(self.fmt_pos(state["target"], state["pos"]))
         self.moving_label.setText(self.fmt_moving(state["moving"]))
-        self.homed_label.setText(self.fmt_moving(state["homed"]))
+        self.homed_label.setText(self.fmt_homed(state["homed"]))
 
 
-class PositionTweakerWidget(ClientTopWidget):
+class PosTweakerWidget(ClientTopWidget):
     """Top widget for DigitalOutGUI"""
 
     def __init__(self, gconf: dict, name, gparams_name, verbose, fontsize, context):
         ClientTopWidget.__init__(self)
-        self.setWindowTitle(f"MAHOS.PositionTweakerGUI ({join_name(name)})")
+        self.setWindowTitle(f"MAHOS.PosTweakerGUI ({join_name(name)})")
 
         self._fontsize = fontsize
         self._widgets = {}
+        self._group_name = "__" + name + "__"
 
-        self.cli = QPositionTweakerClient(gconf, name, context=context)
+        self.cli = QPosTweakerClient(gconf, name, context=context)
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -92,7 +93,7 @@ class PositionTweakerWidget(ClientTopWidget):
 
         self.setEnabled(False)
 
-    def init_with_status(self, status: PositionTweakerStatus):
+    def init_with_status(self, status: PosTweakerStatus):
         """initialize widget after receiving first status."""
 
         # only once.
@@ -101,8 +102,9 @@ class PositionTweakerWidget(ClientTopWidget):
         for i, (ax, state) in enumerate(status.axis_states.items()):
             label = QtWidgets.QLabel(ax)
             pos_label = QtWidgets.QLabel()
-            target_box = QtWidgets.QDoubleSpinBox(state["target"])
+            target_box = QtWidgets.QDoubleSpinBox()
             range_min, range_max = state["range"]
+            target_box.setValue(state["target"])
             target_box.setMinimum(range_min)
             target_box.setMaximum(range_max)
             target_box.setDecimals(3)
@@ -116,7 +118,6 @@ class PositionTweakerWidget(ClientTopWidget):
             self._widgets[ax] = AxisWidgets(
                 pos_label,
                 target_box,
-                set_target_button,
                 moving_label,
                 homed_label,
             )
@@ -146,7 +147,7 @@ class PositionTweakerWidget(ClientTopWidget):
     # def sizeHint(self):
     #     return QtCore.QSize(500, 1000)
 
-    def update(self, status: PositionTweakerStatus):
+    def update(self, status: PosTweakerStatus):
         for ax, state in status.axis_states.items():
             self._widgets[ax].update(state)
 
@@ -162,7 +163,7 @@ class PositionTweakerWidget(ClientTopWidget):
 
     def request_save(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = save_dialog(self, default_path, "PositionTweaker", ".ptweak")
+        fn = save_dialog(self, default_path, "PosTweaker", ".ptweak")
         if not fn:
             return
 
@@ -170,25 +171,25 @@ class PositionTweakerWidget(ClientTopWidget):
 
     def request_load(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = load_dialog(self, default_path, "PositionTweaker or measurement", "")
+        fn = load_dialog(self, default_path, "PosTweaker or measurement", "")
         if not fn:
             return
         if fn.endswith(".ptweak.h5"):
-            # data in individual file for PositionTweaker
+            # data in individual file for PosTweaker
             group = ""
         else:
             # data written within measurement Data
             group = self._group_name
 
-        self.update_all(self.cli.load(fn, group))
+        self.cli.load(fn, group)
 
 
-class PositionTweakerGUI(GUINode):
+class PosTweakerGUI(GUINode):
     def init_widget(self, gconf: dict, name, context):
         lconf = local_conf(gconf, name)
         target = lconf["target"]
         verbose = lconf.get("verbose", True)
         fontsize = lconf.get("fontsize", 26)
-        return PositionTweakerWidget(
-            gconf, target["position_tweaker"], target["gparams"], verbose, fontsize, context
+        return PosTweakerWidget(
+            gconf, target["pos_tweaker"], target["gparams"], verbose, fontsize, context
         )

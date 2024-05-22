@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Message Types for the PositionTweaker.
+Message Types for the PosTweaker.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -14,15 +14,15 @@ from pprint import pformat
 from .common_msgs import Request, Status
 
 
-class PositionTweakerStatus(Status):
+class PosTweakerStatus(Status):
     def __init__(self, axis_states: dict[str, dict[str, [float, bool]]]):
         self.axis_states = axis_states
 
     def __repr__(self):
-        return f"PositionTweakerStatus({self.axis_states})"
+        return f"PosTweakerStatus({self.axis_states})"
 
     def __str__(self):
-        return "PositionTweaker->axis_states:\n" + pformat(self.axis_states)
+        return "PosTweaker->axis_states:\n" + pformat(self.axis_states)
 
 
 class SetTargetReq(Request):
@@ -43,6 +43,7 @@ class HomeAllReq(Request):
     """Perform homing of all the axis."""
 
     pass
+
 
 class SaveReq(Request):
     """Save current states to a file"""

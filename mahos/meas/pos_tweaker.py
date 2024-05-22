@@ -14,9 +14,9 @@ import os
 import h5py
 
 from ..msgs.common_msgs import Reply
-from ..msgs import position_tweaker_msgs
-from ..msgs.position_tweaker_msgs import PositionTweakerStatus, SetTargetReq
-from ..msgs.position_tweaker_msgs import HomeReq, HomeAllReq, LoadReq
+from ..msgs import pos_tweaker_msgs
+from ..msgs.pos_tweaker_msgs import PosTweakerStatus, SetTargetReq
+from ..msgs.pos_tweaker_msgs import HomeReq, HomeAllReq, LoadReq
 from ..msgs.tweaker_msgs import SaveReq
 from ..node.node import Node
 from ..node.client import StatusClient
@@ -24,14 +24,14 @@ from ..inst.server import MultiInstrumentClient
 from ..inst.positioner_interface import SinglePositionerInterface
 
 
-class PositionTweakerClient(StatusClient):
-    """Simple PositionTweaker Client.
+class PosTweakerClient(StatusClient):
+    """Simple PosTweaker Client.
 
     tweaker.TweakSaver can be used to use only save() function.
 
     """
 
-    M = position_tweaker_msgs
+    M = pos_tweaker_msgs
 
     def set_target(self, axis_pos: dict[str, float]) -> bool:
         rep = self.req.request(SetTargetReq(axis_pos))
@@ -54,10 +54,10 @@ class PositionTweakerClient(StatusClient):
         return rep.success
 
 
-class PositionTweaker(Node):
+class PosTweaker(Node):
     """Generic tweaker for manually-tunable Instrument's ParamDicts."""
 
-    CLIENT = PositionTweakerClient
+    CLIENT = PosTweakerClient
 
     def __init__(self, gconf: dict, name, context=None):
         Node.__init__(self, gconf, name, context=context)
@@ -171,7 +171,7 @@ class PositionTweaker(Node):
             self._axis_states[ax].update(d)
 
     def _publish(self):
-        s = PositionTweakerStatus(axis_states=self._axis_states)
+        s = PosTweakerStatus(axis_states=self._axis_states)
         self.status_pub.publish(s)
 
     def main(self):
