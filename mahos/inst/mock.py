@@ -928,6 +928,7 @@ class Positioner_mock(Instrument):
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
         self.range = self.conf.get("range", [0.0, 10.0])
+        self.pos = 0.0
         self.target = 0.0
         self.homed = False
         self.moving = False

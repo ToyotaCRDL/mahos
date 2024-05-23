@@ -8,6 +8,7 @@ GUI frontend for PosTweaker.
 
 """
 
+from __future__ import annotations
 from functools import partial
 
 from .Qt import QtWidgets, QtGui

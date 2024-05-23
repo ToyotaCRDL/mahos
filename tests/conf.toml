@@ -457,8 +457,8 @@ tweaker = "localhost::tweaker2"
 gparams = "localhost::gparams"
 
 [localhost.pos_tweaker_gui]
-module = "mahos.gui.tweaker"
-class = "TweakerGUI"
+module = "mahos.gui.pos_tweaker"
+class = "PosTweakerGUI"
 [localhost.pos_tweaker_gui.target]
 pos_tweaker = "localhost::pos_tweaker"
 gparams = "localhost::gparams"
