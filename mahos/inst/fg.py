@@ -78,6 +78,8 @@ class DG2000(VisaInstrument):
         self._freq_bounds = {}
         self.update_all_bounds()
 
+        self._align_phase = True
+
         self.ext_ref_clock = self.conf.get("ext_ref_clock", False)
         self.set_reference_clock(bool(self.ext_ref_clock))
 
@@ -398,15 +400,39 @@ class DG2000(VisaInstrument):
             success &= self.set_output_impedance(params["ch1_imp"], 1)
         if "ch2_imp" in params:
             success &= self.set_output_impedance(params["ch2_imp"], 2)
-        if "ch1" in params:
-            success &= self.set_output(params["ch1"], 1)
-        if "ch2" in params:
-            success &= self.set_output(params["ch2"], 2)
-        if all([params.get(k) for k in ["ch1", "ch2", "align_phase"]]):
-            success &= self.align_phase()
+        if "align_phase" in params:
+            self._align_phase = params["align_phase"]
+            self.logger.info(f"Phase alignment: {self._align_phase}")
         return success
 
     # Standard API
+
+    def start(self, label: str = "") -> bool:
+        if label.startswith("ch1"):
+            success = self.set_output(True, 1)
+            both_on = self.get_output(2)
+        elif label.startswith("ch2"):
+            success = self.set_output(True, 2)
+            both_on = self.get_output(1)
+        else:
+            return self.fail_with(f"Unknown label {label} to start")
+
+        if not success:
+            return False
+
+        # execute phase alignment if both channel has been turned on.
+        if both_on and self._align_phase:
+            return self.align_phase()
+        else:
+            return True
+
+    def stop(self, label: str = "") -> bool:
+        if label.startswith("ch1"):
+            return self.set_output(False, 1)
+        elif label.startswith("ch2"):
+            return self.set_output(False, 2)
+        else:
+            return self.fail_with(f"Unknown label {label} to stop")
 
     def reset(self, label: str = "") -> bool:
         success = self.rst_cls()
@@ -439,10 +465,15 @@ class DG2000(VisaInstrument):
             return self.fail_with("Unknown set() key.")
 
     def _cw_param_dict(self, ch: int):
+        func = self.get_function(ch)
+        functions = ("SIN", "SQU")
+        if func not in functions:
+            func = "SIN"
+
         return P.ParamDict(
             wave=P.StrChoiceParam(
-                self.get_function(ch),
-                ("SIN", "SQU"),
+                func,
+                functions,
                 doc="wave form",
             ),
             freq=P.FloatParam(
@@ -469,9 +500,9 @@ class DG2000(VisaInstrument):
     def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
         """Get ParamDict for `label`."""
 
-        if label == "cw_ch1":
+        if label == "ch1_cw":
             return self._cw_param_dict(1)
-        elif label == "cw_ch2":
+        elif label == "ch2_cw":
             return self._cw_param_dict(2)
         elif label == "output":
             return P.ParamDict(
@@ -489,14 +520,15 @@ class DG2000(VisaInstrument):
                     unit="Ω",
                     doc=f"Set maximum ({self.OUTPUT_HighZ}) for HighZ",
                 ),
-                ch1=P.BoolParam(self.get_output(1)),
-                ch2=P.BoolParam(self.get_output(2)),
                 align_phase=P.BoolParam(True),
             )
+        else:
+            self.logger.error(f"Invalid label {label}")
+            return None
 
     def get_param_dict_labels(self) -> list[str]:
         # "gate" and "cw" doesn't provide ParamDict
-        return ["cw_ch1", "cw_ch2", "output"]
+        return ["ch1_cw", "ch2_cw", "output"]
 
     def configure(self, params: dict, label: str = "") -> bool:
         params = P.unwrap(params)
@@ -526,7 +558,7 @@ class DG2000(VisaInstrument):
                 ch=params.get("ch", 1),
                 reset=params.get("reset", False),
             )
-        elif label == "cw_ch1":
+        elif label == "ch1_cw":
             return self.configure_CW(
                 params.get("wave"),
                 params.get("freq"),
@@ -535,7 +567,7 @@ class DG2000(VisaInstrument):
                 ch=1,
                 reset=False,
             )
-        elif label == "cw_ch2":
+        elif label == "ch2_cw":
             return self.configure_CW(
                 params.get("wave"),
                 params.get("freq"),
