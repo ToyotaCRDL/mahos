@@ -102,7 +102,7 @@ class Thorlabs_KCube_DCServo(Instrument):
             Decimal.ToDouble(self.device.AdvancedMotorLimits.LengthMinimum),
             Decimal.ToDouble(self.device.AdvancedMotorLimits.LengthMaximum),
         ]
-        self.logger.info(f"Limits: {self.limits[0]:.3f} {self.limits[1]:.3f}")
+        self.logger.debug(f"limits: {self.limits[0]:.3f} {self.limits[1]:.3f}")
         self.range = self.conf.get("range", self.limits)
         if self.range[0] < self.limits[0]:
             msg = f"Given range is out of limit: {self.range[0]} < {self.limits[0]}"
@@ -112,6 +112,7 @@ class Thorlabs_KCube_DCServo(Instrument):
             msg = f"Given range is out of limit: {self.range[1]} > {self.limits[1]}"
             self.logger.error(msg)
             raise ValueError(msg)
+        self.logger.info(f"range: {self.range[0]:.3f} {self.range[1]:.3f}")
 
         if self.is_homed():
             # move to current position to update target pos (self.device.TargetPosition).
@@ -139,7 +140,7 @@ class Thorlabs_KCube_DCServo(Instrument):
         try:
             with self.lock:
                 self.task_id = self.device.Home(Action[UInt64](self.done_callback))
-                self.logger.info(f"New task home: {self.task_id}")
+                self.logger.info(f"New task {self.task_id} (home)")
             return True
         except DeviceManagerCLI.DeviceMovingException:
             return self.fail_with("Cannot move because device is already moving.")
@@ -157,12 +158,12 @@ class Thorlabs_KCube_DCServo(Instrument):
         try:
             with self.lock:
                 self.task_id = self.device.MoveTo(Decimal(pos), Action[UInt64](self.done_callback))
-                self.logger.info(f"New task move to {pos:.3f}: {self.task_id}")
+                self.logger.info(f"New task {self.task_id} (move to {pos:.3f})")
                 return True
         except DeviceManagerCLI.DeviceMovingException:
             return self.fail_with("Cannot move because device is already moving.")
         except DeviceManagerCLI.MoveToInvalidPositionException:
-            return self.fail_with(f"Cannot move because position {pos:.3f} is out of bound.")
+            return self.fail_with(f"Cannot move because position {pos:.3f} is out of limit.")
 
     def get_pos(self) -> float:
         return Decimal.ToDouble(self.device.Position)
