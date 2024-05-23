@@ -1,0 +1,42 @@
+﻿mahos.inst.positioner.Thorlabs\_KCube\_DCServo
+==============================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.positioner
+
+.. autoclass:: Thorlabs_KCube_DCServo
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Thorlabs_KCube_DCServo.__init__
+      ~Thorlabs_KCube_DCServo.close_resources
+      ~Thorlabs_KCube_DCServo.done_callback
+      ~Thorlabs_KCube_DCServo.get
+      ~Thorlabs_KCube_DCServo.get_all
+      ~Thorlabs_KCube_DCServo.get_param_dict
+      ~Thorlabs_KCube_DCServo.get_param_dict_labels
+      ~Thorlabs_KCube_DCServo.get_pos
+      ~Thorlabs_KCube_DCServo.get_range
+      ~Thorlabs_KCube_DCServo.get_status
+      ~Thorlabs_KCube_DCServo.get_target
+      ~Thorlabs_KCube_DCServo.home
+      ~Thorlabs_KCube_DCServo.home_wait
+      ~Thorlabs_KCube_DCServo.is_homed
+      ~Thorlabs_KCube_DCServo.move
+      ~Thorlabs_KCube_DCServo.move_wait
+      ~Thorlabs_KCube_DCServo.reset
+      ~Thorlabs_KCube_DCServo.set
+   
+   
+
+   
+   
+   

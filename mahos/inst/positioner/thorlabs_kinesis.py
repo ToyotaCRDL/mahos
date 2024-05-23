@@ -42,6 +42,9 @@ class Thorlabs_KCube_DCServo(Instrument):
     :param serial: (default: "") Serial string to discriminate multiple devices.
         Blank is fine if only one device is connected.
     :type serial: str
+    :param range: (default: hardware-defined limit) travel range.
+        (lower, upper) bounds of the position.
+    :type range: tuple[float, float]
 
     """
 

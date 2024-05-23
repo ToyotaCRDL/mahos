@@ -59,7 +59,7 @@ class PosTweakerClient(StatusClient):
 
 
 class PosTweaker(Node):
-    """Generic tweaker for manually-tunable Instrument's ParamDicts."""
+    """Specialized tweaker for manually operated positioners."""
 
     CLIENT = PosTweakerClient
 

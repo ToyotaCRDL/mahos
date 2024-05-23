@@ -22,6 +22,7 @@ Instrument modules
    pd
    pg
    piezo
+   positioner
    power_sensor
    sg
    spectrometer

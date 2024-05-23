@@ -14,6 +14,7 @@ The mahos.meas package provides high-level measurement logics.
    common_meas.BasicMeasNode
    state_manager.StateManager
    tweaker.Tweaker
+   pos_tweaker.PosTweaker
    recorder.Recorder
    confocal.Confocal
    confocal_tracker.ConfocalTracker
