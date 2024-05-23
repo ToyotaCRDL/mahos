@@ -33,6 +33,10 @@ class PosTweakerClient(StatusClient):
 
     M = pos_tweaker_msgs
 
+    # override for annotation
+    def get_status(self) -> PosTweakerStatus:
+        return self._get_status()
+
     def set_target(self, axis_pos: dict[str, float]) -> bool:
         rep = self.req.request(SetTargetReq(axis_pos))
         return rep.success

@@ -922,3 +922,75 @@ class DMM_mock(Instrument):
             return True
         else:  # UNCONFIGURED
             return self.fail_with("stop() is called but not configured.")
+
+
+class Positioner_mock(Instrument):
+    def __init__(self, name, conf=None, prefix=None):
+        Instrument.__init__(self, name, conf=conf, prefix=prefix)
+        self.range = self.conf.get("range", [0.0, 10.0])
+        self.target = 0.0
+        self.homed = False
+        self.moving = False
+
+    def move(self, pos: float) -> bool:
+        if pos < self.range[0] or pos > self.range[1]:
+            return self.fail_with(f"Target pos {pos:.3f} is out of range {self.range}.")
+        self.target = pos
+        self.pos = pos
+        return True
+
+    def get_status(self) -> dict:
+        return {
+            "homed": self.homed,
+            "moving": self.moving,
+        }
+
+    def get_all(self) -> dict[str, [float, bool]]:
+        d = self.get_status()
+        d["pos"] = self.pos
+        d["target"] = self.target
+        d["range"] = self.range
+
+        return d
+
+    def reset(self, label: str = "") -> bool:
+        #  Homing (zero-point adjustment) of the positioner
+        self.homed = True
+        return True
+
+    def get_param_dict_labels(self) -> list[str]:
+        return ["pos"]
+
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label`."""
+
+        if label == "pos":
+            return P.ParamDict(
+                target=P.FloatParam(
+                    self.get_target(), self.limits[0], self.limits[1], doc="target position"
+                )
+            )
+        else:
+            self.logger.error(f"Unknown label: {label}")
+            return None
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        if key == "target":
+            return self.move(value)
+        else:
+            return self.fail_with(f"unknown set() key: {key}")
+
+    def get(self, key: str, args=None, label: str = ""):
+        if key == "all":
+            return self.get_all()
+        elif key == "pos":
+            return self.pos
+        elif key == "target":
+            return self.target
+        elif key == "status":
+            return self.get_status()
+        elif key == "range":
+            return self.get_range()
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None

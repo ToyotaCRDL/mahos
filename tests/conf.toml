@@ -122,6 +122,14 @@ class = "DMM_mock"
 [localhost.server.instrument.dmm3.conf]
 bias = 3.0
 
+[localhost.server.instrument.pos_x]
+module = "mock"
+class = "Positioner_mock"
+
+[localhost.server.instrument.pos_y]
+module = "mock"
+class = "Positioner_mock"
+
 [localhost.server.instrument_overlay.scanner]
 module = "confocal_scanner_mock"
 class = "ConfocalScanner_mock"
@@ -335,11 +343,21 @@ param_dicts = ["paramZ::labelA"]
 [localhost.tweaker2.target.servers]
 paramZ = "localhost::server"
 
+[localhost.pos_tweaker]
+module = "mahos.meas.pos_tweaker"
+class = "PosTweaker"
+target = { log = "localhost::log" }
+rep_endpoint = "tcp://127.0.0.1:5596"
+pub_endpoint = "tcp://127.0.0.1:5597"
+[localhost.pos_tweaker.target.servers]
+pos_x = "localhost::server"
+pos_y = "localhost::server"
+
 [localhost.recorder]
 module = "mahos.meas.recorder"
 class = "Recorder"
-rep_endpoint = "tcp://127.0.0.1:5596"
-pub_endpoint = "tcp://127.0.0.1:5597"
+rep_endpoint = "tcp://127.0.0.1:5598"
+pub_endpoint = "tcp://127.0.0.1:5599"
 [localhost.recorder.target]
 log = "localhost::log"
 tweakers = ["localhost::tweaker", "localhost::tweaker2"]
@@ -436,6 +454,13 @@ module = "mahos.gui.tweaker"
 class = "TweakerGUI"
 [localhost.tweaker2_gui.target]
 tweaker = "localhost::tweaker2"
+gparams = "localhost::gparams"
+
+[localhost.pos_tweaker_gui]
+module = "mahos.gui.tweaker"
+class = "TweakerGUI"
+[localhost.pos_tweaker_gui.target]
+pos_tweaker = "localhost::pos_tweaker"
 gparams = "localhost::gparams"
 
 [localhost.recorder_gui]

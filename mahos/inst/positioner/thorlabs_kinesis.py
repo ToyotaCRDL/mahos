@@ -148,6 +148,8 @@ class Thorlabs_KCube_DCServo(Instrument):
     def move(self, pos: float) -> bool:
         if not self.is_homed():
             return self.fail_with("Cannot move because this device has not been homed yet.")
+        if pos < self.range[0] or pos > self.range[1]:
+            return self.fail_with(f"Target pos {pos:.3f} is out of range {self.range}.")
 
         try:
             with self.lock:
@@ -223,7 +225,7 @@ class Thorlabs_KCube_DCServo(Instrument):
         if label == "pos":
             return P.ParamDict(
                 target=P.FloatParam(
-                    self.get_target(), self.limits[0], self.limits[1], doc="target position"
+                    self.get_target(), self.range[0], self.range[1], doc="target position"
                 )
             )
         else:
