@@ -9,15 +9,18 @@ Added
 ^^^^^
 
 - meas: new generic measurement Recorder.
+- meas: new generic measurement PosTweaker.
 - inst: new module dmm (for Digital Multi Meter).
 - inst: new module power_sensor (for RF / MW power sensor).
+- inst: new module positioner.
 - inst.tdc: new instrument TimeTagger (Swabian Instruments).
 
 Changed
 ^^^^^^^
 
-- argument "group" has been removed from get_param_dict_labels(), get_param_dict(),
+- inst,meas: argument "group" has been removed from get_param_dict_labels(), get_param_dict(),
   and configure() in meas / inst APIs.
+- inst: argument "label" has been added to start(), stop(), reset(), set(), and get() inst API.
 
 [0.2.3] - 2023-11-06
 --------------------

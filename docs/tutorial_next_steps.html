@@ -460,8 +460,13 @@ You are lucky! This is usually the easiest case.</p>
 <h4>Wrapping C library<a class="headerlink" href="#wrapping-c-library" title="Permalink to this heading">#</a></h4>
 <p>We can use Python standard <a class="reference external" href="https://docs.python.org/3/library/ctypes.html">ctypes</a> library to wrap the library for C.</p>
 </section>
-<section id="daq">
-<h4>DAQ<a class="headerlink" href="#daq" title="Permalink to this heading">#</a></h4>
+<section id="wrapping-c-net-library">
+<h4>Wrapping C# (.NET) library<a class="headerlink" href="#wrapping-c-net-library" title="Permalink to this heading">#</a></h4>
+<p>We can use <a class="reference external" href="https://github.com/pythonnet/pythonnet">pythonnet</a> library to wrap the library for C# (.NET).
+The example can be found in implementation of <a class="reference internal" href="inst/generated/mahos.inst.spectrometer.LightField.html#mahos.inst.spectrometer.LightField" title="mahos.inst.spectrometer.LightField"><code class="xref py py-class docutils literal notranslate"><span class="pre">LightField</span></code></a> or <a class="reference internal" href="inst/generated/mahos.inst.positioner.Thorlabs_KCube_DCServo.html#mahos.inst.positioner.Thorlabs_KCube_DCServo" title="mahos.inst.positioner.Thorlabs_KCube_DCServo"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thorlabs_KCube_DCServo</span></code></a>.</p>
+</section>
+<section id="ni-daq">
+<h4>NI-DAQ<a class="headerlink" href="#ni-daq" title="Permalink to this heading">#</a></h4>
 <p>We can use <a class="reference external" href="https://pythonhosted.org/PyDAQmx/">PyDAQmx</a> library to implement <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instrument</span></code></a> based on National Instruments DAQ.
 There are several classes in <code class="docutils literal notranslate"><span class="pre">mahos.inst.daq</span></code> module.</p>
 </section>
@@ -552,7 +557,8 @@ We are very happy if you could <a class="reference internal" href="contributing.
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visa">VISA</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#wrapping-python-library">Wrapping Python library</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#wrapping-c-library">Wrapping C library</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#daq">DAQ</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#wrapping-c-net-library">Wrapping C# (.NET) library</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ni-daq">NI-DAQ</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-meas-node">Writing meas Node</a></li>

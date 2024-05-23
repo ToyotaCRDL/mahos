@@ -39,8 +39,14 @@ Wrapping C library
 
 We can use Python standard `ctypes <https://docs.python.org/3/library/ctypes.html>`_ library to wrap the library for C.
 
-DAQ
-...
+Wrapping C# (.NET) library
+..........................
+
+We can use `pythonnet <https://github.com/pythonnet/pythonnet>`_ library to wrap the library for C# (.NET).
+The example can be found in implementation of :class:`LightField <mahos.inst.spectrometer.LightField>` or :class:`Thorlabs_KCube_DCServo <mahos.inst.positioner.Thorlabs_KCube_DCServo>`.
+
+NI-DAQ
+......
 
 We can use `PyDAQmx <https://pythonhosted.org/PyDAQmx/>`_ library to implement :class:`Instrument <mahos.inst.instrument.Instrument>` based on National Instruments DAQ.
 There are several classes in ``mahos.inst.daq`` module.
