@@ -1,0 +1,74 @@
+﻿mahos.inst.fg.SIGLENT\_SDG2000X
+===============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.fg
+
+.. autoclass:: SIGLENT_SDG2000X
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SIGLENT_SDG2000X.__init__
+      ~SIGLENT_SDG2000X.configure
+      ~SIGLENT_SDG2000X.configure_CW
+      ~SIGLENT_SDG2000X.configure_burst
+      ~SIGLENT_SDG2000X.configure_gate
+      ~SIGLENT_SDG2000X.configure_output
+      ~SIGLENT_SDG2000X.get
+      ~SIGLENT_SDG2000X.get_amplitude
+      ~SIGLENT_SDG2000X.get_bounds
+      ~SIGLENT_SDG2000X.get_freq
+      ~SIGLENT_SDG2000X.get_function
+      ~SIGLENT_SDG2000X.get_offset
+      ~SIGLENT_SDG2000X.get_output
+      ~SIGLENT_SDG2000X.get_output_impedance
+      ~SIGLENT_SDG2000X.get_param_dict
+      ~SIGLENT_SDG2000X.get_param_dict_labels
+      ~SIGLENT_SDG2000X.get_phase
+      ~SIGLENT_SDG2000X.reset
+      ~SIGLENT_SDG2000X.reset_modes
+      ~SIGLENT_SDG2000X.set
+      ~SIGLENT_SDG2000X.set_amplitude
+      ~SIGLENT_SDG2000X.set_burst
+      ~SIGLENT_SDG2000X.set_burst_amplitude
+      ~SIGLENT_SDG2000X.set_burst_cycle
+      ~SIGLENT_SDG2000X.set_burst_delay
+      ~SIGLENT_SDG2000X.set_burst_freq
+      ~SIGLENT_SDG2000X.set_burst_function
+      ~SIGLENT_SDG2000X.set_burst_gate_polarity
+      ~SIGLENT_SDG2000X.set_burst_mode
+      ~SIGLENT_SDG2000X.set_burst_offset
+      ~SIGLENT_SDG2000X.set_burst_phase
+      ~SIGLENT_SDG2000X.set_burst_trig_slope
+      ~SIGLENT_SDG2000X.set_burst_trig_source
+      ~SIGLENT_SDG2000X.set_freq
+      ~SIGLENT_SDG2000X.set_function
+      ~SIGLENT_SDG2000X.set_load_impedance
+      ~SIGLENT_SDG2000X.set_offset
+      ~SIGLENT_SDG2000X.set_output
+      ~SIGLENT_SDG2000X.set_phase
+      ~SIGLENT_SDG2000X.set_reference_clock
+      ~SIGLENT_SDG2000X.start
+      ~SIGLENT_SDG2000X.stop
+      ~SIGLENT_SDG2000X.trigger
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SIGLENT_SDG2000X.Load_HighZ
+      ~SIGLENT_SDG2000X.TRIG_SOURCE
+   
+   

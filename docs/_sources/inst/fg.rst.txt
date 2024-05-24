@@ -23,4 +23,5 @@ Instruments
 .. autosummary::
    :toctree: generated
 
-   DG2000
+   RIGOL_DG2000
+   SIGLENT_SDG2000X

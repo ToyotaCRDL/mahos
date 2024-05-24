@@ -16,6 +16,7 @@
 
    .. autosummary::
    
+      ~FGInterface.configure_burst
       ~FGInterface.configure_cw
       ~FGInterface.configure_gate
       ~FGInterface.get_bounds

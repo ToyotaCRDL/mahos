@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mahos.inst.fg.DG2000 &#8212; MAHOS 0.2.3 documentation</title>
+    <title>mahos.inst.fg.SIGLENT_SDG2000X &#8212; MAHOS 0.2.3 documentation</title>
   
   
   
@@ -37,11 +37,11 @@
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'inst/generated/mahos.inst.fg.DG2000';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'inst/generated/mahos.inst.fg.SIGLENT_SDG2000X';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="mahos.inst.lockin" href="../lockin.html" />
-    <link rel="prev" title="mahos.inst.fg_interface.FGInterface" href="mahos.inst.fg_interface.FGInterface.html" />
+    <link rel="prev" title="mahos.inst.fg.RIGOL_DG2000" href="mahos.inst.fg.RIGOL_DG2000.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -423,7 +423,8 @@ document.write(`
 </li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="../fg.html">mahos.inst.fg</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.fg_interface.FGInterface.html">mahos.inst.fg_interface.FGInterface</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">mahos.inst.fg.DG2000</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.fg.RIGOL_DG2000.html">mahos.inst.fg.RIGOL_DG2000</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">mahos.inst.fg.SIGLENT_SDG2000X</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../lockin.html">mahos.inst.lockin</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -611,7 +612,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../fg.html" class="nav-link">mahos.inst.fg</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">mahos.inst.fg.DG2000</li>
+    <li class="breadcrumb-item active" aria-current="page">mahos.inst.fg.SIGLENT_SDG2000X</li>
   </ul>
 </nav>
 </div>
@@ -628,44 +629,47 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="mahos-inst-fg-dg2000">
-<h1>mahos.inst.fg.DG2000<a class="headerlink" href="#mahos-inst-fg-dg2000" title="Permalink to this heading">#</a></h1>
+  <section id="mahos-inst-fg-siglent-sdg2000x">
+<h1>mahos.inst.fg.SIGLENT_SDG2000X<a class="headerlink" href="#mahos-inst-fg-siglent-sdg2000x" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="mahos.inst.fg.DG2000">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.inst.fg.</span></span><span class="sig-name descname"><span class="pre">DG2000</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.fg.DG2000" title="Permalink to this definition">#</a></dt>
-<dd><p>Rigol DG2000 series Function Generator.</p>
+<dt class="sig sig-object py" id="mahos.inst.fg.SIGLENT_SDG2000X">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.inst.fg.</span></span><span class="sig-name descname"><span class="pre">SIGLENT_SDG2000X</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.fg.SIGLENT_SDG2000X" title="Permalink to this definition">#</a></dt>
+<dd><p>SIGLENT SDG2000X series Function Generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>ampl_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – Amplitude bounds in Vpp (min, max).</p></li>
+<li><p><strong>offs_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – Offset bounds in V (min, max).</p></li>
+<li><p><strong>freq_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – Frequency bounds in Hz (min, max).</p></li>
 <li><p><strong>ext_ref_clock</strong> (<em>bool</em>) – use external reference clock source.</p></li>
 <li><p><strong>gate.source</strong> (<em>str</em>) – trigger source for gated burst. one of TRIG_SOURCE.</p></li>
-<li><p><strong>gate.slope</strong> (<em>bool</em>) – trigger slope polarity. True for positive.</p></li>
 <li><p><strong>gate.polarity</strong> (<em>bool</em>) – gate polarity. True for positive.</p></li>
-<li><p><strong>gate.idle_level</strong> (<em>str</em>) – idle level. one of IDLE_LEVEL.</p></li>
+<li><p><strong>burst.source</strong> (<em>str</em>) – trigger source for cycle burst. one of TRIG_SOURCE.</p></li>
+<li><p><strong>burst.polarity</strong> (<em>bool</em>) – burst trigger polarity. True for positive.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="mahos.inst.fg.DG2000.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.fg.DG2000.__init__" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="mahos.inst.fg.SIGLENT_SDG2000X.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.fg.SIGLENT_SDG2000X.__init__" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mahos.inst.fg.DG2000.__init__" title="mahos.inst.fg.DG2000.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name, conf[, prefix])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mahos.inst.fg.SIGLENT_SDG2000X.__init__" title="mahos.inst.fg.SIGLENT_SDG2000X.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name, conf[, prefix])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">align_phase</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure</span></code>(params[, label])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure</span></code>(params[, label])</p></td>
 <td><p>Configure the instrument settings.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_CW</span></code>(wave, freq, ampl_vpp[, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_CW</span></code>(wave, freq, ampl_Vpp[, offset, ...])</p></td>
 <td><p>Configure Continuous Wave output.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_gate</span></code>(wave, freq, ampl_vpp, phase_deg)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_burst</span></code>(wave, freq, ampl_Vpp, ...[, ...])</p></td>
+<td><p>Configure Cycle Burst output.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_gate</span></code>(wave, freq, ampl_Vpp, phase_deg)</p></td>
 <td><p>Configure Gated Burst output.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_output</span></code>(params)</p></td>
@@ -677,19 +681,13 @@ document.write(`
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_amplitude</span></code>([ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounds</span></code>([ch])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounds</span></code>()</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_freq</span></code>([ch])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_function</span></code>([ch])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_high</span></code>([ch])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_low</span></code>([ch])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_offset</span></code>([ch])</p></td>
@@ -713,52 +711,64 @@ document.write(`
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset</span></code>([label])</p></td>
 <td><p>Reset the instrument settings.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code>(key[, value, label])</p></td>
-<td><p>Set an instrument setting or commanding value.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_amplitude</span></code>(ampl_vpp[, ch])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_modes</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst</span></code>(on[, ch])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code>(key[, value, label])</p></td>
+<td><p>Set an instrument setting or commanding value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_amplitude</span></code>(ampl_Vpp[, ch])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst</span></code>(on[, ch])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_amplitude</span></code>(ampl_Vpp[, ch])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_cycle</span></code>(cycle[, ch])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_delay</span></code>(delay_sec[, ch])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_freq</span></code>(freq[, ch])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_function</span></code>(func[, ch])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_gate_polarity</span></code>(positive[, ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_idle_level</span></code>(level[, ch])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_mode</span></code>(mode[, ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_mode</span></code>(mode[, ch])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_offset</span></code>(offset[, ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_trig_slope</span></code>(positive[, ch])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_phase</span></code>(phase_deg[, ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_trig_source</span></code>(source[, ch])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_trig_slope</span></code>(positive[, ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_freq</span></code>(freq[, ch])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_burst_trig_source</span></code>(source[, ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_function</span></code>(func[, ch])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_freq</span></code>(freq[, ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_high</span></code>(volt[, ch])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_function</span></code>(func[, ch])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_low</span></code>(volt[, ch])</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_load_impedance</span></code>(imp_ohm[, ch])</p></td>
+<td><p>Set load impedance.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_offset</span></code>(offset_volt[, ch])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_offset</span></code>(offset[, ch])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_output</span></code>(on[, ch])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_output_impedance</span></code>(imp_ohm[, ch])</p></td>
-<td><p>Set output impedance.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_period</span></code>(t[, ch])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_phase</span></code>(phase_deg[, ch])</p></td>
@@ -767,42 +777,24 @@ document.write(`
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_reference_clock</span></code>(external)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_square_duty</span></code>(duty_percent[, ch])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>([label])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>([label])</p></td>
 <td><p>Start the instrument operation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>([label])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>([label])</p></td>
 <td><p>Stop the instrument operation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trigger</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_all_bounds</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_amplitude_bounds</span></code>(ch)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_freq_bounds</span></code>(ch)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_offset_bounds</span></code>(ch)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trigger</span></code>([ch])</p></td>
+<td><p>Execute manual (software) trigger.</p></td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Attributes</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">IDLE_LEVEL</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Load_HighZ</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">OUTPUT_HighZ</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TRIG_SOURCE</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TRIG_SOURCE</span></code></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -823,12 +815,12 @@ document.write(`
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mahos.inst.fg_interface.FGInterface.html"
+       href="mahos.inst.fg.RIGOL_DG2000.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">mahos.inst.fg_interface.FGInterface</p>
+        <p class="prev-next-title">mahos.inst.fg.RIGOL_DG2000</p>
       </div>
     </a>
     <a class="right-next"
@@ -858,8 +850,8 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.fg.DG2000"><code class="docutils literal notranslate"><span class="pre">DG2000</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.fg.DG2000.__init__"><code class="docutils literal notranslate"><span class="pre">DG2000.__init__()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.fg.SIGLENT_SDG2000X"><code class="docutils literal notranslate"><span class="pre">SIGLENT_SDG2000X</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.inst.fg.SIGLENT_SDG2000X.__init__"><code class="docutils literal notranslate"><span class="pre">SIGLENT_SDG2000X.__init__()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -867,7 +859,7 @@ document.write(`
 
   <div class="sidebar-secondary-item">
   <div class="tocsection sourcelink">
-    <a href="../../_sources/inst/generated/mahos.inst.fg.DG2000.rst.txt">
+    <a href="../../_sources/inst/generated/mahos.inst.fg.SIGLENT_SDG2000X.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

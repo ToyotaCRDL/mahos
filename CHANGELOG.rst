@@ -14,6 +14,7 @@ Added
 - inst: new module power_sensor (for RF / MW power sensor).
 - inst: new module positioner.
 - inst.tdc: new instrument TimeTagger (Swabian Instruments).
+- inst.fg: new instrument SIGLENT_SDG2000X.
 
 Changed
 ^^^^^^^
@@ -21,6 +22,7 @@ Changed
 - inst,meas: argument "group" has been removed from get_param_dict_labels(), get_param_dict(),
   and configure() in meas / inst APIs.
 - inst: argument "label" has been added to start(), stop(), reset(), set(), and get() inst API.
+- inst.fg: class name DG2000 -> RIGOL_DG2000.
 
 [0.2.3] - 2023-11-06
 --------------------

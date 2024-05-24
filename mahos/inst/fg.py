@@ -61,7 +61,6 @@ class RIGOL_DG2000(VisaInstrument):
     :type gate.polarity: bool
     :param gate.idle_level: idle level. one of IDLE_LEVEL.
     :type gate.idle_level: str
-
     :param burst.source: trigger source for cycle burst. one of TRIG_SOURCE.
     :type burst.source: str
     :param burst.polarity: burst trigger polarity. True for positive.
@@ -693,10 +692,12 @@ class SIGLENT_SDG2000X(VisaInstrument):
     :type ext_ref_clock: bool
     :param gate.source: trigger source for gated burst. one of TRIG_SOURCE.
     :type gate.source: str
-    :param gate.slope: trigger slope polarity. True for positive.
-    :type gate.slope: bool
     :param gate.polarity: gate polarity. True for positive.
     :type gate.polarity: bool
+    :param burst.source: trigger source for cycle burst. one of TRIG_SOURCE.
+    :type burst.source: str
+    :param burst.polarity: burst trigger polarity. True for positive.
+    :type burst.polarity: bool
 
     """
 
@@ -729,6 +730,14 @@ class SIGLENT_SDG2000X(VisaInstrument):
             "polarity": c.get("polarity", True),
         }
         self.logger.debug(f"gate configuration: {self.gate_conf}")
+
+        c = self.conf.get("burst", {})
+        self.burst_conf = {
+            "source": c.get("source", "EXT"),
+            "polarity": c.get("polarity", True),
+        }
+        self.logger.debug(f"burst configuration: {self.burst_conf}")
+
         self.reset_modes()
 
     def reset_modes(self):
@@ -1083,7 +1092,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
         ch: int = 1,
         reset: bool = True,
     ) -> bool:
-        """Configure Gated Burst output."""
+        """Configure Cycle Burst output."""
 
         success = True
         if reset:
@@ -1093,9 +1102,9 @@ class SIGLENT_SDG2000X(VisaInstrument):
         success &= (
             self.set_burst(True, ch=ch)
             and self.set_burst_mode("NCYC", ch=ch)
-            and self.set_burst_trig_source(source or self.gate_conf["source"], ch=ch)
+            and self.set_burst_trig_source(source or self.burst_conf["source"], ch=ch)
             and self.set_burst_trig_slope(
-                polarity if polarity is not None else self.gate_conf["polarity"], ch=ch
+                polarity if polarity is not None else self.burst_conf["polarity"], ch=ch
             )
             and self.set_burst_function(wave, ch=ch)
             and self.set_burst_freq(freq, ch=ch)

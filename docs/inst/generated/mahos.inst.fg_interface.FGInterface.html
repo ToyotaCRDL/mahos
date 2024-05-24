@@ -40,7 +40,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'inst/generated/mahos.inst.fg_interface.FGInterface';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="mahos.inst.fg.DG2000" href="mahos.inst.fg.DG2000.html" />
+    <link rel="next" title="mahos.inst.fg.RIGOL_DG2000" href="mahos.inst.fg.RIGOL_DG2000.html" />
     <link rel="prev" title="mahos.inst.fg" href="../fg.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -423,7 +423,8 @@ document.write(`
 </li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="../fg.html">mahos.inst.fg</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">mahos.inst.fg_interface.FGInterface</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mahos.inst.fg.DG2000.html">mahos.inst.fg.DG2000</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.fg.RIGOL_DG2000.html">mahos.inst.fg.RIGOL_DG2000</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.fg.SIGLENT_SDG2000X.html">mahos.inst.fg.SIGLENT_SDG2000X</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../lockin.html">mahos.inst.lockin</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -642,19 +643,22 @@ document.write(`
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw</span></code>(wave, freq, ampl_vpp[, ch, reset])</p></td>
-<td><p>Configure Continuous Wave output.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_gate</span></code>(wave, freq, ampl_vpp, phase_deg)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_burst</span></code>(wave, freq, ampl_Vpp, ...[, ...])</p></td>
 <td><p>Configure Gated Burst output.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounds</span></code>([ch])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw</span></code>(wave, freq, ampl_Vpp[, offset, ...])</p></td>
+<td><p>Configure Continuous Wave output.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_gate</span></code>(wave, freq, ampl_Vpp, phase_deg)</p></td>
+<td><p>Configure Gated Burst output.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounds</span></code>([ch])</p></td>
 <td><p>Get bounds.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_opc</span></code>([delay])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_opc</span></code>([delay])</p></td>
 <td><p>Query OPC (operation complete) status.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_output</span></code>(on[, ch])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_output</span></code>(on[, ch])</p></td>
 <td><p>Set output switch.</p></td>
 </tr>
 </tbody>
@@ -684,11 +688,11 @@ document.write(`
       </div>
     </a>
     <a class="right-next"
-       href="mahos.inst.fg.DG2000.html"
+       href="mahos.inst.fg.RIGOL_DG2000.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">mahos.inst.fg.DG2000</p>
+        <p class="prev-next-title">mahos.inst.fg.RIGOL_DG2000</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

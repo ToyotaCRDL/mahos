@@ -22,6 +22,7 @@
       ~TweakerWidget.request_load
       ~TweakerWidget.request_read
       ~TweakerWidget.request_read_all
+      ~TweakerWidget.request_reset
       ~TweakerWidget.request_save
       ~TweakerWidget.request_start
       ~TweakerWidget.request_stop

@@ -1,0 +1,81 @@
+﻿mahos.inst.fg.RIGOL\_DG2000
+===========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.fg
+
+.. autoclass:: RIGOL_DG2000
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RIGOL_DG2000.__init__
+      ~RIGOL_DG2000.align_phase
+      ~RIGOL_DG2000.configure
+      ~RIGOL_DG2000.configure_CW
+      ~RIGOL_DG2000.configure_burst
+      ~RIGOL_DG2000.configure_gate
+      ~RIGOL_DG2000.configure_output
+      ~RIGOL_DG2000.get
+      ~RIGOL_DG2000.get_amplitude
+      ~RIGOL_DG2000.get_bounds
+      ~RIGOL_DG2000.get_freq
+      ~RIGOL_DG2000.get_function
+      ~RIGOL_DG2000.get_high
+      ~RIGOL_DG2000.get_low
+      ~RIGOL_DG2000.get_offset
+      ~RIGOL_DG2000.get_output
+      ~RIGOL_DG2000.get_output_impedance
+      ~RIGOL_DG2000.get_param_dict
+      ~RIGOL_DG2000.get_param_dict_labels
+      ~RIGOL_DG2000.get_phase
+      ~RIGOL_DG2000.reset
+      ~RIGOL_DG2000.set
+      ~RIGOL_DG2000.set_amplitude
+      ~RIGOL_DG2000.set_burst
+      ~RIGOL_DG2000.set_burst_cycle
+      ~RIGOL_DG2000.set_burst_delay
+      ~RIGOL_DG2000.set_burst_gate_polarity
+      ~RIGOL_DG2000.set_burst_idle_level
+      ~RIGOL_DG2000.set_burst_mode
+      ~RIGOL_DG2000.set_burst_trig_slope
+      ~RIGOL_DG2000.set_burst_trig_source
+      ~RIGOL_DG2000.set_freq
+      ~RIGOL_DG2000.set_function
+      ~RIGOL_DG2000.set_high
+      ~RIGOL_DG2000.set_low
+      ~RIGOL_DG2000.set_offset
+      ~RIGOL_DG2000.set_output
+      ~RIGOL_DG2000.set_output_impedance
+      ~RIGOL_DG2000.set_period
+      ~RIGOL_DG2000.set_phase
+      ~RIGOL_DG2000.set_reference_clock
+      ~RIGOL_DG2000.set_square_duty
+      ~RIGOL_DG2000.start
+      ~RIGOL_DG2000.stop
+      ~RIGOL_DG2000.trigger
+      ~RIGOL_DG2000.update_all_bounds
+      ~RIGOL_DG2000.update_amplitude_bounds
+      ~RIGOL_DG2000.update_freq_bounds
+      ~RIGOL_DG2000.update_offset_bounds
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RIGOL_DG2000.IDLE_LEVEL
+      ~RIGOL_DG2000.OUTPUT_HighZ
+      ~RIGOL_DG2000.TRIG_SOURCE
+   
+   
