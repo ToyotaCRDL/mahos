@@ -154,7 +154,7 @@ def test_podmr_patterns():
         ps = copy.copy(params)
         ps["supersample"] = 2
         ps["method"] = meth
-        data = PODMRData(ps)
+        data = PODMRData(ps, meth)
         ptn = generators[meth].generate(data.xdata, ps)
         assert pattern_equal(ptn, patterns[meth + "ss"])
 
@@ -203,8 +203,8 @@ def test_podmr(server, podmr, server_conf, podmr_conf):
             params["90pulse"].set(10e-9)
         if "180pulse" in params:
             params["180pulse"].set(20e-9)  # default negative value causes error in se90sweep
-        assert podmr.validate(params)
-        assert podmr.start(params)
+        assert podmr.validate(params, m)
+        assert podmr.start(params, m)
         assert expect_podmr(podmr, params["num"].value(), poll_timeout_ms)
         data = get_some(podmr.get_data, poll_timeout_ms)
         assert podmr.stop()
@@ -214,7 +214,7 @@ def test_podmr(server, podmr, server_conf, podmr_conf):
     for m in ("cpN", "cpmgN", "xy4N", "xy8N", "xy16N", "xy8clNflip", "ddgateN"):
         params = podmr.get_param_dict(m)
         params["Nnum"].set(3)  # small num for quick test
-        assert podmr.validate(params)
-        assert podmr.start(params)
+        assert podmr.validate(params, m)
+        assert podmr.start(params, m)
         assert expect_podmr(podmr, params["Nnum"].value(), poll_timeout_ms)
         assert podmr.stop()

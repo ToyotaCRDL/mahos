@@ -37,8 +37,8 @@ class QdyneClient(BasicMeasClient):
     def get_buffer(self) -> Buffer[tuple[str, QdyneData]]:
         return self._get_buffer()
 
-    def validate(self, params: dict) -> Reply:
-        return self.req.request(ValidateReq(params))
+    def validate(self, params: dict, label: str) -> Reply:
+        return self.req.request(ValidateReq(params, label))
 
     def discard(self) -> bool:
         rep = self.req.request(DiscardReq())
@@ -115,7 +115,7 @@ class Qdyne(BasicMeasNode):
         elif msg.state == BinaryState.ACTIVE:
             if not self.switch.start():
                 return Reply(False, "Failed to start switch.", ret=self.state)
-            if not self.worker.start(msg.params):
+            if not self.worker.start(msg.params, msg.label):
                 self.switch.stop()
                 return Reply(False, "Failed to start worker.", ret=self.state)
             self.pub_timer = self.worker.timer.clone()
@@ -167,7 +167,9 @@ class Qdyne(BasicMeasNode):
     def validate(self, msg: ValidateReq) -> Reply:
         """Validate the measurement params."""
 
-        valid, blocks, freq, laser_timing, offsets = self.worker.validate_params(msg.params)
+        valid, blocks, freq, laser_timing, offsets = self.worker.validate_params(
+            msg.params, msg.label
+        )
         return Reply(valid, ret=(blocks, freq, laser_timing, offsets))
 
     def discard(self, msg: DiscardReq) -> Reply:

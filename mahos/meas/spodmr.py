@@ -42,8 +42,8 @@ class SPODMRClient(BasicMeasClient):
         rep = self.req.request(UpdatePlotParamsReq(params))
         return rep.success
 
-    def validate(self, params: dict) -> bool:
-        rep = self.req.request(ValidateReq(params))
+    def validate(self, params: dict, label: str) -> bool:
+        rep = self.req.request(ValidateReq(params, label))
         return rep.success
 
 
@@ -118,7 +118,7 @@ class SPODMR(BasicMeasNode):
         elif msg.state == BinaryState.ACTIVE:
             if not self.switch.start():
                 return Reply(False, "Failed to start switch.", ret=self.state)
-            if not self.worker.start(msg.params):
+            if not self.worker.start(msg.params, msg.label):
                 self.switch.stop()
                 return Reply(False, "Failed to start worker.", ret=self.state)
 
@@ -182,7 +182,7 @@ class SPODMR(BasicMeasNode):
     def validate(self, msg: ValidateReq) -> Reply:
         """Validate the measurement params."""
 
-        return Reply(self.worker.validate_params(msg.params))
+        return Reply(self.worker.validate_params(msg.params, msg.label))
 
     def handle_req(self, msg: Request) -> Reply:
         if isinstance(msg, UpdatePlotParamsReq):

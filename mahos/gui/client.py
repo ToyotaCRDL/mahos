@@ -109,8 +109,8 @@ class QReqClient(QNodeClient):
 class QStateReqClient(QReqClient):
     """Qt-based node client with req and change_state()."""
 
-    def change_state(self, state, params=None) -> bool:
-        rep = self.req.request(StateReq(state, params=params))
+    def change_state(self, state, params=None, label: str = "") -> bool:
+        rep = self.req.request(StateReq(state, params=params, label=label))
         return rep.success
 
 

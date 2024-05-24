@@ -33,7 +33,7 @@ def test_recorder(server, recorder, server_conf, recorder_conf):
     assert get_some(recorder.get_status, poll_timeout_ms).state == BinaryState.IDLE
 
     params = recorder.get_param_dict("all")
-    assert recorder.change_state(BinaryState.ACTIVE, params)
+    assert recorder.change_state(BinaryState.ACTIVE, params, "all")
     assert expect_recorder(recorder, poll_timeout_ms, "dmm0")
     data = get_some(recorder.get_data, poll_timeout_ms)
     assert recorder.change_state(BinaryState.IDLE)

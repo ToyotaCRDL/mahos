@@ -126,26 +126,31 @@ fit_quad = partial(_fit, OF.fit_quad, _fit_quad_dumps)
 
 
 class IODMRFitResult(object):
-    def __init__(self, params: dict, result: list[ModelResult]):
+    def __init__(self, params: dict, label: str, result: list[ModelResult]):
         self.params = params
+        self.label = label
         self.result = result
 
     def save(self, fn: str):
         with open(fn, "w") as f:
-            f.write(json.dumps(self.params))
-            f.write("\n")
+            f.write(json.dumps(self.params) + "\n")
+            f.write(self.label + "\n")
             for r in self.result:
-                f.write(r.dumps())
-                f.write("\n")
+                f.write(r.dumps() + "\n")
 
     @classmethod
     def load(cls, fn: str):
         with open(fn, "r") as f:
             params = json.loads(f.readline())
+            if "method" in params:
+                # for backward compatibility.
+                label = params["method"]
+            else:
+                label = f.readline().strip()
             result = []
             for line in f.readlines():
                 result.append(load_modelresult(line))
-        return cls(params, result)
+        return cls(params, label, result)
 
     def height(self) -> int:
         # return self.params.get("resize").get("height") or self.params["size"]["height"]
@@ -169,7 +174,7 @@ class IODMRFitResult(object):
         res = self.r(h, w)
         d = {}
         for key, vals in zip(("init", "best"), (res.init_values, res.best_values)):
-            if self.params["method"] == "nvba":
+            if self.label == "nvba":
                 centers = OF.peaks_of_B_aligned(vals["B"])
             else:
                 centers = [v for k, v in vals.items() if k.endswith("center")]
@@ -191,16 +196,16 @@ class IODMRFitResult(object):
     def make_image_B(self) -> NDArray | None:
         """Make image of B field."""
 
-        if self.params["method"] == "nvba":
+        if self.label == "nvba":
             return self.make_image(lambda r: r.best_values["B"])
-        elif self.params["method"] == "single":
+        elif self.label == "single":
             f = self.make_image(lambda r: r.best_values["center"])
             return np.abs(f - Dgs_MHz) / gamma_MHz_mT
-        elif self.params["method"] == "double":
+        elif self.label == "double":
             fh = self.make_image(lambda r: r.best_values["p1_center"])
             fl = self.make_image(lambda r: r.best_values["p0_center"])
             return (fh - fl) / (2 * gamma_MHz_mT)
-        elif self.params["method"] == "quad":
+        elif self.label == "quad":
             fh = self.make_image(lambda r: r.best_values["p3_center"])
             fl = self.make_image(lambda r: r.best_values["p0_center"])
             return (fh - fl) / (2 * gamma_MHz_mT)
@@ -208,7 +213,7 @@ class IODMRFitResult(object):
             return None
 
     def make_image_freq(self) -> NDArray | None:
-        if self.params["method"] == "single":
+        if self.label == "single":
             return self.make_image(lambda r: r.best_values["center"])
         else:
             return None
@@ -231,7 +236,7 @@ class IODMRFitter(object):
         else:
             self.logger = logger
 
-    def fit(self, params: dict) -> IODMRFitResult | None:
+    def fit(self, params: dict, label: str) -> IODMRFitResult | None:
         """Perform fitting."""
 
         _, h, w = self.data.data_sum.shape
@@ -256,8 +261,7 @@ class IODMRFitter(object):
             n_guess = params.get("n_guess") or 20
             n_workers = params.get("n_workers") or 1
 
-            m = params["method"]
-            if m == "single":
+            if label == "single":
                 res = fit_single(
                     xdata,
                     image,
@@ -266,7 +270,7 @@ class IODMRFitter(object):
                     n_workers=n_workers,
                     print_fn=self.logger.info,
                 )
-            elif m == "double":
+            elif label == "double":
                 res = fit_double(
                     xdata,
                     image,
@@ -275,7 +279,7 @@ class IODMRFitter(object):
                     n_workers=n_workers,
                     print_fn=self.logger.info,
                 )
-            elif m == "quad":
+            elif label == "quad":
                 res = fit_quad(
                     xdata,
                     image,
@@ -284,7 +288,7 @@ class IODMRFitter(object):
                     n_workers=n_workers,
                     print_fn=self.logger.info,
                 )
-            elif m == "nvba":
+            elif label == "nvba":
                 res = fit_NVB_aligned(
                     xdata,
                     image,

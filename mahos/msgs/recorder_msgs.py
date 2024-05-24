@@ -17,11 +17,11 @@ from .common_meas_msgs import BasicMeasData
 
 
 class RecorderData(BasicMeasData):
-    def __init__(self, params: dict | None = None):
+    def __init__(self, params: dict | None = None, label: str = ""):
         """Note that set_units() must be called before collecting actual data."""
 
-        self.set_version(0)
-        self.init_params(params)
+        self.set_version(1)
+        self.init_params(params, label)
         self.init_attrs()
 
         # not using dict for units and data here
@@ -127,4 +127,10 @@ class RecorderData(BasicMeasData):
 
 
 def update_data(data: RecorderData):
+    if data.version() <= 0:
+        # version 0 to 1
+        data.label = data.params["method"]
+        del data.params["method"]
+        data.set_version(1)
+
     return data

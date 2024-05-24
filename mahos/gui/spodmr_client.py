@@ -25,6 +25,6 @@ class QSPODMRClient(QBasicMeasClient):
         rep = self.req.request(UpdatePlotParamsReq(params))
         return rep.success
 
-    def validate(self, params: dict) -> bool:
-        rep = self.req.request(ValidateReq(params))
+    def validate(self, params: dict, label: str) -> bool:
+        rep = self.req.request(ValidateReq(params, label))
         return rep.success

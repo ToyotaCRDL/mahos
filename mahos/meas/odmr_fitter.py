@@ -107,13 +107,13 @@ class Fitter(BaseFitter):
         # scale xdata to MHz, normalize ydata into [0, 1]
         return 1e-6 * xdata, normalize(ydata)
 
-    def set_fit_data(self, data: ODMRData, fit_x, fit_y, raw_params, result_dict):
+    def set_fit_data(self, data: ODMRData, fit_x, fit_y, raw_params, label, result_dict):
         # rescale xdata to Hz, denormalize ydata
         if data.has_background():
             ydata = data.get_ydata(normalize_n=1)[0]
         else:
             ydata = data.get_ydata()[0]
-        data.set_fit_data(fit_x * 1e6, denormalize(fit_y, ydata), raw_params, result_dict)
+        data.set_fit_data(fit_x * 1e6, denormalize(fit_y, ydata), raw_params, label, result_dict)
 
     def _guess_bg(self, ydata, fit_params, raw_params) -> tuple[float]:
         """guess bg and return bg, ampl, ampl_min, ampl_max"""
@@ -700,35 +700,33 @@ class ODMRFitter(object):
             return P.ParamDict()
         return self.fitters[label].param_dict()
 
-    def fit(self, data: ODMRData, params: dict) -> F.model.ModelResult | None:
+    def fit(self, data: ODMRData, params: dict, label: str) -> F.model.ModelResult | None:
         """Perform fitting. returns lmfit.model.ModelResult."""
 
-        m = params.get("method")
-        if m not in self.fitters:
-            self.logger.error(f"Unknown method {m}")
+        if label not in self.fitters:
+            self.logger.error(f"Unknown label {label}")
             return None
 
         try:
-            return self.fitters[m].fit(data, params)
+            return self.fitters[label].fit(data, params, label)
         except Exception:
             self.logger.exception("Failed to fit.")
             return None
 
-    def fitd(self, data: ODMRData, params: dict) -> dict:
+    def fitd(self, data: ODMRData, params: dict, label: str) -> dict:
         """Perform fitting. returns dict."""
 
-        m = params.get("method")
-        if m not in self.fitters:
-            self.logger.error(f"Unknown method {m}")
+        if label not in self.fitters:
+            self.logger.error(f"Unknown label {label}")
             return {}
 
         try:
-            return self.fitters[m].fitd(data, params)
+            return self.fitters[label].fitd(data, params, label)
         except Exception:
             self.logger.exception("Failed to fit.")
             return {}
 
-    def fit_xy(self, xdata, ydata, params: dict) -> F.model.ModelResult | None:
+    def fit_xy(self, xdata, ydata, params: dict, label: str) -> F.model.ModelResult | None:
         """Perform fitting using xdata and ydata. returns lmfit.model.ModelResult.
 
         :param xdata: frequency in MHz
@@ -736,13 +734,12 @@ class ODMRFitter(object):
 
         """
 
-        m = params.get("method")
-        if m not in self.fitters:
-            self.logger.error(f"Unknown method {m}")
+        if label not in self.fitters:
+            self.logger.error(f"Unknown label {label}")
             return None
 
         try:
-            return self.fitters[m].fit_xy(xdata, ydata, params)
+            return self.fitters[label].fit_xy(xdata, ydata, params, label)
         except Exception:
             self.logger.exception("Failed to fit.")
             return None
@@ -763,13 +760,12 @@ def fit_single(
 
     fitter = ODMRFitter(silent=silent)
     params = {
-        "method": "single",
         "guess": True,
         "peak_type": peak_type,
         "n_guess": n_guess,
         "dip": dip,
     }
-    return fitter.fit_xy(xdata, ydata, params)
+    return fitter.fit_xy(xdata, ydata, params, "single")
 
 
 def fit_multi(
@@ -785,14 +781,13 @@ def fit_multi(
 
     fitter = ODMRFitter(silent=silent)
     params = {
-        "method": "multi",
         "guess": True,
         "n_peaks": n_peaks,
         "peak_type": peak_type,
         "n_guess": n_guess,
         "dip": dip,
     }
-    return fitter.fit_xy(xdata, ydata, params)
+    return fitter.fit_xy(xdata, ydata, params, "multi")
 
 
 def fit_double(
@@ -834,14 +829,13 @@ def fit_NVB(
 
     fitter = ODMRFitter(silent=silent)
     params = {
-        "method": "nvb",
         "guess": True,
         "peak_type": peak_type,
         "n_guess": n_guess,
         "dip": dip,
         "many": many,
     }
-    return fitter.fit_xy(xdata, ydata, params)
+    return fitter.fit_xy(xdata, ydata, params, "nvb")
 
 
 def fit_NVB_aligned(
@@ -862,10 +856,9 @@ def fit_NVB_aligned(
 
     fitter = ODMRFitter(silent=silent)
     params = {
-        "method": "nvba",
         "guess": True,
         "peak_type": peak_type,
         "n_guess": n_guess,
         "dip": dip,
     }
-    return fitter.fit_xy(xdata, ydata, params)
+    return fitter.fit_xy(xdata, ydata, params, "nvba")

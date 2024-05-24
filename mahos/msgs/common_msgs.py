@@ -122,9 +122,10 @@ class BinaryStatus(Status):
 class StateReq(Request):
     """Generic state change request."""
 
-    def __init__(self, state: State, params=None):
+    def __init__(self, state: State, params=None, label: str = ""):
         self.state = state
         self.params = params
+        self.label = label
 
 
 class ShutdownReq(Request):

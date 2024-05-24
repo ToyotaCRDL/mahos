@@ -24,16 +24,17 @@ from ..util import conv
 class ValidateReq(Request):
     """Validate Measurement Params Request"""
 
-    def __init__(self, params: dict):
+    def __init__(self, params: dict, label: str):
         self.params = params
+        self.label = label
 
 
 class ODMRData(BasicMeasData, ComplexDataMixin):
     """Data type for ODMR measurement."""
 
-    def __init__(self, params: dict | None = None):
-        self.set_version(2)
-        self.init_params(params)
+    def __init__(self, params: dict | None = None, label: str = ""):
+        self.set_version(3)
+        self.init_params(params, label)
         self.init_attrs()
 
         self.data = None
@@ -185,9 +186,11 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
             return None
         return conv.num_to_step(self.params["start"], self.params["stop"], self.params["num"])
 
-    def can_resume(self, params: dict | None) -> bool:
+    def can_resume(self, params: dict | None, label: str) -> bool:
         """Check if the measurement can be resumed with given new_params."""
 
+        if self.label != label:
+            return False
         if not self.has_params() or params is None:
             return False
         p = params
@@ -231,12 +234,16 @@ def update_data(data: ODMRData):
             data.params["method"] = "pulse" if data.params["pulsed"] else "cw"
             del data.params["pulsed"]
         data.set_version(1)
-
     if data.version() <= 1:
         # version 1 to 2
         if data.has_params():
             data.params["background"] = False
         data.bg_data = None
         data.set_version(2)
+    if data.version() <= 2:
+        # version 2 to 3
+        data.label = data.params["method"]
+        del data.params["method"]
+        data.set_version(3)
 
     return data

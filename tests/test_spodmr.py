@@ -58,8 +58,8 @@ def test_spodmr(server, spodmr, server_conf, spodmr_conf):
             params["90pulse"].set(10e-9)
         if "180pulse" in params:
             params["180pulse"].set(20e-9)  # default negative value causes error in se90sweep
-        assert spodmr.validate(params)
-        assert spodmr.start(params)
+        assert spodmr.validate(params, m)
+        assert spodmr.start(params, m)
         assert expect_spodmr(spodmr, params["num"].value(), poll_timeout_ms)
         data = get_some(spodmr.get_data, poll_timeout_ms)
         assert spodmr.stop()
@@ -70,7 +70,7 @@ def test_spodmr(server, spodmr, server_conf, spodmr_conf):
         params = spodmr.get_param_dict(m)
         params["Nnum"].set(3)  # small num for quick test
         params["accum_window"].set(1e-4)  # small window for quick test
-        assert spodmr.validate(params)
-        assert spodmr.start(params)
+        assert spodmr.validate(params, m)
+        assert spodmr.start(params, m)
         assert expect_spodmr(spodmr, params["Nnum"].value(), poll_timeout_ms)
         assert spodmr.stop()

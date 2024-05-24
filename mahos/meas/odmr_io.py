@@ -45,15 +45,11 @@ class ODMRIO(object):
             return update_data(d)
 
     def refit_data(self, params: dict, data: ODMRData) -> bool:
-        if "method" not in params["fit"]:
-            self.logger.error("Undefined: params['fit']['method']")
-            return False
-
         if "complex_conv" not in params["fit"] and "complex_conv" in params["fit"]:
             params["fit"]["complex_conv"] = params["complex_conv"]
 
         fitter = ODMRFitter(self.logger)
-        success = bool(fitter.fitd(data, params["fit"]))
+        success = bool(fitter.fitd(data, params["fit"], params["fit_label"]))
         if not success:
             self.logger.error("Failed to fit.")
         return success
@@ -125,7 +121,7 @@ class ODMRIO(object):
             return False
 
         for d in data_list:
-            if params.get("fit") and not self.refit_data(params, d):
+            if params.get("fit_label") and not self.refit_data(params, d):
                 return False
 
         ext = path.splitext(filename)[1]

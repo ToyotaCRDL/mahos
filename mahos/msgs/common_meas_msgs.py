@@ -111,14 +111,15 @@ class BasicMeasData(Data):
     def get_fit_ydata(self):
         return self.fit_data
 
-    def set_fit_data(self, x, y, params, result):
+    def set_fit_data(self, x, y, params, label, result):
         self.fit_xdata = x
         self.fit_data = y
         self.fit_params = params
+        self.fit_label = label
         self.fit_result = result
 
     def clear_fit_data(self):
-        self.fit_xdata = self.fit_data = self.fit_params = self.fit_result = None
+        self.fit_xdata = self.fit_data = self.fit_params = self.fit_label = self.fit_result = None
 
     def init_axes(self):
         self.xlabel: str = ""
@@ -183,9 +184,10 @@ class ClearBufferReq(Request):
 class FitReq(Request):
     """Fit Measurement Result Request"""
 
-    def __init__(self, params: dict, data_index=-1):
+    def __init__(self, params: dict, label: str = "", data_index=-1):
         self.params = params
         self.data_index = data_index
+        self.label = label
 
 
 class ClearFitReq(Request):

@@ -70,13 +70,11 @@ def plot_confocal_trace(args):
 def plot_odmr(args):
     io = ODMRIO()
 
-    if args.method or args.fit_params:
+    if args.method:
         if args.fit_params:
             fit_params = toml.load(args.fit_params)
-            if "method" not in fit_params:
-                fit_params["method"] = args.method
             fit_params["peak_type"] = str_to_peak_type(fit_params.get("peak_type", args.peak_type))
-            if fit_params["method"] == "multi" and "n_peaks" not in fit_params:
+            if args.method == "multi" and "n_peaks" not in fit_params:
                 fit_params["n_peaks"] = args.n_peaks
             if "n_guess" not in fit_params:
                 fit_params["n_guess"] = args.n_guess
@@ -86,19 +84,19 @@ def plot_odmr(args):
                 fit_params["dip"] = args.dip
         else:
             fit_params = {
-                "method": args.method,
                 "peak_type": str_to_peak_type(args.peak_type),
                 "n_guess": args.n_guess,
                 "complex_conv": args.complex_conv,
                 "dip": args.dip,
             }
-            if fit_params["method"] == "multi":
+            if args.method == "multi":
                 fit_params["n_peaks"] = args.n_peaks
     else:
         fit_params = {}
 
     params = {
         "fit": fit_params,
+        "fit_label": args.method,
         "show_fit": args.show_fit,
         "show_std": args.show_std,
         "normalize_n": args.normalize_n,
@@ -140,19 +138,15 @@ def plot_podmr(args):
         value = getattr(args, key)
         if value is not None:
             plot_params[key] = value
-    if args.method or args.fit_params:
-        if args.fit_params:
-            fit_params = toml.load(args.fit_params)
-            if "method" not in fit_params:
-                fit_params["method"] = args.method
-        else:
-            fit_params = {"method": args.method}
+    if args.method and args.fit_params:
+        fit_params = toml.load(args.fit_params)
     else:
         fit_params = {}
 
     params = {
         "plot": plot_params,
         "fit": fit_params,
+        "fit_label": args.method,
         "show_fit": args.show_fit,
         "color0": args.color0,
         "color1": args.color1,
@@ -183,19 +177,15 @@ def plot_spodmr(args):
     # Since args.offset is taken below (y-axis offsets for plotting), we have to avoid it.
     if args.norm_offset is not None:
         plot_params["offset"] = args.norm_offset
-    if args.method or args.fit_params:
-        if args.fit_params:
-            fit_params = toml.load(args.fit_params)
-            if "method" not in fit_params:
-                fit_params["method"] = args.method
-        else:
-            fit_params = {"method": args.method}
+    if args.method and args.fit_params:
+        fit_params = toml.load(args.fit_params)
     else:
         fit_params = {}
 
     params = {
         "plot": plot_params,
         "fit": fit_params,
+        "fit_label": args.method,
         "show_fit": args.show_fit,
         "show_std": args.show_std,
         "color0": args.color0,
@@ -283,18 +273,15 @@ def plot_hbt(args):
     if args.bg_ratio is not None:
         plot_params["bg_ratio"] = args.bg_ratio * 0.01
 
-    if args.method or args.fit_params:
-        if args.fit_params:
-            fit_params = toml.load(args.fit_params)
-            if "method" not in fit_params:
-                fit_params["method"] = args.method
-        else:
-            fit_params = {"method": args.method}
+    if args.method and args.fit_params:
+        fit_params = toml.load(args.fit_params)
     else:
         fit_params = {}
+
     params = {
         "plot": plot_params,
         "fit": fit_params,
+        "fit_label": args.method,
         "show_fit": args.show_fit,
         "normalize": args.normalize,
         "color": args.color,
@@ -316,28 +303,26 @@ def plot_hbt(args):
 def plot_spec(args):
     io = SpectroscopyIO()
 
-    if args.method or args.fit_params:
+    if args.method:
         if args.fit_params:
             fit_params = toml.load(args.fit_params)
-            if "method" not in fit_params:
-                fit_params["method"] = args.method
             fit_params["peak_type"] = str_to_peak_type(fit_params.get("peak_type", args.peak_type))
-            if fit_params["method"] == "multi" and "n_peaks" not in fit_params:
+            if args.method == "multi" and "n_peaks" not in fit_params:
                 fit_params["n_peaks"] = args.n_peaks
             if "n_guess" not in fit_params:
                 fit_params["n_guess"] = args.n_guess
         else:
             fit_params = {
-                "method": args.method,
                 "peak_type": str_to_peak_type(args.peak_type),
                 "n_guess": args.n_guess,
             }
-            if fit_params["method"] == "multi":
+            if args.method == "multi":
                 fit_params["n_peaks"] = args.n_peaks
     else:
         fit_params = {}
     params = {
         "fit": fit_params,
+        "fit_label": args.method,
         "show_fit": args.show_fit,
         "filter_n": args.filter_n,
         "color": args.color,
@@ -464,7 +449,7 @@ def add_odmr_parser(sub_parsers):
         "-P",
         "--fit-params",
         type=str,
-        help="[fit] Fitting parameters file name. Invokes re-fitting.",
+        help="[fit] Fitting parameters file name.",
     )
     p.add_argument(
         "-p",
@@ -561,7 +546,7 @@ def add_podmr_parser(sub_parsers):
         "-P",
         "--fit-params",
         type=str,
-        help="[fit] Fitting parameters file name. Invokes re-fitting.",
+        help="[fit] Fitting parameters file name.",
     )
 
     p.add_argument("-l", "--label", type=str, nargs="+", help="matplotlib labels")
@@ -626,7 +611,7 @@ def add_spodmr_parser(sub_parsers):
         "-P",
         "--fit-params",
         type=str,
-        help="[fit] Fitting parameters file name. Invokes re-fitting.",
+        help="[fit] Fitting parameters file name.",
     )
 
     p.add_argument("-S", "--show-std", action="store_true", help="plot estimated std. dev.")
@@ -736,7 +721,7 @@ def add_hbt_parser(sub_parsers):
         "-P",
         "--fit-params",
         type=str,
-        help="[fit] Fitting parameters file name. Invokes re-fitting.",
+        help="[fit] Fitting parameters file name.",
     )
     p.add_argument("--color", type=str, nargs="+", help="matplotlib colors for data")
     p.add_argument("--color_fit", type=str, nargs="+", help="matplotlib colors for fitting lines")
@@ -765,7 +750,7 @@ def add_spec_parser(sub_parsers):
         "-P",
         "--fit-params",
         type=str,
-        help="[fit] Fitting parameters file name. Invokes re-fitting.",
+        help="[fit] Fitting parameters file name.",
     )
     p.add_argument(
         "-p",

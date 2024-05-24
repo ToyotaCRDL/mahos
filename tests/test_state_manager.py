@@ -72,7 +72,7 @@ def test_state_manager(manager, server, confocal, tracker, odmr, manager_conf):
 
     params = odmr.get_param_dict("cw")
     params["num"].set(10)
-    assert odmr.change_state(BinaryState.ACTIVE, params)
+    assert odmr.change_state(BinaryState.ACTIVE, params, "cw")
 
     assert expect_states(manager, states_active, m_poll_timeout_ms)
 

@@ -1025,9 +1025,9 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         self.update_plot_params()
 
-    def get_params(self) -> dict:
+    def get_params(self) -> tuple[dict, str]:
+        label = self.get_method()
         params = {}
-        params["method"] = self.get_method()
         params["freq"] = self.freqBox.value() * 1e6  # [MHz] ==> [Hz]
         params["power"] = self.powerBox.value()
         params["timebin"] = self.binBox.value() * 1e-9  # [ns] ==> [sec]
@@ -1082,7 +1082,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["plot"] = self.get_plot_params()
         params["fg"] = self.get_fg_params()
 
-        return params
+        return params, label
 
     def get_fg_params(self):
         params = {}
@@ -1129,18 +1129,18 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.start()
 
     def validate_pulse(self):
-        return self.cli.validate(self.get_params())
+        return self.cli.validate(*self.get_params())
 
     def start(self):
         """start the measurement."""
 
-        params = self.get_params()
+        params, label = self.get_params()
         title = "Continue?"
         body = (
             "Continue with current data?"
             + " Press No to clear current data and start a new measurement."
         )
-        if self.data.can_resume(params) and Qt.question_yn(self, title, body):
+        if self.data.can_resume(params, label) and Qt.question_yn(self, title, body):
             params["resume"] = True
             params["ident"] = self.data.ident
         else:
@@ -1155,7 +1155,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         self.autosave.init_autosave()
 
-        self.cli.start(params)
+        self.cli.start(params, label)
 
         self.update_save_button(True)
 

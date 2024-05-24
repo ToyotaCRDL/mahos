@@ -333,8 +333,8 @@ class StatusDataClient(StatusDataSubscriber):
 class StateClientMixin(object):
     """Implements change_state() and get_state()."""
 
-    def change_state(self, state: State, params=None) -> bool:
-        rep = self.req.request(StateReq(state, params=params))
+    def change_state(self, state: State, params=None, label: str = "") -> bool:
+        rep = self.req.request(StateReq(state, params=params, label=label))
         return rep.success
 
     def get_state(self) -> State:

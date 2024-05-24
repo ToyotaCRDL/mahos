@@ -139,8 +139,8 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
                 item.setBackground(QtGui.QColor(color))
 
     def update_param_table(self):
-        method = self.labelBox.currentText()
-        d = self.cli.get_param_dict(join_labels("fit", method))
+        label = self.labelBox.currentText()
+        d = self.cli.get_param_dict(join_labels("fit", label))
         self.paramTable.update_contents(d)
 
     def update_index(self, row: int, col: int):
@@ -179,12 +179,11 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
             self.apply_widgets(data)
 
     def request_fit(self):
-        m = self.labelBox.currentText()
+        label = self.labelBox.currentText()
         params = self.paramTable.params()
-        params["method"] = m
         index = self.indexBox.value()
 
-        rep = self.cli.fit(params, index)
+        rep = self.cli.fit(params, label, index)
         if not rep.success:
             return
         ret = rep.ret

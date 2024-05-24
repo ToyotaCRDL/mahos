@@ -408,17 +408,17 @@ class Pulser(Worker):
     def generate_blocks(self, data: PODMRData | None = None):
         if data is None:
             data = self.data
-        generate = self.generators[data.params["method"]].generate
+        generate = self.generators[data.label].generate
         params = data.get_pulse_params()
         if not self.conf.get("divide_block", False) and params["divide_block"]:
             self.logger.warn("divide_block is recommended to be False.")
         return generate(data.xdata, params)
 
     def validate_params(
-        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]
+        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str
     ) -> bool:
         params = P.unwrap(params)
-        d = PODMRData(params)
+        d = PODMRData(params, label)
         blocks, freq, laser_timing = self.generate_blocks(d)
         offsets = self.pg.validate_blocks(blocks, freq)
         return offsets is not None
@@ -460,12 +460,14 @@ class Pulser(Worker):
             self.op.analyze(self.data)
         return True
 
-    def start(self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]) -> bool:
+    def start(
+        self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str
+    ) -> bool:
         if params is not None:
             params = P.unwrap(params)
         resume = params is None or ("resume" in params and params["resume"])
         if not resume:
-            self.data = PODMRData(params)
+            self.data = PODMRData(params, label)
             self.op.update_axes(self.data)
         else:
             _last_duration = self.data.params.get("duration", 0.0)
@@ -577,7 +579,7 @@ class Pulser(Worker):
         self.logger.error(f"Timeout ({timeout_sec} sec) encountered in wait_tdc_stop!")
         return False
 
-    def _get_param_dict_pulse(self, method: str, d: dict):
+    def _get_param_dict_pulse(self, label: str, d: dict):
         ## common_pulses
         d["base_width"] = P.FloatParam(320e-9, 1e-9, 1e-4)
         d["laser_delay"] = P.FloatParam(45e-9, 0.0, 1e-4)
@@ -595,7 +597,7 @@ class Pulser(Worker):
         d["partial"] = P.IntParam(-1, -1, 1)
 
         ## sweep params (tau / N)
-        if self.generators[method].is_sweepN():
+        if self.generators[label].is_sweepN():
             d["Nstart"] = P.IntParam(1, 1, 10000)
             d["Nnum"] = P.IntParam(50, 1, 10000)
             d["Nstep"] = P.IntParam(1, 1, 10000)
@@ -607,8 +609,8 @@ class Pulser(Worker):
 
         return d
 
-    def _get_param_dict_pulse_opt(self, method: str, d: dict):
-        pulse_params = self.generators[method].pulse_params()
+    def _get_param_dict_pulse_opt(self, label: str, d: dict):
+        pulse_params = self.generators[label].pulse_params()
 
         if "supersample" in pulse_params:
             d["supersample"] = P.IntParam(1, 1, 1000)
@@ -651,7 +653,7 @@ class Pulser(Worker):
 
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         if label not in self.generators:
-            self.logger.error(f"Unknown method {label}")
+            self.logger.error(f"Unknown label {label}")
             return None
 
         if self.bounds.has_sg():
@@ -668,7 +670,6 @@ class Pulser(Worker):
 
         # fundamentals
         d = P.ParamDict(
-            method=P.StrChoiceParam(label, list(self.generators.keys())),
             resume=P.BoolParam(False),
             freq=P.FloatParam(2.80e9, f_min, f_max),
             power=P.FloatParam(p_min, p_min, p_max),

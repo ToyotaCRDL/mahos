@@ -352,7 +352,7 @@ class Pulser(Worker):
     def generate_blocks(self, data: QdyneData | None = None):
         if data is None:
             data = self.data
-        generate = self.generators[data.params["method"]].generate_raw_blocks
+        generate = self.generators[data.label].generate_raw_blocks
 
         # fill unused parameters
         xdata = [data.params["tauconst"]]
@@ -364,10 +364,10 @@ class Pulser(Worker):
         return blocks, freq, laser_timing
 
     def validate_params(
-        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]
+        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str
     ) -> tuple[bool, Blocks[Block], float, list[float], list[int]]:
         params = P.unwrap(params)
-        d = QdyneData(params)
+        d = QdyneData(params, label)
         blocks, freq, laser_timing = self.generate_blocks(d)
         offsets = self.pg.validate_blocks(blocks, freq)
         self.pulse_pattern = PulsePattern(blocks, freq, markers=laser_timing)
@@ -415,12 +415,14 @@ class Pulser(Worker):
             self.data.remove_raw_data()
         return True  # return True anyway to finalize measurement
 
-    def start(self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]) -> bool:
+    def start(
+        self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str
+    ) -> bool:
         if params is not None:
             params = P.unwrap(params)
         resume = params is None or ("resume" in params and params["resume"])
         if not resume:
-            self.data = QdyneData(params)
+            self.data = QdyneData(params, label)
         else:
             self.data.update_params(params)
 
@@ -521,7 +523,7 @@ class Pulser(Worker):
         self.logger.error(f"Timeout ({timeout_sec} sec) encountered in wait_tdc_stop!")
         return False
 
-    def _get_param_dict_pulse(self, method: str, d: dict):
+    def _get_param_dict_pulse(self, label: str, d: dict):
         ## common_pulses
         d["base_width"] = P.FloatParam(320e-9, 0.5e-9, 1e-4, unit="s", SI_prefix=True)
         d["laser_delay"] = P.FloatParam(45e-9, 0.0, 1e-4, unit="s", SI_prefix=True)
@@ -541,8 +543,8 @@ class Pulser(Worker):
 
         return d
 
-    def _get_param_dict_pulse_opt(self, method: str, d: dict):
-        pulse_params = self.generators[method].pulse_params()
+    def _get_param_dict_pulse_opt(self, label: str, d: dict):
+        pulse_params = self.generators[label].pulse_params()
 
         d["tauconst"] = P.FloatParam(1.0e-9, 1.0e-9, 1.0e-3, unit="s", SI_prefix=True)
         d["Nconst"] = P.IntParam(1, 1, 10000)
@@ -559,11 +561,11 @@ class Pulser(Worker):
         return d
 
     def get_param_dict_labels(self) -> list:
-        return list(self.generators.keys())
+        return ["cp", "cpmg", "xy4", "xy8", "xy16"]
 
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         if label not in self.generators:
-            self.logger.error(f"Unknown method {label}")
+            self.logger.error(f"Unknown label {label}")
             return None
 
         if self.bounds.has_sg():
@@ -580,7 +582,6 @@ class Pulser(Worker):
 
         # fundamentals
         d = P.ParamDict(
-            method=P.StrChoiceParam(label, ["cp", "cpmg", "xy4", "xy8", "xy16"]),
             resume=P.BoolParam(False),
             freq=P.FloatParam(2.80e9, f_min, f_max, unit="Hz", SI_prefix=True),
             power=P.FloatParam(p_min, p_min, p_max, unit="dBm"),

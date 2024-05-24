@@ -104,35 +104,33 @@ class HBTFitter(object):
             return P.ParamDict()
         return self.fitters[label].param_dict()
 
-    def fit(self, data: HBTData, params: dict) -> F.model.ModelResult | None:
+    def fit(self, data: HBTData, params: dict, label: str) -> F.model.ModelResult | None:
         """Perform fitting. returns lmfit.model.ModelResult."""
 
-        m = params.get("method")
-        if m not in self.fitters:
-            self.logger.error(f"Unknown method {m}")
+        if label not in self.fitters:
+            self.logger.error(f"Unknown label {label}")
             return None
 
         try:
-            return self.fitters[m].fit(data, params)
+            return self.fitters[label].fit(data, params, label)
         except Exception:
             self.logger.exception("Failed to fit.")
             return None
 
-    def fitd(self, data: HBTData, params: dict) -> dict:
+    def fitd(self, data: HBTData, params: dict, label: str) -> dict:
         """Perform fitting. returns dict."""
 
-        m = params.get("method")
-        if m not in self.fitters:
-            self.logger.error(f"Unknown method {m}")
+        if label not in self.fitters:
+            self.logger.error(f"Unknown label {label}")
             return {}
 
         try:
-            return self.fitters[m].fitd(data, params)
+            return self.fitters[label].fitd(data, params, label)
         except Exception:
             self.logger.exception("Failed to fit.")
             return {}
 
-    def fit_xy(self, xdata, ydata, params: dict) -> F.model.ModelResult | None:
+    def fit_xy(self, xdata, ydata, params: dict, label: str) -> F.model.ModelResult | None:
         """Perform fitting using xdata and ydata. returns lmfit.model.ModelResult.
 
         :param xdata: time in sec
@@ -140,13 +138,12 @@ class HBTFitter(object):
 
         """
 
-        m = params.get("method")
-        if m not in self.fitters:
-            self.logger.error(f"Unknown method {m}")
+        if label not in self.fitters:
+            self.logger.error(f"Unknown label {label}")
             return None
 
         try:
-            return self.fitters[m].fit_xy(xdata, ydata, params)
+            return self.fitters[label].fit_xy(xdata, ydata, params, label)
         except Exception:
             self.logger.exception("Failed to fit.")
             return None

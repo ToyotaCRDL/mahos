@@ -190,7 +190,7 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
         self.cli.stop()
 
     def request_start(self):
-        self.cli.start(self.paramTable.params())
+        self.cli.start(self.paramTable.params(), self.labelBox.currentText())
 
     def apply_widgets(self, data: RecorderData):
         if not data.has_data():

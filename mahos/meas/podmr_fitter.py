@@ -147,12 +147,12 @@ class SpinEchoFitter(Fitter):
         y0, _ = data.get_ydata()
         return xdata, y0
 
-    def set_fit_data(self, data: PODMRData, fit_x, fit_y, raw_params, result_dict):
+    def set_fit_data(self, data: PODMRData, fit_x, fit_y, raw_params, label, result_dict):
         # convert taumode from total to raw
         a, b = data.get_total_scale()
         x = (fit_x - b) / a
 
-        data.set_fit_data(x, fit_y, raw_params, result_dict)
+        data.set_fit_data(x, fit_y, raw_params, label, result_dict)
 
     def guess_fit_params(
         self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
@@ -293,30 +293,28 @@ class PODMRFitter(object):
             return P.ParamDict()
         return self.fitters[label].param_dict()
 
-    def fit(self, data: PODMRData, params: dict) -> F.model.ModelResult | None:
+    def fit(self, data: PODMRData, params: dict, label: str) -> F.model.ModelResult | None:
         """Perform fitting. returns lmfit.model.ModelResult."""
 
-        m = params.get("method")
-        if m not in self.fitters:
-            self.logger.error(f"Unknown method {m}")
+        if label not in self.fitters:
+            self.logger.error(f"Unknown label {label}")
             return None
 
         try:
-            return self.fitters[m].fit(data, params)
+            return self.fitters[label].fit(data, params, label)
         except Exception:
             self.logger.exception("Failed to fit.")
             return None
 
-    def fitd(self, data: PODMRData, params: dict) -> dict:
+    def fitd(self, data: PODMRData, params: dict, label: str) -> dict:
         """Perform fitting. returns dict."""
 
-        m = params.get("method")
-        if m not in self.fitters:
-            self.logger.error(f"Unknown method {m}")
+        if label not in self.fitters:
+            self.logger.error(f"Unknown label {label}")
             return {}
 
         try:
-            return self.fitters[m].fitd(data, params)
+            return self.fitters[label].fitd(data, params, label)
         except Exception:
             self.logger.exception("Failed to fit.")
             return {}

@@ -39,7 +39,7 @@ def test_odmr(server, odmr, server_conf, odmr_conf):
     assert odmr.get_param_dict("non-existent-name") == None
     assert get_some(odmr.get_status, poll_timeout_ms).state == BinaryState.IDLE
 
-    assert odmr.change_state(BinaryState.ACTIVE, params)
+    assert odmr.change_state(BinaryState.ACTIVE, params, "cw")
     assert expect_odmr(odmr, params.unwrap(), poll_timeout_ms)
     data = get_some(odmr.get_data, poll_timeout_ms)
 

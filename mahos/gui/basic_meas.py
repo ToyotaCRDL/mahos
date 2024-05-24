@@ -223,7 +223,9 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         self.cli.stop()
 
     def request_start(self):
-        self.cli.start(self.paramTable.params())
+        params = self.paramTable.params()
+        label = self.labelBox.currentText()
+        self.cli.start(params, label)
 
     def apply_widgets(self, data: BasicMeasData):
         if not data.has_data():

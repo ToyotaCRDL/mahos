@@ -22,8 +22,9 @@ from .common_meas_msgs import BasicMeasData
 class ValidateReq(Request):
     """Validate Measurement Params Request"""
 
-    def __init__(self, params: dict):
+    def __init__(self, params: dict, label: str):
         self.params = params
+        self.label = label
 
 
 class DiscardReq(Request):
@@ -84,9 +85,9 @@ class PODMRStatus(Status):
 
 
 class PODMRData(BasicMeasData):
-    def __init__(self, params: dict | None = None):
-        self.set_version(4)
-        self.init_params(params)
+    def __init__(self, params: dict | None = None, label: str = ""):
+        self.set_version(5)
+        self.init_params(params, label)
         self.init_attrs()
 
         self.init_xdata()
@@ -118,7 +119,7 @@ class PODMRData(BasicMeasData):
             # supersampling
             if self.is_supersampling():
                 i = np.arange(self.params["num"])
-                pulse_num = {"xy8": 8, "xy16": 16}[self.params["method"]] * self.params["Nconst"]
+                pulse_num = {"xy8": 8, "xy16": 16}[self.label] * self.params["Nconst"]
                 sample = np.linspace(0, 1, num=self.params["supersample"] + 1)
                 i_sub = (sample * pulse_num).astype(np.int64)[:-1] / pulse_num
 
@@ -455,7 +456,7 @@ class PODMRData(BasicMeasData):
     def get_method(self) -> str | None:
         if not self.has_params():
             return None
-        return self.params["method"]
+        return self.label
 
     # helpers
 
@@ -502,24 +503,26 @@ class PODMRData(BasicMeasData):
         return self.has_params() and self.params.get("partial") in (0, 1)
 
     def is_sweepN(self):
-        return self.has_params() and is_sweepN(self.params["method"])
+        return self.has_params() and is_sweepN(self.label)
 
     def is_CPlike(self) -> bool:
-        return self.has_params() and is_CPlike(self.params["method"])
+        return self.has_params() and is_CPlike(self.label)
 
     def is_correlation(self):
-        return self.has_params() and is_correlation(self.params["method"])
+        return self.has_params() and is_correlation(self.label)
 
     def is_supersampling(self):
         return (
-            self.params["method"] in ("xy8", "xy16")
+            self.label in ("xy8", "xy16")
             and "supersample" in self.params
             and self.params["supersample"] != 1
         )
 
-    def can_resume(self, params: dict | None) -> bool:
+    def can_resume(self, params: dict | None, label: str) -> bool:
         """Check if the measurement can be resumed with given new_params."""
 
+        if self.label != label:
+            return False
         if not self.has_params() or params is None:
             return False
         p0 = self.params.copy()
@@ -580,5 +583,11 @@ def update_data(data: PODMRData):
         ## newly added ROI-related params
         data.params["roi_head"] = -1.0e-9
         data.params["roi_tail"] = -1.0e-9
+        data.set_version(4)
+    if data.version() <= 4:
+        # version 4 to 5
+        data.label = data.params["method"]
+        del data.params["method"]
+        data.set_version(5)
 
     return data

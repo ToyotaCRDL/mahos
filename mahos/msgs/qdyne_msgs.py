@@ -23,8 +23,9 @@ from . import param_msgs as P
 class ValidateReq(Request):
     """Validate Measurement Params Request"""
 
-    def __init__(self, params: dict):
+    def __init__(self, params: dict, label: str):
         self.params = params
+        self.label = label
 
 
 class DiscardReq(Request):
@@ -34,9 +35,9 @@ class DiscardReq(Request):
 
 
 class QdyneData(BasicMeasData):
-    def __init__(self, params: dict | None = None):
-        self.set_version(0)
-        self.init_params(params)
+    def __init__(self, params: dict | None = None, label: str = ""):
+        self.set_version(1)
+        self.init_params(params, label)
         self.init_attrs()
 
         self.tdc_status: TDCStatus | None = None
@@ -211,7 +212,7 @@ class QdyneData(BasicMeasData):
     def get_method(self) -> str | None:
         if not self.has_params():
             return None
-        return self.params["method"]
+        return self.label
 
     # helpers
 
@@ -226,9 +227,11 @@ class QdyneData(BasicMeasData):
     def is_partial(self) -> bool:
         return self.has_params() and self.params.get("partial") in (0, 1)
 
-    def can_resume(self, params: dict | None) -> bool:
+    def can_resume(self, params: dict | None, label: str) -> bool:
         """Check if the measurement can be resumed with given new_params."""
 
+        if self.label != label:
+            return False
         if not self.has_params() or params is None:
             return False
         p0 = self.params.copy()
@@ -244,5 +247,11 @@ class QdyneData(BasicMeasData):
 
 def update_data(data: QdyneData):
     """update data to latest format"""
+
+    if data.version() <= 0:
+        # version 0 to 1
+        data.label = data.params["method"]
+        del data.params["method"]
+        data.set_version(1)
 
     return data

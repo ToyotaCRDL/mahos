@@ -661,7 +661,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         if "sg_modulation" in data.params:
             self.sgmodBox.setChecked(data.params["sg_modulation"])
         timing = data.params["timing"]
-        if data.params["method"] == "cw":
+        if data.label == "cw":
             self.cwButton.setChecked(True)
             self.windowBox.setValue(timing["time_window"] * 1e3)
         else:
@@ -745,10 +745,10 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params["sg_modulation"] = self.sgmodBox.isChecked()
 
         if self.cwButton.isChecked():
-            params["method"] = "cw"
+            label = "cw"
             t = {"time_window": self.windowBox.value() * 1e-3}  # ms to s
         else:
-            params["method"] = "pulse"
+            label = "pulse"
             t = {}
             t["laser_delay"] = self.laserdelayBox.value() * 1e-9  # ns to s
             t["laser_width"] = self.laserwidthBox.value() * 1e-9
@@ -762,28 +762,28 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             params["pd_rate"] = self.pdrateBox.value() * 1e3  # kHz to Hz
             params["pd_bounds"] = [self.pd_lbBox.value(), self.pd_ubBox.value()]
 
-        return params
+        return params, label
 
     def request_start(self):
-        if self.cli.validate(self.get_params()):
+        if self.cli.validate(*self.get_params()):
             self.start_sweep()
 
     def start_sweep(self):
-        params = self.get_params()
+        params, label = self.get_params()
 
         title = "Continue sweep?"
         body = (
             "Continue sweep with current data?"
             + " Press No to clear current data and start a new sweep."
         )
-        if self.data.can_resume(params) and Qt.question_yn(self, title, body):
+        if self.data.can_resume(params, label) and Qt.question_yn(self, title, body):
             params["resume"] = True
             params["ident"] = self.data.ident
         else:
             params["resume"] = False
             params["ident"] = uuid.uuid4()
 
-        self.cli.start(params)
+        self.cli.start(params, label)
 
     def update_data(self, data: ODMRData):
         self.data = data

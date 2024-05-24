@@ -60,12 +60,8 @@ class PODMRIO(object):
         op.analyze(data)
 
     def refit_data(self, params: dict, data: PODMRData) -> bool:
-        if "method" not in params["fit"]:
-            self.logger.error("Undefined: params['fit']['method']")
-            return False
-
         fitter = PODMRFitter(self.logger)
-        success = bool(fitter.fitd(data, params["fit"]))
+        success = bool(fitter.fitd(data, params["fit"], params["fit_label"]))
         if not success:
             self.logger.error("Failed to fit.")
         return success
@@ -136,7 +132,7 @@ class PODMRIO(object):
         for d in data_list:
             if params.get("plot"):
                 self.reanalyze_data(params["plot"], d)
-            if params.get("fit") and not self.refit_data(params, d):
+            if params.get("fit_label") and not self.refit_data(params, d):
                 return False
 
         ext = path.splitext(filename)[1]

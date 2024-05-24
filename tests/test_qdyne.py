@@ -88,8 +88,8 @@ def test_qdyne(server, qdyne, server_conf, qdyne_conf):
     assert get_some(qdyne.get_status, poll_timeout_ms).state == BinaryState.IDLE
     params = qdyne.get_param_dict("xy8")
 
-    assert qdyne.validate(params)
-    assert qdyne.start(params)
+    assert qdyne.validate(params, "xy8")
+    assert qdyne.start(params, "xy8")
     assert expect_value(qdyne.get_state, BinaryState.ACTIVE, poll_timeout_ms)
 
     # On Qdyne, data is fetched and analyzed on stop().

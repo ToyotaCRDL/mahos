@@ -142,7 +142,6 @@ class Sweeper(Worker):
         f_start = max(min(self.conf.get("start", 2.74e9), f_max), f_min)
         f_stop = max(min(self.conf.get("stop", 3.00e9), f_max), f_min)
         d = P.ParamDict(
-            method=P.StrChoiceParam(label, ("cw", "pulse")),
             start=P.FloatParam(f_start, f_min, f_max),
             stop=P.FloatParam(f_stop, f_min, f_max),
             num=P.IntParam(self.conf.get("num", 101), 2, 10000),
@@ -186,7 +185,7 @@ class Sweeper(Worker):
         return d
 
     def validate_params(
-        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]
+        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str
     ) -> bool:
         params = P.unwrap(params)
         if params["start"] >= params["stop"]:
@@ -445,23 +444,23 @@ class Sweeper(Worker):
             blocks, freq, trigger_type=TriggerType.HARDWARE_RISING, n_runs=1
         )
 
-    def configure_pg(self, params: dict) -> bool:
+    def configure_pg(self, params: dict, label: str) -> bool:
         if not (self.pg.stop() and self.pg.clear()):
             return False
         if self._pd_analog:
-            if params["method"] == "cw":
+            if label == "cw":
                 return self.configure_pg_CW_analog(params)
             else:
                 self.logger.error("Pulse for Analog PD is not implemented yet.")
                 return False
         else:
-            if params["method"] == "cw":
+            if label == "cw":
                 return self.configure_pg_CW_apd(params)
             else:
                 return self.configure_pg_pulse_apd(params)
 
-    def start_apd(self, params: dict) -> bool:
-        if params["method"] == "cw":
+    def start_apd(self, params: dict, label: str) -> bool:
+        if label == "cw":
             time_window = params["timing"]["time_window"]
         else:
             # time_window is used to compute APD's count rate.
@@ -498,9 +497,9 @@ class Sweeper(Worker):
         )
         return success
 
-    def start_analog_pd(self, params: dict) -> bool:
+    def start_analog_pd(self, params: dict, label: str) -> bool:
         rate = params["pd_rate"]
-        if params["method"] == "cw":
+        if label == "cw":
             oversamp = round(params["timing"]["time_window"] * params["pd_rate"])
         else:
             # t = params["timing"]
@@ -553,7 +552,9 @@ class Sweeper(Worker):
         )
         return success
 
-    def start(self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]) -> bool:
+    def start(
+        self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str = ""
+    ) -> bool:
         if params is not None:
             params = P.unwrap(params)
             self._continue_mw = params.get("continue_mw", False)
@@ -563,7 +564,7 @@ class Sweeper(Worker):
             return self.fail_with_release("Error acquiring instrument locks.")
 
         if not resume:
-            self.data = ODMRData(params)
+            self.data = ODMRData(params, label)
         else:
             # TODO: check ident if resume?
             self.data.update_params(params)
@@ -571,13 +572,13 @@ class Sweeper(Worker):
 
         if not self.configure_sg(self.data.params):
             return self.fail_with_release("Failed to configure SG.")
-        if not self.configure_pg(self.data.params):
+        if not self.configure_pg(self.data.params, self.data.label):
             return self.fail_with_release("Failed to configure PG.")
         if self._pd_analog:
-            if not self.start_analog_pd(self.data.params):
+            if not self.start_analog_pd(self.data.params, self.data.label):
                 return self.fail_with_release("Failed to start PD (Analog).")
         else:
-            if not self.start_apd(self.data.params):
+            if not self.start_apd(self.data.params, self.data.label):
                 return self.fail_with_release("Failed to start APD.")
 
         time.sleep(self._start_delay)

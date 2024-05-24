@@ -171,8 +171,8 @@ class BaseFitter(object):
         ydata = data.get_ydata()
         return xdata, ydata
 
-    def set_fit_data(self, data: Data, fit_x, fit_y, raw_params, result_dict):
-        data.set_fit_data(fit_x, fit_y, raw_params, result_dict)
+    def set_fit_data(self, data: Data, fit_x, fit_y, raw_params, label, result_dict):
+        data.set_fit_data(fit_x, fit_y, raw_params, label, result_dict)
 
     def _filter_data(self, xdata, ydata, raw_params):
         if "xbounds" not in raw_params:
@@ -186,17 +186,22 @@ class BaseFitter(object):
         return xdata[indices], ydata[indices]
 
     def _fit_xy(
-        self, xdata, ydata, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]
+        self,
+        xdata,
+        ydata,
+        params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue],
+        label: str,
     ) -> tuple[F.model.ModelResult, dict]:
-        return self._fit_core(xdata, ydata, None, params)
+        return self._fit_core(xdata, ydata, None, params, label)
 
     def _fit(
         self,
         data: Data,
         params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue],
+        label: str,
     ) -> tuple[F.model.ModelResult, dict]:
         xdata, ydata = self.get_xydata(data, P.unwrap(params))
-        return self._fit_core(xdata, ydata, data, params)
+        return self._fit_core(xdata, ydata, data, params, label)
 
     def _fit_core(
         self,
@@ -204,6 +209,7 @@ class BaseFitter(object):
         ydata,
         data: Data | None,
         params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue],
+        label: str,
     ) -> tuple[F.model.ModelResult, dict]:
         raw_params = P.unwrap(params)
         model = self.model(raw_params)
@@ -240,18 +246,22 @@ class BaseFitter(object):
         res_dict = {"msg": msg, "popt": popt.unwrap(), "pcov": res.covar}
 
         if data is not None:
-            self.set_fit_data(data, x, y, raw_params, res_dict)
+            self.set_fit_data(data, x, y, raw_params, label, res_dict)
 
         return res, res_dict
 
-    def fit(self, data: Data, params: P.ParamDict[str, P.PDValue]) -> F.model.ModelResult:
-        return self._fit(data, params)[0]
+    def fit(
+        self, data: Data, params: P.ParamDict[str, P.PDValue], label: str
+    ) -> F.model.ModelResult:
+        return self._fit(data, params, label)[0]
 
-    def fitd(self, data: Data, params: P.ParamDict[str, P.PDValue]) -> dict:
-        return self._fit(data, params)[1]
+    def fitd(self, data: Data, params: P.ParamDict[str, P.PDValue], label: str) -> dict:
+        return self._fit(data, params, label)[1]
 
-    def fit_xy(self, xdata, ydata, params: P.ParamDict[str, P.PDValue]) -> F.model.ModelResult:
-        return self._fit_xy(xdata, ydata, params)[0]
+    def fit_xy(
+        self, xdata, ydata, params: P.ParamDict[str, P.PDValue], label: str
+    ) -> F.model.ModelResult:
+        return self._fit_xy(xdata, ydata, params, label)[0]
 
-    def fit_xyd(self, xdata, ydata, params: P.ParamDict[str, P.PDValue]) -> dict:
-        return self._fit_xy(xdata, ydata, params)[1]
+    def fit_xyd(self, xdata, ydata, params: P.ParamDict[str, P.PDValue], label: str) -> dict:
+        return self._fit_xy(xdata, ydata, params, label)[1]

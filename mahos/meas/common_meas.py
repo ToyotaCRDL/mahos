@@ -87,15 +87,15 @@ class BaseMeasClientMixin(StateClientMixin, ParamDictReqMixin):
 class BasicMeasReqMixin(object):
     """implements start(), stop(), {save,export,load}_data(), and {pop,clear}_buffer()."""
 
-    def start(self, params=None) -> bool:
+    def start(self, params=None, label: str = "") -> bool:
         """Start the measurement, i.e., change state to ACTIVE."""
 
-        return self.change_state(BinaryState.ACTIVE, params=params)
+        return self.change_state(BinaryState.ACTIVE, params=params, label=label)
 
-    def stop(self, params=None) -> bool:
+    def stop(self, params=None, label: str = "") -> bool:
         """Stop the measurement, i.e., change state to IDLE."""
 
-        return self.change_state(BinaryState.IDLE, params=params)
+        return self.change_state(BinaryState.IDLE, params=params, label=label)
 
     def save_data(self, file_name: str, params: dict | None = None, note: str = "") -> bool:
         """Save data to `file_name`."""
@@ -142,10 +142,10 @@ class BasicMeasReqMixin(object):
         rep = self.req.request(ClearBufferReq())
         return rep.success
 
-    def fit(self, params: dict, data_index=-1) -> Reply:
+    def fit(self, params: dict, label: str = "", data_index=-1) -> Reply:
         """Fit data."""
 
-        return self.req.request(FitReq(params, data_index))
+        return self.req.request(FitReq(params, label, data_index))
 
     def clear_fit(self, data_index=-1) -> bool:
         """Clear fit data."""
@@ -262,7 +262,7 @@ class BasicMeasNode(Node):
             return Reply(False, message="Data is invalid / not ready")
 
         try:
-            ret = self.fitter.fitd(data, msg.params)
+            ret = self.fitter.fitd(data, msg.params, msg.label)
         except Exception:
             self.logger.exception("Failed to fit")
             return Reply(False, message="Failed to fit")

@@ -55,7 +55,7 @@ class Recorder(BasicMeasNode):
             if not self.worker.stop():
                 return Reply(False, "Failed to stop internal worker.", ret=self.state)
         elif msg.state == BinaryState.ACTIVE:
-            if not self.worker.start(msg.params):
+            if not self.worker.start(msg.params, msg.label):
                 return Reply(False, "Failed to start worker.", ret=self.state)
 
         self.state = msg.state

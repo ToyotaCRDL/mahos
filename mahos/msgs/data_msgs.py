@@ -69,7 +69,11 @@ class Data(Message):
 
     # params
 
-    def init_params(self, params: dict | None):
+    def init_params(self, params: dict | None, label: str | None = None):
+        # bind label if the measurement accepts label (it provides multiple measurement modes).
+        if label is not None:
+            self.label = label
+
         if params is None:
             self.params = None
             self.ident = uuid.uuid4()

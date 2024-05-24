@@ -35,31 +35,32 @@ class Collector(Worker):
     def get_param_dict_labels(self) -> list[str]:
         return list(self.mode_inst_label.keys())
 
-    def get_param_dict(self, mode: str) -> P.ParamDict[str, P.PDValue] | None:
-        if mode not in self.mode_inst_label:
-            self.logger.error(f"Invalid mode {mode}")
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
+        if label not in self.mode_inst_label:
+            self.logger.error(f"Invalid label {label}")
             return None
 
         pd = P.ParamDict()
-        pd["mode"] = P.StrChoiceParam(mode, self.get_param_dict_labels())
         pd["max_len"] = P.IntParam(1000, 1, 100_000_000)
-        for inst, label in self.mode_inst_label[mode].items():
-            d = self.cli.get_param_dict(inst, label)
+        for inst, inst_label in self.mode_inst_label[label].items():
+            d = self.cli.get_param_dict(inst, inst_label)
             if d is None:
                 self.logger.error(f"Failed to generate param dict for {inst}.")
                 return None
             pd[inst] = d
         return pd
 
-    def start(self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue]) -> bool:
+    def start(
+        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str = ""
+    ) -> bool:
         if params is not None:
             params = P.unwrap(params)
 
-        if "mode" not in params or params["mode"] not in self.mode_inst_label:
-            self.logger.error("mode must be in params")
+        if label not in self.mode_inst_label:
+            self.logger.error(f"Invalid mode label {label}")
             return False
 
-        self.used_insts = list(self.mode_inst_label[params["mode"]].keys())
+        self.used_insts = list(self.mode_inst_label[label].keys())
 
         for inst in self.used_insts:
             if not self.cli.lock(inst):
@@ -69,8 +70,8 @@ class Collector(Worker):
         for inst in self.used_insts:
             if inst not in params:
                 return self.fail_with_release(f"Instrument {inst} is not contained in params.")
-            label = self.mode_inst_label[params["mode"]][inst]
-            if not self.cli.configure(inst, params[inst], label):
+            inst_label = self.mode_inst_label[label][inst]
+            if not self.cli.configure(inst, params[inst], inst_label):
                 return self.fail_with_release(f"Failed to configure instrument {inst}")
             units.append((inst, self.cli.get(inst, "unit") or ""))
 
@@ -80,7 +81,7 @@ class Collector(Worker):
 
         self.timer = IntervalTimer(self.interval_sec)
 
-        self.data = RecorderData(params)
+        self.data = RecorderData(params, label)
         self.data.set_units(units)
         self.data.start()
         self.logger.info("Started collector.")
