@@ -8,6 +8,8 @@ Function Generator module.
 
 """
 
+import re
+import enum
 from functools import wraps
 
 from .visa_instrument import VisaInstrument
@@ -187,7 +189,7 @@ class DG2000(VisaInstrument):
         elif isinstance(t, (float, int)):
             return f"{t:.11E}"
         else:
-            raise TypeError("Invalid frequency value type.")
+            raise TypeError("Invalid period value type.")
 
     @ch_setter((1, 2))
     def set_burst(self, on: bool, ch: int = 1) -> bool:
@@ -493,7 +495,7 @@ class DG2000(VisaInstrument):
                 self.get_offset(ch),
                 self._offs_bounds[ch][0],
                 self._offs_bounds[ch][1],
-                unit="Vpp",
+                unit="V",
             ),
         )
 
@@ -511,14 +513,14 @@ class DG2000(VisaInstrument):
                     1,
                     self.OUTPUT_HighZ,
                     unit="Ω",
-                    doc=f"Set maximum ({self.OUTPUT_HighZ}) for HighZ",
+                    doc=f"Output impedance. Set maximum ({self.OUTPUT_HighZ}) for HighZ",
                 ),
                 ch2_imp=P.IntParam(
                     self.get_output_impedance(2),
                     1,
                     self.OUTPUT_HighZ,
                     unit="Ω",
-                    doc=f"Set maximum ({self.OUTPUT_HighZ}) for HighZ",
+                    doc=f"Output impedance. Set maximum ({self.OUTPUT_HighZ}) for HighZ",
                 ),
                 align_phase=P.BoolParam(True),
             )
@@ -573,6 +575,641 @@ class DG2000(VisaInstrument):
                 params.get("freq"),
                 params.get("ampl"),
                 offset_volt=params.get("offset", 0.0),
+                ch=2,
+                reset=False,
+            )
+        elif label == "output":
+            return self.configure_output(params)
+        else:
+            return self.fail_with(f"Unknown label: {label}")
+
+
+class SIGLENT_SDG2000X(VisaInstrument):
+    """SIGLENT SDG2000X series Function Generator.
+
+    :param ampl_bounds: Amplitude bounds in Vpp (min, max).
+    :type ampl_bounds: tuple[float, float]
+    :param offs_bounds: Offset bounds in V (min, max).
+    :type offs_bounds: tuple[float, float]
+    :param freq_bounds: Frequency bounds in Hz (min, max).
+    :type freq_bounds: tuple[float, float]
+    :param ext_ref_clock: use external reference clock source.
+    :type ext_ref_clock: bool
+    :param gate.source: trigger source for gated burst. one of TRIG_SOURCE.
+    :type gate.source: str
+    :param gate.slope: trigger slope polarity. True for positive.
+    :type gate.slope: bool
+    :param gate.polarity: gate polarity. True for positive.
+    :type gate.polarity: bool
+
+    """
+
+    TRIG_SOURCE = ("INT", "EXT", "MAN")
+    Load_HighZ = 110_000
+
+    class Mode(enum.Enum):
+        UNCONFIGURED = 0
+        CW = 1
+        BURST_GATE = 2
+        BURST_CYCLE = 3
+
+    def __init__(self, name, conf, prefix=None):
+        if "write_termination" not in conf:
+            conf["write_termination"] = "\n"
+        if "read_termination" not in conf:
+            conf["read_termination"] = "\n"
+        VisaInstrument.__init__(self, name, conf, prefix=prefix)
+
+        self._ampl_bounds = self.conf.get("ampl_bounds", (0.0, 10.0))
+        self._offs_bounds = self.conf.get("offs_bounds", (0.0, 10.0))
+        self._freq_bounds = self.conf.get("freq_bounds", (1e-6, 80e6))
+
+        self.ext_ref_clock = self.conf.get("ext_ref_clock", False)
+        self.set_reference_clock(bool(self.ext_ref_clock))
+
+        c = self.conf.get("gate", {})
+        self.gate_conf = {
+            "source": c.get("source", "EXT"),
+            "polarity": c.get("polarity", True),
+        }
+        self.logger.debug(f"gate configuration: {self.gate_conf}")
+        self.reset_modes()
+
+    def reset_modes(self):
+        self._modes = {1: self.Mode.UNCONFIGURED, 2: self.Mode.UNCONFIGURED}
+
+    def get_bounds(self):
+        return {
+            "ampl": self._ampl_bounds,
+            "offs": self._offs_bounds,
+            "freq": self._freq_bounds,
+        }
+
+    @ch_setter((1, 2))
+    def set_output(self, on: bool, ch: int = 1) -> bool:
+        on_off = "ON" if on else "OFF"
+        self.inst.write(f"C{ch}:OUTP {on_off}")
+        self.logger.info(f"Output{ch} {on_off}")
+        return True
+
+    @ch_getter((1, 2))
+    def get_output(self, ch: int = 1) -> bool | None:
+        res = self.inst.query(f"C{ch}:OUTP?")
+        mo = re.search(r"OUTP (ON|OFF)\,", res)
+        if mo is None:
+            self.logger.error(f"Cannot parse C{ch}:OUTP? -> " + res)
+            return None
+
+        return mo.groups()[0] == "ON"
+
+    @ch_setter((1, 2))
+    def set_load_impedance(self, imp_ohm: int | str, ch: int = 1) -> bool:
+        """Set load impedance.
+
+        :param imp_ohm: Impedance in Ohm. May be str "INF".
+            Value greater than 1e5 is considered HighZ (INF).
+        :param ch: Output channel (1 or 2).
+
+        """
+
+        if isinstance(imp_ohm, str):
+            imp_ohm = imp_ohm.upper()[:3]
+            if imp_ohm != "INF":
+                return self.fail_with(f"Invalid impedance string {imp_ohm}")
+            imp_ohm = "HZ"
+        elif isinstance(imp_ohm, (int, float)):
+            imp_ohm = int(round(imp_ohm))
+            if imp_ohm < 1:
+                return self.fail_with(f"Impedance {imp_ohm} must be greaer than 1")
+            if imp_ohm > 1e5:
+                imp_ohm = "HZ"
+        else:
+            return self.fail_with(f"Impedance {imp_ohm} has invalid type {type(imp_ohm)}")
+
+        self.inst.write(f"C{ch}:OUTP LOAD,{imp_ohm}")
+        self.logger.info(f"Output{ch} impedance: {imp_ohm}")
+
+        return True
+
+    @ch_getter((1, 2))
+    def get_output_impedance(self, ch: int = 1) -> int:
+        """Get output impedance. OUTPUT_HighZ means highest impedance (INF)."""
+
+        res = self.inst.query(f"C{ch}:OUTP?")
+        mo = re.search(r"LOAD\,([0-9]*|HZ)\,", res)
+        if mo is None:
+            self.logger.error(f"Cannot parse C{ch}:OUTP? -> " + res)
+            return 0
+
+        value = mo.groups()[0]
+        if value == "HZ":
+            return self.Load_HighZ
+        else:
+            return int(value)
+
+    def _fmt_freq(self, freq: str | float | int) -> str:
+        if isinstance(freq, str):
+            return freq
+        elif isinstance(freq, (float, int)):
+            return f"{freq:.12E}"
+        else:
+            raise TypeError("Invalid frequency value type.")
+
+    # CW (BSWV: Basic Wave) settings
+
+    @ch_setter((1, 2))
+    def set_function(self, func: str, ch: int = 1) -> bool:
+        func = func.upper()
+        if func not in ("SINE", "SQUARE", "RAMP", "PULSE", "NOISE", "ARB", "DC", "PRBS", "IQ"):
+            return self.fail_with(f"Invalid function: {func}")
+        self.inst.write(f"C{ch}:BSWV WVTP,{func}")
+        return True
+
+    @ch_getter((1, 2))
+    def get_function(self, ch: int = 1) -> str:
+        res = self.inst.query(f"C{ch}:BSWV?")
+        mo = re.search(r"WVTP\,([A-Z]+)\,", res)
+        if mo is None:
+            self.logger.error(f"Cannot parse C{ch}:BSWV? -> " + res)
+            return ""
+        return mo.groups()[0]
+
+    @ch_setter((1, 2))
+    def set_freq(self, freq: float, ch: int = 1) -> bool:
+        self.inst.write("C{}:BSWV FRQ,{}".format(ch, self._fmt_freq(freq)))
+        return True
+
+    @ch_getter((1, 2))
+    def get_freq(self, ch: int = 1) -> float:
+        res = self.inst.query(f"C{ch}:BSWV?")
+        mo = re.search(r"FRQ\,([0-9.]+)HZ\,", res)
+        if mo is None:
+            self.logger.error(f"Cannot parse C{ch}:BSWV? -> " + res)
+            return 0.0
+        return float(mo.groups()[0])
+
+    @ch_setter((1, 2))
+    def set_phase(self, phase_deg: float, ch: int = 1) -> bool:
+        self.inst.write(f"C{ch}:BSWV PHSE,{phase_deg:.3f}")
+        return True
+
+    @ch_getter((1, 2))
+    def get_phase(self, ch: int = 1) -> float:
+        res = self.inst.query(f"C{ch}:BSWV?")
+        mo = re.search(r"PHSE\,([0-9.]+)", res)
+        if mo is None:
+            self.logger.error(f"Cannot parse C{ch}:BSWV? -> " + res)
+            return 0.0
+        return float(mo.groups()[0])
+
+    @ch_setter((1, 2))
+    def set_amplitude(self, ampl_Vpp: float, ch: int = 1) -> bool:
+        self.inst.write(f"C{ch}:BSWV AMP,{ampl_Vpp:.8E}")
+        return True
+
+    @ch_getter((1, 2))
+    def get_amplitude(self, ch: int = 1) -> float:
+        res = self.inst.query(f"C{ch}:BSWV?")
+        mo = re.search(r"AMP\,([0-9.]+)V\,", res)
+        if mo is None:
+            self.logger.error(f"Cannot parse C{ch}:BSWV? -> " + res)
+            return 0.0
+        return float(mo.groups()[0])
+
+    @ch_setter((1, 2))
+    def set_offset(self, offset: float, ch: int = 1) -> bool:
+        self.inst.write(f"C{ch}:BSWV OFST,{offset:.8E}")
+        return True
+
+    @ch_getter((1, 2))
+    def get_offset(self, ch: int = 1) -> float:
+        res = self.inst.query(f"C{ch}:BSWV?")
+        mo = re.search(r"OFST\,([0-9.]+)V\,", res)
+        if mo is None:
+            self.logger.error(f"Cannot parse C{ch}:BSWV? -> " + res)
+            return 0.0
+        return float(mo.groups()[0])
+
+    # Burst (BTWV: Burst Wave) settings
+
+    @ch_setter((1, 2))
+    def set_burst(self, on: bool, ch: int = 1) -> bool:
+        on_off = "ON" if on else "OFF"
+        self.inst.write(f"C{ch}:BTWV STATE,{on_off}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_mode(self, mode: str, ch: int = 1) -> bool:
+        if mode.upper() not in ("GATE", "NCYC"):
+            return False
+
+        self.inst.write(f"C{ch}:BTWV GATE_NCYC,{mode}")
+        return True
+
+    def trigger(self, ch: int = 1) -> bool:
+        """Execute manual (software) trigger.
+
+        Only valid when trigger souce is MAN and configured as burst cycle mode.
+        """
+
+        if self._modes[ch] == self.Mode.BURST_CYCLE:
+            self.inst.write(f"C{ch}:BTWV MTRIG")
+            return True
+        return self.fail_with("Improper mode to execute manual trigger.")
+
+    @ch_setter((1, 2))
+    def set_burst_trig_source(self, source: str, ch: int = 1) -> bool:
+        source = source.upper()[:3]
+        if source not in self.TRIG_SOURCE:
+            self.logger.error(f"Invalid Burst Trigger Source: {source}")
+            return False
+
+        self.inst.write(f"C{ch}:BTWV TRSR,{source}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_trig_slope(self, positive: bool, ch: int = 1) -> bool:
+        slope = "RISE" if positive else "FALL"
+        self.inst.write(f"C{ch}:BTWV EDGE,{slope}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_gate_polarity(self, positive: bool, ch: int = 1) -> bool:
+        pol = "POS" if positive else "NEG"
+        self.inst.write(f"C{ch}:BTWV PLRT,{pol}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_cycle(self, cycle: int | str, ch: int = 1) -> bool:
+        if isinstance(cycle, str):
+            cycle = cycle.upper()
+            if cycle not in ("INF", "M"):
+                return self.fail_with("Invalid cycle in str. Valid values are INF or M.")
+        self.inst.write(f"C{ch}:BTWV TIME,{cycle}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_function(self, func: str, ch: int = 1) -> bool:
+        func = func.upper()
+        if func not in ("SINE", "SQUARE", "RAMP", "PULSE", "NOISE", "ARB"):
+            return self.fail_with(f"Invalid function: {func}")
+        self.inst.write(f"C{ch}:BTWV CARR,WVTP,{func}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_freq(self, freq: float, ch: int = 1) -> bool:
+        self.inst.write("C{}:BTWV CARR,FRQ,{}".format(ch, self._fmt_freq(freq)))
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_phase(self, phase_deg: float, ch: int = 1) -> bool:
+        self.inst.write(f"C{ch}:BTWV STPS,{phase_deg:.3f}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_delay(self, delay_sec: float, ch: int = 1) -> bool:
+        self.inst.write(f"C{ch}:BTWV DLAY,{delay_sec:.8E}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_amplitude(self, ampl_Vpp: float, ch: int = 1) -> bool:
+        self.inst.write(f"C{ch}:BTWV CARR,AMP,{ampl_Vpp:.8E}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_offset(self, offset: float, ch: int = 1) -> bool:
+        self.inst.write(f"C{ch}:BTWV CARR,OFST,{offset:.8E}")
+        return True
+
+    def set_reference_clock(self, external: bool) -> bool:
+        source = "EXT" if external else "INT"
+        self.inst.write(f"ROSC {source}")
+        self.logger.info(f"Reference clock: {source}")
+        return True
+
+    def configure_CW(
+        self,
+        wave: str | None,
+        freq: float | None,
+        ampl_vpp: float | None,
+        offset_volt: float | None = 0.0,
+        phase_deg: float = 0.0,
+        ch: int = 1,
+        reset: bool = True,
+    ) -> bool:
+        """Configure Continuous Wave output."""
+
+        success = True
+        if reset:
+            success &= self.reset()
+            success &= self.set_reference_clock(self.ext_ref_clock)
+            self.reset_modes()
+
+        if wave is not None:
+            success &= self.set_function(wave, ch=ch)
+        if freq is not None:
+            success &= self.set_freq(freq, ch=ch)
+        if ampl_vpp is not None:
+            success &= self.set_amplitude(ampl_vpp, ch=ch)
+        if offset_volt is not None:
+            success &= self.set_offset(offset_volt, ch=ch)
+        success &= self.set_phase(phase_deg)
+
+        if success:
+            self.logger.info(f"Configured ch{ch} for CW.")
+            self._modes[ch] = self.Mode.CW
+        else:
+            self.logger.error(f"Failed to configure ch{ch} for CW.")
+
+        return success
+
+    def configure_gate(
+        self,
+        wave: str,
+        freq: float,
+        ampl_Vpp: float,
+        phase_deg: float,
+        offset_volt: float = 0.0,
+        source: str = "",
+        polarity: bool | None = None,
+        ch: int = 1,
+        reset: bool = True,
+    ) -> bool:
+        """Configure Gated Burst output."""
+
+        success = True
+        if reset:
+            success &= self.reset()
+            self.reset_modes()
+            self.set_reference_clock(self.ext_ref_clock)
+
+        success &= (
+            self.set_burst(True, ch=ch)
+            # Setting here mode=NCYC and delay=0.0 to fix questionable behaviour:
+            # - Cannot set delay (via command) after entering GATE mode, as in the manual.
+            # - But, if a delay is set before this, it is actually inserted in the signal.
+            # NOTE that setting delay=0.0 doesn't mean exactly 0 delay,
+            # but minimum possible delay (~ 600 ns) for the instrument.
+            and self.set_burst_mode("NCYC", ch=ch)
+            and self.set_burst_delay(0.0, ch=ch)
+            # turn to GATE mode which we actually want to configure.
+            and self.set_burst_mode("GATE", ch=ch)
+            and self.set_burst_trig_source(source or self.gate_conf["source"], ch=ch)
+            and self.set_burst_gate_polarity(
+                polarity if polarity is not None else self.gate_conf["polarity"], ch=ch
+            )
+            and self.set_burst_function(wave, ch=ch)
+            and self.set_burst_freq(freq, ch=ch)
+            and self.set_burst_amplitude(ampl_Vpp, ch=ch)
+            and self.set_burst_offset(offset_volt, ch=ch)
+            and self.set_burst_phase(phase_deg, ch=ch)
+        )
+
+        if success:
+            self.logger.info(
+                f"Configured ch{ch} for Gated Burst."
+                + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
+            )
+            self._modes[ch] = self.Mode.BURST_GATE
+        else:
+            self.logger.error(f"Failed to configure ch{ch} for Gated Burst.")
+
+        return success
+
+    def configure_burst(
+        self,
+        wave: str,
+        freq: float,
+        ampl_Vpp: float,
+        phase_deg: float,
+        cycle: int,
+        offset: float = 0.0,
+        delay: float = 0.0,
+        source: str = "",
+        polarity: bool | None = None,
+        ch: int = 1,
+        reset: bool = True,
+    ) -> bool:
+        """Configure Gated Burst output."""
+
+        success = True
+        if reset:
+            success &= self.reset()
+            self.reset_modes()
+            self.set_reference_clock(self.ext_ref_clock)
+
+        success &= (
+            self.set_burst(True, ch=ch)
+            and self.set_burst_mode("NCYC", ch=ch)
+            and self.set_burst_trig_source(source or self.gate_conf["source"], ch=ch)
+            and self.set_burst_trig_slope(
+                polarity if polarity is not None else self.gate_conf["polarity"], ch=ch
+            )
+            and self.set_burst_function(wave, ch=ch)
+            and self.set_burst_freq(freq, ch=ch)
+            and self.set_burst_amplitude(ampl_Vpp, ch=ch)
+            and self.set_burst_offset(offset, ch=ch)
+            and self.set_burst_phase(phase_deg, ch=ch)
+            and self.set_burst_cycle(cycle, ch=ch)
+            and self.set_burst_delay(delay, ch=ch)
+        )
+
+        if success:
+            self.logger.info(
+                f"Configured ch{ch} for Cycle Burst. cycle: {cycle}"
+                + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
+            )
+            self._modes[ch] = self.Mode.BURST_CYCLE
+        else:
+            self.logger.error(f"Failed to configure ch{ch} for Gated Burst.")
+
+        return success
+
+    def configure_output(self, params: dict):
+        success = True
+        if "ch1_imp" in params:
+            success &= self.set_load_impedance(params["ch1_imp"], 1)
+        if "ch2_imp" in params:
+            success &= self.set_load_impedance(params["ch2_imp"], 2)
+        return success
+
+    # Standard API
+
+    def start(self, label: str = "") -> bool:
+        if label.startswith("ch1"):
+            return self.set_output(True, 1)
+        elif label.startswith("ch2"):
+            return self.set_output(True, 2)
+        else:
+            return self.fail_with(f"Unknown label {label} to start")
+
+    def stop(self, label: str = "") -> bool:
+        if label.startswith("ch1"):
+            return self.set_output(False, 1)
+        elif label.startswith("ch2"):
+            return self.set_output(False, 2)
+        else:
+            return self.fail_with(f"Unknown label {label} to stop")
+
+    def reset(self, label: str = "") -> bool:
+        return self.rst()
+
+    def get(self, key: str, args=None, label: str = ""):
+        if key == "opc":
+            return self.query_opc(delay=args)
+        elif key == "bounds":
+            return self.get_bounds()
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        if key == "output":
+            if isinstance(value, dict):
+                if "on" in value and "ch" in value:
+                    return self.set_output(value["on"], value["ch"])
+                else:
+                    return self.fail_with("set('output', dict): needs keys on and ch")
+            elif isinstance(value, bool):
+                return self.set_output(value)
+            else:
+                return self.fail_with(f"set('output', value): Ill-formed value {value}")
+        elif key == "trigger":
+            return self.trigger()
+        else:
+            return self.fail_with("Unknown set() key.")
+
+    def _cw_param_dict(self, ch: int):
+        func = self.get_function(ch)
+        functions = ("SINE", "SQUARE")
+        if func not in functions:
+            func = "SINE"
+
+        return P.ParamDict(
+            wave=P.StrChoiceParam(
+                func,
+                functions,
+                doc="wave form",
+            ),
+            freq=P.FloatParam(
+                self.get_freq(ch),
+                self._freq_bounds[0],
+                self._freq_bounds[1],
+                unit="Hz",
+                SI_prefix=True,
+            ),
+            ampl=P.FloatParam(
+                self.get_amplitude(ch),
+                self._ampl_bounds[0],
+                self._ampl_bounds[1],
+                unit="Vpp",
+            ),
+            offset=P.FloatParam(
+                self.get_offset(ch),
+                self._offs_bounds[0],
+                self._offs_bounds[1],
+                unit="V",
+            ),
+            phase=P.FloatParam(
+                self.get_phase(ch),
+                0.0,
+                360.0,
+                unit="deg",
+            ),
+        )
+
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        """Get ParamDict for `label`."""
+
+        if label == "ch1_cw":
+            return self._cw_param_dict(1)
+        elif label == "ch2_cw":
+            return self._cw_param_dict(2)
+        elif label == "output":
+            return P.ParamDict(
+                ch1_imp=P.IntParam(
+                    self.get_output_impedance(1),
+                    1,
+                    self.Load_HighZ,
+                    unit="Ω",
+                    doc=f"Load impedance. Set maximum ({self.Load_HighZ}) for HighZ",
+                ),
+                ch2_imp=P.IntParam(
+                    self.get_output_impedance(2),
+                    1,
+                    self.Load_HighZ,
+                    unit="Ω",
+                    doc=f"Load impedance. Set maximum ({self.Load_HighZ}) for HighZ",
+                ),
+            )
+        else:
+            self.logger.error(f"Invalid label {label}")
+            return None
+
+    def get_param_dict_labels(self) -> list[str]:
+        # "gate" and "cw" doesn't provide ParamDict
+        return ["ch1_cw", "ch2_cw", "output"]
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        params = P.unwrap(params)
+
+        if label == "gate":
+            if not self.check_required_params(params, ("wave", "freq", "ampl", "phase")):
+                return False
+            return self.configure_gate(
+                params["wave"],
+                params["freq"],
+                params["ampl"],
+                params["phase"],
+                offset_volt=params.get("offset", 0.0),
+                source=params.get("source", ""),
+                polarity=params.get("polarity"),
+                ch=params.get("ch", 1),
+                reset=params.get("reset", False),
+            )
+        elif label == "burst":
+            if not self.check_required_params(params, ("wave", "freq", "ampl", "phase", "cycle")):
+                return False
+            return self.configure_burst(
+                params["wave"],
+                params["freq"],
+                params["ampl"],
+                params["phase"],
+                params["cycle"],
+                offset=params.get("offset", 0.0),
+                delay=params.get("delay", 0.0),
+                source=params.get("source", ""),
+                polarity=params.get("polarity"),
+                ch=params.get("ch", 1),
+                reset=params.get("reset", False),
+            )
+        elif label == "cw":
+            return self.configure_CW(
+                params.get("wave"),
+                params.get("freq"),
+                params.get("ampl"),
+                offset_volt=params.get("offset", 0.0),
+                phase_deg=params.get("phase", 0.0),
+                ch=params.get("ch", 1),
+                reset=params.get("reset", False),
+            )
+        elif label == "ch1_cw":
+            return self.configure_CW(
+                params.get("wave"),
+                params.get("freq"),
+                params.get("ampl"),
+                offset_volt=params.get("offset", 0.0),
+                phase_deg=params.get("phase", 0.0),
+                ch=1,
+                reset=False,
+            )
+        elif label == "ch2_cw":
+            return self.configure_CW(
+                params.get("wave"),
+                params.get("freq"),
+                params.get("ampl"),
+                offset_volt=params.get("offset", 0.0),
+                phase_deg=params.get("phase", 0.0),
                 ch=2,
                 reset=False,
             )
