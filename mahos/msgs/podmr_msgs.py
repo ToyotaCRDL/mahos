@@ -588,6 +588,9 @@ def update_data(data: PODMRData):
         # version 4 to 5
         data.label = data.params["method"]
         del data.params["method"]
+        if data.fit_params:
+            data.fit_label = data.fit_params["method"]
+            del data.fit_params["method"]
         data.set_version(5)
 
     return data

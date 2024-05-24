@@ -21,7 +21,7 @@ from ..util.stat import filter_outlier_2d
 
 class SpectroscopyData(BasicMeasData):
     def __init__(self, params: dict | None = None):
-        self.set_version(1)
+        self.set_version(2)
         self.init_params(params)
         self.init_attrs()
 
@@ -67,12 +67,6 @@ class SpectroscopyData(BasicMeasData):
             return 0
         return outlier.shape[1]
 
-    def get_fit_xdata(self):
-        return self.fit_xdata
-
-    def get_fit_ydata(self):
-        return self.fit_data
-
     def can_resume(self, params: dict | None) -> bool:
         """Check if the measurement can be continued with given new_params."""
 
@@ -113,5 +107,12 @@ def update_data(data: SpectroscopyData):
         data.init_axes()
         data._saved = True
         data.set_version(1)
+
+    if data.version() <= 1:
+        # version 1 to 2
+        if data.fit_params:
+            data.fit_label = data.fit_params["method"]
+            del data.fit_params["method"]
+        data.set_version(2)
 
     return data

@@ -48,9 +48,6 @@ class QdyneData(BasicMeasData):
         self.fft_xdata = None
         self.fft_data = None
 
-        self.fit_xdata = None
-        self.fit_data = None
-
         self.raw_data = None
 
         self.marker_indices = None
@@ -160,12 +157,6 @@ class QdyneData(BasicMeasData):
         except (KeyError, TypeError):
             return None
 
-    def get_fit_xdata(self) -> NDArray | None:
-        return self.fit_xdata
-
-    def get_fit_ydata(self) -> NDArray | None:
-        return self.fit_data
-
     def get_xdata(self, fft: bool = False) -> NDArray | None:
         """get analyzed xdata.
 
@@ -252,6 +243,9 @@ def update_data(data: QdyneData):
         # version 0 to 1
         data.label = data.params["method"]
         del data.params["method"]
+        if data.fit_params:
+            data.fit_label = data.fit_params["method"]
+            del data.fit_params["method"]
         data.set_version(1)
 
     return data

@@ -25,7 +25,7 @@ class UpdatePlotParamsReq(Request):
 
 class HBTData(BasicMeasData):
     def __init__(self, params: dict | None = None):
-        self.set_version(2)
+        self.set_version(3)
         self.init_params(params)
         self.init_attrs()
 
@@ -92,12 +92,6 @@ class HBTData(BasicMeasData):
         if y is None:
             return None
         return (y - bg) / (ref - bg)
-
-    def get_fit_xdata(self):
-        return self.fit_xdata
-
-    def get_fit_ydata(self):
-        return self.fit_data
 
     def get_t0(self) -> float:
         return self.params["plot"]["t0"]
@@ -189,7 +183,13 @@ def update_data(data: HBTData):
             ref = data.get_reference()
             bg = ref * data.get_bg_ratio()
             data.fit_data = (data.fit_data - bg) / (ref - bg)
-
         data.set_version(2)
+
+    if data.version() <= 2:
+        # version 2 to 3
+        if data.fit_params:
+            data.fit_label = data.fit_params["method"]
+            del data.fit_params["method"]
+        data.set_version(3)
 
     return data
