@@ -5,11 +5,16 @@
 
 .. autoclass:: Node
 
+   .. rubric:: Methods to be overridden
+
+   .. automethod:: Node.main
+   .. automethod:: Node.close_resources
+
    .. rubric:: Important methods
 
    .. automethod:: Node.add_rep
    .. automethod:: Node.add_pub
-   .. automethod:: Node.add_client
+   .. automethod:: Node.add_clients
 
    .. rubric:: Other methods
 
@@ -17,9 +22,7 @@
 
       ~Node.__init__
       ~Node.close
-      ~Node.close_resources
       ~Node.fail_with
-      ~Node.main
       ~Node.main_event
       ~Node.main_interrupt
       ~Node.poll

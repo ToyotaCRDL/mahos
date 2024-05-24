@@ -647,6 +647,20 @@ the rate management should be done inside main() function.</p>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Methods to be overridden</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mahos.node.node.Node.main">
+<span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mahos.node.node.Node.main" title="Permalink to this definition">#</a></dt>
+<dd><p>Main procedure that will be looped.</p>
+<p>Default implementation calls poll().</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mahos.node.node.Node.close_resources">
+<span class="sig-name descname"><span class="pre">close_resources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mahos.node.node.Node.close_resources" title="Permalink to this definition">#</a></dt>
+<dd><p>Close custom resources.</p>
+</dd></dl>
+
 <p class="rubric">Important methods</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mahos.node.node.Node.add_rep">
@@ -661,9 +675,9 @@ the rate management should be done inside main() function.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="mahos.node.node.Node.add_client">
-<span class="sig-name descname"><span class="pre">add_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cli</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.node.node.Node.add_client" title="Permalink to this definition">#</a></dt>
-<dd><p>Register an internal NodeClient.</p>
+<dt class="sig sig-object py" id="mahos.node.node.Node.add_clients">
+<span class="sig-name descname"><span class="pre">add_clients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">clis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.node.node.Node.add_clients" title="Permalink to this definition">#</a></dt>
+<dd><p>Register internal NodeClient(s).</p>
 </dd></dl>
 
 <p class="rubric">Other methods</p>
@@ -675,14 +689,8 @@ the rate management should be done inside main() function.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code>()</p></td>
 <td><p>Close this node.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">close_resources</span></code>()</p></td>
-<td><p>Close custom resources.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fail_with</span></code>(msg)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fail_with</span></code>(msg)</p></td>
 <td><p>log error and return failing response with same message.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>()</p></td>
-<td><p>Main procedure that will be looped.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main_event</span></code>(shutdown_ev)</p></td>
 <td><p>Main loop that can be stopped by shutdown_ev.</p></td>
@@ -764,9 +772,11 @@ the rate management should be done inside main() function.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.node.node.Node"><code class="docutils literal notranslate"><span class="pre">Node</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.node.node.Node.main"><code class="docutils literal notranslate"><span class="pre">Node.main()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.node.node.Node.close_resources"><code class="docutils literal notranslate"><span class="pre">Node.close_resources()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.node.node.Node.add_rep"><code class="docutils literal notranslate"><span class="pre">Node.add_rep()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.node.node.Node.add_pub"><code class="docutils literal notranslate"><span class="pre">Node.add_pub()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.node.node.Node.add_client"><code class="docutils literal notranslate"><span class="pre">Node.add_client()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.node.node.Node.add_clients"><code class="docutils literal notranslate"><span class="pre">Node.add_clients()</span></code></a></li>
 </ul>
 </li>
 </ul>

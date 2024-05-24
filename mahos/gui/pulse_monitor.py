@@ -33,7 +33,7 @@ class PulseMonitorWidget(ClientTopWidget):
         self.conf = local_conf(gconf, name)
         target = self.conf["target"]["pulse"]
         self.cli = QPulseClient(gconf, target, context=context)
-        self.add_client(self.cli)
+        self.add_clients(self.cli)
         self.pulse = None
         self.markers = None
 

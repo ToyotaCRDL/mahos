@@ -69,7 +69,7 @@ class PosTweaker(Node):
         self.cli = MultiInstrumentClient(
             gconf, self.conf["target"]["servers"], context=self.ctx, prefix=self.joined_name()
         )
-        self.add_client(self.cli)
+        self.add_clients(self.cli)
 
         #: dict[str, SinglePositionerInterface]
         self._axis_positioners = {

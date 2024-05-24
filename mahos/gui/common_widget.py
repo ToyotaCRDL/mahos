@@ -13,6 +13,7 @@ import pyqtgraph as pg
 from .Qt import QtWidgets
 
 from .ui.compressionWidget import Ui_CompressionWidget
+from ..util.conv import args_to_list
 
 
 class CompressionWidget(QtWidgets.QWidget, Ui_CompressionWidget):
@@ -44,17 +45,12 @@ class SpinBox(pg.SpinBox):
 
 
 class ClientMixin(object):
-    """require attr _clients (list). defines add_client(), add_clients(), close_clients()."""
-
-    def add_client(self, cli):
-        """Register a Client. Client must have close() method."""
-
-        self._clients.append(cli)
+    """require attr _clients (list). defines add_clients(), close_clients()."""
 
     def add_clients(self, *clis):
-        """Register multiple Clients. A Client must have close() method."""
+        """Register Client(s). A Client must have close() method."""
 
-        self._clients.extend(clis)
+        self._clients.extend(args_to_list(clis))
 
     # NOTE: QWidget has public slot close(). Thus, we don't name this method close().
     def close_clients(self):

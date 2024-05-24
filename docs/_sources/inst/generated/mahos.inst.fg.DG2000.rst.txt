@@ -55,6 +55,8 @@
       ~DG2000.set_phase
       ~DG2000.set_reference_clock
       ~DG2000.set_square_duty
+      ~DG2000.start
+      ~DG2000.stop
       ~DG2000.trigger
       ~DG2000.update_all_bounds
       ~DG2000.update_amplitude_bounds

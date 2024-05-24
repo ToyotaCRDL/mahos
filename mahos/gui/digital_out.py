@@ -36,7 +36,7 @@ class DigitalOutWidget(ClientTopWidget):
         fontsize = self.conf.get("fontsize", 26)
 
         self.cli = MultiInstrumentClient(gconf, servers, context=context)
-        self.add_client(self.cli)
+        self.add_clients(self.cli)
         self.digital_outs = {}
         self.buttons = {}
         gl = QtWidgets.QGridLayout()

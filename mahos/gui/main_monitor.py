@@ -44,14 +44,14 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
                 gconf, target["gparams"], context=context, parent=self
             )
             self.gparams_cli.statusUpdated.connect(self.init_param)
-            self.add_client(self.gparams_cli)
+            self.add_clients(self.gparams_cli)
         else:
             print("[WARN] gparams is not defined for {}.target".format(name))
 
         if "log" in target:
             self.log_cli = QLogSubscriber(gconf, target["log"], context=context, parent=self)
             self.log_cli.logArrived.connect(self.write_log)
-            self.add_client(self.log_cli)
+            self.add_clients(self.log_cli)
         else:
             print("[WARN] log is not defined for {}.target".format(name))
 
@@ -64,7 +64,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
                 cli.statusUpdated.connect(self.update_locks)
                 self.inst_clis[n] = cli
                 self.locks[n] = None
-                self.add_client(cli)
+                self.add_clients(cli)
         else:
             print("[WARN] servers is not defined for {}.target".format(name))
 
@@ -73,7 +73,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
                 gconf, target["manager"], context=context, parent=self
             )
             self.manager_cli.statesUpdated.connect(self.update_states)
-            self.add_client(self.manager_cli)
+            self.add_clients(self.manager_cli)
         else:
             print("[WARN] manager is not defined for {}.target".format(name))
 

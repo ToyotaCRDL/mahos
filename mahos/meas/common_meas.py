@@ -190,13 +190,13 @@ class BasicMeasNode(Node):
             context=self.ctx,
             prefix=self.joined_name(),
         )
-        self.add_client(self.cli)
+        self.add_clients(self.cli)
 
         self.tweaker_clis: dict[str, TweakSaver] = {}
         for tweaker in self.conf["target"].get("tweakers", []):
             cli = TweakSaver(gconf, tweaker, context=self.ctx, prefix=self.joined_name())
             self.tweaker_clis[tweaker] = cli
-            self.add_client(cli)
+            self.add_clients(cli)
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")

@@ -200,8 +200,8 @@ class ConfocalTracker(Node):
 
         self.cli = ConfocalClient(gconf, self.conf["target"]["confocal"], context=self.ctx)
         self.sm_cli = StateManagerClient(gconf, self.conf["target"]["manager"], context=self.ctx)
-        self.add_client(self.cli)
-        self.add_client(self.sm_cli)
+        self.add_clients(self.cli)
+        self.add_clients(self.sm_cli)
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")

@@ -43,7 +43,7 @@ class StateManager(Node):
         self._States = {}
         for node_name, (state_module, state_class) in self.conf["node"].items():
             cli = StateClient(gconf, node_name, context=self.ctx)
-            self.add_client(cli)
+            self.add_clients(cli)
             self._clis[node_name] = cli
             sm = importlib.import_module(state_module)
             self._States[node_name] = getattr(sm, state_class)

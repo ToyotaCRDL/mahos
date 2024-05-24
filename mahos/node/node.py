@@ -19,6 +19,7 @@ import toml
 from .comm import Context, Publisher, Request
 from .log import DummyLogger
 from ..util.typing import NodeName, RepHandler
+from ..util.conv import args_to_list
 from ..msgs.common_msgs import Reply
 
 
@@ -297,15 +298,10 @@ class Node(NodeBase):
 
         pass
 
-    def add_client(self, cli):
-        """Register an internal NodeClient."""
-
-        self._clients.append(cli)
-
     def add_clients(self, *clis):
-        """Register multiple internal NodeClients."""
+        """Register internal NodeClient(s)."""
 
-        self._clients.extend(clis)
+        self._clients.extend(args_to_list(clis))
 
     def add_rep(
         self,
