@@ -55,8 +55,6 @@ class RIGOL_DG2000(VisaInstrument):
     :type ext_ref_clock: bool
     :param gate.source: trigger source for gated burst. one of TRIG_SOURCE.
     :type gate.source: str
-    :param gate.slope: trigger slope polarity. True for positive.
-    :type gate.slope: bool
     :param gate.polarity: gate polarity. True for positive.
     :type gate.polarity: bool
     :param gate.idle_level: idle level. one of IDLE_LEVEL.
@@ -94,7 +92,6 @@ class RIGOL_DG2000(VisaInstrument):
         c = self.conf.get("gate", {})
         self.gate_conf = {
             "source": c.get("source", "EXT"),
-            "slope": c.get("slope", True),
             "polarity": c.get("polarity", True),
             "idle_level": c.get("idle_level", "CENTER"),
         }
@@ -391,7 +388,6 @@ class RIGOL_DG2000(VisaInstrument):
         phase_deg: float,
         offset: float = 0.0,
         source: str = "",
-        slope: bool | None = None,
         polarity: bool | None = None,
         idle_level: str = "",
         ch: int = 1,
@@ -410,7 +406,7 @@ class RIGOL_DG2000(VisaInstrument):
             and self.set_burst_mode("GATED", ch=ch)
             and self.set_burst_trig_source(source or self.gate_conf["source"], ch=ch)
             and self.set_burst_trig_slope(
-                slope if slope is not None else self.gate_conf["slope"], ch=ch
+                polarity if polarity is not None else self.gate_conf["polarity"], ch=ch
             )
             and self.set_burst_gate_polarity(
                 polarity if polarity is not None else self.gate_conf["polarity"], ch=ch
@@ -450,13 +446,13 @@ class RIGOL_DG2000(VisaInstrument):
             and self.set_phase(phase_deg, ch=ch)
             and self.set_burst(True, ch=ch)
             and self.set_burst_mode("TRIG", ch=ch)
-            and self.set_burst_cycle(cycle, ch=ch)
-            and self.set_burst_delay(delay, ch=ch)
             and self.set_burst_trig_source(source or self.burst_conf["source"], ch=ch)
             and self.set_burst_trig_slope(
                 polarity if polarity is not None else self.burst_conf["polarity"], ch=ch
             )
             and self.set_burst_idle_level(idle_level or self.burst_conf["idle_level"], ch=ch)
+            and self.set_burst_cycle(cycle, ch=ch)
+            and self.set_burst_delay(delay, ch=ch)
         )
 
         self.logger.info(
@@ -620,7 +616,6 @@ class RIGOL_DG2000(VisaInstrument):
                 params["phase"],
                 offset=params.get("offset", 0.0),
                 source=params.get("source", ""),
-                slope=params.get("polarity"),  # this is intentional. slope = polarity.
                 polarity=params.get("polarity"),
                 idle_level=params.get("idle_level", ""),
                 ch=params.get("ch", 1),
@@ -1057,6 +1052,9 @@ class SIGLENT_SDG2000X(VisaInstrument):
             # turn to GATE mode which we actually want to configure.
             and self.set_burst_mode("GATE", ch=ch)
             and self.set_burst_trig_source(source or self.gate_conf["source"], ch=ch)
+            and self.set_burst_trig_slope(
+                polarity if polarity is not None else self.gate_conf["polarity"], ch=ch
+            )
             and self.set_burst_gate_polarity(
                 polarity if polarity is not None else self.gate_conf["polarity"], ch=ch
             )
