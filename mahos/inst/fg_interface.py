@@ -43,6 +43,7 @@ class FGInterface(InstrumentInterface):
         freq: float,
         ampl_Vpp: float,
         offset: float = 0.0,
+        phase_deg: float = 0.0,
         ch: int = 1,
         reset: bool = False,
     ) -> bool:
@@ -52,13 +53,24 @@ class FGInterface(InstrumentInterface):
         :param freq: (Hz) frequnecy.
         :param ampl_Vpp: (V) amplitude in Vpp (peak-to-peak).
         :param offset: (V) offset in V.
+        :param phase_deg: (Degrees) starting phase.
+            Usually used to set up relative phase between 2 channels.
         :param ch: channel.
         :param reset: If True, reset before configuration.
 
         """
 
         return self.configure(
-            {"wave": wave, "freq": freq, "ampl": ampl_Vpp, "ch": ch, "reset": reset}, label="cw"
+            {
+                "wave": wave,
+                "freq": freq,
+                "ampl": ampl_Vpp,
+                "offset": offset,
+                "phase": phase_deg,
+                "ch": ch,
+                "reset": reset,
+            },
+            label="cw",
         )
 
     def configure_gate(

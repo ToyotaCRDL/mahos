@@ -48,8 +48,8 @@ def ch_getter(channels):
     return _check_ch
 
 
-class DG2000(VisaInstrument):
-    """Rigol DG2000 series Function Generator.
+class RIGOL_DG2000(VisaInstrument):
+    """RIGOL DG2000 series Function Generator.
 
     :param ext_ref_clock: use external reference clock source.
     :type ext_ref_clock: bool
@@ -61,6 +61,13 @@ class DG2000(VisaInstrument):
     :type gate.polarity: bool
     :param gate.idle_level: idle level. one of IDLE_LEVEL.
     :type gate.idle_level: str
+
+    :param burst.source: trigger source for cycle burst. one of TRIG_SOURCE.
+    :type burst.source: str
+    :param burst.polarity: burst trigger polarity. True for positive.
+    :type burst.polarity: bool
+    :param burst.idle_level: idle level. one of IDLE_LEVEL.
+    :type burst.idle_level: str
 
     """
 
@@ -82,8 +89,8 @@ class DG2000(VisaInstrument):
 
         self._align_phase = True
 
-        self.ext_ref_clock = self.conf.get("ext_ref_clock", False)
-        self.set_reference_clock(bool(self.ext_ref_clock))
+        self.ext_ref_clock = bool(self.conf.get("ext_ref_clock", False))
+        self.set_reference_clock(self.ext_ref_clock)
 
         c = self.conf.get("gate", {})
         self.gate_conf = {
@@ -93,6 +100,14 @@ class DG2000(VisaInstrument):
             "idle_level": c.get("idle_level", "CENTER"),
         }
         self.logger.debug(f"gate configuration: {self.gate_conf}")
+
+        c = self.conf.get("burst", {})
+        self.burst_conf = {
+            "source": c.get("source", "EXT"),
+            "polarity": c.get("polarity", True),
+            "idle_level": c.get("idle_level", "CENTER"),
+        }
+        self.logger.debug(f"burst configuration: {self.burst_conf}")
 
     def update_all_bounds(self):
         for ch in (1, 2):
@@ -210,6 +225,21 @@ class DG2000(VisaInstrument):
         return True
 
     @ch_setter((1, 2))
+    def set_burst_cycle(self, cycle: int | str, ch: int = 1) -> bool:
+        if isinstance(cycle, str):
+            cycle = cycle.upper()
+            if cycle not in ("MIN", "MAX"):
+                return self.fail_with("Invalid cycle in str. Valid values are MIN or MAX.")
+
+        self.inst.write(f":SOUR{ch}:BURS:NCYC {cycle}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_delay(self, delay: float, ch: int = 1) -> bool:
+        self.inst.write(f":SOUR{ch}:BURS:TDEL {delay:.8E}")
+        return True
+
+    @ch_setter((1, 2))
     def set_burst_trig_source(self, source: str, ch: int = 1) -> bool:
         source = source.upper()[:3]
         if source not in self.TRIG_SOURCE:
@@ -280,8 +310,8 @@ class DG2000(VisaInstrument):
         return float(self.inst.query(f":SOUR{ch}:PHAS?"))
 
     @ch_setter((1, 2))
-    def set_amplitude(self, ampl_vpp: float, ch: int = 1) -> bool:
-        self.inst.write(f":SOUR{ch}:VOLT {ampl_vpp:.5f}")
+    def set_amplitude(self, ampl_Vpp: float, ch: int = 1) -> bool:
+        self.inst.write(f":SOUR{ch}:VOLT {ampl_Vpp:.8E}")
         return True
 
     @ch_getter((1, 2))
@@ -289,8 +319,8 @@ class DG2000(VisaInstrument):
         return float(self.inst.query(f":SOUR{ch}:VOLT?"))
 
     @ch_setter((1, 2))
-    def set_offset(self, offset_volt: float, ch: int = 1) -> bool:
-        self.inst.write(f":SOUR{ch}:VOLT:OFFS {offset_volt:.5f}")
+    def set_offset(self, offset: float, ch: int = 1) -> bool:
+        self.inst.write(f":SOUR{ch}:VOLT:OFFS {offset:.8E}")
         return True
 
     @ch_getter((1, 2))
@@ -299,7 +329,7 @@ class DG2000(VisaInstrument):
 
     @ch_setter((1, 2))
     def set_high(self, volt: float, ch: int = 1) -> bool:
-        self.inst.write(f":SOUR{ch}:VOLT:HIGH {volt:.5f}")
+        self.inst.write(f":SOUR{ch}:VOLT:HIGH {volt:.8E}")
         return True
 
     @ch_getter((1, 2))
@@ -308,7 +338,7 @@ class DG2000(VisaInstrument):
 
     @ch_setter((1, 2))
     def set_low(self, volt: float, ch: int = 1) -> bool:
-        self.inst.write(f":SOUR{ch}:VOLT:LOW {volt:.5f}")
+        self.inst.write(f":SOUR{ch}:VOLT:LOW {volt:.8E}")
         return True
 
     @ch_getter((1, 2))
@@ -330,8 +360,9 @@ class DG2000(VisaInstrument):
         self,
         wave: str | None,
         freq: float | None,
-        ampl_vpp: float | None,
-        offset_volt: float | None = 0.0,
+        ampl_Vpp: float | None,
+        offset: float = 0.0,
+        phase_deg: float = 0.0,
         ch: int = 1,
         reset: bool = True,
     ) -> bool:
@@ -340,16 +371,15 @@ class DG2000(VisaInstrument):
         success = True
         if reset:
             success &= self.reset()
-            success &= self.set_reference_clock(self.ext_ref_clock)
 
         if wave is not None:
             success &= self.set_function(wave, ch=ch)
         if freq is not None:
             success &= self.set_freq(freq, ch=ch)
-        if ampl_vpp is not None:
-            success &= self.set_amplitude(ampl_vpp, ch=ch)
-        if offset_volt is not None:
-            success &= self.set_offset(offset_volt, ch=ch)
+        if ampl_Vpp is not None:
+            success &= self.set_amplitude(ampl_Vpp, ch=ch)
+        success &= self.set_offset(offset, ch=ch)
+        success &= self.set_phase(phase_deg, ch=ch)
 
         self.logger.info("Configured for CW.")
         return success
@@ -358,9 +388,9 @@ class DG2000(VisaInstrument):
         self,
         wave: str,
         freq: float,
-        ampl_vpp: float,
+        ampl_Vpp: float,
         phase_deg: float,
-        offset_volt: float = 0.0,
+        offset: float = 0.0,
         source: str = "",
         slope: bool | None = None,
         polarity: bool | None = None,
@@ -372,11 +402,10 @@ class DG2000(VisaInstrument):
 
         success = (
             (self.reset() if reset else True)
-            and self.set_reference_clock(self.ext_ref_clock)
             and self.set_function(wave, ch=ch)
             and self.set_freq(freq, ch=ch)
-            and self.set_amplitude(ampl_vpp, ch=ch)
-            and self.set_offset(offset_volt, ch=ch)
+            and self.set_amplitude(ampl_Vpp, ch=ch)
+            and self.set_offset(offset, ch=ch)
             and self.set_phase(phase_deg, ch=ch)
             and self.set_burst(True, ch=ch)
             and self.set_burst_mode("GATED", ch=ch)
@@ -392,7 +421,48 @@ class DG2000(VisaInstrument):
 
         self.logger.info(
             "Configured for Gated Burst."
-            + f" wave: {wave} ampl: {ampl_vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
+            + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
+        )
+        return success
+
+    def configure_burst(
+        self,
+        wave: str,
+        freq: float,
+        ampl_Vpp: float,
+        phase_deg: float,
+        cycle: int,
+        offset: float = 0.0,
+        delay: float = 0.0,
+        source: str = "",
+        polarity: bool | None = None,
+        idle_level: str = "",
+        ch: int = 1,
+        reset: bool = True,
+    ) -> bool:
+        """Configure Cycle Burst output."""
+
+        success = (
+            (self.reset() if reset else True)
+            and self.set_function(wave, ch=ch)
+            and self.set_freq(freq, ch=ch)
+            and self.set_amplitude(ampl_Vpp, ch=ch)
+            and self.set_offset(offset, ch=ch)
+            and self.set_phase(phase_deg, ch=ch)
+            and self.set_burst(True, ch=ch)
+            and self.set_burst_mode("TRIG", ch=ch)
+            and self.set_burst_cycle(cycle, ch=ch)
+            and self.set_burst_delay(delay, ch=ch)
+            and self.set_burst_trig_source(source or self.burst_conf["source"], ch=ch)
+            and self.set_burst_trig_slope(
+                polarity if polarity is not None else self.burst_conf["polarity"], ch=ch
+            )
+            and self.set_burst_idle_level(idle_level or self.burst_conf["idle_level"], ch=ch)
+        )
+
+        self.logger.info(
+            "Configured for Cycle Burst."
+            + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
         )
         return success
 
@@ -408,6 +478,11 @@ class DG2000(VisaInstrument):
         return success
 
     # Standard API
+
+    def reset(self, label: str = "") -> bool:
+        success = self.rst_cls() and self.set_reference_clock(self.ext_ref_clock)
+        self.update_all_bounds()
+        return success
 
     def start(self, label: str = "") -> bool:
         if label.startswith("ch1"):
@@ -435,11 +510,6 @@ class DG2000(VisaInstrument):
             return self.set_output(False, 2)
         else:
             return self.fail_with(f"Unknown label {label} to stop")
-
-    def reset(self, label: str = "") -> bool:
-        success = self.rst_cls()
-        self.update_all_bounds()
-        return success
 
     def get(self, key: str, args=None, label: str = ""):
         if key == "opc":
@@ -497,6 +567,12 @@ class DG2000(VisaInstrument):
                 self._offs_bounds[ch][1],
                 unit="V",
             ),
+            phase=P.FloatParam(
+                self.get_phase(ch),
+                0.0,
+                360.0,
+                unit="deg",
+            ),
         )
 
     def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
@@ -543,9 +619,26 @@ class DG2000(VisaInstrument):
                 params["freq"],
                 params["ampl"],
                 params["phase"],
-                offset_volt=params.get("offset", 0.0),
+                offset=params.get("offset", 0.0),
                 source=params.get("source", ""),
                 slope=params.get("polarity"),  # this is intentional. slope = polarity.
+                polarity=params.get("polarity"),
+                idle_level=params.get("idle_level", ""),
+                ch=params.get("ch", 1),
+                reset=params.get("reset", False),
+            )
+        elif label == "burst":
+            if not self.check_required_params(params, ("wave", "freq", "ampl", "phase", "cycle")):
+                return False
+            return self.configure_burst(
+                params["wave"],
+                params["freq"],
+                params["ampl"],
+                params["phase"],
+                params["cycle"],
+                offset=params.get("offset", 0.0),
+                delay=params.get("delay", 0.0),
+                source=params.get("source", ""),
                 polarity=params.get("polarity"),
                 idle_level=params.get("idle_level", ""),
                 ch=params.get("ch", 1),
@@ -556,7 +649,8 @@ class DG2000(VisaInstrument):
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
-                offset_volt=params.get("offset", 0.0),
+                offset=params.get("offset", 0.0),
+                phase_deg=params.get("phase", 0.0),
                 ch=params.get("ch", 1),
                 reset=params.get("reset", False),
             )
@@ -565,7 +659,8 @@ class DG2000(VisaInstrument):
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
-                offset_volt=params.get("offset", 0.0),
+                offset=params.get("offset", 0.0),
+                phase_deg=params.get("phase", 0.0),
                 ch=1,
                 reset=False,
             )
@@ -574,7 +669,8 @@ class DG2000(VisaInstrument):
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
-                offset_volt=params.get("offset", 0.0),
+                offset=params.get("offset", 0.0),
+                phase_deg=params.get("phase", 0.0),
                 ch=2,
                 reset=False,
             )
@@ -621,11 +717,11 @@ class SIGLENT_SDG2000X(VisaInstrument):
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
 
         self._ampl_bounds = self.conf.get("ampl_bounds", (0.0, 10.0))
-        self._offs_bounds = self.conf.get("offs_bounds", (0.0, 10.0))
+        self._offs_bounds = self.conf.get("offs_bounds", (-10.0, 10.0))
         self._freq_bounds = self.conf.get("freq_bounds", (1e-6, 80e6))
 
-        self.ext_ref_clock = self.conf.get("ext_ref_clock", False)
-        self.set_reference_clock(bool(self.ext_ref_clock))
+        self.ext_ref_clock = bool(self.conf.get("ext_ref_clock", False))
+        self.set_reference_clock(self.ext_ref_clock)
 
         c = self.conf.get("gate", {})
         self.gate_conf = {
@@ -891,8 +987,8 @@ class SIGLENT_SDG2000X(VisaInstrument):
         self,
         wave: str | None,
         freq: float | None,
-        ampl_vpp: float | None,
-        offset_volt: float | None = 0.0,
+        ampl_Vpp: float | None,
+        offset: float = 0.0,
         phase_deg: float = 0.0,
         ch: int = 1,
         reset: bool = True,
@@ -902,18 +998,16 @@ class SIGLENT_SDG2000X(VisaInstrument):
         success = True
         if reset:
             success &= self.reset()
-            success &= self.set_reference_clock(self.ext_ref_clock)
             self.reset_modes()
 
         if wave is not None:
             success &= self.set_function(wave, ch=ch)
         if freq is not None:
             success &= self.set_freq(freq, ch=ch)
-        if ampl_vpp is not None:
-            success &= self.set_amplitude(ampl_vpp, ch=ch)
-        if offset_volt is not None:
-            success &= self.set_offset(offset_volt, ch=ch)
-        success &= self.set_phase(phase_deg)
+        if ampl_Vpp is not None:
+            success &= self.set_amplitude(ampl_Vpp, ch=ch)
+        success &= self.set_offset(offset, ch=ch)
+        success &= self.set_phase(phase_deg, ch=ch)
 
         if success:
             self.logger.info(f"Configured ch{ch} for CW.")
@@ -929,7 +1023,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
         freq: float,
         ampl_Vpp: float,
         phase_deg: float,
-        offset_volt: float = 0.0,
+        offset: float = 0.0,
         source: str = "",
         polarity: bool | None = None,
         ch: int = 1,
@@ -941,7 +1035,6 @@ class SIGLENT_SDG2000X(VisaInstrument):
         if reset:
             success &= self.reset()
             self.reset_modes()
-            self.set_reference_clock(self.ext_ref_clock)
 
         success &= (
             self.set_burst(True, ch=ch)
@@ -961,7 +1054,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
             and self.set_burst_function(wave, ch=ch)
             and self.set_burst_freq(freq, ch=ch)
             and self.set_burst_amplitude(ampl_Vpp, ch=ch)
-            and self.set_burst_offset(offset_volt, ch=ch)
+            and self.set_burst_offset(offset, ch=ch)
             and self.set_burst_phase(phase_deg, ch=ch)
         )
 
@@ -996,7 +1089,6 @@ class SIGLENT_SDG2000X(VisaInstrument):
         if reset:
             success &= self.reset()
             self.reset_modes()
-            self.set_reference_clock(self.ext_ref_clock)
 
         success &= (
             self.set_burst(True, ch=ch)
@@ -1052,7 +1144,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
             return self.fail_with(f"Unknown label {label} to stop")
 
     def reset(self, label: str = "") -> bool:
-        return self.rst()
+        return self.rst() and self.set_reference_clock(self.ext_ref_clock)
 
     def get(self, key: str, args=None, label: str = ""):
         if key == "opc":
@@ -1161,7 +1253,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
                 params["freq"],
                 params["ampl"],
                 params["phase"],
-                offset_volt=params.get("offset", 0.0),
+                offset=params.get("offset", 0.0),
                 source=params.get("source", ""),
                 polarity=params.get("polarity"),
                 ch=params.get("ch", 1),
@@ -1188,7 +1280,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
-                offset_volt=params.get("offset", 0.0),
+                offset=params.get("offset", 0.0),
                 phase_deg=params.get("phase", 0.0),
                 ch=params.get("ch", 1),
                 reset=params.get("reset", False),
@@ -1198,7 +1290,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
-                offset_volt=params.get("offset", 0.0),
+                offset=params.get("offset", 0.0),
                 phase_deg=params.get("phase", 0.0),
                 ch=1,
                 reset=False,
@@ -1208,7 +1300,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
-                offset_volt=params.get("offset", 0.0),
+                offset=params.get("offset", 0.0),
                 phase_deg=params.get("phase", 0.0),
                 ch=2,
                 reset=False,
