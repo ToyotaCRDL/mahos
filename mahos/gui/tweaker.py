@@ -71,6 +71,7 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         self.writeButton.clicked.connect(self.request_write)
         self.startButton.clicked.connect(self.request_start)
         self.stopButton.clicked.connect(self.request_stop)
+        self.resetButton.clicked.connect(self.request_reset)
         self.saveButton.clicked.connect(self.request_save)
         self.loadButton.clicked.connect(self.request_load)
 
@@ -136,6 +137,15 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
         if not success and self._verbose:
             QtWidgets.QMessageBox.warning(
                 self, "Failed to stop.", f"Failed to stop {param_dict_id}."
+            )
+
+    def request_reset(self):
+        i = self.tabWidget.currentIndex()
+        param_dict_id = self.param_dict_ids[i]
+        success = self.cli.reset(param_dict_id)
+        if not success and self._verbose:
+            QtWidgets.QMessageBox.warning(
+                self, "Failed to reset.", f"Failed to reset {param_dict_id}."
             )
 
     def request_save(self):

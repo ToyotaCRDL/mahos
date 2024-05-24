@@ -76,6 +76,13 @@ class StopReq(Request):
         self.param_dict_id = param_dict_id
 
 
+class ResetReq(Request):
+    """Reset instrument setting (pertaining to a ParamDict)."""
+
+    def __init__(self, param_dict_id: str):
+        self.param_dict_id = param_dict_id
+
+
 class SaveReq(Request):
     """Save current parameters to a file"""
 

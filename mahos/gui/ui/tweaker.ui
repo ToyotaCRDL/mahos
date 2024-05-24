@@ -59,6 +59,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="resetButton">
+       <property name="text">
+        <string>Reset</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="saveButton">
        <property name="text">
         <string>Save</string>
@@ -108,6 +115,7 @@
   <tabstop>writeButton</tabstop>
   <tabstop>startButton</tabstop>
   <tabstop>stopButton</tabstop>
+  <tabstop>resetButton</tabstop>
   <tabstop>saveButton</tabstop>
   <tabstop>loadButton</tabstop>
   <tabstop>tabWidget</tabstop>

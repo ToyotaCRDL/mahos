@@ -17,7 +17,7 @@ from ..msgs.common_msgs import Reply
 from ..msgs import param_msgs as P
 from ..msgs import tweaker_msgs
 from ..msgs.tweaker_msgs import TweakerStatus, ReadReq, ReadAllReq, WriteReq, WriteAllReq
-from ..msgs.tweaker_msgs import StartReq, StopReq, SaveReq, LoadReq
+from ..msgs.tweaker_msgs import StartReq, StopReq, ResetReq, SaveReq, LoadReq
 from ..node.node import Node
 from ..node.client import NodeClient, StatusClient
 from ..inst.server import MultiInstrumentClient
@@ -51,6 +51,10 @@ class TweakerClient(StatusClient):
 
     def stop(self, param_dict_id: str) -> bool:
         rep = self.req.request(StopReq(param_dict_id))
+        return rep.success
+
+    def reset(self, param_dict_id: str) -> bool:
+        rep = self.req.request(ResetReq(param_dict_id))
         return rep.success
 
     def save(self, filename: str, group: str = "") -> bool:
@@ -176,6 +180,13 @@ class Tweaker(Node):
             self._start_stop_states[msg.param_dict_id] = False
         return Reply(success)
 
+    def reset(self, msg: StopReq) -> Reply:
+        inst, label = self._parse_param_dict_id(msg.param_dict_id)
+        success = self.cli.reset(inst, label)
+        if success:
+            self._start_stop_states[msg.param_dict_id] = False
+        return Reply(success)
+
     def save(self, msg: SaveReq) -> Reply:
         """Save tweaker state (param_dicts and start_stop_state) to file using h5."""
 
@@ -244,6 +255,8 @@ class Tweaker(Node):
             return self.start(msg)
         elif isinstance(msg, StopReq):
             return self.stop(msg)
+        elif isinstance(msg, ResetReq):
+            return self.reset(msg)
         elif isinstance(msg, SaveReq):
             return self.save(msg)
         elif isinstance(msg, LoadReq):

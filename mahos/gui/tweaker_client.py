@@ -14,7 +14,7 @@ from .Qt import QtCore
 
 from ..msgs import param_msgs as P
 from ..msgs.tweaker_msgs import TweakerStatus, ReadReq, ReadAllReq, WriteReq, WriteAllReq
-from ..msgs.tweaker_msgs import StartReq, StopReq, SaveReq, LoadReq
+from ..msgs.tweaker_msgs import StartReq, StopReq, ResetReq, SaveReq, LoadReq
 from ..node.node import get_value
 from .client import QStatusSubscriber
 
@@ -56,6 +56,10 @@ class QTweakerClient(QStatusSubscriber):
 
     def stop(self, param_dict_id: str) -> bool:
         rep = self.req.request(StopReq(param_dict_id))
+        return rep.success
+
+    def reset(self, param_dict_id: str) -> bool:
+        rep = self.req.request(ResetReq(param_dict_id))
         return rep.success
 
     def save(self, filename: str, group: str = "") -> bool:
