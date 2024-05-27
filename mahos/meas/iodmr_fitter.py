@@ -305,7 +305,7 @@ class IODMRFitter(object):
 
         self.logger.info("fit done in " + timer.elapsed_str())
 
-        return IODMRFitResult(params, res)
+        return IODMRFitResult(params, label, res)
 
     def make_data(self, params: dict):
         if self.data.params.get("latest", False):

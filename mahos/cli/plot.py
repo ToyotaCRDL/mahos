@@ -230,8 +230,8 @@ def plot_iodmr(args):
 
 def fit_iodmr(args):
     io = IODMRIO()
+    label = args.method
     fit_params = {
-        "method": args.method,
         "peak": args.peak,
         "binning": args.binning,
         "flim": (args.fmin, args.fmax),
@@ -255,7 +255,7 @@ def fit_iodmr(args):
                 continue
             xfn = f"{head}{args.suffix}.fit"
             if args.force or not path.exists(xfn) or prompt(f"Overwrite {xfn} ?", "y"):
-                fit = io.fit_save_data(xfn, data, fit_params)
+                fit = io.fit_save_data(xfn, data, fit_params, label)
         else:
             fit = io.load_fit(fn)
 

@@ -93,12 +93,14 @@ class IODMRIO(object):
         else:
             return load_h5(filename, IODMRData, self.logger)
 
-    def fit_data(self, data: IODMRData, params: dict) -> IODMRFitResult | None:
+    def fit_data(self, data: IODMRData, params: dict, label: str) -> IODMRFitResult | None:
         fitter = IODMRFitter(data, self.logger)
-        return fitter.fit(params)
+        return fitter.fit(params, label)
 
-    def fit_save_data(self, filename: str, data: IODMRData, params: dict) -> IODMRFitResult | None:
-        res = self.fit_data(data, params)
+    def fit_save_data(
+        self, filename: str, data: IODMRData, params: dict, label: str
+    ) -> IODMRFitResult | None:
+        res = self.fit_data(data, params, label)
         if res is not None:
             res.save(filename)
         return res

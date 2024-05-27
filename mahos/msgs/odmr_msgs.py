@@ -234,12 +234,14 @@ def update_data(data: ODMRData):
             data.params["method"] = "pulse" if data.params["pulsed"] else "cw"
             del data.params["pulsed"]
         data.set_version(1)
+
     if data.version() <= 1:
         # version 1 to 2
         if data.has_params():
             data.params["background"] = False
         data.bg_data = None
         data.set_version(2)
+
     if data.version() <= 2:
         # version 2 to 3
         data.label = data.params["method"]
