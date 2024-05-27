@@ -19,8 +19,6 @@
       ~SpectroscopyData.__init__
       ~SpectroscopyData.acquisitions
       ~SpectroscopyData.can_resume
-      ~SpectroscopyData.get_fit_xdata
-      ~SpectroscopyData.get_fit_ydata
       ~SpectroscopyData.get_xdata
       ~SpectroscopyData.get_ydata
       ~SpectroscopyData.has_data

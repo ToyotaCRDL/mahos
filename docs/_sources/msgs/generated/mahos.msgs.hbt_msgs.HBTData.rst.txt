@@ -22,8 +22,6 @@
       ~HBTData.denormalize_ydata
       ~HBTData.get_bg_ratio
       ~HBTData.get_bin
-      ~HBTData.get_fit_xdata
-      ~HBTData.get_fit_ydata
       ~HBTData.get_range
       ~HBTData.get_reference
       ~HBTData.get_reference_window

@@ -19,8 +19,6 @@
       ~QdyneData.__init__
       ~QdyneData.can_resume
       ~QdyneData.get_bin
-      ~QdyneData.get_fit_xdata
-      ~QdyneData.get_fit_ydata
       ~QdyneData.get_method
       ~QdyneData.get_period
       ~QdyneData.get_period_bins
