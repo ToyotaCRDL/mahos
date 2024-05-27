@@ -909,11 +909,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         # self.update_data(data)
 
     # parameters
-    def apply_meas_widgets(self, params=None):
-        if params is None:
-            p = self.data.params
-        else:
-            p = params
+    def apply_meas_widgets(self):
+        p = self.data.params
 
         # TDC
         self.binBox.setValue(p.get("timebin", 0.0) * 1e9)  # sec to ns
@@ -924,8 +921,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.roitailBox.setValue(p.get("roi_tail", -1e-9) * 1e9)  # sec to ns
 
         # method
-        method = p.get("method", "rabi")
-        self.set_method(method)
+        self.set_method(self.data.label)
 
         # MW
         self.freqBox.setValue(p.get("freq", 2740e6) * 1e-6)  # [Hz] ==> [MHz]

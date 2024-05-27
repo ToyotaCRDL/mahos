@@ -44,7 +44,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
     # application specific method to be overridden
     def load_dialog(self, default_path: str) -> str:
         name = "Any"
-        ext = ".pkl"
+        ext = ".h5"
         return Qt.open_file_dialog(
             self, f"Load {name} Data", default_path, f"{name} data (*{ext})"
         )

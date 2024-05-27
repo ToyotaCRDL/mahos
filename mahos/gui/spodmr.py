@@ -576,11 +576,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         # self.update_data(data)
 
     # parameters
-    def apply_meas_widgets(self, params=None):
-        if params is None:
-            p = self.data.params
-        else:
-            p = params
+    def apply_meas_widgets(self):
+        p = self.data.params
 
         # pulser
         self.sweepsBox.setValue(p.get("sweeps", 0))
@@ -597,8 +594,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             self.pd_ubBox.setValue(ub)
 
         # method
-        method = p.get("method", "rabi")
-        self.set_method(method)
+        self.set_method(self.data.label)
 
         # MW
         self.freqBox.setValue(p.get("freq", 2740e6) * 1e-6)  # [Hz] ==> [MHz]
