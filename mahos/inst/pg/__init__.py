@@ -10,6 +10,7 @@ Pulse Generator module.
 
 from .dtg import DTG5000, DTG5078, DTG5274, DTG5334
 from .pulse_streamer import PulseStreamer, PulseStreamerDAQTrigger
+from .pulse_blaster import SpinCore_PulseBlasterESR_PRO
 
 __all__ = [
     "DTG5000",
@@ -18,4 +19,5 @@ __all__ = [
     "DTG5334",
     "PulseStreamer",
     "PulseStreamerDAQTrigger",
+    "SpinCore_PulseBlasterESR_PRO",
 ]

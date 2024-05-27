@@ -22,15 +22,14 @@ class OP(enum.Enum):
     """PulseBlaster instruction codes (op-codes)."""
 
     CONTINUE = 0
-    STOP = 1
+    STOP = 1  # enter stop state: must call pb_reset() to restart
     LOOP = 2
     END_LOOP = 3
     JSR = 4  # jump to subroutine
     RTS = 5  # return from subroutine
-    BRANCH = 6
-    LONG_DELAY = 7
-    WAIT = 8
-    RTI = 9
+    BRANCH = 6  # goto
+    LONG_DELAY = 7  # for long delay beyond 8.59 sec
+    WAIT = 8  # wait for trigger
 
 
 class SpinCore_PulseBlasterESR_PRO(Instrument):
@@ -39,7 +38,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
 
-        self.CHANNELS = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7}
+        self.CHANNELS = {str(i): i for i in range(24)}
         if "channels" in conf:
             self.CHANNELS.update(conf.get("channels", {}))
 
@@ -73,11 +72,13 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         else:
             i = 0
 
-        clock_MHz = self.conf.get("clock_MHz", 500.0)
+        self._freq = self.conf.get("freq", 500.0e6)
+        clock_MHz = self._freq * 1e-6
 
-        if self.check_error(self.dll.pb_init()) and self.check_error(
-            self.dll.pb_core_clock(clock_MHz)
-        ):
+        if self.check_error(self.dll.pb_init()):
+            self.dll.pb_core_clock(
+                C.c_double(clock_MHz)
+            )  # Cannot check error as this one is void.
             self.logger.info(f"Initialized PulseBlasterESR-PRO ({i}) at {clock_MHz:.1f} MHz")
         else:
             msg = f"Failed to initialize PulseBlasterESR-PRO ({i})"
@@ -90,15 +91,35 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
 
     def _get_pb_version(self) -> str:
         self.dll.pb_get_version.restype = C.c_char_p
-        return self.dll.pb_get_version.restype().decode()
+        return self.dll.pb_get_version().decode()
 
     def _inst(self, output: int, inst: int, inst_data: int, length_ns: float) -> int:
-        return self.dll.pb_inst_pbonly(output, inst, inst_data, length_ns)
+        return self.dll.pb_inst_pbonly(output, inst, inst_data, C.c_double(length_ns))
 
     def _inst_continue(self, output: int, length_ns: float) -> int:
         """CONTINUE instruction. No branching / jump is performed."""
 
-        return self.dll.pb_inst_pbonly(output, OP.CONTINUE.value, 0, length_ns)
+        return self._inst(output, OP.CONTINUE.value, 0, length_ns)
+
+    def _inst_wait(self, output: int, length_ns: float) -> int:
+        """WAIT instruction."""
+
+        return self._inst(output, OP.WAIT.value, 0, length_ns)
+
+    def _inst_branch(self, output: int, index: int, length_ns: float) -> int:
+        """BRANCH instruction."""
+
+        return self._inst(output, OP.BRANCH.value, index, length_ns)
+
+    def _inst_loop(self, output: int, loop_num: int, length_ns: float) -> int:
+        """LOOP instruction."""
+
+        return self._inst(output, OP.LOOP.value, loop_num, length_ns)
+
+    def _inst_end_loop(self, output: int, loop_id: int, length_ns: float) -> int:
+        """END_LOOP instruction. loop_id is instruction id of loop instruction."""
+
+        return self._inst(output, OP.END_LOOP.value, loop_id, length_ns)
 
     def check_error(self, ret: int) -> bool:
         """Check ret value of int function and log message if error. return True if OK."""
@@ -117,8 +138,6 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         return False
 
     def channels_to_ints(self, channels) -> list[int]:
-        """NOTE: if channels is a container, channels in analog_channels are excluded."""
-
         def parse(c):
             if isinstance(c, (bytes, str)):
                 return self.CHANNELS[c]
@@ -132,7 +151,13 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         elif isinstance(channels, (bytes, str, int)):
             return [parse(channels)]
         else:  # container (list or tuple) of (bytes, str, int)
-            return [parse(c) for c in channels if c not in self.analog_channels]
+            return [parse(c) for c in channels]
+
+    def channels_to_output(self, channels) -> int:
+        data = 0
+        for bit in self.channels_to_ints(channels):
+            data |= 1 << bit
+        return data
 
     def _included_channels_blocks(self, blocks: Blocks[Block]) -> list[int]:
         """create sorted list of channels in blocks converted to ints."""
@@ -141,20 +166,12 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         # (CHANNELS is not always injective), though it's quite rare usecase.
         return sorted(list(set(self.channels_to_ints(blocks.channels()))))
 
-    def _extract_trigger_blocks(self, blocks: Blocks[Block]) -> bool | None:
-        trigger = False
-        for i, block in enumerate(blocks):
-            if block.trigger:
-                if i:
-                    self.logger.error("Can set trigger for first block only.")
-                    return None
-                trigger = True
-        return trigger
-
     def validate_blocks(self, blocks: Blocks[Block], freq: float) -> list[int] | None:
+        self.logger.warn("Not implemented!")
         return True
 
     def validate_blockseq(self, blockseq: BlockSeq[Block], freq: float) -> list[int] | None:
+        self.logger.warn("Not implemented!")
         return True
 
     def configure_blocks(
@@ -166,13 +183,60 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
     ) -> bool:
         """Make sequence from blocks."""
 
+        if freq != self._freq:
+            return self.fail_with("freq must be {:.1f} MHz".format(self._freq * 1e-6))
+
         self.offsets = [0] * len(blocks)
         self.length = blocks.total_length()
 
+        self.check_error(self.dll.pb_reset())
         # 0 is PULSE_PROGRAM
         self.check_error(self.dll.pb_start_programming(0))
 
+        if n_runs is None:
+            # infinite loop
+            N_i = len(blocks)
+            for i, block in enumerate(blocks):
+                patterns = block.total_pattern()
+                N_j = len(patterns)
+                for j, (channels, duration) in enumerate(patterns):
+                    output = self.channels_to_output(channels)
+                    dur = duration * round(1e9 / freq)
+                    if i == N_i - 1 and j == N_j - 1:
+                        # keep last output (for 0 sec) and branch to the head.
+                        if block.trigger:
+                            return self.fail_with(
+                                "Cannot set trigger at final block with length 1."
+                            )
+                        ret = self._inst_branch(output, 0, dur)
+                        self.logger.debug(f"BRANCH (to 0) Output: {output} Dur: {dur} ret: {ret}")
+                    elif block.trigger:
+                        ret = self._inst_wait(output, dur)
+                        self.logger.debug(f"WAIT Output: {output} Dur: {dur} ret: {ret}")
+                    else:
+                        ret = self._inst_continue(output, dur)
+                        self.logger.debug(f"CONTINUE Output: {output} Dur: {dur} ret: {ret}")
+                    if not self.check_error(ret):
+                        return False
+        else:
+            # finite loop
+            loop_id = self._inst_loop(output, n_runs, 0)
+            for block in blocks:
+                for channels, duration in block.total_pattern():
+                    output = self.channels_to_output(channels)
+                    dur = duration * round(1e9 / freq)
+                    if block.trigger:
+                        self._inst_wait(output, dur)
+                    else:
+                        self._inst_continue(output, dur)
+            # keep last output (for 0 sec) and finish loop.
+            self._inst_end_loop(output, loop_id, 0)
+            # Let next trigger start the n_runs loop again.
+            self._inst_wait(output, 0)
+            self._inst_branch(output, 0, 0.0)
+
         self.check_error(self.dll.pb_stop_programming())
+        # self.check_error(self.dll.pb_reset())
 
         msg = f"Configured with blocks. length: {self.length}"
         self.logger.info(msg)
@@ -188,7 +252,8 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         """Make sequence from blockseq."""
 
         # TODO
-        return self.configure_blocks(Blocks([blockseq.collapse()]), freq, trigger_type, n_runs)
+        self.logger.error("Not implemented!")
+        return False
 
     def trigger(self) -> bool:
         """issue a software trigger."""
@@ -201,15 +266,13 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
     #     return True
 
     def start(self, label: str = "") -> bool:
-        if self.sequence is None or self.n_runs is None:
-            return self.fail_with("No sequence defined. configure() first.")
-        self.ps.stream(self.sequence, self.n_runs)
-        self.logger.info("Start streaming.")
-        return True
+        success = self.check_error(self.dll.pb_start())
+        self.logger.info("Start outputting pulses.")
+        return success
 
     def stop(self, label: str = "") -> bool:
         success = self.check_error(self.dll.pb_stop())
-        self.logger.info("Stopp the output.")
+        self.logger.info("Stop the output.")
         return success
 
     def configure(self, params: dict, label: str = "") -> bool:
