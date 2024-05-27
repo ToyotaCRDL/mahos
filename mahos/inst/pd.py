@@ -345,7 +345,7 @@ class LUCI10(Instrument):
     def get_product_string(self) -> str:
         size = 64
         s = ctypes.create_string_buffer(size)
-        ret = self.dll.GetProductString(self.index, ctypes.byref(s), size)
+        ret = self.dll.GetProductString(self.index, s, size)
         if self._check_ret_value(ret):
             return s.value.decode()
         else:

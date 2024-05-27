@@ -49,7 +49,7 @@ class RS_NRPZ(Instrument):
             if err < 0:
                 # cannot use self.check_error here because self._sessions hasn't been initialized.
                 msg = C.create_string_buffer(512)
-                self.dll.rsnrpz_error_message(session, err, C.byref(msg))
+                self.dll.rsnrpz_error_message(session, err, msg)
                 m = msg.value.decode()
                 self.logger.error(m)
                 raise RuntimeError(m)
@@ -67,8 +67,8 @@ class RS_NRPZ(Instrument):
         if not err:
             return True
         msg = C.create_string_buffer(512)
-        self.dll.rsnrpz_error_message(session, err, C.byref(msg))
-        self.logger.error(f"Error ({err}) " + msg.value.decode())
+        self.dll.rsnrpz_error_message(session, err, msg)
+        self.logger.error(f"Error ({err}): " + msg.value.decode())
         return False
 
     def configure_cont_average(self, params) -> bool:

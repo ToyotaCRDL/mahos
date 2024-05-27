@@ -218,7 +218,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
             data.fit_params is None
             or data.fit_result is None
             or not self.applyloadBox.isChecked()
-            or data.fit_params["method"] != self.labelBox.currentText()
+            or data.fit_label != self.labelBox.currentText()
             or "popt" not in data.fit_result
         ):
             return
