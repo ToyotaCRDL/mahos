@@ -187,7 +187,50 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
                 trigger = True
         return trigger
 
-    def _configure_blocks_infinite(self, blocks: Blocks[Block], trigger: bool) -> bool:
+    def _configure_blocks_no_loop_block(self, block: Block, is_last: bool, head_addr: int) -> bool:
+        Nj = block.total_pattern_num()
+        for j, (channels, duration) in enumerate(block.total_pattern()):
+            if duration < 5:
+                # TODO: short pulse feature can be used to generate pulse shorter
+                # than this limit. But we don't implement this as it can introduce little
+                # change of total length and break the measurement.
+                return self.fail_with("Duration cannot be shorter than 5 periods.")
+
+            output = self.channels_to_output(channels)
+            dur = duration * round(1e9 / self._freq)
+            if is_last and j == Nj - 1:
+                # the last pattern, branch to the head.
+                ret = self._BRANCH(output, head_addr, dur)
+            else:
+                ret = self._CONTINUE(output, dur)
+            if not self.check_error(ret):
+                return False
+        return True
+
+    def _configure_blocks_loop_block(self, block: Block, is_last: bool, head_addr: int) -> bool:
+        loop_addr = 0
+        Nj = block.raw_pattern_num()
+        for j, (channels, duration) in enumerate(block.pattern):
+            if duration < 5:
+                return self.fail_with("Duration cannot be shorter than 5 periods.")
+            output = self.channels_to_output(channels)
+            dur = duration * round(1e9 / self._freq)
+            if j == 0:
+                loop_addr = ret = self._LOOP(output, block.Nrep, dur)
+            elif is_last and j == Nj - 1:
+                # Can reach here only when trigger, where BRANCH can be safely added after END_LOOP
+                if not self.check_error(self._END_LOOP(output, loop_addr, dur)):
+                    return False
+                ret = self._BRANCH(0, head_addr, self._min_duration_ns)
+            elif j == Nj - 1:
+                ret = self._END_LOOP(output, loop_addr, dur)
+            else:
+                ret = self._CONTINUE(output, dur)
+            if not self.check_error(ret):
+                return False
+        return True
+
+    def _configure_blocks(self, blocks: Blocks[Block], trigger: bool) -> bool:
         """Configure infinite loop using blocks. If trigger is True, wait trigger at the head.
 
         Note that trigger at the other position is ignored.
@@ -198,34 +241,26 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             # Insert short CONTINUE as we cannot set WAIT at the very beginning.
             if not self.check_error(self._CONTINUE(0, self._min_duration_ns)):
                 return False
-            head_addr = ret = self._WAIT(0, self._min_duration_ns)
-            if not self.check_error(ret):
+            head_addr = self._WAIT(0, self._min_duration_ns)
+            if not self.check_error(head_addr):
                 return False
-            # Insert short CONTINUE again. Without this and non-zero data the head of blocks, 
+            # Insert short CONTINUE again. Without this and non-zero data the head of blocks,
             # first start() shows unexpected behaviour. (output can be high after first start())
             if not self.check_error(self._CONTINUE(0, self._min_duration_ns)):
                 return False
         else:
             head_addr = 0
 
-        N_i = len(blocks)
+        Ni = len(blocks)
         for i, block in enumerate(blocks):
-            patterns = block.total_pattern()
-            N_j = len(patterns)
-            for j, (channels, duration) in enumerate(patterns):
-                if duration < 5:
-                    # TODO: short pulse feature can be used to generate pulse shorter
-                    # than this limit. But we don't implement this as it can introduce little
-                    # change of total length and break the measurement.
-                    return self.fail_with("Duration cannot be shorter than 5 periods.")
-                output = self.channels_to_output(channels)
-                dur = duration * round(1e9 / self._freq)
-                if i == N_i - 1 and j == N_j - 1:
-                    # the last pattern, branch to the head.
-                    ret = self._BRANCH(output, head_addr, dur)
-                else:
-                    ret = self._CONTINUE(output, dur)
-                if not self.check_error(ret):
+            is_last = i == Ni - 1
+            if block.Nrep == 1 or (not trigger and is_last):
+                # without trigger, we cannot use LOOP for the last block
+                # because BRANCH at the tail will disturb the pattern.
+                if not self._configure_blocks_no_loop_block(block, is_last, head_addr):
+                    return False
+            else:
+                if not self._configure_blocks_loop_block(block, is_last, head_addr):
                     return False
         return True
 
@@ -252,7 +287,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
 
         # 0 is PULSE_PROGRAM
         self.check_error(self.dll.pb_start_programming(0))
-        success = self._configure_blocks_infinite(blocks, trigger)
+        success = self._configure_blocks(blocks, trigger)
         self.check_error(self.dll.pb_stop_programming())
 
         if not success:
