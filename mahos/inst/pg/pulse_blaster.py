@@ -9,6 +9,7 @@ SpinCore Pulse Blaster part of Pulse Generator module.
 """
 
 from __future__ import annotations
+import typing as T
 import sys
 import os
 
@@ -16,6 +17,13 @@ import ctypes as C
 
 from ..instrument import Instrument
 from ...msgs.inst.pg_msgs import TriggerType, Block, Blocks, BlockSeq
+
+
+class PulseBlasterStatus(T.NamedTuple):
+    stopped: bool
+    reset: bool
+    running: bool
+    waiting: bool
 
 
 class SpinCore_PulseBlasterESR_PRO(Instrument):
@@ -312,6 +320,15 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         self.logger.error("Not implemented!")
         return False
 
+    def get_status(self) -> PulseBlasterStatus:
+        s = self.dll.pb_read_status()
+        return PulseBlasterStatus(
+            stopped=bool(s & 0b1),
+            reset=bool(s & 0b10),
+            running=bool(s & 0b100),
+            waiting=bool(s & 0b1000),
+        )
+
     def trigger(self) -> bool:
         """issue a software trigger."""
 
@@ -359,7 +376,9 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             return self.fail_with(f"unknown set() key: {key}")
 
     def get(self, key: str, args=None, label: str = ""):
-        if key == "length":
+        if key == "status":
+            return self.get_status()
+        elif key == "length":
             return self.length  # length of last configure_blocks
         elif key == "offsets":  # for API compatibility
             if args is None:
