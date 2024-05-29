@@ -336,7 +336,9 @@ class ConfocalTracker(Node):
             return vmin if val < vmin else vmax if val > vmax else val
 
         prev_conf, prev_img, (px, py) = self.img_buf.get(self.scan_params)
-        if np.all(image.image == 0.0) or np.all(np.isclose(image.image, image.image[0, 0], atol=0.0)):
+        if np.all(image.image == 0.0) or np.all(
+            np.isclose(image.image, image.image[0, 0], atol=0.0)
+        ):
             # All-equal image can appear when detector power is off.
             self.logger.error("Image is invalid. Skipping optimization.")
             self.request_move(direction_to_axes(image.direction), (px, py))
