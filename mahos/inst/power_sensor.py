@@ -225,7 +225,7 @@ class RS_NRPZ(Instrument):
                 ),
                 samples=P.IntParam(4, 1, 1000, doc="number of averaging samples"),
                 aperture=P.FloatParam(
-                    100e-6, 100e-6, 1e-3, SI_prefix=True, unit="s", doc="measurement aperture"
+                    100e-6, 100e-6, 1.0, SI_prefix=True, unit="s", doc="measurement aperture"
                 ),
                 smoothing=P.BoolParam(True, doc="enable smoothing"),
             )
