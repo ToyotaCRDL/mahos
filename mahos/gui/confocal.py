@@ -422,7 +422,7 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
             ],
         )
         if "pd_bounds" in params:
-            apply_widgets(params, [("pd_bounds"), [self.pd_lbBox, self.pd_ubBox]])
+            apply_widgets(params, [("pd_bounds", [self.pd_lbBox, self.pd_ubBox])])
             self._pd_analog = True
         else:
             self.pd_lbBox.setEnabled(False)
