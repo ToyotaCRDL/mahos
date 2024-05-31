@@ -19,6 +19,7 @@ Added
 Changed
 ^^^^^^^
 
+- Python version: drop support of 3.8 and 3.9, and add support of 3.12.
 - inst,meas: argument "group" has been removed from get_param_dict_labels(), get_param_dict(),
   and configure() in meas / inst APIs.
 - inst: argument "label" has been added to start(), stop(), reset(), set(), and get() inst API.

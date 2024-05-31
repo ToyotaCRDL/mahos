@@ -12,7 +12,7 @@ Steps to install mahos:
 System requirements
 -------------------
 
-You need Python (>= 3.8, < 3.12) on Windows or Linux, and prerequisites for C extensions (see below).
+You need Python (>= 3.10, < 3.13) on Windows or Linux, and prerequisites for C extensions (see below).
 
 For C extensions
 ^^^^^^^^^^^^^^^^
