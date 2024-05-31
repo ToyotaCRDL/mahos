@@ -27,6 +27,15 @@ class PGInterface(InstrumentInterface):
     ) -> bool:
         """Configure the PG using blocks (Blocks[Block]) representation.
 
+        How pulse patterns are output depends on n_runs and existence of triggered Blocks.
+        Following two cases are standardized, however, the other case may be instrument-dependent.
+        - n_runs = None, no triggered blocks: Infinite loop mode. The output starts immediately
+            on start() after this configure(). And it's repeated infinitely until stop().
+        - n_runs = 1, (only) first block is triggered: Triggered one-shot mode.
+            On start() after this configure(), output is not started but trigger is armed.
+            The pattern is output once on each trigger event
+            (software trigger() or hardware trigger signal).
+
         :param blocks: block representation of pulse pattern.
         :param freq: frequency in Hz.
         :param trigger_type: the trigger type. if None, instrument's default is used.

@@ -316,12 +316,17 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         if freq != self._freq:
             return self.fail_with("freq must be {:.1f} MHz".format(self._freq * 1e-6))
 
+        # TODO: consider nest_depth() and LOOP depth
+        # if blockseq.nest_depth() > N:
+        #     return self.fail_with("maximum BlockSeq nest depth is N for PulseBlaster.")
+
         # TODO
         self.logger.error("Not implemented!")
         return False
 
     def get_status(self) -> PulseBlasterStatus:
         s = self.dll.pb_read_status()
+        # self.logger.debug(f"status bits: 0b{s:04b}")
         return PulseBlasterStatus(
             stopped=bool(s & 0b1),
             reset=bool(s & 0b10),
