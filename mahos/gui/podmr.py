@@ -78,8 +78,9 @@ class PODMRFitWidget(FitWidget):
 
 
 class PlotWidget(pg.GraphicsLayoutWidget):
-    def __init__(self, parent=None):
+    def __init__(self, auto_range: bool, parent=None):
         pg.GraphicsLayoutWidget.__init__(self, parent)
+        self._auto_range = auto_range
 
         self.init_view()
 
@@ -169,7 +170,8 @@ class PlotWidget(pg.GraphicsLayoutWidget):
         self.plot.ctrl.fftCheck.setChecked(enable)
 
     def enable_auto_range(self):
-        self.plot.enableAutoRange()
+        if self._auto_range:
+            self.plot.enableAutoRange()
 
 
 class RawPlotWidget(QtWidgets.QWidget):
@@ -1443,7 +1445,7 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
         lconf = local_conf(gconf, name)
         target = lconf["target"]
 
-        self.plot = PlotWidget(parent=self)
+        self.plot = PlotWidget(lconf.get("auto_range", True), parent=self)
         self.raw_plot = RawPlotWidget(parent=self)
         self.podmr = PODMRWidget(
             gconf,
