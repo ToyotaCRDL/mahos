@@ -10,9 +10,9 @@ mahos data plot command.
 
 import sys
 import argparse
+from argparse import BooleanOptionalAction
 from os import path
 import pprint
-from distutils.util import strtobool
 import toml
 
 from ..msgs.fit_msgs import str_to_peak_type
@@ -530,11 +530,13 @@ def add_podmr_parser(sub_parsers):
     p.add_argument(
         "-R", "--refmode", type=str, help="[plot] Reference mode (subtract|divide|ignore)"
     )
-    p.add_argument("--fft", type=strtobool, help="[plot] FFT mode")
-    p.add_argument("--logX", type=strtobool, help="[plot] logscale X axis")
-    p.add_argument("--logY", type=strtobool, help="[plot] logscale Y axis")
-    p.add_argument("--flipY", type=strtobool, help="[plot] flip Y axis")
-    p.add_argument("-a", "--refaverage", type=strtobool, help="[plot] Reference avaraging")
+    p.add_argument("--fft", action=BooleanOptionalAction, help="[plot] FFT mode")
+    p.add_argument("--logX", action=BooleanOptionalAction, help="[plot] logscale X axis")
+    p.add_argument("--logY", action=BooleanOptionalAction, help="[plot] logscale Y axis")
+    p.add_argument("--flipY", action=BooleanOptionalAction, help="[plot] flip Y axis")
+    p.add_argument(
+        "-a", "--refaverage", action=BooleanOptionalAction, help="[plot] Reference avaraging"
+    )
 
     p.add_argument(
         "-m",
@@ -594,12 +596,14 @@ def add_spodmr_parser(sub_parsers):
         help="[plot] Plot mode (data01|data0|data1|diff|average|normalize|normalize1|concatenate)",
     )
     p.add_argument("-T", "--taumode", type=str, help="[plot] Tau mode (raw|total|freq|index)")
-    p.add_argument("--fft", type=strtobool, help="[plot] FFT mode")
-    p.add_argument("--logX", type=strtobool, help="[plot] logscale X axis")
-    p.add_argument("--logY", type=strtobool, help="[plot] logscale Y axis")
-    p.add_argument("-n", "--normalize", type=strtobool, help="[plot] Normalize using laser duty")
+    p.add_argument("--fft", action=BooleanOptionalAction, help="[plot] FFT mode")
+    p.add_argument("--logX", action=BooleanOptionalAction, help="[plot] logscale X axis")
+    p.add_argument("--logY", action=BooleanOptionalAction, help="[plot] logscale Y axis")
+    p.add_argument(
+        "-n", "--normalize", action=BooleanOptionalAction, help="[plot] Normalize using laser duty"
+    )
     p.add_argument("--norm-offset", type=float, help="[plot] Offset value for normalization")
-    p.add_argument("--flipY", type=strtobool, help="[plot] flip Y axis")
+    p.add_argument("--flipY", action=BooleanOptionalAction, help="[plot] flip Y axis")
 
     p.add_argument(
         "-m",
