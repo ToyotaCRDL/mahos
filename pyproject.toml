@@ -7,7 +7,7 @@ name = "mahos"
 version = "0.2.3"
 description = "Measurement Automation Handling and Orchestration System"
 readme = "README.rst"
-requires-python = ">=3.8, <3.13"
+requires-python = ">=3.10, <3.13"
 license = { text = "BSD License (BSD-3-Clause)" }
 keywords = [ "measurement automation", "laboratory automation", "instrumentation", ]
 authors = [
