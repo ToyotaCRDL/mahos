@@ -786,6 +786,8 @@ class scanItem(QtCore.QObject):
         self.pi.disableAutoRange(axis="xy")
         self.pi_sub.disableAutoRange(axis="xy")
 
+        self._auto_levels = True
+
         xybound = QtCore.QRectF(self.xmin, self.ymin, self.xmax, self.ymax)
         roi_x, roi_y = pos[0] - roi_size[0] / 2.0, pos[1] - roi_size[1] / 2.0
         if roi_x < self.xmin:
@@ -1054,6 +1056,11 @@ class scanItem(QtCore.QObject):
             self.img.data = image.get_image(self.complex_conv)
         self._update_image()
 
+    def set_auto_levels(self, enable: bool):
+        self._auto_levels = enable
+        if enable:
+            self._set_levels()
+
     def _set_levels(self):
         """set histogram levels to fit current img."""
 
@@ -1067,14 +1074,14 @@ class scanItem(QtCore.QObject):
         self.img.setPos(*self.img.get_pos())
         self.img.setTransform(QtGui.QTransform.fromScale(*self.img.get_steps()))
 
-    def _update_image(self, set_levels=True):
+    def _update_image(self):
         # not necessary because auto range is enabled by default.
         # self.histo.setHistogramRange(np.min(self.img.data), np.max(self.img.data))
 
         # self.img.setImage(self.img.data) # not so much difference with this.
         self.img.updateImage(self.img.data)
 
-        if set_levels:
+        if self._auto_levels:
             self._set_levels()
         self._set_img_transform()
         self.update_sub()
@@ -2063,6 +2070,10 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         for w in [self.XTgtBox, self.YTgtBox, self.ZTgtBox]:
             w.setStyleSheet("background: {bg:s};".format(bg=bg))
 
+    def set_auto_levels(self, enable: bool):
+        for si in (self.XY, self.XZ, self.YZ):
+            si.set_auto_levels(enable)
+
 
 class traceView(ClientWidget, Ui_traceView):
     """Widget for Confocal trace view."""
@@ -2359,6 +2370,13 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
 
         self.view_menu = self.menuBar().addMenu("View")
         self.view_menu.addAction(self.d_traceView.toggleViewAction())
+
+        self.option_menu = self.menuBar().addMenu("Option")
+        act = QtGui.QAction("Auto colorbar levels", parent=self.option_menu)
+        act.setCheckable(True)
+        act.setChecked(True)
+        self.option_menu.addAction(act)
+        act.toggled.connect(self.confocal.set_auto_levels)
 
     def shutdown(self):
         self.confocal.cli.shutdown()

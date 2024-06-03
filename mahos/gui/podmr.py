@@ -20,7 +20,7 @@ import numpy as np
 import pyqtgraph as pg
 
 from . import Qt
-from .Qt import QtCore, QtWidgets
+from .Qt import QtCore, QtWidgets, QtGui
 
 from .ui.podmr import Ui_PODMR
 from .ui.podmr_indicator import Ui_PODMRIndicator
@@ -78,11 +78,17 @@ class PODMRFitWidget(FitWidget):
 
 
 class PlotWidget(pg.GraphicsLayoutWidget):
-    def __init__(self, auto_range: bool, parent=None):
+    def __init__(self, parent=None):
         pg.GraphicsLayoutWidget.__init__(self, parent)
-        self._auto_range = auto_range
+        self._auto_range = True
 
         self.init_view()
+
+    def auto_range(self) -> bool:
+        return self._auto_range
+
+    def set_auto_range(self, enable: bool):
+        self._auto_range = enable
 
     def sizeHint(self):
         return QtCore.QSize(1400, 1000)
@@ -1445,7 +1451,7 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
         lconf = local_conf(gconf, name)
         target = lconf["target"]
 
-        self.plot = PlotWidget(lconf.get("auto_range", True), parent=self)
+        self.plot = PlotWidget(parent=self)
         self.raw_plot = RawPlotWidget(parent=self)
         self.podmr = PODMRWidget(
             gconf,
@@ -1470,6 +1476,13 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
         self.view_menu = self.menuBar().addMenu("View")
         self.view_menu.addAction(self.d_plot.toggleViewAction())
         self.view_menu.addAction(self.d_raw_plot.toggleViewAction())
+
+        self.option_menu = self.menuBar().addMenu("Option")
+        act = QtGui.QAction("Auto range", parent=self.option_menu)
+        act.setCheckable(True)
+        act.setChecked(self.plot.auto_range())
+        self.option_menu.addAction(act)
+        act.toggled.connect(self.plot.set_auto_range)
 
     def closeEvent(self, event):
         """Close the clients on closeEvent."""

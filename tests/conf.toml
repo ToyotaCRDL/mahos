@@ -409,7 +409,6 @@ gparams = "localhost::gparams"
 [localhost.podmr_gui]
 module = "mahos.gui.podmr"
 class = "PODMRGUI"
-auto_range = false
 [localhost.podmr_gui.target]
 podmr = "localhost::podmr"
 gparams = "localhost::gparams"
