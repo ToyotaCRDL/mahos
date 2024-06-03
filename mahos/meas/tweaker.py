@@ -21,6 +21,7 @@ from ..msgs.tweaker_msgs import StartReq, StopReq, ResetReq, SaveReq, LoadReq
 from ..node.node import Node
 from ..node.client import NodeClient, StatusClient
 from ..inst.server import MultiInstrumentClient
+from .tweaker_io import TweakerIO
 
 
 class TweakerClient(StatusClient):
@@ -103,6 +104,8 @@ class Tweaker(Node):
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
+
+        self.io = TweakerIO()
 
     def _parse_param_dict_id(self, pid: str) -> tuple[str, str]:
         """returns (inst, label)."""
@@ -190,57 +193,34 @@ class Tweaker(Node):
     def save(self, msg: SaveReq) -> Reply:
         """Save tweaker state (param_dicts and start_stop_state) to file using h5."""
 
-        mode = "r+" if os.path.exists(msg.filename) else "w"
-        with h5py.File(msg.filename, mode) as f:
-            if msg.group:
-                if msg.group in f:
-                    g = f[msg.group]
-                else:
-                    g = f.create_group(msg.group)
-            else:
-                g = f
-            for pid, params in self._param_dicts.items():
-                if params is None:
-                    continue
-                group = g.create_group(pid)
-                params.to_h5(group)
-
-                state = self._start_stop_states[pid]
-                #  Do not save unknown state (= None) because
-                #  it might be just irrelevant for given instrument.
-                if state is True:
-                    group.attrs["__start_stop__"] = True
-                elif state is False:
-                    group.attrs["__start_stop__"] = False
-
-        self.logger.info(f"Saved {msg.filename}.")
-        return Reply(True)
+        return Reply(
+            self.io.save_data(
+                msg.filename, msg.group, self._param_dicts, self._start_stop_states
+            )
+        )
 
     def load(self, msg: LoadReq) -> Reply:
-        """Load the tweaker state (param_dicts).
+        """Load the tweaker state into current param_dicts.
 
         Load is done defensively, checking the existence and validity in current setup.
 
         """
 
-        with h5py.File(msg.filename, "r") as f:
-            if msg.group:
-                if msg.group not in f:
-                    self.logger.error(f"group {msg.group} doesn't exist in {msg.filename}")
-                    return Reply(False)
-                g = f[msg.group]
-            else:
-                g = f
-            for pid, params in self._param_dicts.items():
-                if pid not in g or params is None:
-                    continue
-                for key, lp in P.ParamDict.of_h5(g[pid]).items():
-                    if (param := params.getf(key)) is not None:
-                        if not param.set(lp):
-                            self.logger.error(f"Cannot set {pid}[{key}] to {lp}")
-
-        self.logger.info(f"Loaded {msg.filename}.")
-        return Reply(True, ret=self._param_dicts)
+        success = self.io.load_data_dicts(msg.filename, msg.group, self._param_dicts)
+        pds = self.io.load_data(msg.filename, msg.group)
+        if not pds:
+            return Reply(False)
+        for pid, params in self._param_dicts.items():
+            if pid not in pds:
+                continue
+            for key, lp in pds[pid].items():
+                if (param := params.getf(key)) is not None:
+                    if not param.set(lp):
+                        self.logger.error(f"Cannot set {pid}[{key}] to {lp}")
+        if success:
+            return Reply(True, ret=self._param_dicts)
+        else:
+            return Reply(False)
 
     def handle_req(self, msg):
         if isinstance(msg, ReadReq):

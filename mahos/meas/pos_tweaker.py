@@ -22,6 +22,7 @@ from ..node.node import Node
 from ..node.client import StatusClient
 from ..inst.server import MultiInstrumentClient
 from ..inst.positioner_interface import SinglePositionerInterface
+from .pos_tweaker_io import PosTweakerIO
 
 
 class PosTweakerClient(StatusClient):
@@ -81,6 +82,8 @@ class PosTweaker(Node):
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
 
+        self.io = PosTweakerIO()
+
     def wait(self):
         for inst_name in self.conf["target"]["servers"]:
             self.cli.wait(inst_name)
@@ -111,44 +114,18 @@ class PosTweaker(Node):
     def save(self, msg: SaveReq) -> Reply:
         """Save tweaker state (pos, target, homed) to file using h5."""
 
-        mode = "r+" if os.path.exists(msg.filename) else "w"
-        with h5py.File(msg.filename, mode) as f:
-            if msg.group:
-                if msg.group in f:
-                    g = f[msg.group]
-                else:
-                    g = f.create_group(msg.group)
-            else:
-                g = f
-            for ax, state in self._axis_states.items():
-                if state is None:
-                    continue
-                group = g.create_group(ax)
-                for key in ("pos", "target", "homed"):
-                    if key in state:
-                        group.attrs[key] = state[key]
-
-        self.logger.info(f"Saved {msg.filename}.")
-        return Reply(True)
+        return Reply(self.io.save_data(msg.filename, msg.group, self._axis_states))
 
     def load(self, msg: LoadReq) -> Reply:
         """Load the tweaker state (target) and set the target."""
 
-        with h5py.File(msg.filename, "r") as f:
-            if msg.group:
-                if msg.group not in f:
-                    self.logger.error(f"group {msg.group} doesn't exist in {msg.filename}")
-                    return Reply(False)
-                g = f[msg.group]
-            else:
-                g = f
-            for ax, positioner in self._axis_positioners.items():
-                if ax not in g or "target" not in g[ax].attrs:
-                    continue
-                target = g[ax].attrs["target"]
-                positioner.set_target(target)
-
-        self.logger.info(f"Loaded {msg.filename}.")
+        ax_states = self.io.load_data(self._axis_positioners.keys())
+        if not ax_states:
+            return Reply(False)
+        for ax, positioner in self._axis_positioners.items():
+            states = ax_states[ax]
+            if "target" in states:
+                positioner.set_target(states["target"])
         return Reply(True)
 
     def handle_req(self, msg):
