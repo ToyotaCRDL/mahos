@@ -195,6 +195,19 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
                 trigger = True
         return trigger
 
+    def _extract_trigger_blockseq(self, blockseq: BlockSeq) -> bool | None:
+        def any_trigger(bs):
+            if isinstance(bs, BlockSeq):
+                return bs.trigger or any([any_trigger(b) for b in bs.data])
+            else:  # Block
+                return bs.trigger
+
+        # check other trigger is all False
+        if any([any_trigger(b) for b in blockseq.data]):
+            self.logger.error("Can set trigger for outermost BlockSeq only.")
+
+        return blockseq.trigger
+
     def _configure_blocks_no_loop_block(self, block: Block, is_last: bool, head_addr: int) -> bool:
         Nj = block.total_pattern_num()
         for j, (channels, duration) in enumerate(block.total_pattern()):
@@ -238,23 +251,29 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
                 return False
         return True
 
+    def _make_trigger_block(self) -> int:
+        # Insert short CONTINUE as we cannot set WAIT at the very beginning.
+        if not self.check_error(self._CONTINUE(0, self._min_duration_ns)):
+            return -1
+        head_addr = self._WAIT(0, self._min_duration_ns)
+        if not self.check_error(head_addr):
+            return -1
+        # Insert short CONTINUE again. Without this and non-zero data the head of blocks,
+        # first start() shows unexpected behaviour. (output can be high after first start())
+        if not self.check_error(self._CONTINUE(0, self._min_duration_ns)):
+            return -1
+        return head_addr
+
     def _configure_blocks(self, blocks: Blocks[Block], trigger: bool) -> bool:
-        """Configure infinite loop using blocks. If trigger is True, wait trigger at the head.
+        """Configure infinite loop using Blocks. If trigger is True, wait trigger at the head.
 
         Note that trigger at the other position is ignored.
 
         """
 
         if trigger:
-            # Insert short CONTINUE as we cannot set WAIT at the very beginning.
-            if not self.check_error(self._CONTINUE(0, self._min_duration_ns)):
-                return False
-            head_addr = self._WAIT(0, self._min_duration_ns)
-            if not self.check_error(head_addr):
-                return False
-            # Insert short CONTINUE again. Without this and non-zero data the head of blocks,
-            # first start() shows unexpected behaviour. (output can be high after first start())
-            if not self.check_error(self._CONTINUE(0, self._min_duration_ns)):
+            head_addr = self._make_trigger_block()
+            if head_addr < 0:
                 return False
         else:
             head_addr = 0
@@ -305,6 +324,206 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         self.logger.info(msg)
         return True
 
+    def _add_block_no_loop(self, block: Block, head_addr: int) -> bool:
+        Nj = block.total_pattern_num()
+        for j, (channels, duration) in enumerate(block.total_pattern()):
+            if duration < 5:
+                return self.fail_with("Duration cannot be shorter than 5 periods.")
+
+            output = self.channels_to_output(channels)
+            dur = duration * round(1e9 / self._freq)
+            if head_addr >= 0 and j == Nj - 1:
+                # the last pattern, branch to the head.
+                ret = self._BRANCH(output, head_addr, dur)
+            else:
+                ret = self._CONTINUE(output, dur)
+            if not self.check_error(ret):
+                return False
+        return True
+
+    def _add_block_loop(self, block: Block, head_addr: int) -> bool:
+        loop_addr = 0
+        Nj = block.raw_pattern_num()
+        for j, (channels, duration) in enumerate(block.pattern):
+            if duration < 5:
+                return self.fail_with("Duration cannot be shorter than 5 periods.")
+            output = self.channels_to_output(channels)
+            dur = duration * round(1e9 / self._freq)
+            if j == 0:
+                loop_addr = ret = self._LOOP(output, block.Nrep, dur)
+            elif head_addr >= 0 and j == Nj - 1:
+                # Can reach here only when trigger, where BRANCH can be safely added after END_LOOP
+                if not self.check_error(self._END_LOOP(output, loop_addr, dur)):
+                    return False
+                ret = self._BRANCH(0, head_addr, self._min_duration_ns)
+            elif j == Nj - 1:
+                ret = self._END_LOOP(output, loop_addr, dur)
+            else:
+                ret = self._CONTINUE(output, dur)
+            if not self.check_error(ret):
+                return False
+        return True
+
+    def _add_block(self, block: Block, head_addr: int) -> bool:
+        if block.Nrep == 1:
+            return self._add_block_no_loop(block, head_addr)
+        else:
+            return self._add_block_loop(block, head_addr)
+
+    def _add_block_loop_start(self, block: Block, Nrep: int) -> tuple[bool, int]:
+        assert block.Nrep == 1
+
+        loop_addr = 0
+        for j, (channels, duration) in enumerate(block.total_pattern()):
+            if duration < 5:
+                return self.fail_with("Duration cannot be shorter than 5 periods.")
+
+            output = self.channels_to_output(channels)
+            dur = duration * round(1e9 / self._freq)
+            if j == 0:
+                loop_addr = ret = self._LOOP(output, Nrep, dur)
+            else:
+                ret = self._CONTINUE(output, dur)
+            if not self.check_error(ret):
+                return False, 0
+        return True, loop_addr
+
+    def _add_block_loop_end(self, block: Block, loop_addr: int, head_addr: int) -> bool:
+        assert block.Nrep == 1
+
+        Nj = block.total_pattern_num()
+        for j, (channels, duration) in enumerate(block.total_pattern()):
+            if duration < 5:
+                return self.fail_with("Duration cannot be shorter than 5 periods.")
+
+            output = self.channels_to_output(channels)
+            dur = duration * round(1e9 / self._freq)
+            if head_addr >= 0 and j == Nj - 1:
+                # Can reach here only when trigger, where BRANCH can be safely added after END_LOOP
+                if not self.check_error(self._END_LOOP(output, loop_addr, dur)):
+                    return False
+                ret = self._BRANCH(0, head_addr, self._min_duration_ns)
+            elif j == Nj - 1:
+                ret = self._END_LOOP(output, loop_addr, dur)
+            else:
+                ret = self._CONTINUE(output, dur)
+            if not self.check_error(ret):
+                return False
+        return True
+
+    def _add_blockseq_loop_start(self, blockseq: BlockSeq, Nrep: int) -> tuple[bool, int]:
+        assert blockseq.Nrep == 1
+
+        success = True
+        fst = blockseq.data[0]
+        if fst.Nrep > 1:
+            return self.fail_with("First element cannot be loop (Nrep > 1).")
+        if isinstance(fst, BlockSeq):
+            s, addr = self._add_blockseq_loop_start(fst, Nrep)
+            success &= s
+        else:
+            s, addr = self._add_block_loop_start(fst, Nrep)
+            success &= s
+
+        for b in blockseq.data[1:]:
+            if isinstance(b, BlockSeq):
+                success &= self._add_blockseq(b, -1)
+            else:
+                success &= self._add_block(b, -1)
+
+        return success, addr
+
+    def _add_blockseq_loop_end(self, blockseq: BlockSeq, addr: int, head_addr: bool) -> bool:
+        assert blockseq.Nrep == 1
+
+        success = True
+
+        for b in blockseq.data[:-1]:
+            if isinstance(b, BlockSeq):
+                success &= self._add_blockseq(b, -1)
+            else:
+                success &= self._add_block(b, -1)
+
+        last = blockseq.data[-1]
+        if last.Nrep > 1:
+            return self.fail_with("Last element cannot be loop (Nrep > 1).")
+        if isinstance(last, BlockSeq):
+            success &= self._add_blockseq_loop_end(last, addr, head_addr)
+        else:
+            success &= self._add_block_loop_end(last, addr, head_addr)
+        return success
+
+    def _add_blockseq(self, blockseq: BlockSeq, head_addr: int) -> bool:
+        """When head_addr >= 0, it contains the last block."""
+
+        success = True
+        fst = blockseq.data[0]
+        if blockseq.Nrep > 1:
+            if fst.Nrep > 1:
+                return self.fail_with("Bad nested loop. First element cannot be loop (Nrep > 1).")
+            if len(blockseq.data) == 1:
+                return self.fail_with("Length of looped BlockSeq must be more than 1.")
+            if isinstance(fst, BlockSeq):
+                s, addr = self._add_blockseq_loop_start(fst, blockseq.Nrep)
+                success &= s
+            else:
+                s, addr = self._add_block_loop_start(fst, blockseq.Nrep)
+                success &= s
+        else:
+            if head_addr >= 0 and len(blockseq.data) == 1:
+                # first and last blockseq / block
+                if isinstance(fst, BlockSeq):
+                    success &= self._add_blockseq(fst, head_addr)
+                else:
+                    success &= self._add_block(fst, head_addr)
+            else:
+                if isinstance(fst, BlockSeq):
+                    success &= self._add_blockseq(fst, -1)
+                else:
+                    success &= self._add_block(fst, -1)
+
+        if len(blockseq.data) == 1:
+            return success
+
+        # for more than 3 elements
+        for b in blockseq.data[1:-1]:
+            if isinstance(b, BlockSeq):
+                success &= self._add_blockseq(b, -1)
+            else:
+                success &= self._add_block(b, -1)
+
+        last = blockseq.data[-1]
+        if blockseq.Nrep > 1:
+            if last.Nrep > 1:
+                return self.fail_with("Bad nested loop. Last element cannot be loop (Nrep > 1).")
+            if isinstance(last, BlockSeq):
+                success &= self._add_blockseq_loop_end(last, addr, head_addr)
+            else:
+                success &= self._add_block_loop_end(last, addr, head_addr)
+        else:
+            if isinstance(last, BlockSeq):
+                success &= self._add_blockseq(last, head_addr)
+            else:
+                success &= self._add_block(last, head_addr)
+
+        return True
+
+    def _configure_blockseq(self, blockseq: BlockSeq, trigger: bool) -> bool:
+        """Configure infinite loop using BlockSeq. If trigger is True, wait trigger at the head.
+
+        Note that trigger at the other position is ignored.
+
+        """
+
+        if trigger:
+            head_addr = self._make_trigger_block()
+            if head_addr < 0:
+                return False
+        else:
+            head_addr = 0
+
+        return self._add_blockseq(blockseq, head_addr)
+
     def configure_blockseq(
         self,
         blockseq: BlockSeq,
@@ -316,13 +535,31 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         if freq != self._freq:
             return self.fail_with("freq must be {:.1f} MHz".format(self._freq * 1e-6))
 
+        trigger = self._extract_trigger_blockseq(blockseq)
+        if trigger is None:
+            return False
+
         # TODO: consider nest_depth() and LOOP depth
         # if blockseq.nest_depth() > N:
         #     return self.fail_with("maximum BlockSeq nest depth is N for PulseBlaster.")
 
-        # TODO
-        self.logger.error("Not implemented!")
-        return False
+        self.offsets = [0] * len(blockseq.unique_blocks())
+        self.length = blockseq.total_length()
+
+        # self.check_error(self.dll.pb_reset())
+        self.check_error(self.dll.pb_stop())
+
+        # 0 is PULSE_PROGRAM
+        self.check_error(self.dll.pb_start_programming(0))
+        success = self._configure_blockseq(blockseq, trigger)
+        self.check_error(self.dll.pb_stop_programming())
+
+        if not success:
+            return self.fail_with("Failed to configure with blockseq.")
+
+        msg = f"Configured with blockseq. length: {self.length}"
+        self.logger.info(msg)
+        return True
 
     def get_status(self) -> PulseBlasterStatus:
         s = self.dll.pb_read_status()
