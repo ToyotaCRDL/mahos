@@ -59,25 +59,47 @@ class TweakerIO(object):
         self.logger.info(f"Saved {filename}.")
         return True
 
-    def load_data(self, filename: str, group: str) -> dict:
+    def load_data(self, filename: str, group: str = "") -> dict:
         """Load params from filename[group] and return as dict."""
 
         d = {}
         try:
             with h5py.File(filename, "r") as f:
                 if group:
+                    group = self.demangle_group(group)
                     if group not in f:
-                        self.logger.error(f"group {group} doesn't exist in {filename}")
+                        msg = f"group {group} doesn't exist in {filename}."
+                        msg += f" available groups: {self.get_groups(filename)}"
+                        self.logger.error(msg)
                         return {}
                     g = f[group]
                 else:
                     g = f
                 for pid in g:
                     d[pid] = P.ParamDict.of_h5(g[pid])
-                # TODO: __start_stop__
         except Exception:
             self.logger.exception(f"Error loading {filename}.")
             return {}
 
         self.logger.info(f"Loaded {filename}.")
         return d
+
+    def get_groups(self, filename: str) -> list[str]:
+        """Get list of available groups in filename."""
+
+        li = []
+        try:
+            with h5py.File(filename, "r") as f:
+                for key, val in f.items():
+                    if isinstance(val, h5py.Group):
+                        li.append(key)
+        except Exception:
+            self.logger.exception(f"Error loading {filename}.")
+            return []
+        return li
+
+    def demangle_group(self, group: str):
+        if group.startswith("__") and group.endswith("__"):
+            return group
+        else:
+            return "__" + group + "__"

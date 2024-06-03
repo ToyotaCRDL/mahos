@@ -9,9 +9,6 @@ Generic tweaker for manually-tunable Instrument's ParamDicts.
 """
 
 from __future__ import annotations
-import os
-
-import h5py
 
 from ..msgs.common_msgs import Reply
 from ..msgs import param_msgs as P
@@ -105,7 +102,7 @@ class Tweaker(Node):
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
 
-        self.io = TweakerIO()
+        self.io = TweakerIO(self.logger)
 
     def _parse_param_dict_id(self, pid: str) -> tuple[str, str]:
         """returns (inst, label)."""
@@ -194,9 +191,7 @@ class Tweaker(Node):
         """Save tweaker state (param_dicts and start_stop_state) to file using h5."""
 
         return Reply(
-            self.io.save_data(
-                msg.filename, msg.group, self._param_dicts, self._start_stop_states
-            )
+            self.io.save_data(msg.filename, msg.group, self._param_dicts, self._start_stop_states)
         )
 
     def load(self, msg: LoadReq) -> Reply:
@@ -206,7 +201,6 @@ class Tweaker(Node):
 
         """
 
-        success = self.io.load_data_dicts(msg.filename, msg.group, self._param_dicts)
         pds = self.io.load_data(msg.filename, msg.group)
         if not pds:
             return Reply(False)
@@ -217,10 +211,7 @@ class Tweaker(Node):
                 if (param := params.getf(key)) is not None:
                     if not param.set(lp):
                         self.logger.error(f"Cannot set {pid}[{key}] to {lp}")
-        if success:
-            return Reply(True, ret=self._param_dicts)
-        else:
-            return Reply(False)
+        return Reply(True, ret=self._param_dicts)
 
     def handle_req(self, msg):
         if isinstance(msg, ReadReq):

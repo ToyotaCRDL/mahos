@@ -13,10 +13,11 @@ from os import path
 
 import h5py
 
+from .tweaker_io import TweakerIO
 from ..node.log import DummyLogger
 
 
-class PosTweakerIO(object):
+class PosTweakerIO(TweakerIO):
     def __init__(self, logger=None):
         if logger is None:  # use DummyLogger on interactive use
             self.logger = DummyLogger(self.__class__.__name__)
@@ -50,24 +51,27 @@ class PosTweakerIO(object):
         self.logger.info(f"Saved {filename}.")
         return True
 
-    def load_data(self, filename: str, group: str, axes: list[str]) -> dict:
+    def load_data(self, filename: str, group: str = "") -> dict:
         """Load params from filename[group] and return as dict."""
 
         d = {}
         try:
             with h5py.File(filename, "r") as f:
                 if group:
+                    group = self.demangle_group(group)
                     if group not in f:
-                        self.logger.error(f"group {group} doesn't exist in {filename}")
+                        msg = f"group {group} doesn't exist in {filename}."
+                        msg += f" available groups: {self.get_groups(filename)}"
+                        self.logger.error(msg)
                         return {}
                     g = f[group]
                 else:
                     g = f
-                for ax in axes:
+                for ax, gax in g.items():
                     d[ax] = {}
                     for key in ("pos", "target", "homed"):
-                        if key in g[ax].attrs:
-                            d[ax][key] = g[ax].attrs[key]
+                        if key in gax.attrs:
+                            d[ax][key] = gax.attrs[key]
         except Exception:
             self.logger.exception(f"Error loading {filename}.")
             return {}

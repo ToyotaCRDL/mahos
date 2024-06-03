@@ -9,9 +9,6 @@ Specialized tweaker for manually operated positioners.
 """
 
 from __future__ import annotations
-import os
-
-import h5py
 
 from ..msgs.common_msgs import Reply
 from ..msgs import pos_tweaker_msgs
@@ -82,7 +79,7 @@ class PosTweaker(Node):
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
 
-        self.io = PosTweakerIO()
+        self.io = PosTweakerIO(self.logger)
 
     def wait(self):
         for inst_name in self.conf["target"]["servers"]:
@@ -119,7 +116,7 @@ class PosTweaker(Node):
     def load(self, msg: LoadReq) -> Reply:
         """Load the tweaker state (target) and set the target."""
 
-        ax_states = self.io.load_data(self._axis_positioners.keys())
+        ax_states = self.io.load_data(msg.filename, msg.group)
         if not ax_states:
             return Reply(False)
         for ax, positioner in self._axis_positioners.items():
