@@ -67,6 +67,31 @@ class PGInterface(InstrumentInterface):
             {"blockseq": blockseq, "freq": freq, "trigger_type": trigger_type, "n_runs": n_runs}
         )
 
+    def configure_blockseq_list(
+        self,
+        blockseq_list: list[BlockSeq],
+        freq: float,
+        trigger_type: TriggerType | None = None,
+        n_runs: int | None = None,
+    ) -> bool:
+        """Configure the PG using list of BlockSeq.
+
+        :param blockseq_list: list of BlockSeq representation of pulse pattern.
+        :param freq: frequency in Hz.
+        :param trigger_type: the trigger type. if None, instrument's default is used.
+        :param n_runs: repetition number. if None, runs infinitely.
+
+        """
+
+        return self.configure(
+            {
+                "blockseq_list": blockseq_list,
+                "freq": freq,
+                "trigger_type": trigger_type,
+                "n_runs": n_runs,
+            }
+        )
+
     def clear(self) -> bool:
         """Clear status."""
 

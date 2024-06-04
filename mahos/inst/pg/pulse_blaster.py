@@ -12,6 +12,8 @@ from __future__ import annotations
 import typing as T
 import sys
 import os
+import time
+import threading
 
 import ctypes as C
 
@@ -87,7 +89,13 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             raise RuntimeError(msg)
 
         self._max_instructions = self.conf.get("max_instructions", 4096)
+        self._verbose = self.conf.get("verbose", False)
         self._sanity_check = self.conf.get("sanity_check", False)
+        self._running = False
+        self._bs_list = []
+        self._bs_list_i = 0
+        self._bs_list_mode = False
+        self._bs_list_stop_ev = self._bs_list_thread = None
 
     def close_resources(self):
         if hasattr(self, "dll"):
@@ -100,39 +108,51 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
     def _inst(self, output: int, inst: int, inst_data: int, duration_ns: float) -> int:
         return self.dll.pb_inst_pbonly(output, inst, inst_data, C.c_double(duration_ns))
 
+    def _log_inst(self, msg: str):
+        if not self._verbose:
+            return
+        self.logger.debug(msg)
+
     def _CONTINUE(self, output: int, duration_ns: float) -> int:
         """CONTINUE instruction. No branching / jump is performed."""
 
         ret = self._inst(output, 0, 0, duration_ns)
-        self.logger.debug(f"{ret}: CONTINUE Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: CONTINUE Out: 0x{output:X} Dur: {duration_ns}")
+        return ret
+
+    def _STOP(self, output: int, duration_ns: float) -> int:
+        """STOP instruction."""
+
+        ret = self._inst(output, 1, 0, duration_ns)
+        self._log_inst(f"{ret}: STOP Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def _LOOP(self, output: int, loop_num: int, duration_ns: float) -> int:
         """LOOP instruction."""
 
         ret = self._inst(output, 2, loop_num, duration_ns)
-        self.logger.debug(f"{ret}: LOOP ({loop_num}) Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: LOOP ({loop_num}) Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def _END_LOOP(self, output: int, loop_addr: int, duration_ns: float) -> int:
         """END_LOOP instruction. loop_addr is instruction addr (ret value) of loop instruction."""
 
         ret = self._inst(output, 3, loop_addr, duration_ns)
-        self.logger.debug(f"{ret}: END_LOOP ({loop_addr}) Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: END_LOOP ({loop_addr}) Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def _BRANCH(self, output: int, index: int, duration_ns: float) -> int:
         """BRANCH instruction."""
 
         ret = self._inst(output, 6, index, duration_ns)
-        self.logger.debug(f"{ret}: BRANCH ({index}) Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: BRANCH ({index}) Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def _WAIT(self, output: int, duration_ns: float) -> int:
         """WAIT instruction. Wait for trigger."""
 
         ret = self._inst(output, 8, 0, duration_ns)
-        self.logger.debug(f"{ret}: WAIT Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: WAIT Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def check_error(self, ret: int) -> bool:
@@ -322,6 +342,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         if trigger is None:
             return False
 
+        self._bs_list_mode = False
         self.offsets = [0] * len(blocks)
         self.length = blocks.total_length()
 
@@ -546,6 +567,19 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
 
         return self._add_blockseq(blockseq, head_addr)
 
+    def _configure_blockseq_oneshot(self, blockseq: BlockSeq) -> bool:
+        """Configure infinite loop using BlockSeq."""
+
+        # disable infinite loop (BRANCH to head)
+        head_addr = -1
+        success = (
+            self._add_blockseq(blockseq, head_addr)
+            # CONTINUE is inserted here to turning off the output properly.
+            and self.check_inst(self._CONTINUE(0, 10 * self._min_duration_ns))
+            and self.check_inst(self._STOP(0, self._min_duration_ns))
+        )
+        return success
+
     def _fix_bs_unwrap(self, bs: BlockSeq | Block) -> BlockSeq | Block:
         """unwrap unnecessary BlockSeq."""
 
@@ -670,6 +704,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         if blockseq is None:
             return False
 
+        self._bs_list_mode = False
         self.offsets = [0] * len(blockseq.unique_blocks())
         self.length = blockseq.total_length()
 
@@ -691,6 +726,79 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         msg = f"Configured with blockseq. length: {self.length}"
         self.logger.info(msg)
         return True
+
+    def configure_blockseq_list(
+        self,
+        blockseq_list: list[BlockSeq],
+        freq: float,
+        trigger_type: TriggerType | None = None,
+    ) -> bool:
+        """Configure using list of blockseq."""
+
+        if freq != self._freq:
+            return self.fail_with("freq must be {:.1f} MHz".format(self._freq * 1e-6))
+
+        triggers = [self._extract_trigger_blockseq(bs) for bs in blockseq_list]
+        if any(triggers):
+            self.logger.error("Cannot set trigger in configure_blockseq_list.")
+            return False
+
+        # TODO: consider nest_depth() and LOOP depth
+        # if blockseq.nest_depth() > N:
+        #     return self.fail_with("maximum BlockSeq nest depth is N for PulseBlaster.")
+
+        # set trigger = True to disable tail loop unrolling
+        blockseq_list = [self._fix_blockseq(bs, True) for bs in blockseq_list]
+        if any([bs is None for bs in blockseq_list]):
+            return False
+
+        if self._running:
+            self.stop()
+
+        self._bs_list = blockseq_list
+        self._bs_list_i = 0
+        self._bs_list_mode = True
+
+        self.offsets = [0] * len(self._bs_list)
+        self.length = sum([bs.total_length() for bs in self._bs_list])
+
+        msg = f"Configured with blockseq_list. length: {self.length}"
+        self.logger.info(msg)
+        return True
+
+    def _bs_list_program(self) -> bool:
+        success = True
+        idx = self._bs_list_i % len(self._bs_list)
+        self.logger.info(f"Start programming blockseq_list[{idx}]")
+        success &= self.check_error(self.dll.pb_start_programming(0))
+        try:
+            success &= self._configure_blockseq_oneshot(self._bs_list[idx])
+        except ValueError:
+            self.logger.exception("Exception while programming")
+            success = False
+        success &= self.check_error(self.dll.pb_stop_programming())
+        if not success:
+            return self.fail_with(f"Failed to configure with blockseq_list[{idx}].")
+        self.logger.info(f"Done programming blockseq_list[{idx}]")
+        return success
+
+    def _bs_list_loop(self, ev: threading.Event):
+        while True:
+            if not self._bs_list_program():
+                self.logger.error("Error programming. Quitting blockseq_list loop.")
+                return
+            if not self.check_error(self.dll.pb_start()):
+                self.logger.error("Error starting. Quitting blockseq_list loop.")
+                return
+            while not self.get_status().stopped:
+                time.sleep(10e-6)
+            if not self.check_error(self.dll.pb_stop()):
+                self.logger.error("Error stopping. Quitting blockseq_list loop.")
+                return
+            self._bs_list_i += 1
+            if ev.is_set():
+                self.logger.info("Quitting blockseq_list loop.")
+                return
 
     def get_status(self) -> PulseBlasterStatus:
         s = self.dll.pb_read_status()
@@ -715,11 +823,23 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
     def start(self, label: str = "") -> bool:
         success = self.check_error(self.dll.pb_start())
         self.logger.info("Starting pulse output.")
+        if self._bs_list_mode:
+            self._bs_list_stop_ev = threading.Event()
+            self._bs_list_thread = threading.Thread(
+                target=self._bs_list_loop, args=(self._bs_list_stop_ev,)
+            )
+            self._bs_list_thread.start()
+        self._running = True
         return success
 
     def stop(self, label: str = "") -> bool:
         success = self.check_error(self.dll.pb_stop())
+        if self._bs_list_mode:
+            self._bs_list_stop_ev.set()
+            self._bs_list_thread.join()
+            self._bs_list_i = 0
         self.logger.info("Stopped pulse output.")
+        self._running = False
         return success
 
     def configure(self, params: dict, label: str = "") -> bool:
@@ -734,6 +854,12 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         elif "blockseq" in params and "freq" in params:
             return self.configure_blockseq(
                 params["blockseq"],
+                params["freq"],
+                trigger_type=params.get("trigger_type"),
+            )
+        elif "blockseq_list" in params and "freq" in params:
+            return self.configure_blockseq_list(
+                params["blockseq_list"],
                 params["freq"],
                 trigger_type=params.get("trigger_type"),
             )
