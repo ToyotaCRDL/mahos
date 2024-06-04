@@ -376,7 +376,8 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         loop_addr = 0
         for j, (channels, duration) in enumerate(block.total_pattern()):
             if duration < 5:
-                return self.fail_with("Duration cannot be shorter than 5 periods.")
+                self.logger.error("Duration cannot be shorter than 5 periods.")
+                return False, 0
 
             output = self.channels_to_output(channels)
             dur = duration * round(1e9 / self._freq)
@@ -417,7 +418,8 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         success = True
         fst = blockseq.data[0]
         if fst.Nrep > 1:
-            return self.fail_with("First element cannot be loop (Nrep > 1).")
+            self.logger.error("First element cannot be loop (Nrep > 1).")
+            return False, 0
         if isinstance(fst, BlockSeq):
             s, addr = self._add_blockseq_loop_start(fst, Nrep)
             success &= s
@@ -506,7 +508,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             else:
                 success &= self._add_block(last, head_addr)
 
-        return True
+        return success
 
     def _configure_blockseq(self, blockseq: BlockSeq, trigger: bool) -> bool:
         """Configure infinite loop using BlockSeq. If trigger is True, wait trigger at the head.
@@ -523,6 +525,105 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             head_addr = 0
 
         return self._add_blockseq(blockseq, head_addr)
+
+    def _fix_bs_unwrap(self, bs: BlockSeq | Block) -> BlockSeq | Block:
+        """unwrap unnecessary BlockSeq."""
+
+        if isinstance(bs, Block):
+            return bs
+
+        bs: BlockSeq
+        if len(bs.data) == 1:
+            self.logger.debug(f"Unwrap unnecessary BlockSeq {bs.name}")
+            # Block may be returned here.
+            return self._fix_bs_unwrap(bs.data[0].repeat(bs.Nrep))
+
+        return BlockSeq(bs.name, [self._fix_bs_unwrap(b) for b in bs.data], bs.Nrep, bs.trigger)
+
+    def _fix_bs_nest(
+        self, bs: BlockSeq | Block, head: bool = False, tail: bool = False
+    ) -> BlockSeq | Block:
+        """expand nested loop."""
+
+        if isinstance(bs, Block):
+            return bs
+
+        fst: BlockSeq | Block = bs.data[0]
+        last: BlockSeq | Block = bs.data[-1]
+        if (head or bs.Nrep > 1) and fst.Nrep > 1:
+            fst.Nrep -= 1
+            b = fst.copy()
+            b.name += "_head"
+            b.Nrep = 1
+            # head=True to propagate >3-times nested loop
+            bs.data.insert(0, self._fix_bs_nest(b, head=True))
+            self.logger.debug(f"Fix (nest head) {fst.name} -> {b.name}, {fst.name}")
+        if (tail or bs.Nrep > 1) and last.Nrep > 1:
+            last.Nrep -= 1
+            b = last.copy()
+            b.name += "_tail"
+            b.Nrep = 1
+            # tail=True to propagate >3-times nested loop
+            bs.data.append(self._fix_bs_nest(b, tail=True))
+            self.logger.debug(f"Fix (nest tail) {last.name} -> {last.name}, {b.name}")
+
+        return BlockSeq(bs.name, [self._fix_bs_nest(b) for b in bs.data], bs.Nrep, bs.trigger)
+
+    def _fix_bs_tail_loop(self, bs: BlockSeq | Block) -> BlockSeq | Block:
+        """expand tail loop."""
+
+        if bs.Nrep > 1:
+            bs.Nrep = bs.Nrep - 1
+            b = bs.copy()
+            b.name = b.name + "_tail"
+            b.Nrep = 1
+            self.logger.debug(f"Fix (tail loop) {bs.name} -> {bs.name}, {b.name}")
+            if isinstance(bs, BlockSeq):
+                return BlockSeq(bs.name + "_wrap", [bs] + [self._fix_bs_tail_loop(b)])
+            else:  # isinstance(bs, Block)
+                return BlockSeq(bs.name + "_wrap", [bs, b])
+        if isinstance(bs, BlockSeq):
+            return BlockSeq(bs.name, bs.data[:-1] + [self._fix_bs_tail_loop(bs.data[-1])])
+        return bs
+
+    def _fix_blockseq(
+        self, blockseq: BlockSeq, trigger: bool, sanity_check: bool = True
+    ) -> BlockSeq | None:
+        """Fix BlockSeq so that we can configure.
+
+        Requirements and fixes below
+
+        - Length of looped BlockSeq must be more than 1:
+            Unwrap unnecessary BlockSeq.
+        - Nested loop cannot start / end with looped Block or BlockSeq:
+            Expand inner loop.
+        - When not trigger, final Block cannot be loop:
+            Expand loop at tail.
+
+        """
+
+        original = blockseq.copy()
+        bseq = self._fix_bs_unwrap(blockseq)
+        bseq = self._fix_bs_nest(bseq)
+        if isinstance(bseq, Block):
+            # outermost BlockSeq has been unwrapped. we can safely set Nrep = 1.
+            bseq = BlockSeq("unwrapped", bseq)
+
+        # check final block loop here.
+        if not trigger:
+            bseq = self._fix_bs_tail_loop(bseq)
+
+        if sanity_check and not bseq.equivalent(original):
+            self.logger.error("Failed sanity check of fix_blockseq.")
+            return None
+
+        return bseq
+
+    def fix_blockseq(self, blockseq: BlockSeq) -> BlockSeq | None:
+        trigger = self._extract_trigger_blockseq(blockseq)
+        if trigger is None:
+            return None
+        return self._fix_blockseq(blockseq, trigger)
 
     def configure_blockseq(
         self,
@@ -542,6 +643,10 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         # TODO: consider nest_depth() and LOOP depth
         # if blockseq.nest_depth() > N:
         #     return self.fail_with("maximum BlockSeq nest depth is N for PulseBlaster.")
+
+        blockseq = self._fix_blockseq(blockseq, trigger)
+        if blockseq is None:
+            return False
 
         self.offsets = [0] * len(blockseq.unique_blocks())
         self.length = blockseq.total_length()
@@ -639,6 +744,9 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             else:
                 self.logger.error(f"Invalid args for get(validate): {args}")
                 return None
+        elif key == "fix":
+            # for debug
+            return self.fix_blockseq(args)
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None

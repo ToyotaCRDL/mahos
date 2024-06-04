@@ -320,6 +320,21 @@ class Block(Message):
                 self.name, len(self), self.Nrep, self.trigger
             )
 
+    def pprint(self, nest: int = 0, max_len: int = 4):
+        def ptos(p: Pulse):
+            if not p.channels:
+                ch = "None"
+            elif len(p.channels) == 1:
+                ch = str(p.channels[0])
+            else:
+                ch = str(p.channels)
+            return f"({ch}, {p.duration})"
+
+        ptn = ", ".join((ptos(p) for p in self.pattern[:max_len]))
+        if len(self.pattern) > max_len:
+            ptn += ", ..."
+        print(" " * nest + "{} = [{}]".format(str(self), ptn))
+
     def copy(self) -> Block:
         return copy.deepcopy(self)
 
@@ -630,6 +645,22 @@ class BlockSeq(Message):
 
     def _new(self, data) -> BlockSeq:
         return BlockSeq(self.name, data, self.Nrep, self.trigger)
+
+    def pprint(self, nest: int = 0):
+        if self.Nrep == 1 and not self.trigger:
+            print(" " * nest + f"BlockSeq({self.name},")
+        elif self.Nrep == 1 and self.trigger:
+            print(" " * nest + f"BlockSeq({self.name}, trigger,")
+        elif self.Nrep != 1 and not self.trigger:
+            print(" " * nest + f"BlockSeq({self.name}, Nrep={self.Nrep},")
+        else:
+            print(" " * nest + f"BlockSeq({self.name}, Nrep={self.Nrep}, trigger,")
+        for b in self.data:
+            b.pprint(nest=nest + 4)
+        print(" " * nest + ")")
+
+    def copy(self) -> BlockSeq:
+        return copy.deepcopy(self)
 
     def collapse(self) -> Block:
         """Collapse the contained Blocks | BlockSeq to single Block.
