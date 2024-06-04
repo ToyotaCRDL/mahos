@@ -324,6 +324,16 @@ class Pulser(Worker):
                 ("divide_block", False),
             ],
         )
+        loader.add_preset(
+            "SpinCore_PulseBlaster",
+            [
+                ("block_base", 1),
+                ("pg_freq", 0.5e9),
+                ("reduce_start_divisor", 5),
+                ("minimum_block_length", 5),
+                ("divide_block", False),
+            ],
+        )
         loader.load_preset(self.conf, cli.class_name("pg"))
 
     def init_inst(self, params: dict) -> bool:

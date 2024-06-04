@@ -140,11 +140,21 @@ class Bounds(object):
 class BlockSeqBuilder(object):
     """Build the PG BlockSeq for SPODMR from PODMR's Blocks."""
 
-    def __init__(self, trigger_width: float, trigger_channel: str, nest: bool, block_base: int):
+    def __init__(
+        self,
+        trigger_width: float,
+        trigger_channel: str,
+        nest: bool,
+        block_base: int,
+        minimum_block_length: int,
+        pulse_blaster: bool,
+    ):
         self.trigger_width = trigger_width
         self.trigger_channel = trigger_channel
         self.nest = nest
         self.block_base = block_base
+        self.min_block_len = minimum_block_length
+        self.pulse_blaster = pulse_blaster
 
     def fix_block_base(self, blk: Block, idx: int = 0) -> Block:
         res = blk.total_length() % self.block_base
@@ -233,6 +243,10 @@ class BlockSeqBuilder(object):
             laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
 
+        if self.pulse_blaster:
+            # add short block to avoid loop unrolling
+            seqs.append(Block("tail", [(None, self.min_block_len)]))
+
         return BlockSeq("top", seqs), laser_duties, markers
 
     def build_partial(
@@ -285,6 +299,10 @@ class BlockSeqBuilder(object):
             lw = Blocks(blkacc).total_channel_length("laser", True)
             laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
+
+        if self.pulse_blaster:
+            # add short block to avoid loop unrolling
+            seqs.append(Block("tail", [(None, self.min_block_len)]))
 
         return BlockSeq("top", seqs), laser_duties, markers
 
@@ -364,6 +382,10 @@ class BlockSeqBuilder(object):
             assert lw == Blocks(blk1acc).total_channel_length("laser", True)
             laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
+
+        if self.pulse_blaster:
+            # add short block to avoid loop unrolling
+            seqs.append(Block("tail", [(None, self.min_block_len)]))
 
         return BlockSeq("top", seqs), laser_duties, markers
 
@@ -466,6 +488,8 @@ class Pulser(Worker):
             self.conf.get("trigger_channel", "gate"),
             self.conf.get("nest_blockseq", False),
             self.conf["block_base"],
+            self.conf["minimum_block_length"],
+            self.conf.get("pulse_blaster", False),
         )
 
         self.data = SPODMRData()
@@ -493,6 +517,17 @@ class Pulser(Worker):
                 ("reduce_start_divisor", 10),
                 ("minimum_block_length", 1),
                 ("nest_blockseq", False),
+            ],
+        )
+        loader.add_preset(
+            "SpinCore_PulseBlaster",
+            [
+                ("block_base", 1),
+                ("pg_freq", 0.5e9),
+                ("reduce_start_divisor", 5),
+                ("minimum_block_length", 5),
+                ("nest_blockseq", True),
+                ("pulse_blaster", True),
             ],
         )
         loader.load_preset(self.conf, cli.class_name("pg"))

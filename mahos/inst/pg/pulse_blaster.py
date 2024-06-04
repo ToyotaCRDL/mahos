@@ -86,6 +86,9 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             self.logger.error(msg)
             raise RuntimeError(msg)
 
+        self._max_instructions = self.conf.get("max_instructions", 4096)
+        self._sanity_check = self.conf.get("sanity_check", False)
+
     def close_resources(self):
         if hasattr(self, "dll"):
             self.dll.pb_close()
@@ -148,6 +151,17 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             self.logger.error(f"There is an error ({ret}) but no message found.")
         return False
 
+    def check_inst(self, ret: int) -> bool:
+        """Check ret value of instruction function. return True if OK.
+
+        :raises ValueError: when max number of instructions exceeded.
+
+        """
+
+        if ret > self._max_instructions - 1:
+            raise ValueError(f"Max number of instructions ({self._max_instructions}) exceeded.")
+        return self.check_error(ret)
+
     def channels_to_ints(self, channels) -> list[int]:
         def parse(c):
             if isinstance(c, (bytes, str)):
@@ -177,13 +191,15 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         # (CHANNELS is not always injective), though it's quite rare usecase.
         return sorted(list(set(self.channels_to_ints(blocks.channels()))))
 
-    def validate_blocks(self, blocks: Blocks[Block]) -> list[int] | None:
-        self.logger.warn("Not implemented!")
-        return True
+    def validate_blocks(self, blocks: Blocks[Block], freq: float) -> list[int] | None:
+        # TODO
+        offsets = [0] * len(blocks)
+        return offsets
 
-    def validate_blockseq(self, blockseq: BlockSeq[Block]) -> list[int] | None:
-        self.logger.warn("Not implemented!")
-        return True
+    def validate_blockseq(self, blockseq: BlockSeq[Block], freq: float) -> list[int] | None:
+        # TODO
+        offsets = [0] * len(blockseq.unique_blocks())
+        return offsets
 
     def _extract_trigger_blocks(self, blocks: Blocks[Block]) -> bool | None:
         trigger = False
@@ -224,7 +240,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
                 ret = self._BRANCH(output, head_addr, dur)
             else:
                 ret = self._CONTINUE(output, dur)
-            if not self.check_error(ret):
+            if not self.check_inst(ret):
                 return False
         return True
 
@@ -240,27 +256,27 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
                 loop_addr = ret = self._LOOP(output, block.Nrep, dur)
             elif is_last and j == Nj - 1:
                 # Can reach here only when trigger, where BRANCH can be safely added after END_LOOP
-                if not self.check_error(self._END_LOOP(output, loop_addr, dur)):
+                if not self.check_inst(self._END_LOOP(output, loop_addr, dur)):
                     return False
                 ret = self._BRANCH(0, head_addr, self._min_duration_ns)
             elif j == Nj - 1:
                 ret = self._END_LOOP(output, loop_addr, dur)
             else:
                 ret = self._CONTINUE(output, dur)
-            if not self.check_error(ret):
+            if not self.check_inst(ret):
                 return False
         return True
 
     def _make_trigger_block(self) -> int:
         # Insert short CONTINUE as we cannot set WAIT at the very beginning.
-        if not self.check_error(self._CONTINUE(0, self._min_duration_ns)):
+        if not self.check_inst(self._CONTINUE(0, self._min_duration_ns)):
             return -1
         head_addr = self._WAIT(0, self._min_duration_ns)
-        if not self.check_error(head_addr):
+        if not self.check_inst(head_addr):
             return -1
         # Insert short CONTINUE again. Without this and non-zero data the head of blocks,
         # first start() shows unexpected behaviour. (output can be high after first start())
-        if not self.check_error(self._CONTINUE(0, self._min_duration_ns)):
+        if not self.check_inst(self._CONTINUE(0, self._min_duration_ns)):
             return -1
         return head_addr
 
@@ -314,7 +330,11 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
 
         # 0 is PULSE_PROGRAM
         self.check_error(self.dll.pb_start_programming(0))
-        success = self._configure_blocks(blocks, trigger)
+        try:
+            success = self._configure_blocks(blocks, trigger)
+        except ValueError:
+            self.logger.exception("Exception while programming")
+            success = False
         self.check_error(self.dll.pb_stop_programming())
 
         if not success:
@@ -337,7 +357,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
                 ret = self._BRANCH(output, head_addr, dur)
             else:
                 ret = self._CONTINUE(output, dur)
-            if not self.check_error(ret):
+            if not self.check_inst(ret):
                 return False
         return True
 
@@ -353,14 +373,14 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
                 loop_addr = ret = self._LOOP(output, block.Nrep, dur)
             elif head_addr >= 0 and j == Nj - 1:
                 # Can reach here only when trigger, where BRANCH can be safely added after END_LOOP
-                if not self.check_error(self._END_LOOP(output, loop_addr, dur)):
+                if not self.check_inst(self._END_LOOP(output, loop_addr, dur)):
                     return False
                 ret = self._BRANCH(0, head_addr, self._min_duration_ns)
             elif j == Nj - 1:
                 ret = self._END_LOOP(output, loop_addr, dur)
             else:
                 ret = self._CONTINUE(output, dur)
-            if not self.check_error(ret):
+            if not self.check_inst(ret):
                 return False
         return True
 
@@ -385,7 +405,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
                 loop_addr = ret = self._LOOP(output, Nrep, dur)
             else:
                 ret = self._CONTINUE(output, dur)
-            if not self.check_error(ret):
+            if not self.check_inst(ret):
                 return False, 0
         return True, loop_addr
 
@@ -401,14 +421,14 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             dur = duration * round(1e9 / self._freq)
             if head_addr >= 0 and j == Nj - 1:
                 # Can reach here only when trigger, where BRANCH can be safely added after END_LOOP
-                if not self.check_error(self._END_LOOP(output, loop_addr, dur)):
+                if not self.check_inst(self._END_LOOP(output, loop_addr, dur)):
                     return False
                 ret = self._BRANCH(0, head_addr, self._min_duration_ns)
             elif j == Nj - 1:
                 ret = self._END_LOOP(output, loop_addr, dur)
             else:
                 ret = self._CONTINUE(output, dur)
-            if not self.check_error(ret):
+            if not self.check_inst(ret):
                 return False
         return True
 
@@ -543,7 +563,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
     def _fix_bs_nest(
         self, bs: BlockSeq | Block, head: bool = False, tail: bool = False
     ) -> BlockSeq | Block:
-        """expand nested loop."""
+        """unroll nested loop."""
 
         if isinstance(bs, Block):
             return bs
@@ -570,7 +590,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         return BlockSeq(bs.name, [self._fix_bs_nest(b) for b in bs.data], bs.Nrep, bs.trigger)
 
     def _fix_bs_tail_loop(self, bs: BlockSeq | Block) -> BlockSeq | Block:
-        """expand tail loop."""
+        """unroll tail loop."""
 
         if bs.Nrep > 1:
             bs.Nrep = bs.Nrep - 1
@@ -586,9 +606,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             return BlockSeq(bs.name, bs.data[:-1] + [self._fix_bs_tail_loop(bs.data[-1])])
         return bs
 
-    def _fix_blockseq(
-        self, blockseq: BlockSeq, trigger: bool, sanity_check: bool = True
-    ) -> BlockSeq | None:
+    def _fix_blockseq(self, blockseq: BlockSeq, trigger: bool) -> BlockSeq | None:
         """Fix BlockSeq so that we can configure.
 
         Requirements and fixes below
@@ -596,9 +614,9 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         - Length of looped BlockSeq must be more than 1:
             Unwrap unnecessary BlockSeq.
         - Nested loop cannot start / end with looped Block or BlockSeq:
-            Expand inner loop.
+            Unroll inner loop.
         - When not trigger, final Block cannot be loop:
-            Expand loop at tail.
+            Unroll loop at tail.
 
         """
 
@@ -613,9 +631,13 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         if not trigger:
             bseq = self._fix_bs_tail_loop(bseq)
 
-        if sanity_check and not bseq.equivalent(original):
-            self.logger.error("Failed sanity check of fix_blockseq.")
-            return None
+        if self._sanity_check:
+            self.logger.info("Starting sanity check")
+            success = bseq.equivalent(original)
+            self.logger.info("Finish sanity check")
+            if not success:
+                self.logger.error("Failed sanity check of fix_blockseq.")
+                return None
 
         return bseq
 
@@ -656,7 +678,11 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
 
         # 0 is PULSE_PROGRAM
         self.check_error(self.dll.pb_start_programming(0))
-        success = self._configure_blockseq(blockseq, trigger)
+        try:
+            success = self._configure_blockseq(blockseq, trigger)
+        except ValueError:
+            self.logger.exception("Exception while programming")
+            success = False
         self.check_error(self.dll.pb_stop_programming())
 
         if not success:

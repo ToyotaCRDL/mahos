@@ -23,7 +23,7 @@ kb = 1.3806488e-23
 kb_eV = 8.6173324e-5  # in eV/K
 
 
-def round_halfint(x):
+def round_halfint(x: float) -> float:
     """Round float x to nearest integer or half integer.
 
     round_halfint(1.1) ==> 1.0
@@ -43,3 +43,9 @@ def round_halfint(x):
         return s * (float(np.floor(a)) + 0.5)
     else:
         return s * float(np.ceil(a))
+
+
+def round_evenint(x: float) -> float:
+    """Round float x to nearest even integer."""
+
+    return round(x / 2.0) * 2.0

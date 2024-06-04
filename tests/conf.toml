@@ -251,7 +251,6 @@ pd_trigger = "/Dummy"
 log = "localhost::log"
 tweakers = ["localhost::tweaker", "localhost::tweaker2", "localhost::pos_tweaker"]
 [localhost.spodmr.target.servers]
-tdc = "localhost::server"
 sg = "localhost::server"
 pg = "localhost::server"
 fg = "localhost::server"

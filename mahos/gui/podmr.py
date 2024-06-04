@@ -40,7 +40,7 @@ from .dialog import save_dialog, load_dialog, export_dialog
 from ..node.node import local_conf, join_name
 from ..util.plot import colors_tab20_pair
 from ..util.timer import seconds_to_hms
-from ..util.math_phys import round_halfint
+from ..util.math_phys import round_halfint, round_evenint
 
 
 Policy = QtWidgets.QSizePolicy.Policy
@@ -1341,6 +1341,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             step = 0.5
         elif round(self._pg_freq) == round(1.0e9):
             step = 1.0
+        elif round(self._pg_freq) == round(0.5e9):
+            step = 2.0
         else:
             print(f"Cannot determine timing box step with PG freq {self._pg_freq*1e-9:.2f} GHz")
             step = 1.0
@@ -1355,6 +1357,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             _round = round_halfint
         elif round(self._pg_freq) == round(1.0e9):
             _round = round
+        elif round(self._pg_freq) == round(0.5e9):
+            _round = round_evenint
         else:
             print(f"Cannot determine round method with PG freq {self._pg_freq*1e-9:.2f} GHz")
             _round = round
