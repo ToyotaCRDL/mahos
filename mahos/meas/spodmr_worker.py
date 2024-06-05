@@ -349,24 +349,31 @@ class BlockSeqBuilder(object):
             blk0acc = [blk0R, blk0.repeat(rep - 1)]
             blk0accT = [blk0T, blk0.repeat(rep - 1)]
             blk1acc = [blk1R, blk1.repeat(rep - 1)]
-            # blkXacc * accum_rep here may be inefficient (blockseq data may be long),
-            # however, accum_rep won't be huge (order of 10 - 100).
-            # If this is a problem, we can try deeper nest of BlockSeq.
             if self.nest:
                 seqs.extend(
                     [
                         BlockSeq(
                             blk0.name + "SeqD",
-                            blk0acc * accum_rep + blk1acc * accum_rep,
+                            [
+                                BlockSeq(blk0.name + "SeqD0", blk0acc, accum_rep),
+                                BlockSeq(blk0.name + "SeqD1", blk1acc, accum_rep),
+                            ],
                             drop_rep,
                         ),
                         BlockSeq(
                             blk0.name + "SeqT",
-                            blk0accT + blk0acc * (accum_rep - 1) + blk1acc * accum_rep,
+                            [
+                                BlockSeq(blk0.name + "SeqTT", blk0accT),
+                                BlockSeq(blk0.name + "SeqT0", blk0acc, accum_rep - 1),
+                                BlockSeq(blk0.name + "SeqT1", blk1acc, accum_rep),
+                            ],
                         ),
                         BlockSeq(
                             blk0.name + "SeqM",
-                            blk0acc * accum_rep + blk1acc * accum_rep,
+                            [
+                                BlockSeq(blk0.name + "SeqM0", blk0acc, accum_rep),
+                                BlockSeq(blk0.name + "SeqM1", blk1acc, accum_rep),
+                            ],
                             lockin_rep - 1,
                         ),
                     ]
