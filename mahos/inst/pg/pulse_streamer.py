@@ -335,17 +335,12 @@ class PulseStreamer(Instrument):
 
     def get(self, key: str, args=None, label: str = ""):
         if key == "length":
-            return self.length  # length of last configure_blocks
-        elif key == "offsets":  # for API compatibility
-            if args is None:
-                return self.offsets
-            elif "blocks" in args:
-                return [0] * len(args["blocks"])
-            elif "blockseq" in args:
-                return [0]
+            return self.length  # length of last configure
+        elif key == "offsets":
+            return self.offsets  # offsets of last configure
         elif key == "opc":  # for API compatibility
             return True
-        elif key == "validate":  # for API compatibility
+        elif key == "validate":
             if "blocks" in args and "freq" in args:
                 return self.validate_blocks(args["blocks"], args["freq"])
             elif "blockseq" in args and "freq" in args:

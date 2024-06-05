@@ -438,6 +438,16 @@ class Block(Message):
 
         return [pulse_to_str(pat) for pat in self.pattern]
 
+    def first_pulse(self) -> Pulse:
+        """Find the first pulse in this Block."""
+
+        return self.pattern[0]
+
+    def last_pulse(self) -> Pulse:
+        """Find the last pulse in this Block."""
+
+        return self.pattern[-1]
+
 
 class Blocks(UserList):
     """list for Block with convenient functions."""
@@ -619,6 +629,16 @@ class Blocks(UserList):
         """Scale all the durations in the Blocks."""
 
         return Blocks([b.scale(s) for b in self.data])
+
+    def first_pulse(self) -> Pulse:
+        """Find the first pulse in this Blocks."""
+
+        return self.data[0].first_pulse()
+
+    def last_pulse(self) -> Pulse:
+        """Find the last pulse in this Block."""
+
+        return self.data[-1].last_pulse()
 
 
 class BlockSeq(Message):
@@ -862,3 +882,13 @@ class BlockSeq(Message):
 
     def nest_depth(self) -> int:
         return max([b.nest_depth() if isinstance(b, BlockSeq) else 0 for b in self.data]) + 1
+
+    def first_pulse(self) -> Pulse:
+        """Find the first pulse in this BlockSeq."""
+
+        return self.data[0].first_pulse()
+
+    def last_pulse(self) -> Pulse:
+        """Find the last pulse in this BlockSeq."""
+
+        return self.data[-1].last_pulse()

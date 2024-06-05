@@ -146,15 +146,13 @@ class BlockSeqBuilder(object):
         trigger_channel: str,
         nest: bool,
         block_base: int,
-        minimum_block_length: int,
-        pulse_blaster: bool,
+        eos_margin: int,
     ):
         self.trigger_width = trigger_width
         self.trigger_channel = trigger_channel
         self.nest = nest
         self.block_base = block_base
-        self.min_block_len = minimum_block_length
-        self.pulse_blaster = pulse_blaster
+        self.eos_margin = eos_margin
 
     def fix_block_base(self, blk: Block, idx: int = 0) -> Block:
         res = blk.total_length() % self.block_base
@@ -164,6 +162,12 @@ class BlockSeqBuilder(object):
         pulse = blk.pattern[idx]
         blk.update_duration(idx, pulse.duration + res)
         return blk
+
+    def _append_eos(self, seqs: list):
+        if self.eos_margin:
+            # for PulseBlaster, this is in order to avoid loop unrolling
+            ch = seqs[-1].last_pulse().channels
+            seqs.append(Block("eos", [(ch, self.eos_margin)]))
 
     def build_complementary(
         self,
@@ -243,9 +247,7 @@ class BlockSeqBuilder(object):
             laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
 
-        if self.pulse_blaster:
-            # add short block to avoid loop unrolling
-            seqs.append(Block("tail", [(None, self.min_block_len)]))
+        self._append_eos(seqs)
 
         return BlockSeq("top", seqs), laser_duties, markers
 
@@ -300,9 +302,7 @@ class BlockSeqBuilder(object):
             laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
 
-        if self.pulse_blaster:
-            # add short block to avoid loop unrolling
-            seqs.append(Block("tail", [(None, self.min_block_len)]))
+        self._append_eos(seqs)
 
         return BlockSeq("top", seqs), laser_duties, markers
 
@@ -383,9 +383,7 @@ class BlockSeqBuilder(object):
             laser_duties.append(lw / accum_window)
             markers.append(sum([s.total_length() for s in seqs]))
 
-        if self.pulse_blaster:
-            # add short block to avoid loop unrolling
-            seqs.append(Block("tail", [(None, self.min_block_len)]))
+        self._append_eos(seqs)
 
         return BlockSeq("top", seqs), laser_duties, markers
 
@@ -488,8 +486,7 @@ class Pulser(Worker):
             self.conf.get("trigger_channel", "gate"),
             self.conf.get("nest_blockseq", False),
             self.conf["block_base"],
-            self.conf["minimum_block_length"],
-            self.conf.get("pulse_blaster", False),
+            self.conf.get("eos_margin", 0),
         )
 
         self.data = SPODMRData()
@@ -527,7 +524,7 @@ class Pulser(Worker):
                 ("reduce_start_divisor", 5),
                 ("minimum_block_length", 5),
                 ("nest_blockseq", True),
-                ("pulse_blaster", True),
+                ("eos_margin", 5),
             ],
         )
         loader.load_preset(self.conf, cli.class_name("pg"))

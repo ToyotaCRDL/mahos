@@ -12,11 +12,11 @@ from __future__ import annotations
 import typing as T
 import sys
 import os
-
 import ctypes as C
 
 from ..instrument import Instrument
 from ...msgs.inst.pg_msgs import TriggerType, Block, Blocks, BlockSeq
+from ...util.unit import SI_scale
 
 
 class PulseBlasterStatus(T.NamedTuple):
@@ -55,7 +55,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         self.logger.info("Opened SpinAPI ({}) version: {}".format(path, self._get_pb_version()))
 
         num_boards = self.dll.pb_count_boards()
-        self.logger.debug(f"boards -> {num_boards}")
+        self.logger.debug(f"number of boards = {num_boards}")
 
         if num_boards <= 0:
             msg = "No PulseBlaster board available."
@@ -87,7 +87,10 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             raise RuntimeError(msg)
 
         self._max_instructions = self.conf.get("max_instructions", 4096)
+        self._max_loop_num = self.conf.get("max_loop_num", 1_048_576)
+        self._verbose = self.conf.get("verbose", False)
         self._sanity_check = self.conf.get("sanity_check", False)
+        self._last_addr = 0
 
     def close_resources(self):
         if hasattr(self, "dll"):
@@ -98,41 +101,50 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         return self.dll.pb_get_version().decode()
 
     def _inst(self, output: int, inst: int, inst_data: int, duration_ns: float) -> int:
-        return self.dll.pb_inst_pbonly(output, inst, inst_data, C.c_double(duration_ns))
+        ret = self.dll.pb_inst_pbonly(output, inst, inst_data, C.c_double(duration_ns))
+        if ret >= 0:
+            self._last_addr = ret
+        return ret
+
+    def _log_inst(self, msg: str):
+        if self._verbose:
+            self.logger.debug(msg)
 
     def _CONTINUE(self, output: int, duration_ns: float) -> int:
         """CONTINUE instruction. No branching / jump is performed."""
 
         ret = self._inst(output, 0, 0, duration_ns)
-        self.logger.debug(f"{ret}: CONTINUE Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: CONTINUE Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def _LOOP(self, output: int, loop_num: int, duration_ns: float) -> int:
         """LOOP instruction."""
 
+        if loop_num > self._max_loop_num:
+            raise ValueError(f"Number of loop ({loop_num}) exceeds max ({self._max_loop_num}).")
         ret = self._inst(output, 2, loop_num, duration_ns)
-        self.logger.debug(f"{ret}: LOOP ({loop_num}) Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: LOOP ({loop_num}) Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def _END_LOOP(self, output: int, loop_addr: int, duration_ns: float) -> int:
         """END_LOOP instruction. loop_addr is instruction addr (ret value) of loop instruction."""
 
         ret = self._inst(output, 3, loop_addr, duration_ns)
-        self.logger.debug(f"{ret}: END_LOOP ({loop_addr}) Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: END_LOOP ({loop_addr}) Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def _BRANCH(self, output: int, index: int, duration_ns: float) -> int:
         """BRANCH instruction."""
 
         ret = self._inst(output, 6, index, duration_ns)
-        self.logger.debug(f"{ret}: BRANCH ({index}) Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: BRANCH ({index}) Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def _WAIT(self, output: int, duration_ns: float) -> int:
         """WAIT instruction. Wait for trigger."""
 
         ret = self._inst(output, 8, 0, duration_ns)
-        self.logger.debug(f"{ret}: WAIT Out: 0x{output:X} Dur: {duration_ns}")
+        self._log_inst(f"{ret}: WAIT Out: 0x{output:X} Dur: {duration_ns}")
         return ret
 
     def check_error(self, ret: int) -> bool:
@@ -184,22 +196,15 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             data |= 1 << bit
         return data
 
-    def _included_channels_blocks(self, blocks: Blocks[Block]) -> list[int]:
-        """create sorted list of channels in blocks converted to ints."""
-
-        # take set() here because channels_to_ints() may contain non-unique integers
-        # (CHANNELS is not always injective), though it's quite rare usecase.
-        return sorted(list(set(self.channels_to_ints(blocks.channels()))))
-
     def validate_blocks(self, blocks: Blocks[Block], freq: float) -> list[int] | None:
-        # TODO
-        offsets = [0] * len(blocks)
-        return offsets
+        """No pre-configure validation performed for now."""
+
+        return [0] * len(blocks)
 
     def validate_blockseq(self, blockseq: BlockSeq[Block], freq: float) -> list[int] | None:
-        # TODO
-        offsets = [0] * len(blockseq.unique_blocks())
-        return offsets
+        """No pre-configure validation performed for now."""
+
+        return [0]
 
     def _extract_trigger_blocks(self, blocks: Blocks[Block]) -> bool | None:
         trigger = False
@@ -223,49 +228,6 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             self.logger.error("Can set trigger for outermost BlockSeq only.")
 
         return blockseq.trigger
-
-    def _configure_blocks_no_loop_block(self, block: Block, is_last: bool, head_addr: int) -> bool:
-        Nj = block.total_pattern_num()
-        for j, (channels, duration) in enumerate(block.total_pattern()):
-            if duration < 5:
-                # TODO: short pulse feature can be used to generate pulse shorter
-                # than this limit. But we don't implement this as it can introduce little
-                # change of total length and break the measurement.
-                return self.fail_with("Duration cannot be shorter than 5 periods.")
-
-            output = self.channels_to_output(channels)
-            dur = duration * round(1e9 / self._freq)
-            if is_last and j == Nj - 1:
-                # the last pattern, branch to the head.
-                ret = self._BRANCH(output, head_addr, dur)
-            else:
-                ret = self._CONTINUE(output, dur)
-            if not self.check_inst(ret):
-                return False
-        return True
-
-    def _configure_blocks_loop_block(self, block: Block, is_last: bool, head_addr: int) -> bool:
-        loop_addr = 0
-        Nj = block.raw_pattern_num()
-        for j, (channels, duration) in enumerate(block.pattern):
-            if duration < 5:
-                return self.fail_with("Duration cannot be shorter than 5 periods.")
-            output = self.channels_to_output(channels)
-            dur = duration * round(1e9 / self._freq)
-            if j == 0:
-                loop_addr = ret = self._LOOP(output, block.Nrep, dur)
-            elif is_last and j == Nj - 1:
-                # Can reach here only when trigger, where BRANCH can be safely added after END_LOOP
-                if not self.check_inst(self._END_LOOP(output, loop_addr, dur)):
-                    return False
-                ret = self._BRANCH(0, head_addr, self._min_duration_ns)
-            elif j == Nj - 1:
-                ret = self._END_LOOP(output, loop_addr, dur)
-            else:
-                ret = self._CONTINUE(output, dur)
-            if not self.check_inst(ret):
-                return False
-        return True
 
     def _make_trigger_block(self) -> int:
         # Insert short CONTINUE as we cannot set WAIT at the very beginning.
@@ -297,13 +259,17 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         Ni = len(blocks)
         for i, block in enumerate(blocks):
             is_last = i == Ni - 1
+            if is_last:
+                head = head_addr
+            else:
+                head = -1
             if block.Nrep == 1 or (not trigger and is_last):
                 # without trigger, we cannot use LOOP for the last block
                 # because BRANCH at the tail will disturb the pattern.
-                if not self._configure_blocks_no_loop_block(block, is_last, head_addr):
+                if not self._add_block_no_loop(block, head):
                     return False
             else:
-                if not self._configure_blocks_loop_block(block, is_last, head_addr):
+                if not self._add_block_loop(block, head):
                     return False
         return True
 
@@ -325,29 +291,39 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         self.offsets = [0] * len(blocks)
         self.length = blocks.total_length()
 
-        # self.check_error(self.dll.pb_reset())
-        self.check_error(self.dll.pb_stop())
+        if not self.check_error(self.dll.pb_stop()):
+            return self.fail_with("Failed to stop.")
 
         # 0 is PULSE_PROGRAM
-        self.check_error(self.dll.pb_start_programming(0))
+        if not self.check_error(self.dll.pb_start_programming(0)):
+            return self.fail_with("Failed to start programming.")
         try:
             success = self._configure_blocks(blocks, trigger)
         except ValueError:
             self.logger.exception("Exception while programming")
             success = False
-        self.check_error(self.dll.pb_stop_programming())
+        success &= self.check_error(self.dll.pb_stop_programming())
+        success &= self.check_error(self.dll.pb_reset())
 
         if not success:
             return self.fail_with("Failed to configure with blocks.")
 
-        msg = f"Configured with blocks. length: {self.length}"
+        length_s = self.length / self._freq
+        scale, prefix = SI_scale(length_s)
+        msg = f"Configured with blocks. length: {self.length} ({length_s*scale:.3f} {prefix}s),"
+        msg += f" {self._last_addr + 1}/{self._max_instructions} inst"
         self.logger.info(msg)
         return True
 
     def _add_block_no_loop(self, block: Block, head_addr: int) -> bool:
+        """Add block without loop. if head_addr >= 0 is given, branch the last pattern to head."""
+
         Nj = block.total_pattern_num()
         for j, (channels, duration) in enumerate(block.total_pattern()):
             if duration < 5:
+                # TODO: short pulse feature can be used to generate pulse shorter
+                # than this limit. But we don't implement this as it can introduce little
+                # change of total length and break the measurement.
                 return self.fail_with("Duration cannot be shorter than 5 periods.")
 
             output = self.channels_to_output(channels)
@@ -362,6 +338,8 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         return True
 
     def _add_block_loop(self, block: Block, head_addr: int) -> bool:
+        """Add block with loop. if head_addr >= 0 is given, branch the last pattern to head."""
+
         loop_addr = 0
         Nj = block.raw_pattern_num()
         for j, (channels, duration) in enumerate(block.pattern):
@@ -372,7 +350,8 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             if j == 0:
                 loop_addr = ret = self._LOOP(output, block.Nrep, dur)
             elif head_addr >= 0 and j == Nj - 1:
-                # Can reach here only when trigger, where BRANCH can be safely added after END_LOOP
+                # Should reach here only when trigger,
+                # where BRANCH can be safely added after END_LOOP
                 if not self.check_inst(self._END_LOOP(output, loop_addr, dur)):
                     return False
                 ret = self._BRANCH(0, head_addr, self._min_duration_ns)
@@ -662,33 +641,40 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         if trigger is None:
             return False
 
-        # TODO: consider nest_depth() and LOOP depth
-        # if blockseq.nest_depth() > N:
-        #     return self.fail_with("maximum BlockSeq nest depth is N for PulseBlaster.")
+        loop_depth = blockseq.nest_depth()
+        if blockseq.Nrep > 1:
+            loop_depth += 1
+        if loop_depth > 8:
+            return self.fail_with("maximum loop depth is 8 for PulseBlaster.")
 
         blockseq = self._fix_blockseq(blockseq, trigger)
         if blockseq is None:
             return False
 
-        self.offsets = [0] * len(blockseq.unique_blocks())
+        self.offsets = [0]
         self.length = blockseq.total_length()
 
-        # self.check_error(self.dll.pb_reset())
-        self.check_error(self.dll.pb_stop())
+        if not self.check_error(self.dll.pb_stop()):
+            return self.fail_with("Failed to stop.")
 
         # 0 is PULSE_PROGRAM
-        self.check_error(self.dll.pb_start_programming(0))
+        if not self.check_error(self.dll.pb_start_programming(0)):
+            return self.fail_with("Failed to start programming.")
         try:
             success = self._configure_blockseq(blockseq, trigger)
         except ValueError:
             self.logger.exception("Exception while programming")
             success = False
-        self.check_error(self.dll.pb_stop_programming())
+        success &= self.check_error(self.dll.pb_stop_programming())
+        success &= self.check_error(self.dll.pb_reset())
 
         if not success:
             return self.fail_with("Failed to configure with blockseq.")
 
-        msg = f"Configured with blockseq. length: {self.length}"
+        length_s = self.length / self._freq
+        scale, prefix = SI_scale(length_s)
+        msg = f"Configured with blockseq. length: {self.length} ({length_s*scale:.3f} {prefix}s),"
+        msg += f" {self._last_addr + 1}/{self._max_instructions} inst"
         self.logger.info(msg)
         return True
 
@@ -752,17 +738,12 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         if key == "status":
             return self.get_status()
         elif key == "length":
-            return self.length  # length of last configure_blocks
-        elif key == "offsets":  # for API compatibility
-            if args is None:
-                return self.offsets
-            elif "blocks" in args:
-                return [0] * len(args["blocks"])
-            elif "blockseq" in args:
-                return [0]
+            return self.length  # length of last configure
+        elif key == "offsets":
+            return self.offsets  # offsets of last configure
         elif key == "opc":  # for API compatibility
             return True
-        elif key == "validate":  # for API compatibility
+        elif key == "validate":
             if "blocks" in args and "freq" in args:
                 return self.validate_blocks(args["blocks"], args["freq"])
             elif "blockseq" in args and "freq" in args:
@@ -770,8 +751,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             else:
                 self.logger.error(f"Invalid args for get(validate): {args}")
                 return None
-        elif key == "fix":
-            # for debug
+        elif key == "fix":  # for debug
             return self.fix_blockseq(args)
         else:
             self.logger.error(f"unknown get() key: {key}")

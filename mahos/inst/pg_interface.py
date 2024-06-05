@@ -83,31 +83,31 @@ class PGInterface(InstrumentInterface):
         return self.get("opc", delay)
 
     def get_length(self) -> int:
-        """Get total block length of last configure_blocks() call."""
+        """Get total block length of last configure() call."""
 
         return self.get("length")
 
-    def get_offsets(self, blocks=None, freq=None):
-        """Get additional offsets of given blocks.
+    def get_offsets(self) -> list[int]:
+        """Get additional offsets of last configure() call."""
 
-        If blocks and freq are None, get offsets of last configure_blocks() call.
+        return self.get("offsets")
+
+    def validate_blocks(self, blocks: Block[Blocks], freq: float) -> list[int] | None:
+        """Validate the blocks with freq.
+
+        :returns: list of additional offsets if valid. None if invalid.
 
         """
-
-        if blocks is None and freq is None:
-            args = None
-        else:
-            args = {"blocks": blocks, "freq": freq}
-        return self.get("offsets", args)
-
-    def validate_blocks(self, blocks: Block[Blocks], freq: float):
-        """Validate the blocks with freq."""
 
         args = {"blocks": blocks, "freq": freq}
         return self.get("validate", args)
 
-    def validate_blockseq(self, blockseq: BlockSeq, freq: float):
-        """Validate the blocks with freq."""
+    def validate_blockseq(self, blockseq: BlockSeq, freq: float) -> list[int] | None:
+        """Validate the blocks with freq.
+
+        :returns: list of additional offsets if valid. None if invalid.
+
+        """
 
         args = {"blockseq": blockseq, "freq": freq}
         return self.get("validate", args)

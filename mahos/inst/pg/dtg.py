@@ -240,17 +240,9 @@ class DTG5000(VisaInstrument, DTGCoreMixin):
 
     def get(self, key: str, args=None, label: str = ""):
         if key == "length":
-            return self.length  # length of last configure_blocks
+            return self.length  # length of last configure
         elif key == "offsets":
-            if args is None:
-                return self.offsets  # offsets of last configure_blocks
-            elif "blocks" in args and "freq" in args:
-                return self.validate_blocks(args["blocks"], args["freq"])
-            elif "blockseq" in args and "freq" in args:
-                return self.validate_blockseq(args["blockseq"], args["freq"])
-            else:
-                self.logger.error(f"Invalid args for get(offsets): {args}")
-                return None
+            return self.offsets  # offsets of last configure
         elif key == "opc":
             return self.query_opc(delay=args)
         elif key == "validate":
