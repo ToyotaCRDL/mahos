@@ -310,14 +310,16 @@ class Block(Message):
 
     def __str__(self):
         if self.Nrep == 1 and not self.trigger:
-            return "Block({:s}, {:d})".format(self.name, len(self))
+            return "Block({:s}, {:d})".format(self.name, self.raw_length())
         elif self.Nrep == 1 and self.trigger:
-            return "Block({:s}, {:d}, trigger={})".format(self.name, len(self), self.trigger)
+            return "Block({:s}, {:d}, trigger={})".format(
+                self.name, self.raw_length(), self.trigger
+            )
         elif self.Nrep != 1 and not self.trigger:
-            return "Block({:s}, {:d}, Nrep={:d})".format(self.name, len(self), self.Nrep)
+            return "Block({:s}, {:d}, Nrep={:d})".format(self.name, self.raw_length(), self.Nrep)
         else:
             return "Block({:s}, {:d}, Nrep={:d}, trigger={})".format(
-                self.name, len(self), self.Nrep, self.trigger
+                self.name, self.raw_length(), self.Nrep, self.trigger
             )
 
     def pprint(self, nest: int = 0, max_len: int = 4):
@@ -666,7 +668,7 @@ class BlockSeq(Message):
     def _new(self, data) -> BlockSeq:
         return BlockSeq(self.name, data, self.Nrep, self.trigger)
 
-    def pprint(self, nest: int = 0):
+    def pprint(self, nest: int = 0, max_len: int = 4):
         if self.Nrep == 1 and not self.trigger:
             print(" " * nest + f"BlockSeq({self.name},")
         elif self.Nrep == 1 and self.trigger:
@@ -676,7 +678,7 @@ class BlockSeq(Message):
         else:
             print(" " * nest + f"BlockSeq({self.name}, Nrep={self.Nrep}, trigger,")
         for b in self.data:
-            b.pprint(nest=nest + 4)
+            b.pprint(nest=nest + 4, max_len=max_len)
         print(" " * nest + ")")
 
     def copy(self) -> BlockSeq:
