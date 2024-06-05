@@ -15,6 +15,7 @@ Added
 - inst: new module positioner.
 - inst.tdc: new instrument TimeTagger (Swabian Instruments).
 - inst.fg: new instrument SIGLENT_SDG2000X.
+- inst.pg: new instrument SpinCore_PulseBlasterESR_PRO.
 
 Changed
 ^^^^^^^

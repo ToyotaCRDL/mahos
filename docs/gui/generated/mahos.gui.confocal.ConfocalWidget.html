@@ -445,6 +445,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg_interface.PGInterface.html">mahos.inst.pg_interface.PGInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.PulseStreamer.html">mahos.inst.pg.PulseStreamer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.PulseStreamerDAQTrigger.html">mahos.inst.pg.PulseStreamerDAQTrigger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.SpinCore_PulseBlasterESR_PRO.html">mahos.inst.pg.SpinCore_PulseBlasterESR_PRO</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.DTG5000.html">mahos.inst.pg.DTG5000</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.DTG5078.html">mahos.inst.pg.DTG5078</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.pg.DTG5274.html">mahos.inst.pg.DTG5274</a></li>
@@ -773,64 +774,67 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_image_yz</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_background</span></code>(state)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_auto_levels</span></code>(enable)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_home</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_background</span></code>(state)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_home</span></code>()</p></td>
 <td><p>Store current position as the home position.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_scan</span></code>(dialog, direction)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_scan</span></code>(dialog, direction)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_PosEdit</span></code>(state)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_PosEdit</span></code>(state)</p></td>
 <td><p>Set PosEdit string for states without polling.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_TgtBox</span></code>(editable)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_TgtBox</span></code>(editable)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_buttons</span></code>(state)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_buttons</span></code>(state)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_interaction</span></code>(state, last_state)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_interaction</span></code>(state, last_state)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_key_move</span></code>(enable)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">switch_key_move</span></code>(enable)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_PosEdit</span></code>(val, on_tgt, edit)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_PosEdit</span></code>(val, on_tgt, edit)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_XPosEdit</span></code>(val, on_tgt)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_XPosEdit</span></code>(val, on_tgt)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_XYbox</span></code>(rect)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_XYbox</span></code>(rect)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_XZbox</span></code>(rect)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_XZbox</span></code>(rect)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_YPosEdit</span></code>(val, on_tgt)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_YPosEdit</span></code>(val, on_tgt)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_YZbox</span></code>(rect)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_YZbox</span></code>(rect)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_ZPosEdit</span></code>(val, on_tgt)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_ZPosEdit</span></code>(val, on_tgt)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_roiXY</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_roiXY</span></code>()</p></td>
 <td><p>Transmit change of XYroi to XZroi and YZroi</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_roiXZ</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_roiXZ</span></code>()</p></td>
 <td><p>Transmit change of XZroi to XYroi and YZroi</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_roiYZ</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_roiYZ</span></code>()</p></td>
 <td><p>Transmit change of YZroi to XYroi and XZroi</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_state</span></code>(state, last_state)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_state</span></code>(state, last_state)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_tracker_state</span></code>(state, last_state)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_tracker_state</span></code>(state, last_state)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

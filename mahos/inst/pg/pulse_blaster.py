@@ -27,7 +27,30 @@ class PulseBlasterStatus(T.NamedTuple):
 
 
 class SpinCore_PulseBlasterESR_PRO(Instrument):
-    """SpinCore PulseBlasterESR-PRO Pulse Generator."""
+    """SpinCore PulseBlasterESR-PRO Pulse Generator.
+
+    :param channels: mapping from channel names to indices.
+    :type channels: dict[str | bytes, int]
+    :param dll_dir: (default: "C:\\SpinCore\\SpinAPI\\lib" for windows, "~/.local/lib" for Linux)
+        The directory containing dynamic link library (SpinAPI).
+    :type dll_dir: str
+    :param dll_name: (default: "spinapi64.dll" for windows, "libspinapi.so" for Linux)
+        The name of dynamic link library (SpinAPI).
+    :type dll_name: str
+    :param board_index: The index of PulseBlaster board.
+        Required when multiple boards are connected.
+    :type board_index: int
+    :param freq: (default: 500.0e6) Base frequency. Depends on the board type.
+    :type freq: float
+    :param max_instructions: (default: 4096) Max number of instructions. Depends on the board type.
+    :type max_instructions: int
+    :param verbose: (default: False) Set True to log every instuctions.
+    :type verbose: bool
+    :param sanity_check: (default: False) Set True do sanity check on BlockSeq fix.
+        Note that this can be very time-consuming for long pulse pattern.
+    :type sanity_check: bool
+
+    """
 
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
@@ -621,6 +644,8 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
         return bseq
 
     def fix_blockseq(self, blockseq: BlockSeq) -> BlockSeq | None:
+        """Perform fix post-process of blockseq. Mainly for debug."""
+
         trigger = self._extract_trigger_blockseq(blockseq)
         if trigger is None:
             return None

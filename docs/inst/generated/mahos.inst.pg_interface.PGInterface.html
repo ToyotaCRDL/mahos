@@ -445,6 +445,7 @@ document.write(`
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">mahos.inst.pg_interface.PGInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.PulseStreamer.html">mahos.inst.pg.PulseStreamer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.PulseStreamerDAQTrigger.html">mahos.inst.pg.PulseStreamerDAQTrigger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.SpinCore_PulseBlasterESR_PRO.html">mahos.inst.pg.SpinCore_PulseBlasterESR_PRO</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.DTG5000.html">mahos.inst.pg.DTG5000</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.DTG5078.html">mahos.inst.pg.DTG5078</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.pg.DTG5274.html">mahos.inst.pg.DTG5274</a></li>
@@ -653,10 +654,10 @@ document.write(`
 <td><p>Configure the PG using BlockSeq representation.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_length</span></code>()</p></td>
-<td><p>Get total block length of last configure_blocks() call.</p></td>
+<td><p>Get total block length of last configure() call.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_offsets</span></code>([blocks, freq])</p></td>
-<td><p>Get additional offsets of given blocks.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_offsets</span></code>()</p></td>
+<td><p>Get additional offsets of last configure() call.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_opc</span></code>([delay])</p></td>
 <td><p>Get OPC (operation complete) status.</p></td>

@@ -61,6 +61,7 @@
       ~ConfocalWidget.save_image_xy
       ~ConfocalWidget.save_image_xz
       ~ConfocalWidget.save_image_yz
+      ~ConfocalWidget.set_auto_levels
       ~ConfocalWidget.set_background
       ~ConfocalWidget.set_home
       ~ConfocalWidget.start_scan

@@ -25,6 +25,7 @@ Instruments
 
    PulseStreamer
    PulseStreamerDAQTrigger
+   SpinCore_PulseBlasterESR_PRO
    DTG5000
    DTG5078
    DTG5274

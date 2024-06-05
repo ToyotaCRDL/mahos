@@ -17,7 +17,7 @@ from ...msgs.inst.pg_msgs import TriggerType, Block, Blocks, BlockSeq
 
 
 class PulseStreamer(Instrument):
-    """Wrapper for Swabian Instrument Pulse Streamer 8/2.
+    """Swabian Instrument Pulse Streamer 8/2.
 
     :param channels: mapping from channel names to indices.
     :type channels: dict[str | bytes, int]

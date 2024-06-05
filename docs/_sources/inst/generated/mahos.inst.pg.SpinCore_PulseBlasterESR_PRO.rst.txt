@@ -1,0 +1,42 @@
+﻿mahos.inst.pg.SpinCore\_PulseBlasterESR\_PRO
+============================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.pg
+
+.. autoclass:: SpinCore_PulseBlasterESR_PRO
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SpinCore_PulseBlasterESR_PRO.__init__
+      ~SpinCore_PulseBlasterESR_PRO.channels_to_ints
+      ~SpinCore_PulseBlasterESR_PRO.channels_to_output
+      ~SpinCore_PulseBlasterESR_PRO.check_error
+      ~SpinCore_PulseBlasterESR_PRO.check_inst
+      ~SpinCore_PulseBlasterESR_PRO.close_resources
+      ~SpinCore_PulseBlasterESR_PRO.configure
+      ~SpinCore_PulseBlasterESR_PRO.configure_blocks
+      ~SpinCore_PulseBlasterESR_PRO.configure_blockseq
+      ~SpinCore_PulseBlasterESR_PRO.fix_blockseq
+      ~SpinCore_PulseBlasterESR_PRO.get
+      ~SpinCore_PulseBlasterESR_PRO.get_status
+      ~SpinCore_PulseBlasterESR_PRO.set
+      ~SpinCore_PulseBlasterESR_PRO.start
+      ~SpinCore_PulseBlasterESR_PRO.stop
+      ~SpinCore_PulseBlasterESR_PRO.trigger
+      ~SpinCore_PulseBlasterESR_PRO.validate_blocks
+      ~SpinCore_PulseBlasterESR_PRO.validate_blockseq
+   
+   
+
+   
+   
+   
