@@ -75,6 +75,13 @@ class PODMR(BasicMeasNode):
         :param pulser.divide_block: (has preset) Default value of divide_block.
         :type pulser.divide_block: bool
 
+        :param fitter.rabi.c: default value of param "c" (base line) in RabiFitter.
+            You can set the bounds using "c_min" and "c_max" too.
+        :type fitter.rabi.c: float
+        :param fitter.rabi.A: default value of param "A" (amplitude) in RabiFitter.
+            You can set the bounds using "A_min" and "A_max" too.
+        :type fitter.rabi.A: float
+
         """
 
         BasicMeasNode.__init__(self, gconf, name, context=context)
@@ -87,7 +94,7 @@ class PODMR(BasicMeasNode):
             self.switch = DummyWorker()
 
         self.worker = Pulser(self.cli, self.logger, self.conf.get("pulser", {}))
-        self.fitter = PODMRFitter(self.logger)
+        self.fitter = PODMRFitter(self.logger, conf=self.conf.get("fitter"))
         self.io = PODMRIO(self.logger)
         self.buffer: Buffer[tuple[str, PODMRData]] = Buffer()
         self.op = PODMRDataOperator()

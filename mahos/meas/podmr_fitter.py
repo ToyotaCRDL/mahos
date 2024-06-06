@@ -37,8 +37,18 @@ def rabi_decay_cos(x, A, T, f, dt):
 class RabiFitter(Fitter):
     def model_params(self) -> P.ParamDict[str, P.PDValue]:
         return P.ParamDict(
-            c=self.make_model_param(1.0, 0.0, 2.0, doc="constant baseline"),
-            A=self.make_model_param(0.15, 0.001, 1.0, doc="peak-to-peak amplitude of oscillation"),
+            c=self.make_model_param(
+                self.conf.get("c", 1.0),
+                self.conf.get("c_min", 0.0),
+                self.conf.get("c_max", 2.0),
+                doc="constant baseline",
+            ),
+            A=self.make_model_param(
+                self.conf.get("A", 0.15),
+                self.conf.get("A_min", 0.001),
+                self.conf.get("A_max", 1.0),
+                doc="peak-to-peak amplitude of oscillation",
+            ),
             T=self.make_model_param(
                 400e-9, 1e-9, 1e3, unit="s", SI_prefix=True, doc="exponential decay T_2^*"
             ),
@@ -266,21 +276,23 @@ class LorentzianFitter(Fitter):
 
 
 class PODMRFitter(object):
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, conf=None):
         """Fitter for PODMR."""
 
         if logger is None:  # use DummyLogger on interactive use
             self.logger = DummyLogger(self.__class__.__name__)
         else:
             self.logger = logger
+        if conf is None:
+            conf = {}
 
         self.fitters = {
-            "rabi": RabiFitter(self.logger.info),
-            "T1": T1Fitter(self.logger.info),
-            "spinecho": SpinEchoFitter(self.logger.info),
-            "fid": FIDFitter(self.logger.info),
-            "gaussian": GaussianFitter(self.logger.info),
-            "lorentzian": LorentzianFitter(self.logger.info),
+            "rabi": RabiFitter(self.logger.info, conf.get("rabi")),
+            "T1": T1Fitter(self.logger.info, conf.get("T1")),
+            "spinecho": SpinEchoFitter(self.logger.info, conf.get("spinecho")),
+            "fid": FIDFitter(self.logger.info, conf.get("fid")),
+            "gaussian": GaussianFitter(self.logger.info, conf.get("gaussian")),
+            "lorentzian": LorentzianFitter(self.logger.info, conf.get("lorentzian")),
         }
 
     def get_param_dict_labels(self) -> list[str]:

@@ -79,6 +79,13 @@ class SPODMR(BasicMeasNode):
         :param pulser.nest_blockseq: (has preset, default: False) allow nested BlockSeq.
         :type pulser.nest_blockseq: bool
 
+        :param fitter.rabi.c: default value of param "c" (base line) in RabiFitter.
+            You can set the bounds using "c_min" and "c_max" too.
+        :type fitter.rabi.c: float
+        :param fitter.rabi.A: default value of param "A" (amplitude) in RabiFitter.
+            You can set the bounds using "A_min" and "A_max" too.
+        :type fitter.rabi.A: float
+
         """
 
         BasicMeasNode.__init__(self, gconf, name, context=context)
@@ -94,7 +101,7 @@ class SPODMR(BasicMeasNode):
             self.worker = DebugPulser(self.cli, self.logger, self.conf.get("pulser", {}))
         else:
             self.worker = Pulser(self.cli, self.logger, self.conf.get("pulser", {}))
-        self.fitter = PODMRFitter(self.logger)
+        self.fitter = PODMRFitter(self.logger, conf=self.conf.get("fitter"))
         self.io = SPODMRIO(self.logger)
         self.buffer: Buffer[tuple[str, SPODMRData]] = Buffer()
         self.op = SPODMRDataOperator()
