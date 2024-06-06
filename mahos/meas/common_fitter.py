@@ -60,8 +60,9 @@ def voigt(x, amplitude, center, sigma, gamma):
 
 
 class BaseFitter(object):
-    def __init__(self, print_fn=print):
+    def __init__(self, print_fn=print, conf=None):
         self.print_fn = print_fn
+        self.conf = conf or {}
 
     def make_model_param(
         self,

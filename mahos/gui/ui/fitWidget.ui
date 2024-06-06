@@ -154,7 +154,7 @@
             <string>apply loaded</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -164,7 +164,7 @@
             <string>apply result</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -200,8 +200,18 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>indexBox</tabstop>
   <tabstop>loadButton</tabstop>
+  <tabstop>popbufButton</tabstop>
+  <tabstop>clearbufButton</tabstop>
+  <tabstop>fitButton</tabstop>
+  <tabstop>clearfitButton</tabstop>
+  <tabstop>labelBox</tabstop>
+  <tabstop>applyloadBox</tabstop>
+  <tabstop>applyresultBox</tabstop>
   <tabstop>bufferTable</tabstop>
+  <tabstop>paramTable</tabstop>
+  <tabstop>resultEdit</tabstop>
  </tabstops>
  <resources/>
  <connections/>

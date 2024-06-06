@@ -78,6 +78,13 @@ class ODMR(BasicMeasNode):
         :param sweeper.sg_modulation: (default param) enable external IQ modulation for SG.
         :type sweeper.sg_modulation: bool
 
+        :param fitter.dip: (default: True) True if ODMR shape is dip instead of peak.
+        :type fitter.dip: bool
+        :param fitter.n_guess: (default: 20) Number of data points in peak center guess.
+        :type fitter.n_guess: int
+        :param fitter.n_guess_bg: (default: 40) Number of histogram bins in background guess.
+        :type fitter.n_guess_bg: int
+
         """
 
         BasicMeasNode.__init__(self, gconf, name, context=context)
@@ -88,7 +95,7 @@ class ODMR(BasicMeasNode):
             self.switch = DummyWorker()
 
         self.worker = Sweeper(self.cli, self.logger, self.conf.get("sweeper", {}))
-        self.fitter = ODMRFitter(self.logger)
+        self.fitter = ODMRFitter(self.logger, silent=False, conf=self.conf.get("fitter"))
         self.io = ODMRIO(self.logger)
         self.buffer = Buffer()
         self.pub_timer = IntervalTimer(self.conf.get("pub_interval_sec", 0.5))

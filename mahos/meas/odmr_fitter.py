@@ -81,10 +81,20 @@ class Fitter(BaseFitter):
     def param_dict(self) -> P.ParamDict[str, P.PDValue]:
         params = P.ParamDict(
             peak_type=P.EnumParam(PeakType, PeakType.Voigt),
-            dip=P.BoolParam(True, doc="dip-shape instead of peak. used for guess."),
-            n_guess=P.IntParam(20, 1, 1000, doc="number of data points in peak center guess."),
+            dip=P.BoolParam(
+                self.conf.get("dip", True), doc="dip-shape instead of peak. used for guess."
+            ),
+            n_guess=P.IntParam(
+                self.conf.get("n_guess", 20),
+                1,
+                1000,
+                doc="number of data points in peak center guess.",
+            ),
             n_guess_bg=P.IntParam(
-                40, 5, 1000, doc="number of histogram bins in background guess."
+                self.conf.get("n_guess_bg", 40),
+                5,
+                1000,
+                doc="number of histogram bins in background guess.",
             ),
             complex_conv=P.StrChoiceParam(
                 "real", ("real", "imag", "abs", "angle"), doc="conversion method for complex data."
@@ -669,7 +679,7 @@ class ODMRFitter(object):
     XCOEFF = 1e-6
     XUNIT = "MHz"
 
-    def __init__(self, logger=None, silent=False):
+    def __init__(self, logger=None, silent=False, conf=None):
         if logger is None:  # use DummyLogger on interactive use
             self.logger = DummyLogger(self.__class__.__name__)
         else:
@@ -681,10 +691,10 @@ class ODMRFitter(object):
             print_fn = self.logger.info
 
         self.fitters = {
-            "single": SingleFitter(print_fn),
-            "multi": MultiFitter(print_fn),
-            "nvb": NVBFitter(print_fn),
-            "nvba": NVBAlignedFitter(print_fn),
+            "single": SingleFitter(print_fn, conf),
+            "multi": MultiFitter(print_fn, conf),
+            "nvb": NVBFitter(print_fn, conf),
+            "nvba": NVBAlignedFitter(print_fn, conf),
         }
 
     def print_null(self, msg):
