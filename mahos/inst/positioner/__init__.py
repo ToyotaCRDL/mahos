@@ -9,5 +9,6 @@ Positioner module
 """
 
 from .thorlabs_kinesis import Thorlabs_KCube_DCServo
+from .suruga import Suruga_DS102
 
-__all__ = ["Thorlabs_KCube_DCServo"]
+__all__ = ["Thorlabs_KCube_DCServo", "Suruga_DS102"]
