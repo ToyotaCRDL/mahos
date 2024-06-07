@@ -24,3 +24,4 @@ Instruments
    :toctree: generated
 
    Thorlabs_KCube_DCServo
+   Suruga_DS102

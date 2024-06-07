@@ -17,9 +17,14 @@ from ...msgs import param_msgs as P
 class Suruga_DS102(VisaInstrument):
     """Instrument for Suruga DS102 stepping motor controller.
 
-    :param serial: (default: "") Serial string to discriminate multiple devices.
-        Blank is fine if only one device is connected.
-    :type serial: str
+    :param axis: (default: 1) Axis identifier to control.
+    :type axis: int
+    :param homed: (default: False) Since the controller don't memorize whether homing (zeroing)
+        has been performed, this class assumes non-homed initial state by default.
+        By setting this True, already-homed state is assumed on start.
+        Be careful setting this True because the position won't be reproduced if the controller
+        hasn't actually performed zeroing yet.
+    :type homed: bool
     :param range: (required) travel range.
         (lower, upper) bounds of the position.
     :type range: tuple[float, float]

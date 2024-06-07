@@ -464,6 +464,7 @@ document.write(`
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/positioner.html">mahos.inst.positioner</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner_interface.SinglePositionerInterface.html">mahos.inst.positioner_interface.SinglePositionerInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner.Thorlabs_KCube_DCServo.html">mahos.inst.positioner.Thorlabs_KCube_DCServo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner.Suruga_DS102.html">mahos.inst.positioner.Suruga_DS102</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/power_sensor.html">mahos.inst.power_sensor</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -652,6 +653,10 @@ reduce is done first by this value, and then repeated by 10.</p></li>
 <li><p><strong>pulser.minimum_block_length</strong> (<em>int</em>) – (has preset) minimum block length in generated blocks</p></li>
 <li><p><strong>pulser.block_base</strong> (<em>int</em>) – (has preset) block base granularity of pulse generator.</p></li>
 <li><p><strong>pulser.nest_blockseq</strong> (<em>bool</em>) – (has preset, default: False) allow nested BlockSeq.</p></li>
+<li><p><strong>fitter.rabi.c</strong> (<em>float</em>) – default value of param “c” (base line) in RabiFitter.
+You can set the bounds using “c_min” and “c_max” too.</p></li>
+<li><p><strong>fitter.rabi.A</strong> (<em>float</em>) – default value of param “A” (amplitude) in RabiFitter.
+You can set the bounds using “A_min” and “A_max” too.</p></li>
 </ul>
 </dd>
 </dl>

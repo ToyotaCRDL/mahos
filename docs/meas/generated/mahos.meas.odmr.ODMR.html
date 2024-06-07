@@ -464,6 +464,7 @@ document.write(`
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/positioner.html">mahos.inst.positioner</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner_interface.SinglePositionerInterface.html">mahos.inst.positioner_interface.SinglePositionerInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner.Thorlabs_KCube_DCServo.html">mahos.inst.positioner.Thorlabs_KCube_DCServo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner.Suruga_DS102.html">mahos.inst.positioner.Suruga_DS102</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/power_sensor.html">mahos.inst.power_sensor</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -654,6 +655,9 @@ This mode is for SGs which won’t start the point sweep by software command.</p
 <li><p><strong>sweeper.time_window</strong> (<em>float</em>) – (default param) time window for cw mode.</p></li>
 <li><p><strong>sweeper.pd_rate</strong> (<em>float</em>) – (default param) analog PD sampling rate.</p></li>
 <li><p><strong>sweeper.sg_modulation</strong> (<em>bool</em>) – (default param) enable external IQ modulation for SG.</p></li>
+<li><p><strong>fitter.dip</strong> (<em>bool</em>) – (default: True) True if ODMR shape is dip instead of peak.</p></li>
+<li><p><strong>fitter.n_guess</strong> (<em>int</em>) – (default: 20) Number of data points in peak center guess.</p></li>
+<li><p><strong>fitter.n_guess_bg</strong> (<em>int</em>) – (default: 40) Number of histogram bins in background guess.</p></li>
 </ul>
 </dd>
 </dl>

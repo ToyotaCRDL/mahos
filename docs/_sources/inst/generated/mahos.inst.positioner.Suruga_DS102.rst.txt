@@ -1,0 +1,39 @@
+﻿mahos.inst.positioner.Suruga\_DS102
+===================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.positioner
+
+.. autoclass:: Suruga_DS102
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Suruga_DS102.__init__
+      ~Suruga_DS102.get
+      ~Suruga_DS102.get_all
+      ~Suruga_DS102.get_param_dict
+      ~Suruga_DS102.get_param_dict_labels
+      ~Suruga_DS102.get_pos
+      ~Suruga_DS102.get_range
+      ~Suruga_DS102.get_status
+      ~Suruga_DS102.get_target
+      ~Suruga_DS102.home
+      ~Suruga_DS102.is_homed
+      ~Suruga_DS102.is_moving
+      ~Suruga_DS102.move
+      ~Suruga_DS102.reset
+      ~Suruga_DS102.set
+   
+   
+
+   
+   
+   
