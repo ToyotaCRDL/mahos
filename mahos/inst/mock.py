@@ -938,6 +938,7 @@ class Positioner_mock(Instrument):
             return self.fail_with(f"Target pos {pos:.3f} is out of range {self.range}.")
         self.target = pos
         self.pos = pos
+        self.logger.info(f"Dummy move to {pos:.3f}")
         return True
 
     def get_status(self) -> dict:
@@ -957,6 +958,7 @@ class Positioner_mock(Instrument):
     def reset(self, label: str = "") -> bool:
         #  Homing (zero-point adjustment) of the positioner
         self.homed = True
+        self.logger.info("Dummy homing performed")
         return True
 
     def get_param_dict_labels(self) -> list[str]:

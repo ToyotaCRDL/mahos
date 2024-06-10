@@ -11,7 +11,7 @@ GUI frontend for PosTweaker.
 from __future__ import annotations
 from functools import partial
 
-from .Qt import QtWidgets, QtGui
+from .Qt import QtWidgets, QtGui, question_yn
 
 # from .Qt import QtCore
 
@@ -42,6 +42,7 @@ class AxisWidgets(object):
         self.target_box = target_box
         self.moving_label = moving_label
         self.homed_label = homed_label
+        self.is_homed = False
 
     def fmt_pos(self, target: float, pos: float):
         return f"{pos:.3f} ({target:.3f})"
@@ -56,6 +57,7 @@ class AxisWidgets(object):
         self.pos_label.setText(self.fmt_pos(state["target"], state["pos"]))
         self.moving_label.setText(self.fmt_moving(state["moving"]))
         self.homed_label.setText(self.fmt_homed(state["homed"]))
+        self.is_homed = state["homed"]
 
 
 class PosTweakerWidget(ClientTopWidget):
@@ -109,6 +111,7 @@ class PosTweakerWidget(ClientTopWidget):
             target_box.setMinimum(range_min)
             target_box.setMaximum(range_max)
             target_box.setDecimals(3)
+            target_box.lineEdit().returnPressed.connect(partial(self.request_set_target, ax))
             moving_label = QtWidgets.QLabel()
             homed_label = QtWidgets.QLabel()
             set_target_button = QtWidgets.QPushButton("Set")
@@ -157,10 +160,19 @@ class PosTweakerWidget(ClientTopWidget):
         self.cli.set_target({ax: v})
 
     def request_home(self, ax: str):
+        if self._widgets[ax].is_homed and not question_yn(
+            self,
+            "Sure to HOME?",
+            f"Axis {ax} has already been homed. Are you sure to perform homing again?",
+        ):
+            return
         self.cli.home(ax)
 
     def request_home_all(self):
-        self.cli.home_all()
+        if question_yn(
+            self, "Sure to HOME ALL?", "Are you sure to perform homing for all the axes?"
+        ):
+            self.cli.home_all()
 
     def request_save(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
