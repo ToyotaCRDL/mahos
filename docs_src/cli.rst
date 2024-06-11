@@ -39,6 +39,8 @@ mahos run
 
 ``mahos run [nodename]`` starts a mahos node.
 
+If the node is :class:`InstrumentServer <inst.server.InstrumentServer>`, you can specify Instrument to include / exclude using ``-i`` or ``-e`` arguments.
+
 .. _mahos launch:
 
 mahos launch
@@ -63,6 +65,8 @@ mahos ls
 ^^^^^^^^
 
 ``mahos ls`` prints the list of defined nodes in the config file.
+
+``mahos ls -i`` enables listing of :class:`Instruments <inst.instrument.Instrument>` and :class:`InstrumentOverlays <inst.overlay.overlay.InstrumentOverlay>` in :class:`InstrumentServers <inst.server.InstrumentServer>`
 
 .. _mahos graph:
 
