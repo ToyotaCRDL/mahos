@@ -617,14 +617,18 @@ class InstrumentServer(Node):
 
     CLIENT = InstrumentClient
 
-    def __init__(self, gconf: dict, name, context=None):
+    def __init__(self, gconf: dict, name, context=None, include=None, exclude=None):
         Node.__init__(self, gconf, name, context=context)
+        self.include = include or []
+        self.exclude = exclude or []
 
         self._insts: dict[str, Instrument | None] = {}
         self._overlays: dict[str, InstrumentOverlay] = {}
-        self.locks = Locks(list(self.conf["instrument"].keys()))
+        self.locks = Locks([i for i in self.conf["instrument"].keys() if not self._is_excluded(i)])
 
         for inst, idict in self.conf["instrument"].items():
+            if self._is_excluded(inst):
+                continue
             C = self._get_class(
                 ["mahos.inst." + idict["module"], idict["module"]], idict["class"], Instrument
             )
@@ -644,6 +648,8 @@ class InstrumentServer(Node):
             self.logger.debug(f"sorted overlay names: {conf.sorted_lays}")
 
             for lay in conf.sorted_lays:
+                if self._is_excluded(lay):
+                    continue
                 ldict = conf.get(lay)
                 C = self._get_class(
                     ["mahos.inst.overlay." + ldict["module"], ldict["module"]],
@@ -661,6 +667,9 @@ class InstrumentServer(Node):
 
         self.add_rep()
         self.status_pub = self.add_pub(b"status")
+
+    def _is_excluded(self, inst: str):
+        return (self.include and inst not in self.include) or inst in self.exclude
 
     def _get_class(self, module_names, class_name, Class_T):
         for name in module_names:

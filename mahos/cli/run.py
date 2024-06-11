@@ -28,8 +28,25 @@ def parse_args(args):
     parser.add_argument(
         "node", type=str, help="node name or full name ({})".format(join_name(("host", "node")))
     )
+    parser.add_argument(
+        "-i",
+        "--include",
+        type=str,
+        nargs="*",
+        help="instrument names to include (only for InstrumentServer)",
+    )
+    parser.add_argument(
+        "-e",
+        "--exclude",
+        type=str,
+        nargs="*",
+        help="instrument names to exclude (only for InstrumentServer)",
+    )
 
     args = parser.parse_args(args)
+
+    if args.include and args.exclude:
+        parser.error("Only one of include or -e (--exclude) can be used.")
 
     return args
 
@@ -57,7 +74,14 @@ def main(args=None):
 
     module = importlib.import_module(c["module"])
     NodeClass = getattr(module, c["class"])
-    if issubclass(NodeClass, Node):
+    if c["class"] == "InstrumentServer":
+        if args.include:
+            print("Including Instruments: {}".format(args.include))
+        if args.exclude:
+            print("Excluding Instruments: {}".format(args.exclude))
+        n: Node = NodeClass(gconf, joined_name, include=args.include, exclude=args.exclude)
+        return n.main_interrupt()
+    elif issubclass(NodeClass, Node):
         n: Node = NodeClass(gconf, joined_name)
         return n.main_interrupt()
     elif issubclass(NodeClass, GUINode):

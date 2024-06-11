@@ -21,6 +21,9 @@ def parse_args(args):
     parser.add_argument(
         "-c", "--conf", type=str, default="conf.toml", help="config file name (default: conf.toml)"
     )
+    parser.add_argument(
+        "-i", "--inst", action="store_true", help="print list of Instruments for InstrumentServer"
+    )
 
     args = parser.parse_args(args)
 
@@ -40,3 +43,15 @@ def main(args=None):
         module = lconf.get("module", "<module unknown>")
         Class = lconf.get("class", "<class unknown>")
         print(f"{joined_name:30s}: {module}.{Class}")
+        if args.inst and Class == "InstrumentServer":
+            print("  Instruments")
+            for inst, idict in lconf.get("instrument", {}).items():
+                imodule = idict.get("module", "<module unknown>")
+                iClass = idict.get("class", "<class unknown>")
+                print(f"    {inst:26s}: {imodule}.{iClass}")
+            if lconf.get("instrument_overlay"):
+                print("  InstrumentOverlays")
+            for lay, ldict in lconf.get("instrument_overlay", {}).items():
+                lmodule = ldict.get("module", "<module unknown>")
+                lClass = ldict.get("class", "<class unknown>")
+                print(f"    {lay:26s}: {lmodule}.{lClass}")
