@@ -8,9 +8,12 @@ The mahos package
 
 """
 
-__all__ = ["cli", "gui", "inst", "meas", "msgs", "node", "util"]
-
 import os
+
+# top level exports for frequently used functions
+from .node.node import load_gconf, local_conf
+
+__all__ = ["cli", "gui", "inst", "meas", "msgs", "node", "util", "load_gconf", "local_conf"]
 
 HOME_DIR = os.environ.get("MAHOS_HOME", os.path.expanduser(os.path.join("~", ".mahos")))
 CONFIG_DIR = os.path.join(HOME_DIR, "config")

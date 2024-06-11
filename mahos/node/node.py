@@ -73,11 +73,15 @@ class PickleableTomlDecoder(toml.TomlDecoder):
         return self.get_empty_table()
 
 
-def load_gconf(fn: str) -> dict:
-    return toml.load(fn, decoder=PickleableTomlDecoder())
+def load_gconf(filename: str) -> dict:
+    """load (global) configuration dict from `filename`."""
+
+    return toml.load(filename, decoder=PickleableTomlDecoder())
 
 
-def local_conf(gconf: dict, name: NodeName):
+def local_conf(gconf: dict, name: NodeName) -> dict:
+    """get local configuration dict for Node `name` from `gconf`."""
+
     names = split_name(name)
     return gconf[names[0]][names[1]]
 
