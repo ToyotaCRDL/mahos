@@ -77,12 +77,16 @@ class PlotWidget(QtWidgets.QWidget):
         self.lastnBox.setPrefix("last_n: ")
         self.lastnBox.setMinimum(0)
         self.lastnBox.setMaximum(10000)
-        self.lastnBox.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
-        self.lastnBox.setMaximumWidth(200)
+        self.lastnimgBox = QtWidgets.QSpinBox(parent=self)
+        self.lastnimgBox.setPrefix("last_n (img): ")
+        self.lastnimgBox.setMinimum(0)
+        self.lastnimgBox.setMaximum(10000)
+        for w in (self.lastnBox, self.lastnimgBox):
+            w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
+            w.setMaximumWidth(200)
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
-        hl0.addWidget(self.showimgBox)
-        hl0.addWidget(self.showstdBox)
-        hl0.addWidget(self.lastnBox)
+        for w in (self.showimgBox, self.showstdBox, self.lastnBox, self.lastnimgBox):
+            hl0.addWidget(w)
         hl0.addItem(spacer)
 
         hl = QtWidgets.QHBoxLayout()
@@ -166,7 +170,7 @@ class PlotWidget(QtWidgets.QWidget):
             if show_fit and (xfit is not None) and (yfit is not None):
                 self.plot.plot(xfit, yfit, pen=c.color0, width=2)
 
-    def refresh(self, data_list: list[tuple[SPODMRData, bool, str]], data: SPODMRData):
+    def refresh_all(self, data_list: list[tuple[SPODMRData, bool, str]], data: SPODMRData):
         try:
             self.update_plot(data_list)
         except TypeError as e:
@@ -181,6 +185,13 @@ class PlotWidget(QtWidgets.QWidget):
 
         self.update_label(data)
 
+    def refresh_plot(self, data_list: list[tuple[SPODMRData, bool, str]]):
+        try:
+            self.update_plot(data_list)
+        except TypeError as e:
+            # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
+            print("Error in plot_analyzed " + repr(e))
+
     def update_label(self, data: SPODMRData):
         if not data.has_params():
             return
@@ -193,7 +204,7 @@ class PlotWidget(QtWidgets.QWidget):
         if not data.has_data():
             return
 
-        img = data.get_image()
+        img = data.get_image(last_n=self.lastnimgBox.value())
         self.img.updateImage(img)
         if setlevel:
             mn, mx = np.nanmin(img), np.nanmax(img)
@@ -571,7 +582,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         if self.plotenableBox.isChecked():
             self.apply_plot_widgets()
         self.switch_method()
-        self.refresh_plot()
+        self.refresh_all()
 
         # self.update_data(data)
 
@@ -813,17 +824,17 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         if not self.data.has_data():
             return  # measurement has not been started yet or data has not been accumulated.
 
-        self.refresh_plot()
+        self.refresh_all()
 
     def update_buffer(self, buffer: Buffer[tuple[str, SPODMRData]]):
         self.fit.update_buffer(buffer)
-        self.refresh_plot()
+        self.plot.refresh_plot(self.get_plottable_data())
 
     def update_plot_params(self):
         self.cli.update_plot_params(self.get_plot_params())
 
-    def refresh_plot(self):
-        self.plot.refresh(self.get_plottable_data(), self.data)
+    def refresh_all(self):
+        self.plot.refresh_all(self.get_plottable_data(), self.data)
 
     def finalize(self, data: SPODMRData):
         if self._finalizing:

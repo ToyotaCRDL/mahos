@@ -60,21 +60,29 @@ class PlotWidget(QtWidgets.QWidget):
         self.lastnBox.setPrefix("last_n: ")
         self.lastnBox.setMinimum(0)
         self.lastnBox.setMaximum(10000)
+        self.lastnimgBox = QtWidgets.QSpinBox(parent=self)
+        self.lastnimgBox.setPrefix("last_n (img): ")
+        self.lastnimgBox.setMinimum(0)
+        self.lastnimgBox.setMaximum(10000)
         self.filternBox = QtWidgets.QDoubleSpinBox(parent=self)
         self.filternBox.setPrefix("filter_n: ")
         self.filternBox.setSuffix(" σ")
         self.filternBox.setMinimum(0.0)
         self.filternBox.setMaximum(10.0)
-        for w in (self.symbolsizeBox, self.lastnBox, self.filternBox):
+        for w in (self.symbolsizeBox, self.lastnBox, self.lastnimgBox, self.filternBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
         self.outlierLabel = QtWidgets.QLabel("Removed outliers: ")
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
-        hl0.addWidget(self.showimgBox)
-        hl0.addWidget(self.symbolsizeBox)
-        hl0.addWidget(self.lastnBox)
-        hl0.addWidget(self.filternBox)
-        hl0.addWidget(self.outlierLabel)
+        for w in (
+            self.showimgBox,
+            self.symbolsizeBox,
+            self.lastnBox,
+            self.lastnimgBox,
+            self.filternBox,
+            self.outlierLabel,
+        ):
+            hl0.addWidget(w)
         hl0.addItem(spacer)
 
         hl = QtWidgets.QHBoxLayout()
@@ -108,13 +116,19 @@ class PlotWidget(QtWidgets.QWidget):
 
         self.showimgBox.toggled.connect(self.toggle_image)
 
-    def refresh(self, data_list: list[tuple[SpectroscopyData, bool, str]], data: SpectroscopyData):
+    def refresh_all(
+        self, data_list: list[tuple[SpectroscopyData, bool, str]], data: SpectroscopyData
+    ):
         if data.has_data():
             self.update_image(data)
         self.update_plot(data_list)
 
+    def refresh_plot(self, data_list: list[tuple[SpectroscopyData, bool, str]]):
+        self.update_plot(data_list)
+
     def update_image(self, data: SpectroscopyData, setlevel=True):
-        self.img.updateImage(data.data)
+        img = data.data[:, -self.lastnimgBox.value() :]
+        self.img.updateImage(img)
         if setlevel:
             mn, mx = np.nanmin(data.data), np.nanmax(data.data)
             if mn == mx:
@@ -301,19 +315,19 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
         if data.note():
             self.gparams_cli.set_param("loaded_note", data.note())
 
-        self.refresh_plot()
+        self.refresh_all()
         self.apply_widgets(data)
 
     def update_data(self, data: SpectroscopyData):
         self.data = data
-        self.refresh_plot()
+        self.refresh_all()
 
     def update_buffer(self, buffer: Buffer[tuple[str, SpectroscopyData]]):
         self.fit.update_buffer(buffer)
-        self.refresh_plot()
+        self.plot.refresh_plot(self.get_plottable_data())
 
-    def refresh_plot(self):
-        self.plot.refresh(self.get_plottable_data(), self.data)
+    def refresh_all(self):
+        self.plot.refresh_all(self.get_plottable_data(), self.data)
 
     def get_plottable_data(self) -> list[tuple[SpectroscopyData, bool, str]]:
         return self.fit.get_plottable_data(self.data)

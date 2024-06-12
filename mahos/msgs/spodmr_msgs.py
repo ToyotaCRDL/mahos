@@ -121,14 +121,14 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
         else:
             return data
 
-    def get_image(self) -> NDArray:
+    def get_image(self, last_n: int = 0) -> NDArray:
         if self.partial() in (0, 2):
-            return self._normalize_image(self._conv_complex(self.data0))
+            return self._normalize_image(self._conv_complex(self.data0))[:, -last_n:]
         elif self.partial() == 1:
-            return self._normalize_image(self._conv_complex(self.data1))
+            return self._normalize_image(self._conv_complex(self.data1))[:, -last_n:]
         else:  # -1
-            i0 = self._normalize_image(self._conv_complex(self.data0))
-            i1 = self._normalize_image(self._conv_complex(self.data1))
+            i0 = self._normalize_image(self._conv_complex(self.data0))[:, -last_n:]
+            i1 = self._normalize_image(self._conv_complex(self.data1))[:, -last_n:]
 
             plotmode = self.params["plot"]["plotmode"]
             flip = self.params["plot"].get("flipY", False)

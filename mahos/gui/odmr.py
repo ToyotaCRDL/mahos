@@ -80,11 +80,15 @@ class PlotWidget(QtWidgets.QWidget):
         self.lastnBox.setPrefix("last_n: ")
         self.lastnBox.setMinimum(0)
         self.lastnBox.setMaximum(10000)
+        self.lastnimgBox = QtWidgets.QSpinBox(parent=self)
+        self.lastnimgBox.setPrefix("last_n (img): ")
+        self.lastnimgBox.setMinimum(0)
+        self.lastnimgBox.setMaximum(10000)
         self.normalizenBox = QtWidgets.QSpinBox(parent=self)
         self.normalizenBox.setPrefix("normalize_n: ")
         self.normalizenBox.setMinimum(-100)
         self.normalizenBox.setMaximum(100)
-        for w in (self.lastnBox, self.normalizenBox):
+        for w in (self.lastnBox, self.lastnimgBox, self.normalizenBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
         self.complexBox = QtWidgets.QComboBox(parent=self)
@@ -95,6 +99,7 @@ class PlotWidget(QtWidgets.QWidget):
             self.showimgBox,
             self.showstdBox,
             self.lastnBox,
+            self.lastnimgBox,
             self.normalizenBox,
             self.complexBox,
         ):
@@ -133,7 +138,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.showimgBox.toggled.connect(self.toggle_image)
         self.normalizenBox.valueChanged.connect(self.update_normalize)
 
-    def refresh(self, data_list: list[tuple[ODMRData, bool, str]], data: ODMRData):
+    def refresh_all(self, data_list: list[tuple[ODMRData, bool, str]], data: ODMRData):
         if self._yunit != data.yunit:
             self._yunit = data.yunit
             self.update_ylabel(self.normalizenBox.value())
@@ -142,8 +147,13 @@ class PlotWidget(QtWidgets.QWidget):
             self.update_image(data)
         self.update_plot(data_list)
 
+    def refresh_plot(self, data_list: list[tuple[ODMRData, bool, str]]):
+        self.update_plot(data_list)
+
     def update_image(self, data: ODMRData, setlevel=True):
-        img = data.get_image(self.complexBox.currentText())
+        img = data.get_image(
+            last_n=self.lastnimgBox.value(), complex_conv=self.complexBox.currentText()
+        )
         self.img.updateImage(img)
         if setlevel:
             mn, mx = np.nanmin(img), np.nanmax(img)
@@ -706,7 +716,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         if data.note():
             self.gparams_cli.set_param("loaded_note", data.note())
 
-        self.refresh_plot()
+        self.refresh_all()
         self.apply_widgets(data)
 
     def export_data(self):
@@ -787,14 +797,14 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
 
     def update_data(self, data: ODMRData):
         self.data = data
-        self.refresh_plot()
+        self.refresh_all()
 
     def update_buffer(self, buffer: Buffer[tuple[str, ODMRData]]):
         self.fit.update_buffer(buffer)
-        self.refresh_plot()
+        self.plot.refresh_plot(self.get_plottable_data())
 
-    def refresh_plot(self):
-        self.plot.refresh(self.get_plottable_data(), self.data)
+    def refresh_all(self):
+        self.plot.refresh_all(self.get_plottable_data(), self.data)
 
     def get_plottable_data(self) -> list[tuple[ODMRData, bool, Colors]]:
         return self.fit.get_plottable_data(self.data)

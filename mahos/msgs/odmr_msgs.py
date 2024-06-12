@@ -132,8 +132,8 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
             ydata0, ydata1 = self._get_ydata_nobg(last_n, normalize_n, complex_conv)
             return conv(ydata0), conv(ydata1)
 
-    def get_image(self, complex_conv: str = "real") -> NDArray:
-        return self.conv_complex(self.data, complex_conv)
+    def get_image(self, last_n: int = 0, complex_conv: str = "real") -> NDArray:
+        return self.conv_complex(self.data, complex_conv)[:, -last_n:]
 
     def get_fit_xdata(self):
         return self.fit_xdata
