@@ -107,6 +107,12 @@ class Suruga_DS102(VisaInstrument):
 
     # Standard API
 
+    def stop(self, label: str = "") -> bool:
+        """Stop motion of this device."""
+
+        self.inst.write(f"AXI{self.axis}:STOP")
+        return True
+
     def reset(self, label: str = "") -> bool:
         """Perform homing of this device."""
 
@@ -127,6 +133,12 @@ class Suruga_DS102(VisaInstrument):
         else:
             self.logger.error(f"Unknown label: {label}")
             return None
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        if label == "pos":
+            return self.move(params["target"])
+        else:
+            return self.fail_with(f"Unknown label {label}")
 
     def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "target":

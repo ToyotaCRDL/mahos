@@ -145,6 +145,21 @@ class Thorlabs_KCube_DCServo(Instrument):
         except DeviceManagerCLI.DeviceMovingException:
             return self.fail_with("Cannot move because device is already moving.")
 
+    def stop_wait(self, timeout_ms: int = 60_000) -> bool:
+        self.device.Stop(timeout_ms)
+        return True
+
+    def _stop(self) -> bool:
+        try:
+            with self.lock:
+                self.task_id = self.device.Stop(Action[UInt64](self.done_callback))
+                self.logger.info(f"New task {self.task_id} (stop)")
+            return True
+        except Exception:
+            # TODO: catch some more specific exceptions
+            self.logger.exception("Failed to stop.")
+            return False
+
     def move_wait(self, pos: float, timeout_ms: int = 60_000) -> bool:
         self.device.MoveTo(Decimal(pos), timeout_ms)
         return True
@@ -220,6 +235,11 @@ class Thorlabs_KCube_DCServo(Instrument):
 
         return self.home()
 
+    def stop(self, label: str = "") -> bool:
+        """Stop motion of this device."""
+
+        return self._stop()
+
     def get_param_dict_labels(self) -> list[str]:
         return ["pos"]
 
@@ -235,6 +255,12 @@ class Thorlabs_KCube_DCServo(Instrument):
         else:
             self.logger.error(f"Unknown label: {label}")
             return None
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        if label == "pos":
+            return self.move(params["target"])
+        else:
+            return self.fail_with(f"Unknown label {label}")
 
     def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "target":

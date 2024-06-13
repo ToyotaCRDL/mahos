@@ -13,7 +13,7 @@ from __future__ import annotations
 from ..msgs.common_msgs import Reply
 from ..msgs import pos_tweaker_msgs
 from ..msgs.pos_tweaker_msgs import PosTweakerStatus, SetTargetReq
-from ..msgs.pos_tweaker_msgs import HomeReq, HomeAllReq, LoadReq
+from ..msgs.pos_tweaker_msgs import HomeReq, HomeAllReq, StopReq, StopAllReq, LoadReq
 from ..msgs.tweaker_msgs import SaveReq
 from ..node.node import Node
 from ..node.client import StatusClient
@@ -45,6 +45,14 @@ class PosTweakerClient(StatusClient):
 
     def home_all(self) -> bool:
         rep = self.req.request(HomeAllReq())
+        return rep.success
+
+    def stop(self, axis: str) -> bool:
+        rep = self.req.request(StopReq(axis))
+        return rep.success
+
+    def stop_all(self) -> bool:
+        rep = self.req.request(StopAllReq())
         return rep.success
 
     def save(self, filename: str, group: str = "") -> bool:
@@ -108,6 +116,23 @@ class PosTweaker(Node):
                 return self.fail_with(f"Failed to home {ax}")
         return Reply(True)
 
+    def stop(self, msg: StopReq) -> Reply:
+        if msg.axis not in self._axis_positioners:
+            return self.fail_with(f"Invalid axis {msg.axis}")
+
+        if self._axis_positioners[msg.axis].stop():
+            return Reply(True)
+        else:
+            return self.fail_with(f"Failed to home {msg.axis}")
+
+    def stop_all(self, msg: StopAllReq) -> Reply:
+        success = True
+        for ax, positioner in self._axis_positioners.items():
+            if not positioner.stop():
+                self.logger.error(f"Failed to stop {ax}")
+                success = False
+        return Reply(success)
+
     def save(self, msg: SaveReq) -> Reply:
         """Save tweaker state (pos, target, homed) to file using h5."""
 
@@ -132,6 +157,10 @@ class PosTweaker(Node):
             return self.home(msg)
         elif isinstance(msg, HomeAllReq):
             return self.home_all(msg)
+        elif isinstance(msg, StopReq):
+            return self.stop(msg)
+        elif isinstance(msg, StopAllReq):
+            return self.stop_all(msg)
         elif isinstance(msg, SaveReq):
             return self.save(msg)
         elif isinstance(msg, LoadReq):

@@ -40,7 +40,20 @@ class HomeReq(Request):
 
 
 class HomeAllReq(Request):
-    """Perform homing of all the axis."""
+    """Perform homing of all the axes."""
+
+    pass
+
+
+class StopReq(Request):
+    """Stop motion of single axis."""
+
+    def __init__(self, axis: str):
+        self.axis = axis
+
+
+class StopAllReq(Request):
+    """Stop motion of all the axes."""
 
     pass
 

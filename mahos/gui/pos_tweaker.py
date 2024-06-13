@@ -81,14 +81,16 @@ class PosTweakerWidget(ClientTopWidget):
         self.gl = QtWidgets.QGridLayout()
         self.vl = QtWidgets.QVBoxLayout()
 
+        self.stop_all_button = QtWidgets.QPushButton("Stop All")
         self.home_all_button = QtWidgets.QPushButton("Home All")
         self.save_button = QtWidgets.QPushButton("Save")
         self.load_button = QtWidgets.QPushButton("Load")
+        self.stop_all_button.pressed.connect(self.request_stop_all)
         self.home_all_button.pressed.connect(self.request_home_all)
         self.save_button.pressed.connect(self.request_save)
         self.load_button.pressed.connect(self.request_load)
 
-        for b in (self.save_button, self.load_button, self.home_all_button):
+        for b in (self.save_button, self.load_button, self.stop_all_button, self.home_all_button):
             self.hl.addWidget(b)
         self.vl.addLayout(self.hl)
         self.vl.addLayout(self.gl)
@@ -116,6 +118,8 @@ class PosTweakerWidget(ClientTopWidget):
             homed_label = QtWidgets.QLabel()
             set_target_button = QtWidgets.QPushButton("Set")
             set_target_button.pressed.connect(partial(self.request_set_target, ax))
+            stop_button = QtWidgets.QPushButton("Stop")
+            stop_button.pressed.connect(partial(self.request_stop, ax))
             home_button = QtWidgets.QPushButton("Home")
             home_button.pressed.connect(partial(self.request_home, ax))
 
@@ -132,6 +136,7 @@ class PosTweakerWidget(ClientTopWidget):
                 pos_label,
                 target_box,
                 set_target_button,
+                stop_button,
                 moving_label,
                 homed_label,
                 home_button,
@@ -141,9 +146,10 @@ class PosTweakerWidget(ClientTopWidget):
             self.gl.addWidget(pos_label, i, 1)
             self.gl.addWidget(target_box, i, 2)
             self.gl.addWidget(set_target_button, i, 3)
-            self.gl.addWidget(moving_label, i, 4)
-            self.gl.addWidget(homed_label, i, 5)
-            self.gl.addWidget(home_button, i, 6)
+            self.gl.addWidget(stop_button, i, 4)
+            self.gl.addWidget(moving_label, i, 5)
+            self.gl.addWidget(homed_label, i, 6)
+            self.gl.addWidget(home_button, i, 7)
 
         self.cli.statusUpdated.connect(self.update)
         self.setEnabled(True)
@@ -158,6 +164,12 @@ class PosTweakerWidget(ClientTopWidget):
     def request_set_target(self, ax: str):
         v = self._widgets[ax].target_box.value()
         self.cli.set_target({ax: v})
+
+    def request_stop(self, ax: str):
+        self.cli.stop(ax)
+
+    def request_stop_all(self):
+        self.cli.stop_all()
 
     def request_home(self, ax: str):
         if self._widgets[ax].is_homed and not question_yn(

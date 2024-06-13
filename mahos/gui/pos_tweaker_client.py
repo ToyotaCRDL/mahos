@@ -13,7 +13,7 @@ from __future__ import annotations
 from .Qt import QtCore
 
 from ..msgs.pos_tweaker_msgs import PosTweakerStatus, SetTargetReq
-from ..msgs.pos_tweaker_msgs import HomeReq, HomeAllReq, LoadReq
+from ..msgs.pos_tweaker_msgs import HomeReq, HomeAllReq, StopReq, StopAllReq, LoadReq
 from ..msgs.tweaker_msgs import SaveReq
 from ..node.node import get_value
 from .client import QStatusSubscriber
@@ -43,6 +43,14 @@ class QPosTweakerClient(QStatusSubscriber):
 
     def home_all(self) -> bool:
         rep = self.req.request(HomeAllReq())
+        return rep.success
+
+    def stop(self, axis: str) -> bool:
+        rep = self.req.request(StopReq(axis))
+        return rep.success
+
+    def stop_all(self) -> bool:
+        rep = self.req.request(StopAllReq())
         return rep.success
 
     def save(self, filename: str, group: str = "") -> bool:

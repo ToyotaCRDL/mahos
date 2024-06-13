@@ -961,6 +961,10 @@ class Positioner_mock(Instrument):
         self.logger.info("Dummy homing performed")
         return True
 
+    def stop(self, label: str = "") -> bool:
+        self.logger.info("Dummy stop")
+        return True
+
     def get_param_dict_labels(self) -> list[str]:
         return ["pos"]
 
@@ -976,6 +980,12 @@ class Positioner_mock(Instrument):
         else:
             self.logger.error(f"Unknown label: {label}")
             return None
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        if label == "pos":
+            return self.move(params["target"])
+        else:
+            return self.fail_with(f"Unknown label {label}")
 
     def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "target":
