@@ -100,7 +100,7 @@ class PlotWidget(QtWidgets.QWidget):
         hl0 = QtWidgets.QHBoxLayout()
         self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
         self.fontsizeBox.setPrefix("font size: ")
-        self.fontsizeBox.setSuffix(" px")
+        self.fontsizeBox.setSuffix(" pt")
         self.fontsizeBox.setMinimum(1)
         self.fontsizeBox.setValue(12)
         self.fontsizeBox.setMaximum(99)
@@ -262,7 +262,7 @@ class RawPlotWidget(QtWidgets.QWidget):
 
         self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
         self.fontsizeBox.setPrefix("font size: ")
-        self.fontsizeBox.setSuffix(" px")
+        self.fontsizeBox.setSuffix(" pt")
         self.fontsizeBox.setMinimum(1)
         self.fontsizeBox.setValue(12)
         self.fontsizeBox.setMaximum(99)

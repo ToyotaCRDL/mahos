@@ -13,7 +13,7 @@ import uuid
 import os
 
 from . import Qt
-from .Qt import QtCore, QtWidgets
+from .Qt import QtCore, QtGui, QtWidgets
 
 import pyqtgraph as pg
 
@@ -43,6 +43,8 @@ class PlotWidget(QtWidgets.QWidget):
         self._normalize_toggled = False
         self.init_ui()
         self.init_view()
+        self.update_font_size()
+        self.fontsizeBox.editingFinished.connect(self.update_font_size)
 
     def sizeHint(self):
         return QtCore.QSize(1600, 1000)
@@ -69,11 +71,24 @@ class PlotWidget(QtWidgets.QWidget):
         self.xminBox.setValue(-100.0)
         self.xmaxBox.setValue(+100.0)
 
-        hl.addWidget(self.indicatorBox)
-        hl.addWidget(self.normalizeBox)
-        hl.addWidget(self.xfixBox)
-        hl.addWidget(self.xminBox)
-        hl.addWidget(self.xmaxBox)
+        self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
+        self.fontsizeBox.setPrefix("font size: ")
+        self.fontsizeBox.setSuffix(" pt")
+        self.fontsizeBox.setMinimum(1)
+        self.fontsizeBox.setValue(12)
+        self.fontsizeBox.setMaximum(99)
+        self.fontsizeBox.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
+        self.fontsizeBox.setMaximumWidth(200)
+
+        for w in (
+            self.indicatorBox,
+            self.normalizeBox,
+            self.xfixBox,
+            self.xminBox,
+            self.xmaxBox,
+            self.fontsizeBox,
+        ):
+            hl.addWidget(w)
         hl.addItem(spacer)
 
         self.graphicsView = pg.GraphicsView(parent=self)
@@ -213,6 +228,13 @@ class PlotWidget(QtWidgets.QWidget):
         if not fix_enable:
             return
         self.plot.setXRange(*self.get_xrange())
+
+    def update_font_size(self):
+        font = QtGui.QFont()
+        font.setPointSize(self.fontsizeBox.value())
+        for p in ("bottom", "left"):
+            self.plot.getAxis(p).label.setFont(font)
+            self.plot.getAxis(p).setTickFont(font)
 
 
 class HBTFitWidget(FitWidget):

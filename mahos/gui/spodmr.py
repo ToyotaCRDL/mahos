@@ -18,7 +18,7 @@ import numpy as np
 import pyqtgraph as pg
 
 from . import Qt
-from .Qt import QtCore, QtWidgets
+from .Qt import QtCore, QtGui, QtWidgets
 
 from .ui.spodmr import Ui_SPODMR
 from .spodmr_client import QSPODMRClient
@@ -63,6 +63,8 @@ class PlotWidget(QtWidgets.QWidget):
 
         self.init_ui()
         self.init_view()
+        self.update_font_size()
+        self.fontsizeBox.editingFinished.connect(self.update_font_size)
 
     def sizeHint(self):
         return QtCore.QSize(1400, 700)
@@ -81,11 +83,23 @@ class PlotWidget(QtWidgets.QWidget):
         self.lastnimgBox.setPrefix("last_n (img): ")
         self.lastnimgBox.setMinimum(0)
         self.lastnimgBox.setMaximum(10000)
-        for w in (self.lastnBox, self.lastnimgBox):
+        self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
+        self.fontsizeBox.setPrefix("font size: ")
+        self.fontsizeBox.setSuffix(" pt")
+        self.fontsizeBox.setMinimum(1)
+        self.fontsizeBox.setValue(12)
+        self.fontsizeBox.setMaximum(99)
+        for w in (self.lastnBox, self.lastnimgBox, self.fontsizeBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
-        for w in (self.showimgBox, self.showstdBox, self.lastnBox, self.lastnimgBox):
+        for w in (
+            self.showimgBox,
+            self.showstdBox,
+            self.lastnBox,
+            self.lastnimgBox,
+            self.fontsizeBox,
+        ):
             hl0.addWidget(w)
         hl0.addItem(spacer)
 
@@ -231,6 +245,14 @@ class PlotWidget(QtWidgets.QWidget):
             self.layout.addItem(self.img_plot, row=1, col=0)
         else:
             self.layout.removeItem(self.img_plot)
+
+    def update_font_size(self):
+        font = QtGui.QFont()
+        font.setPointSize(self.fontsizeBox.value())
+        for p in (self.plot, self.img_plot):
+            for l in ("bottom", "left"):
+                p.getAxis(l).label.setFont(font)
+                p.getAxis(l).setTickFont(font)
 
 
 class SPODMRWidget(ClientWidget, Ui_SPODMR):

@@ -92,7 +92,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.normalizenBox.setMaximum(100)
         self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
         self.fontsizeBox.setPrefix("font size: ")
-        self.fontsizeBox.setSuffix(" px")
+        self.fontsizeBox.setSuffix(" pt")
         self.fontsizeBox.setMinimum(1)
         self.fontsizeBox.setValue(12)
         self.fontsizeBox.setMaximum(99)
