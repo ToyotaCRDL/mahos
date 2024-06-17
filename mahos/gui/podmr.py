@@ -118,26 +118,31 @@ class PlotWidget(pg.GraphicsLayoutWidget):
 
             if fitdisp and (xfit is not None) and (yfit is not None):
                 self.plot.plot(
-                    x, y0, pen=None, symbolPen=None, symbol="o", symbolSize=4, symbolBrush=c.color0
+                    x,
+                    y0,
+                    pen=pg.mkPen(c.color0, width=0.5),
+                    symbolPen=None,
+                    symbol="o",
+                    symbolSize=4,
+                    symbolBrush=c.color0,
                 )
                 if y1 is not None:
                     self.plot.plot(
                         x,
                         y1,
-                        pen=None,
+                        pen=pg.mkPen(c.color1, width=0.5),
                         symbolPen=None,
                         symbol="o",
                         symbolSize=4,
                         symbolBrush=c.color1,
                     )
-                self.plot.plot(xfit, yfit, pen=c.color0, width=1)
+                self.plot.plot(xfit, yfit, pen=pg.mkPen(c.color0, width=2.0))
 
             else:
                 self.plot.plot(
                     x,
                     y0,
-                    pen=c.color0,
-                    width=1,
+                    pen=pg.mkPen(c.color0, width=1.0),
                     symbolPen=None,
                     symbol="o",
                     symbolSize=8,
@@ -147,8 +152,7 @@ class PlotWidget(pg.GraphicsLayoutWidget):
                     self.plot.plot(
                         x,
                         y1,
-                        pen=c.color1,
-                        width=1,
+                        pen=pg.mkPen(c.color1, width=1.0),
                         symbolPen=None,
                         symbol="o",
                         symbolSize=8,
