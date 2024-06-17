@@ -65,6 +65,8 @@ class PlotWidget(QtWidgets.QWidget):
         self._yunit: str = ""
         self.init_ui()
         self.init_view()
+        self.update_font_size()
+        self.fontsizeBox.editingFinished.connect(self.update_font_size)
         self._error_bar_items = []
 
     def sizeHint(self):
@@ -88,7 +90,13 @@ class PlotWidget(QtWidgets.QWidget):
         self.normalizenBox.setPrefix("normalize_n: ")
         self.normalizenBox.setMinimum(-100)
         self.normalizenBox.setMaximum(100)
-        for w in (self.lastnBox, self.lastnimgBox, self.normalizenBox):
+        self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
+        self.fontsizeBox.setPrefix("font size: ")
+        self.fontsizeBox.setSuffix(" px")
+        self.fontsizeBox.setMinimum(1)
+        self.fontsizeBox.setValue(12)
+        self.fontsizeBox.setMaximum(99)
+        for w in (self.lastnBox, self.lastnimgBox, self.normalizenBox, self.fontsizeBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
         self.complexBox = QtWidgets.QComboBox(parent=self)
@@ -101,6 +109,7 @@ class PlotWidget(QtWidgets.QWidget):
             self.lastnBox,
             self.lastnimgBox,
             self.normalizenBox,
+            self.fontsizeBox,
             self.complexBox,
         ):
             hl0.addWidget(w)
@@ -254,6 +263,14 @@ class PlotWidget(QtWidgets.QWidget):
     def update_normalize(self, normalize_n: int):
         self.update_ylabel(normalize_n)
         self._normalize_updated = True
+
+    def update_font_size(self):
+        font = QtGui.QFont()
+        font.setPointSize(self.fontsizeBox.value())
+        for p in (self.plot, self.img_plot):
+            for l in ("bottom", "left"):
+                p.getAxis(l).label.setFont(font)
+                p.getAxis(l).setTickFont(font)
 
 
 class ODMRPeaksWidget(QtWidgets.QWidget, Ui_ODMRPeaks):

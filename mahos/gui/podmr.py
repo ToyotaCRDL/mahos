@@ -77,12 +77,15 @@ class PODMRFitWidget(FitWidget):
         return load_dialog(self, default_path, "PODMR", ".podmr")
 
 
-class PlotWidget(pg.GraphicsLayoutWidget):
+class PlotWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        pg.GraphicsLayoutWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self._auto_range = True
 
+        self.init_ui()
         self.init_view()
+        self.update_font_size()
+        self.fontsizeBox.editingFinished.connect(self.update_font_size)
 
     def auto_range(self) -> bool:
         return self._auto_range
@@ -93,8 +96,34 @@ class PlotWidget(pg.GraphicsLayoutWidget):
     def sizeHint(self):
         return QtCore.QSize(1400, 1000)
 
+    def init_ui(self):
+        hl0 = QtWidgets.QHBoxLayout()
+        self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
+        self.fontsizeBox.setPrefix("font size: ")
+        self.fontsizeBox.setSuffix(" px")
+        self.fontsizeBox.setMinimum(1)
+        self.fontsizeBox.setValue(12)
+        self.fontsizeBox.setMaximum(99)
+        for w in (self.fontsizeBox,):
+            w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
+            w.setMaximumWidth(200)
+
+        spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
+        for w in (self.fontsizeBox,):
+            hl0.addWidget(w)
+        hl0.addItem(spacer)
+
+        vl = QtWidgets.QVBoxLayout()
+        self.graphicsView = pg.GraphicsView(parent=self)
+
+        vl.addLayout(hl0)
+        vl.addWidget(self.graphicsView)
+        self.setLayout(vl)
+
     def init_view(self):
-        self.plot = self.addPlot(row=0, col=0, lockAspect=False)
+        self.layout = pg.GraphicsLayout()
+        self.graphicsView.setCentralItem(self.layout)
+        self.plot = self.layout.addPlot(row=0, col=0, lockAspect=False)
         self.plot.showGrid(x=True, y=True)
 
     def plot_analyzed(self, data_list):
@@ -176,6 +205,13 @@ class PlotWidget(pg.GraphicsLayoutWidget):
         self.plot.setLabel("left", data.ylabel, data.yunit)
         self.plot.setLogMode(x=data.xscale == "log", y=data.yscale == "log")
 
+    def update_font_size(self):
+        font = QtGui.QFont()
+        font.setPointSize(self.fontsizeBox.value())
+        for p in ("bottom", "left"):
+            self.plot.getAxis(p).label.setFont(font)
+            self.plot.getAxis(p).setTickFont(font)
+
     def update_fft_mode(self, enable):
         self.plot.ctrl.fftCheck.setChecked(enable)
 
@@ -189,6 +225,8 @@ class RawPlotWidget(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent)
 
         self.init_widgets()
+        self.update_font_size()
+        self.fontsizeBox.editingFinished.connect(self.update_font_size)
 
     def sizeHint(self):
         return QtCore.QSize(1400, 600)
@@ -222,7 +260,14 @@ class RawPlotWidget(QtWidgets.QWidget):
         self.marginBox.setSingleStep(50)
         self.marginBox.setValue(150)
 
-        for w in (self.indexBox, self.numBox, self.marginBox):
+        self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
+        self.fontsizeBox.setPrefix("font size: ")
+        self.fontsizeBox.setSuffix(" px")
+        self.fontsizeBox.setMinimum(1)
+        self.fontsizeBox.setValue(12)
+        self.fontsizeBox.setMaximum(99)
+
+        for w in (self.indexBox, self.numBox, self.marginBox, self.fontsizeBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
 
@@ -234,6 +279,7 @@ class RawPlotWidget(QtWidgets.QWidget):
         hl.addWidget(self.indexBox)
         hl.addWidget(self.numBox)
         hl.addWidget(self.marginBox)
+        hl.addWidget(self.fontsizeBox)
         hl.addItem(spacer)
         vl = QtWidgets.QVBoxLayout()
         vl.addLayout(hl)
@@ -317,6 +363,13 @@ class RawPlotWidget(QtWidgets.QWidget):
         except TypeError as e:
             # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
             print("Error in plot_raw " + repr(e))
+
+    def update_font_size(self):
+        font = QtGui.QFont()
+        font.setPointSize(self.fontsizeBox.value())
+        for p in ("bottom", "left"):
+            self.raw_plot.getAxis(p).label.setFont(font)
+            self.raw_plot.getAxis(p).setTickFont(font)
 
 
 class PODMRIndicatorWidget(QtWidgets.QWidget, Ui_PODMRIndicator):
