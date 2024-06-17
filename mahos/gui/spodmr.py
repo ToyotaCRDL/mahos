@@ -142,33 +142,38 @@ class PlotWidget(QtWidgets.QWidget):
                 print("Error getting ydata: " + repr(e))
                 continue
 
+            plot_fit = show_fit and (xfit is not None) and (yfit is not None)
+            width = 0.5 if plot_fit else 1.0
+            symbolSize = 4 if plot_fit else 8
             if y0std is not None:
-                self.plot.addItem(pg.ErrorBarItem(x=x, y=y0, height=2 * y0std, pen=c.color0))
+                self.plot.addItem(
+                    pg.ErrorBarItem(x=x, y=y0, height=2 * y0std, pen=pg.mkPen(c.color0, width=0.5))
+                )
             if y1std is not None:
-                self.plot.addItem(pg.ErrorBarItem(x=x, y=y1, height=2 * y1std, pen=c.color1))
+                self.plot.addItem(
+                    pg.ErrorBarItem(x=x, y=y1, height=2 * y1std, pen=pg.mkPen(c.color1, width=0.5))
+                )
             self.plot.plot(
                 x,
                 y0,
-                pen=c.color0,
-                width=1,
+                pen=pg.mkPen(c.color0, width=width),
                 symbolPen=None,
                 symbol="o",
-                symbolSize=8,
+                symbolSize=symbolSize,
                 symbolBrush=c.color0,
             )
             if y1 is not None:
                 self.plot.plot(
                     x,
                     y1,
-                    pen=c.color1,
-                    width=1,
+                    pen=pg.mkPen(c.color1, width=width),
                     symbolPen=None,
                     symbol="o",
-                    symbolSize=8,
+                    symbolSize=symbolSize,
                     symbolBrush=c.color1,
                 )
-            if show_fit and (xfit is not None) and (yfit is not None):
-                self.plot.plot(xfit, yfit, pen=c.color0, width=2)
+            if plot_fit:
+                self.plot.plot(xfit, yfit, pen=pg.mkPen(c.color0, width=2.0))
 
     def refresh_all(self, data_list: list[tuple[SPODMRData, bool, str]], data: SPODMRData):
         try:

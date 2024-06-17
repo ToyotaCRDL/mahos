@@ -157,19 +157,18 @@ class PlotWidget(QtWidgets.QWidget):
                 self.plot.plot(
                     x,
                     y,
-                    pen=None,
+                    pen=pg.mkPen(color, width=0.5),
                     symbolPen=None,
                     symbol="o",
                     symbolSize=self.symbolsizeBox.value(),
                     symbolBrush=color,
                 )
-                self.plot.plot(xfit, yfit, pen=color, width=1)
+                self.plot.plot(xfit, yfit, pen=pg.mkPen(color, width=2.0))
             else:
                 self.plot.plot(
                     x,
                     y,
-                    pen=color,
-                    width=1,
+                    pen=pg.mkPen(color, width=1.0),
                     symbolPen=None,
                     symbol="o",
                     symbolSize=self.symbolsizeBox.value(),

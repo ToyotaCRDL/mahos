@@ -121,15 +121,20 @@ class PlotWidget(QtWidgets.QWidget):
             # it can be visualized only when normalize == True.
             if show_fit and normalize and xfit is not None and yfit is not None:
                 self.plot.plot(
-                    x, y, pen=None, symbolPen=None, symbol="o", symbolSize=4, symbolBrush=color
+                    x,
+                    y,
+                    pen=pg.mkPen(color, width=0.5),
+                    symbolPen=None,
+                    symbol="o",
+                    symbolSize=4,
+                    symbolBrush=color,
                 )
-                self.plot.plot(xfit, yfit, pen=color, width=1)
+                self.plot.plot(xfit, yfit, pen=pg.mkPen(color, width=2.0))
             else:
                 self.plot.plot(
                     x,
                     y,
-                    pen=color,
-                    width=1,
+                    pen=pg.mkPen(color, width=1.0),
                     symbolPen=None,
                     symbol="o",
                     symbolSize=8,
