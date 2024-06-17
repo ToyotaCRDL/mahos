@@ -383,10 +383,12 @@ class scanDialog(QtWidgets.QDialog, Ui_scanDialog):
 class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
     """Dialog for Tracking function."""
 
-    def __init__(self, xbound, ybound, zbound, params, parent=None):
+    def __init__(self, cli, xbound, ybound, zbound, params, default_path, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
 
+        self.cli = cli
+        self.default_path = default_path
         self.xmin, self.xmax = xbound
         self.ymin, self.ymax = ybound
         self.zmin, self.zmax = zbound
@@ -441,7 +443,14 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
         self.upButton.clicked.connect(self.up_order_item)
         self.downButton.clicked.connect(self.down_order_item)
 
+        self.saveButton.clicked.connect(self.request_save)
+        self.loadButton.clicked.connect(self.request_load)
         self.defaultButton.clicked.connect(partial(self.load_parameter, params=None))
+
+        # load parameter from default parameter file (last parameter)
+        c = self.cli.load_params()
+        if c is not None:
+            self.load_parameter(c)
 
     def update_xyxstep(self):
         self.xyxstepLabel.setText(
@@ -609,6 +618,40 @@ class trackDialog(QtWidgets.QDialog, Ui_trackDialog):
             params["pd_bounds"] = self.get_pd_bounds()
 
         return params
+
+    def request_save(self):
+        valid, msg = self.validate()
+        if not valid:
+            QtWidgets.QMessageBox.warning(
+                self, "Cannot save because track parameter is invalid.", msg
+            )
+            return
+
+        ext = ".pkl"
+        fn = Qt.save_file_dialog(
+            self, "Save Tracking Parameters", self.default_path, f"Track param file (*{ext})"
+        )
+        if not fn:
+            return
+        # On windows, the ext is unintentionally repeated (maybe Qt bug?).
+        # fix the fn to be suffixed with ext only once.
+        while fn.endswith(ext):
+            fn = fn[: fn.rfind(ext)]
+        fn += ext
+
+        params = self.get_params()
+        self.cli.save_params(params, fn)
+
+    def request_load(self):
+        fn = Qt.open_file_dialog(
+            self, "Load Tracking Parameters", self.default_path, "Track param file (*.pkl)"
+        )
+        if not fn:
+            return
+        params = self.cli.load_params(fn)
+        if params is None:
+            return
+        self.load_parameter(params)
 
     def load_parameter(self, params: dict):
         """Load track parameters"""
@@ -1883,10 +1926,15 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         scan_params = self.get_scan_param_dict()
         if scan_params is None:
             return
-        d = trackDialog(self.xbound, self.ybound, self.zbound, scan_params, parent=self)
-        c = self.tracker_cli.load_params()
-        if c is not None:
-            d.load_parameter(c)
+        d = trackDialog(
+            self.tracker_cli,
+            self.xbound,
+            self.ybound,
+            self.zbound,
+            scan_params,
+            str(self.gparams_cli.get_param("work_dir")),
+            parent=self,
+        )
         if not d.exec():
             return
         valid, msg = d.validate()
