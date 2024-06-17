@@ -474,7 +474,10 @@ class ConfocalTracker(Node):
         self.scan_params["time_window"] = self.track_params["time_window"]
         self.scan_params["ident"] = uuid.uuid4()
 
-        self.cli.change_state(ConfocalState.SCAN, params=self.scan_params)
+        # delete opt_mode here because it causes error when saving confocal image
+        p = copy.copy(self.scan_params)
+        del p["opt_mode"]
+        self.cli.change_state(ConfocalState.SCAN, params=p)
 
     def prepare_states(self):
         self.sm_cli.command("prepare_scan")

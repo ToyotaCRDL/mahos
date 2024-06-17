@@ -13,6 +13,7 @@ import os
 from functools import partial
 import uuid
 import enum
+import time
 
 from . import Qt
 from .Qt import QtCore, QtGui, QtWidgets
@@ -1239,6 +1240,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self._scan_param_dict = None
         self._prev_pos = None
         self._move_interval_ms = move_interval_ms
+        self._track_save_dir = ""
 
         self.cli = QConfocalClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
@@ -1926,13 +1928,14 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         scan_params = self.get_scan_param_dict()
         if scan_params is None:
             return
+        default_path = str(self.gparams_cli.get_param("work_dir"))
         d = trackDialog(
             self.tracker_cli,
             self.xbound,
             self.ybound,
             self.zbound,
             scan_params,
-            str(self.gparams_cli.get_param("work_dir")),
+            default_path,
             parent=self,
         )
         if not d.exec():
@@ -1943,6 +1946,12 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
             return
 
         params = d.get_params()
+        if d.get_save_enable():
+            self._track_save_dir = os.path.join(default_path, "track_log")
+            if not os.path.exists(self._track_save_dir):
+                os.makedirs(self._track_save_dir)
+        else:
+            self._track_save_dir = ""
         self.tracker_cli.save_params(params)
         self.tracker_cli.start(params)
 
@@ -1993,14 +2002,15 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
                 self.move_crosshair(self._prev_pos)
 
     def finalize_track(self, image: Image):
-        pass
-        # TODO: maybe automatic save at meas/Tracker?
-        # if self.dialog.get_save_enable():
-        #     tim = time.strftime("%Y%m%d_%H%M%S", time.localtime(finish))
-        #     fn = str(self.pathEdit.text()) + '/track_' + tim + '.' + direction.lower() + 's'
-        #     print('Auto saving %s scan image to %s' % (direction, fn))
-        #     si.save_image(fn)
-        #     si.export_image(fn, dialog=False, pos=True)
+        # TODO: maybe automatic save at meas.ConfocalTracker?
+        if not self._track_save_dir:
+            return
+        t = time.strftime("%Y%m%d_%H%M%S", time.localtime(image.finish_time))
+        d = direction_to_str(image.direction).lower()
+        fn = os.path.join(self._track_save_dir, f"track_{t}.{d}.scan.h5")
+        png_fn = os.path.splitext(fn)[0] + ".png"
+        self.cli.save_image(fn)
+        self.cli.export_image(png_fn)
 
     def update_state(self, state: ConfocalState, last_state: ConfocalState):
         self.switch_interaction(state, last_state)
