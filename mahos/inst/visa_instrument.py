@@ -24,7 +24,13 @@ class VisaInstrument(Instrument):
         self.inst = rm.open_resource(self.conf.get("resource"))
         self.logger.info("opened {} on {}".format(name, self.inst.resource_name))
 
-        for attr in ("write_termination", "read_termination", "timeout", "baud_rate"):
+        for attr in (
+            "write_termination",
+            "read_termination",
+            "timeout",
+            "baud_rate",
+            "flow_control",
+        ):
             if attr in conf:
                 setattr(self.inst, attr, conf[attr])
 

@@ -19,8 +19,10 @@ import time
 
 import numpy as np
 from pipython import GCSDevice
+import pyvisa
 
 from .instrument import Instrument
+from .visa_instrument import VisaInstrument
 from .exceptions import InstError
 from .daq import AnalogIn, AnalogOut, ClockSource
 from ..msgs.confocal_msgs import Axis
@@ -53,6 +55,10 @@ class BasePiezo3Axes(Instrument):
     def __init__(self, name, conf, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
 
+        self.init_limit_target()
+        self.init_transform_matrix()
+
+    def init_limit_target(self):
         # The cubic-limit in command space
         limit = self.conf.get("limit_um", self.DEFAULT_LIMIT)
         for (low, high), (lb, ub) in zip(limit, self.LIMIT_BOUNDS):
@@ -60,7 +66,6 @@ class BasePiezo3Axes(Instrument):
                 raise ValueError(f"limit_um is out of hard-bounds ({lb}, {ub})")
         self.limit: dict[Axis, tuple[float, float]] = {ax: r for ax, r in zip(Axis, limit)}
         self.target: dict[Axis, float] = {ax: 0.0 for ax in Axis}
-        self.init_transform_matrix()
 
     def set_target_pos(self, positions: list[float], axes: list[Axis] | None = None) -> bool:
         """update self.target and move toward it."""
@@ -445,6 +450,199 @@ class E727_3_USB_AO(E727_3_USB):
             return self._ao.get_buffer_size()
         else:
             return E727_3_USB.get(self, key, args)
+
+
+class Jena_NV40_3_AO(VisaInstrument, BasePiezo3Axes):
+    """Piezosystem Jena NV40-3 driver using VISA connection and DAQ AnalogOut.
+
+    :param resource: VISA resource string (should be ASRLn).
+    :type resource: str
+    :param start_servo: (default: True) if True, start servo on init.
+    :type start_servo: bool
+    :param axes_order: (default: [0, 1, 2]) permutation for piezo axes IDs and (x, y, z).
+        When axes_order is [1, 2, 0], the x axis is piezo axis of index 1,
+        and the y (z) axis is index 2 (0).
+    :type axes_order: tuple[int, int, int]
+
+    :param lines: list of strings to designate DAQ AnalogOut physical channels.
+        Order them as [x, y, z].
+    :type lines: list[str]
+    :param scale_volt_per_um: the AnalogOut voltage scale in V / um.
+        the output voltage is determined by: (pos_um - offset_um) * scale_volt_per_um.
+    :type scale_volt_per_um: float
+    :param offset_um: the AnalogOut voltage offset in um. see scale_volt_per_um too.
+    :type offset_um: float
+
+    :param samples_margin: (has preset, default: 0) margin of samples for AnalogOut.
+    :type samples_margin: int
+    :param write_and_start: (has preset, default: True) if False, DAQ Task is started and then
+        scan data is written in start_scan(). True reverses this order.
+    :type write_and_start: bool
+
+    :param ont_error: (default: 0.010) Threshold error in um to determine current position is
+        on target or not.
+    :type ont_error: float
+
+    """
+
+    DEFAULT_LIMIT = ((0.0, 80.0), (0.0, 80.0), (0.0, 80.0))
+    LIMIT_BOUNDS = ((0.0, 100.0), (0.0, 100.0), (0.0, 100.0))
+
+    def __init__(self, name, conf, prefix=None):
+        conf["write_termination"] = "\r"
+        conf["read_termination"] = "\r"
+        conf["baud_rate"] = 19200
+        conf["flow_control"] = pyvisa.constants.VI_ASRL_FLOW_XON_XOFF
+        if "timeout" not in conf:
+            conf["timeout"] = 20000.0
+        # disable initial commands
+        conf["clear"] = conf["query_idn"] = False
+        VisaInstrument.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.init_limit_target()
+        self.init_transform_matrix()
+        self.axes_order = self.conf.get("axes_order", [0, 1, 2])
+
+        self.check_required_conf(("lines", "scale_volt_per_um", "offset_um"))
+        lines = self.conf["lines"]
+        if len(lines) != len(self.axes_order):
+            raise ValueError("length of AO lines and number of axis don't match.")
+        self._scale_volt_per_um = self.conf["scale_volt_per_um"]
+        self._offset_um = self.conf["offset_um"]
+        self._ont_error = self.conf.get("ont_error", 0.010)
+
+        ao_name = name + "_ao"
+        # bounds in volts converted from command space range
+        bounds = [[self.um_to_volt_raw(v) for v in lim] for lim in self.get_limit()]
+        ao_conf = {
+            "lines": lines,
+            "bounds": bounds,
+        }
+        if "samples_margin" in self.conf:
+            ao_conf["samples_margin"] = self.conf["samples_margin"]
+        self._ao = AnalogOut(ao_name, ao_conf, prefix=prefix)
+        self.load_conf_preset(self._ao.device_type)
+        self._write_and_start = self.conf.get("write_and_start", True)
+
+        if self.conf.get("start_servo", True):
+            self.set_servo(True)
+        self.init_target_pos()
+
+    def set_servo(self, on: bool):
+        for ch in (0, 1, 2):
+            self.inst.write(f"cloop,{ch},{int(bool(on))}")
+
+    def init_target_pos(self):
+        """initialize self.target using current position."""
+
+        pos = self.get_pos()
+        for ax, p in zip(Axis, pos):
+            self.target[ax] = p
+
+    def load_conf_preset(self, dev_type: str):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.PARTIAL)
+        loader.add_preset("PCIe-6343", [("write_and_start", False)])
+        loader.add_preset("USB-6363", [("write_and_start", True)])
+        loader.load_preset(self.conf, dev_type)
+
+    def write_scan_array(self, scan_array: np.ndarray) -> bool:
+        # scan_array is N x 3 array.
+        # Transpose to 3 x N, convert, and transpose again to N x 3.
+        volts = self.um_to_volt(scan_array.T).T
+        return self._ao.set_output(volts, auto_start=False)
+
+    def start_scan(self, scan_array: np.ndarray) -> bool:
+        """start the configured scan with scan_array."""
+
+        if self._write_and_start:
+            return self.write_scan_array(scan_array) and self.start()
+        else:
+            return self.start() and self.write_scan_array(scan_array)
+
+    def join(self, timeout_sec: float):
+        return self._ao.join(timeout_sec)
+
+    def close_ao(self):
+        if hasattr(self, "_ao"):
+            self._ao.close()
+
+    def move(self) -> bool:
+        return self._ao.set_output_once(self.um_to_volt(self.get_target()))
+
+    def um_to_volt_raw(self, pos_um):
+        return (pos_um - self._offset_um) * self._scale_volt_per_um
+
+    def um_to_volt(self, pos_um: np.ndarray):
+        pos_tr = self.T @ np.array(pos_um, dtype=np.float64)
+        return self.um_to_volt_raw(pos_tr)
+
+    def volt_to_um(self, volt: np.ndarray):
+        p = np.array(volt, dtype=np.float64) / self._scale_volt_per_um + self._offset_um
+        return self.Tinv @ p
+
+    def get_scan_buffer_size(self):
+        return self._ao.get_onboard_buffer_size()
+
+    def query_pos(self) -> list[float]:
+        ret = self.inst.query("measure")
+        pos = [float(v) for v in ret.split(",")[1:]]
+        return [pos[ax] for ax in self.axes_order]
+
+    def get_pos(self):
+        return self.Tinv @ np.array(self.query_pos(), dtype=np.float64)
+
+    def get_pos_ont(self):
+        def ontgt(val):
+            return abs(val) < self._ont_error
+
+        pos = self.get_pos()
+        ont = [ontgt(p - t) for p, t in zip(pos, self.get_target())]
+        return pos, ont
+
+    # Standard API
+
+    def close_resources(self):
+        self.close_ao()
+        VisaInstrument.close_resources(self)
+
+    def shutdown(self) -> bool:
+        success = (
+            self.stop() and self.configure({}) and self.start() and self.set_target_pos([0.0] * 3)
+        )
+        time.sleep(0.1)
+        # success &= self.stop() and self.set_servo(False)
+        # Don't turn off servo here. Servo on/off is saved in this controller.
+        success &= self.stop()
+
+        self.close()
+
+        if success:
+            self.logger.info("Ready to power-off.")
+        else:
+            self.logger.error("Error on shutdown process.")
+
+        return success
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        return self._ao.configure(params)
+
+    def start(self, label: str = "") -> bool:
+        return self._ao.start()
+
+    def stop(self, label: str = "") -> bool:
+        return self._ao.stop()
+
+    def get(self, key: str, args=None, label: str = ""):
+        if key in ("onboard_buffer_size", "scan_buffer_size"):
+            return self._ao.get_onboard_buffer_size()
+        elif key == "buffer_size":
+            return self._ao.get_buffer_size()
+        elif key == "pos":
+            return self.get_pos()
+        elif key == "pos_ont":
+            return self.get_pos_ont()
+        else:
+            return BasePiezo3Axes.get(self, key, args)
 
 
 class AnalogPiezo3Axes(BasePiezo3Axes):
