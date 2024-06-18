@@ -23,6 +23,7 @@ class VisaInstrument(Instrument):
         rm = pyvisa.ResourceManager()
         self.inst = rm.open_resource(self.conf.get("resource"))
         self.logger.info("opened {} on {}".format(name, self.inst.resource_name))
+        self._resource_name = self.inst.resource_name
 
         for attr in (
             "write_termination",
@@ -41,7 +42,7 @@ class VisaInstrument(Instrument):
             self.logger.info("*IDN? > " + self.query_idn())
 
     def __repr__(self):
-        return "VisaInstrument({}, {})".format(self.full_name(), self.inst.resource_name)
+        return "VisaInstrument({}, {})".format(self.full_name(), self._resource_name)
 
     def rst(self) -> bool:
         self.inst.write("*RST")

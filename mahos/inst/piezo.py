@@ -479,7 +479,7 @@ class Jena_NV40_3_AO(VisaInstrument, BasePiezo3Axes):
         scan data is written in start_scan(). True reverses this order.
     :type write_and_start: bool
 
-    :param ont_error: (default: 0.010) Threshold error in um to determine current position is
+    :param ont_error: (default: 0.050) Threshold error in um to determine current position is
         on target or not.
     :type ont_error: float
 
@@ -509,7 +509,7 @@ class Jena_NV40_3_AO(VisaInstrument, BasePiezo3Axes):
             raise ValueError("length of AO lines and number of axis don't match.")
         self._scale_volt_per_um = self.conf["scale_volt_per_um"]
         self._offset_um = self.conf["offset_um"]
-        self._ont_error = self.conf.get("ont_error", 0.010)
+        self._ont_error = self.conf.get("ont_error", 0.050)
 
         ao_name = name + "_ao"
         # bounds in volts converted from command space range
