@@ -13,7 +13,6 @@ import os
 from functools import partial
 import uuid
 import enum
-import time
 
 from . import Qt
 from .Qt import QtCore, QtGui, QtWidgets
@@ -2005,7 +2004,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         # TODO: maybe automatic save at meas.ConfocalTracker?
         if not self._track_save_dir:
             return
-        t = time.strftime("%Y%m%d_%H%M%S", time.localtime(image.finish_time))
+        t = image.format_finish_time()
         d = direction_to_str(image.direction).lower()
         fn = os.path.join(self._track_save_dir, f"track_{t}.{d}.scan.h5")
         png_fn = os.path.splitext(fn)[0] + ".png"

@@ -11,6 +11,7 @@ Base Data type definitions for mahos measurements.
 from __future__ import annotations
 import uuid
 import datetime
+import time
 
 import numpy as np
 import h5py
@@ -357,3 +358,24 @@ class ComplexDataMixin(object):
             return _complex_converters[conv](data)
         else:
             return None
+
+
+class FormatTimeMixin(object):
+    """Mixin for formatting start / finish time.
+
+    It's highly recommended that the user class has attributes start_time and finish_time.
+
+    """
+
+    def format_time(self, stamp: float, fmt: str = "%Y%m%d_%H%M%S") -> str:
+        return time.strftime(fmt, time.localtime(stamp))
+
+    def format_start_time(self, fmt: str = "%Y%m%d_%H%M%S") -> str:
+        if not hasattr(self, "start_time") or self.start_time is None:
+            return ""
+        return self.format_time(self.start_time, fmt)
+
+    def format_finish_time(self, fmt: str = "%Y%m%d_%H%M%S") -> str:
+        if not hasattr(self, "finish_time") or self.finish_time is None:
+            return ""
+        return self.format_time(self.finish_time, fmt)

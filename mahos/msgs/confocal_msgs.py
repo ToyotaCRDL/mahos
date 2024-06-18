@@ -12,14 +12,13 @@ from __future__ import annotations
 import enum
 import uuid
 import time
-from typing import Optional, Union, List
 
 import numpy as np
 import pandas as pd
 import msgpack
 
 from .common_msgs import Message, Request, State, Status
-from .data_msgs import Data, ComplexDataMixin
+from .data_msgs import Data, ComplexDataMixin, FormatTimeMixin
 
 from .common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 
@@ -180,7 +179,7 @@ class PiezoPos(Message):
         return self.has_range() and self.has_target()
 
 
-class Image(Data, ComplexDataMixin):
+class Image(Data, ComplexDataMixin, FormatTimeMixin):
     def __init__(self, params: dict | None = None):
         self.set_version(1)
         self.init_params(params)
@@ -367,20 +366,20 @@ class ConfocalStatus(Status):
 
 
 class MoveReq(Request):
-    def __init__(self, ax: Union[Axis, List[Axis]], pos: Union[float, List[float]]):
+    def __init__(self, ax: Axis | list[Axis], pos: float | list[float]):
         self.ax = ax
         self.pos = pos
 
 
 class SaveImageReq(SaveDataReq):
-    def __init__(self, file_name: str, direction: Optional[ScanDirection] = None, note: str = ""):
+    def __init__(self, file_name: str, direction: ScanDirection | None = None, note: str = ""):
         self.file_name = file_name
         self.direction = direction
         self.note = note
 
 
 class ExportImageReq(ExportDataReq):
-    def __init__(self, file_name: str, direction: Optional[ScanDirection] = None, params=None):
+    def __init__(self, file_name: str, direction: ScanDirection | None = None, params=None):
         self.file_name = file_name
         self.direction = direction
         self.params = params

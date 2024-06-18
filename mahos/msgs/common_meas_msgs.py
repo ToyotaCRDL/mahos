@@ -16,10 +16,10 @@ import numpy as np
 import msgpack
 
 from .common_msgs import Message, Request
-from .data_msgs import Data
+from .data_msgs import Data, FormatTimeMixin
 
 
-class BasicMeasData(Data):
+class BasicMeasData(Data, FormatTimeMixin):
     """Base Data class for Basic Meas.
 
     Basic Meas Node will produce Data which is 2D-plottable (x and y).
