@@ -632,6 +632,20 @@ class Jena_NV40_3_AO(VisaInstrument, BasePiezo3Axes):
     def stop(self, label: str = "") -> bool:
         return self._ao.stop()
 
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        key = key.lower()
+        if key == "target":
+            return self.set_target(value)
+        elif key == "servo":
+            if isinstance(value, bool):
+                return self.set_servo(value)
+            else:
+                self.logger.error('set("servo", on: bool): on must be bool.')
+                return False
+        else:
+            self.logger.error(f"unknown set() key: {key}")
+            return False
+
     def get(self, key: str, args=None, label: str = ""):
         if key in ("onboard_buffer_size", "scan_buffer_size"):
             return self._ao.get_onboard_buffer_size()
