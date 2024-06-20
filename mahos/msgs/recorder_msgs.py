@@ -84,7 +84,7 @@ class RecorderData(BasicMeasData):
         return np.array(self.xdata)
 
     def get_unit(self, inst: str) -> str:
-        return self.unit[self.index(inst)][1]
+        return self.units[self.index(inst)][1]
 
     def get_ydata(self, inst: str) -> np.ndarray:
         return np.array(self.data[self.index(inst)])
