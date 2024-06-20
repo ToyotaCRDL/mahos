@@ -10,6 +10,7 @@ Digital MultiMeter module.
 
 from __future__ import annotations
 import enum
+import time
 
 from ..msgs import param_msgs as P
 from .visa_instrument import VisaInstrument
@@ -18,6 +19,176 @@ from .visa_instrument import VisaInstrument
 class Mode(enum.Enum):
     UNCONFIGURED = 0
     DCV = 1
+    DCI = 2
+    Temp = 3
+
+
+class ADC_7352E(VisaInstrument):
+    """ADC 7352E Digital MultiMeter."""
+
+    def __init__(self, name, conf, prefix=None):
+        conf["write_termination"] = "\r\n"
+        conf["read_termination"] = "\r\n"
+        if "timeout" not in conf:
+            conf["timeout"] = 2_000.0
+
+        VisaInstrument.__init__(self, name, conf, prefix=prefix)
+        self.rst()
+        time.sleep(1e-3)
+        self.inst.write("INIC0")
+
+        self._mode = {1: Mode.UNCONFIGURED, 2: Mode.UNCONFIGURED}
+
+    def query_error(self):
+        return self.inst.query("ERR?")
+
+    def set_DCV_auto(self, ch: int = 1) -> bool:
+        code = 1 if ch == 1 else 12
+        self.inst.write(f"DSP{ch},F{code},R0,AZ1")  # dcv mode, auto range enable, auto zero enable
+        #
+        return True
+
+    def set_DCI_auto(self, ch: int = 1) -> bool:
+        code = 5 if ch == 1 else 35
+        self.inst.write(f"DSP{ch},F{code},R0,AZ1")  # dci mode, auto range enable, auto zero enable
+        return True
+
+    def set_Temp_auto(self, ch: int = 1) -> bool:
+        self.inst.write(f"DSP{ch},F40,AZ1")  # temp mode, auto zero enable
+
+        return True
+
+    def set_sampling_rate(self, sampling_rate: int) -> bool:
+        if sampling_rate not in (1, 2, 3, 4):
+            return self.fail_with("Sampling rate must be one of 1, 2, 3, 4.")
+
+        self.inst.write(f"PR{sampling_rate}")
+        return True
+
+    def configure_DCV(self, sampling_rate: int = 3, ch: int = 1) -> bool:
+        """Setup DC Voltage (on-demand) measurement."""
+
+        success = self.set_DCV_auto(ch)
+        time.sleep(1e-3)
+        success &= self.set_sampling_rate(sampling_rate)
+
+        if success:
+            self._mode[ch] = Mode.DCV
+            self.logger.info("Configured for DC Voltage measurement.")
+        else:
+            self._mode[ch] = Mode.UNCONFIGURED
+            self.logger.info("Failed to configure DC Voltage measurement.")
+        return success
+
+    def configure_DCI(self, sampling_rate: int = 3, ch: int = 1) -> bool:
+        """Setup DC Current (on-demand) measurement."""
+
+        success = self.set_DCI_auto(ch)
+        time.sleep(1e-3)
+        success &= self.set_sampling_rate(sampling_rate)
+        if success:
+            self._mode[ch] = Mode.DCI
+            self.logger.info("Configured for DC Current measurement.")
+        else:
+            self._mode[ch] = Mode.UNCONFIGURED
+            self.logger.info("Failed to configure DC Current measurement.")
+        return success
+
+    def configure_Temp(self, sampling_rate: int = 3, ch: int = 1) -> bool:
+        """Setup Temperature (on-demand) measurement."""
+
+        success = self.set_Temp_auto(ch)
+        time.sleep(1e-3)
+        success &= self.set_sampling_rate(sampling_rate)
+
+        if success:
+            self._mode[ch] = Mode.Temp
+            self.logger.info("Configured for Temperature measurement.")
+        else:
+            self._mode[ch] = Mode.UNCONFIGURED
+            self.logger.info("Failed to configure Temperature measurement.")
+        return success
+
+    def get_data(self, ch: int = 1):
+        if self._mode[ch] == Mode.UNCONFIGURED:
+            self.logger.error("get_data() is called but not configured.")
+            return None
+
+        val = self.inst.query("INI")
+        val_spl = val.split(",")
+        try:
+            return float(val_spl[ch - 1][5:])
+        except Exception:
+            self.logger.error(f"Got invalid read {val}")
+            return None
+
+    def get_unit(self, ch: int = 1) -> str:
+        if self._mode[ch] == Mode.DCV:
+            return "V"
+
+        if self._mode[ch] == Mode.DCI:
+            return "A"
+
+        if self._mode[ch] == Mode.Temp:
+            return "℃"
+
+        else:
+            self.logger.error("get_unit() is called but not configured.")
+            return ""
+
+    # Standard API
+
+    def get(self, key: str, args=None, label: str = ""):
+        if key == "opc":
+            return self.query_opc(delay=args)
+        elif key == "data":
+            return self.get_data(int(label[2]))
+        elif key == "unit":
+            return self.get_unit(int(label[2]))
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def get_param_dict_labels(self) -> list[str]:
+        return ["ch1_dcv", "ch1_dci", "ch1_temp", "ch2_dcv", "ch2_dci", "ch2_temp"]
+
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
+        if label in self.get_param_dict_labels():
+            return P.ParamDict(
+                sampling_rate=P.IntChoiceParam(3, [1, 2, 3, 4]),
+            )
+        else:
+            return self.fail_with(f"unknown label {label}")
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        label = label.lower()
+        if label in ["ch1_dcv", "ch2_dcv"]:
+            return self.configure_DCV(
+                sampling_rate=params.get("sampling_rate", 3), ch=int(label[2])
+            )
+        if label in ["ch1_dci", "ch2_dci"]:
+            return self.configure_DCI(
+                sampling_rate=params.get("sampling_rate", 3), ch=int(label[2])
+            )
+        if label in ["ch1_temp", "ch2_temp"]:
+            return self.configure_Temp(
+                sampling_rate=params.get("sampling_rate", 3), ch=int(label[2])
+            )
+        else:
+            self.logger.error(f"unknown label: {label}")
+            return False
+
+    def start(self, label: str = "") -> bool:
+        if self._mode[int(label[2])] == Mode.UNCONFIGURED:
+            return self.fail_with("start() is called but not configured.")
+        else:
+            return True
+
+    def stop(self, label: str = "") -> bool:
+        if self._mode[int(label[2])] == Mode.UNCONFIGURED:
+            return self.fail_with("stop() is called but not configured.")
+        else:
+            return True
 
 
 class Agilent34410A(VisaInstrument):
