@@ -25,6 +25,7 @@ class Collector(Worker):
         self.interval_sec = conf.get("interval_sec", 0.1)
         self.insts = self.cli.insts()
         self.add_instruments([InstrumentInterface(self.cli, inst) for inst in self.insts])
+        self._label = ""
         self.used_insts = []
 
         self.mode_inst_label = mode or {"all": {inst: "" for inst in self.insts}}
@@ -60,6 +61,7 @@ class Collector(Worker):
             self.logger.error(f"Invalid mode label {label}")
             return False
 
+        self._label = label
         self.used_insts = list(self.mode_inst_label[label].keys())
 
         for inst in self.used_insts:
@@ -73,10 +75,11 @@ class Collector(Worker):
             inst_label = self.mode_inst_label[label][inst]
             if not self.cli.configure(inst, params[inst], inst_label):
                 return self.fail_with_release(f"Failed to configure instrument {inst}")
-            units.append((inst, self.cli.get(inst, "unit") or ""))
+            units.append((inst, self.cli.get(inst, "unit", label=inst_label) or ""))
 
         for inst in self.used_insts:
-            if not self.cli.start(inst):
+            inst_label = self.mode_inst_label[label][inst]
+            if not self.cli.start(inst, label=inst_label):
                 return self.fail_with_release(f"Failed to start instrument {inst}")
 
         self.timer = IntervalTimer(self.interval_sec)
@@ -87,6 +90,9 @@ class Collector(Worker):
         self.logger.info("Started collector.")
 
         return True
+
+    def get_inst_label(self, inst: str) -> str:
+        return self.mode_inst_label[self._label][inst]
 
     def work(self) -> bool:
         # TODO: treatment of time stamp is quite rough now
@@ -100,7 +106,8 @@ class Collector(Worker):
         t_start = time.time()
         data = {}
         for inst in self.used_insts:
-            d = self.cli.get(inst, "data")
+            inst_label = self.get_inst_label(inst)
+            d = self.cli.get(inst, "data", label=inst_label)
             if d is None:
                 return False
             data[inst] = d
@@ -114,8 +121,10 @@ class Collector(Worker):
         if not self.data.running:
             return False
 
-        success = all([self.cli.stop(inst) and self.cli.release(inst) for inst in self.used_insts])
-
+        success = True
+        for inst in self.used_insts:
+            inst_label = self.get_inst_label(inst)
+            success &= self.cli.stop(inst, label=inst_label) and self.cli.release(inst)
         self.timer = None
         self.data.finalize()
 
