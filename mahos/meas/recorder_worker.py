@@ -25,30 +25,31 @@ class Collector(Worker):
         self.interval_sec = conf.get("interval_sec", 0.1)
         self.insts = self.cli.insts()
         self.add_instruments([InstrumentInterface(self.cli, inst) for inst in self.insts])
-        self._label = ""
-        self.used_insts = []
 
-        self.mode_inst_label = mode or {"all": {inst: "" for inst in self.insts}}
+        self._label = ""
+        self.mode_dicts = mode or {"all": {inst: [inst, ""] for inst in self.insts}}
 
         self.data = RecorderData()
         self.timer = None
 
     def get_param_dict_labels(self) -> list[str]:
-        return list(self.mode_inst_label.keys())
+        return list(self.mode_dicts.keys())
 
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
-        if label not in self.mode_inst_label:
+        if label not in self.mode_dicts:
             self.logger.error(f"Invalid label {label}")
             return None
 
         pd = P.ParamDict()
         pd["max_len"] = P.IntParam(1000, 1, 100_000_000)
-        for inst, inst_label in self.mode_inst_label[label].items():
+        for channel, (inst, inst_label) in self.mode_dicts[label].items():
             d = self.cli.get_param_dict(inst, inst_label)
             if d is None:
-                self.logger.error(f"Failed to generate param dict for {inst}.")
+                self.logger.error(
+                    f"Failed to generate param dict for {channel} ({inst}, {inst_label})."
+                )
                 return None
-            pd[inst] = d
+            pd[channel] = d
         return pd
 
     def start(
@@ -57,30 +58,34 @@ class Collector(Worker):
         if params is not None:
             params = P.unwrap(params)
 
-        if label not in self.mode_inst_label:
+        if label not in self.mode_dicts:
             self.logger.error(f"Invalid mode label {label}")
             return False
 
         self._label = label
-        self.used_insts = list(self.mode_inst_label[label].keys())
+        used_insts = set([inst for inst, inst_label in self.mode_dicts[label].values()])
 
-        for inst in self.used_insts:
+        for inst in used_insts:
             if not self.cli.lock(inst):
                 return self.fail_with_release(f"Failed to lock instrument {inst}")
 
         units = []
-        for inst in self.used_insts:
-            if inst not in params:
-                return self.fail_with_release(f"Instrument {inst} is not contained in params.")
-            inst_label = self.mode_inst_label[label][inst]
-            if not self.cli.configure(inst, params[inst], inst_label):
-                return self.fail_with_release(f"Failed to configure instrument {inst}")
-            units.append((inst, self.cli.get(inst, "unit", label=inst_label) or ""))
+        for channel, (inst, inst_label) in self.mode_dicts[label].items():
+            if channel not in params:
+                return self.fail_with_release(
+                    f"Channel {channel} ({inst}, {inst_label}) is not contained in params."
+                )
+            if not self.cli.configure(inst, params[channel], inst_label):
+                return self.fail_with_release(
+                    f"Failed to configure channel {channel} ({inst}, {inst_label})"
+                )
+            units.append((channel, self.cli.get(inst, "unit", label=inst_label) or ""))
 
-        for inst in self.used_insts:
-            inst_label = self.mode_inst_label[label][inst]
+        for channel, (inst, inst_label) in self.mode_dicts[label].items():
             if not self.cli.start(inst, label=inst_label):
-                return self.fail_with_release(f"Failed to start instrument {inst}")
+                return self.fail_with_release(
+                    f"Failed to start channel {channel} ({inst}, {inst_label})"
+                )
 
         self.timer = IntervalTimer(self.interval_sec)
 
@@ -90,9 +95,6 @@ class Collector(Worker):
         self.logger.info("Started collector.")
 
         return True
-
-    def get_inst_label(self, inst: str) -> str:
-        return self.mode_inst_label[self._label][inst]
 
     def work(self) -> bool:
         # TODO: treatment of time stamp is quite rough now
@@ -105,12 +107,11 @@ class Collector(Worker):
 
         t_start = time.time()
         data = {}
-        for inst in self.used_insts:
-            inst_label = self.get_inst_label(inst)
+        for channel, (inst, inst_label) in self.mode_dicts[self._label].items():
             d = self.cli.get(inst, "data", label=inst_label)
             if d is None:
                 return False
-            data[inst] = d
+            data[channel] = d
         t_finish = time.time()
         t = (t_start + t_finish) / 2.0
         self.data.append(t, data)
@@ -122,8 +123,7 @@ class Collector(Worker):
             return False
 
         success = True
-        for inst in self.used_insts:
-            inst_label = self.get_inst_label(inst)
+        for channel, (inst, inst_label) in self.mode_dicts[self._label].items():
             success &= self.cli.stop(inst, label=inst_label) and self.cli.release(inst)
         self.timer = None
         self.data.finalize()

@@ -33,15 +33,15 @@ class RecorderData(BasicMeasData):
     def set_units(self, units: list[tuple[str, str]]):
         """set units and initialize data.
 
-        units is list of (instrument name, unit name).
+        units is list of (channel name, unit name).
 
         """
 
         self.units = units
         self.data = [[] for _ in units]
 
-    def get_insts(self) -> list[str]:
-        """Get list of recorded instrument names (data labels)."""
+    def get_channels(self) -> list[str]:
+        """Get list of recorded channel names (data labels)."""
 
         return [u[0] for u in self.units]
 
@@ -50,21 +50,21 @@ class RecorderData(BasicMeasData):
 
         return [u[1] for u in self.units]
 
-    def get_unit_to_insts(self) -> dict[str, list[str]]:
-        """Get a map from unit to list of corresponding inst."""
+    def get_unit_to_channels(self) -> dict[str, list[str]]:
+        """Get a map from unit to list of corresponding channel."""
 
         ret = {}
-        for inst, unit in self.units:
+        for ch, unit in self.units:
             if unit not in ret:
-                ret[unit] = [inst]
+                ret[unit] = [ch]
             else:
-                ret[unit].append(inst)
+                ret[unit].append(ch)
         return ret
 
-    def index(self, inst: str) -> int:
-        """Get index of instrument name (data label)."""
+    def index(self, ch: str) -> int:
+        """Get index of channel name (data label)."""
 
-        return self.get_insts().index(inst)
+        return self.get_channels().index(ch)
 
     def roll(self, data):
         max_len = self.params.get("max_len", 0)
@@ -75,19 +75,19 @@ class RecorderData(BasicMeasData):
     def append(self, x: float, y: dict[str, float]):
         self.xdata.append(x)
         self.xdata = self.roll(self.xdata)
-        for inst, value in y.items():
-            i = self.index(inst)
+        for ch, value in y.items():
+            i = self.index(ch)
             self.data[i].append(value)
             self.data[i] = self.roll(self.data[i])
 
     def get_xdata(self) -> np.ndarray:
         return np.array(self.xdata)
 
-    def get_unit(self, inst: str) -> str:
-        return self.units[self.index(inst)][1]
+    def get_unit(self, ch: str) -> str:
+        return self.units[self.index(ch)][1]
 
-    def get_ydata(self, inst: str) -> np.ndarray:
-        return np.array(self.data[self.index(inst)])
+    def get_ydata(self, ch: str) -> np.ndarray:
+        return np.array(self.data[self.index(ch)])
 
     def init_axes(self):
         self.xlabel: str = "Time"

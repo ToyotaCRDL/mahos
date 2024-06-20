@@ -840,34 +840,34 @@ class DMM_mock(Instrument):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
 
         self._running = False
-        self._mode = self.Mode.UNCONFIGURED
+        self._mode = {1: self.Mode.UNCONFIGURED, 2: self.Mode.UNCONFIGURED}
 
         # just for debug
         self._bias = self.conf.get("bias", 0.0)
 
-    def configure_DCV(self) -> bool:
-        self._mode = self.Mode.DCV
-        self.logger.info("Configured for DC Voltage measurement.")
+    def configure_DCV(self, ch: int = 1) -> bool:
+        self._mode[ch] = self.Mode.DCV
+        self.logger.info(f"Configured ch {ch} for DC Voltage measurement.")
         return True
 
-    def configure_DCI(self) -> bool:
-        self._mode = self.Mode.DCI
-        self.logger.info("Configured for DC Current measurement.")
+    def configure_DCI(self, ch: int = 1) -> bool:
+        self._mode[ch] = self.Mode.DCI
+        self.logger.info(f"Configured ch {ch} for DC Current measurement.")
         return True
 
-    def get_data(self):
-        if self._mode == self.Mode.DCV:
+    def get_data(self, ch: int = 1):
+        if self._mode[ch] == self.Mode.DCV:
             return np.random.normal(self._bias, 1.0, size=1)[0]
-        elif self._mode == self.Mode.DCI:
+        elif self._mode[ch] == self.Mode.DCI:
             return np.random.normal(self._bias, 0.1, size=1)[0]
         else:
             self.logger.error("get_data() is called but not configured.")
             return None
 
-    def get_unit(self) -> str:
-        if self._mode == self.Mode.DCV:
+    def get_unit(self, ch: int = 1) -> str:
+        if self._mode[ch] == self.Mode.DCV:
             return "V"
-        elif self._mode == self.Mode.DCI:
+        elif self._mode[ch] == self.Mode.DCI:
             return "A"
         else:
             self.logger.error("get_unit() is called but not configured.")
@@ -877,20 +877,18 @@ class DMM_mock(Instrument):
         if key == "opc":
             return True
         elif key == "data":
-            return self.get_data()
+            return self.get_data(int(label[2]))
         elif key == "unit":
-            return self.get_unit()
+            return self.get_unit(int(label[2]))
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
 
+    def get_param_dict_labels(self) -> list[str]:
+        return ["ch1_dcv", "ch1_dci", "ch2_dcv", "ch2_dci"]
+
     def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
-        if label == "dcv":
-            return P.ParamDict(
-                nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
-                trigger=P.StrChoiceParam("IMM", ["IMM", "BUS", "EXT"]),
-            )
-        elif label == "dci":
+        if label in self.get_param_dict_labels():
             return P.ParamDict(
                 nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
                 trigger=P.StrChoiceParam("IMM", ["IMM", "BUS", "EXT"]),
@@ -900,28 +898,26 @@ class DMM_mock(Instrument):
 
     def configure(self, params: dict, label: str = "") -> bool:
         label = label.lower()
-        if label == "dcv":
-            return self.configure_DCV()
-        elif label == "dci":
-            return self.configure_DCI()
-        else:
+        if label not in self.get_param_dict_labels():
             self.fail_with(f"unknown label: {label}")
+        ch = int(label[2])
+        meas = label[4:]
+        if meas == "dcv":
+            return self.configure_DCV(ch)
+        else:  # "dci"
+            return self.configure_DCI(ch)
 
     def start(self, label: str = "") -> bool:
-        if self._mode == self.Mode.DCV:
-            return True
-        elif self._mode == self.Mode.DCI:
-            return True
-        else:  # UNCONFIGURED
+        ch = int(label[2])
+        if self._mode[ch] == self.Mode.UNCONFIGURED:
             return self.fail_with("start() is called but not configured.")
+        return True
 
     def stop(self, label: str = "") -> bool:
-        if self._mode == self.Mode.DCV:
-            return True
-        elif self._mode == self.Mode.DCI:
-            return True
-        else:  # UNCONFIGURED
-            return self.fail_with("stop() is called but not configured.")
+        ch = int(label[2])
+        if self._mode[ch] == self.Mode.UNCONFIGURED:
+            return self.fail_with("start() is called but not configured.")
+        return True
 
 
 class Positioner_mock(Instrument):

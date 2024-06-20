@@ -110,18 +110,6 @@ class = "DMM_mock"
 [localhost.server.instrument.dmm1.conf]
 bias = 1.0
 
-[localhost.server.instrument.dmm2]
-module = "mock"
-class = "DMM_mock"
-[localhost.server.instrument.dmm2.conf]
-bias = 2.0
-
-[localhost.server.instrument.dmm3]
-module = "mock"
-class = "DMM_mock"
-[localhost.server.instrument.dmm3.conf]
-bias = 3.0
-
 [localhost.server.instrument.pos_x]
 module = "mock"
 class = "Positioner_mock"
@@ -363,23 +351,21 @@ tweakers = ["localhost::tweaker", "localhost::tweaker2", "localhost::pos_tweaker
 [localhost.recorder.target.servers]
 dmm0 = "localhost::server"
 dmm1 = "localhost::server"
-dmm2 = "localhost::server"
-dmm3 = "localhost::server"
 [localhost.recorder.collector]
 interval_sec = 0.5
-[localhost.recorder.mode.all]
-dmm0 = "dcv"
-dmm1 = "dcv"
-dmm2 = "dcv"
-dmm3 = "dcv"
+[localhost.recorder.mode.volt]
+dmm0_v1 = ["dmm0", "ch1_dcv"]
+dmm0_v2 = ["dmm0", "ch2_dcv"]
+dmm1_v1 = ["dmm1", "ch1_dcv"]
+dmm1_v2 = ["dmm1", "ch2_dcv"]
 [localhost.recorder.mode.mix]
-dmm0 = "dcv"
-dmm1 = "dci"
-dmm2 = "dci"
-dmm3 = "dcv"
+dmm0_v1 = ["dmm0", "ch1_dcv"]
+dmm0_i2 = ["dmm0", "ch2_dci"]
+dmm1_v1 = ["dmm1", "ch1_dcv"]
+dmm1_i2 = ["dmm1", "ch2_dci"]
 [localhost.recorder.mode.few]
-dmm1 = "dcv"
-dmm2 = "dci"
+dmm0 = ["dmm0", "ch1_dcv"]
+dmm1 = ["dmm1", "ch1_dcv"]
 
 [localhost.confocal_gui]
 module = "mahos.gui.confocal"

@@ -96,22 +96,22 @@ class RecorderIO(object):
         plt.rcParams["font.size"] = params.get("fontsize", 28)
 
         fig = plt.figure(figsize=params.get("figsize", (12, 12)), dpi=params.get("dpi", 100))
-        unit_to_insts = data.get_unit_to_insts()
+        unit_to_channels = data.get_unit_to_channels()
         x = [datetime.fromtimestamp(s) for s in data.get_xdata()]
-        if len(unit_to_insts) == 1:
+        if len(unit_to_channels) == 1:
             axes = [fig.subplots()]
         else:
-            axes = fig.subplots(len(unit_to_insts))
+            axes = fig.subplots(len(unit_to_channels))
 
-        for ax, (unit, insts) in zip(axes, unit_to_insts.items()):
+        for ax, (unit, channels) in zip(axes, unit_to_channels.items()):
             color = cycle(params.get("color") or [f"C{i}" for i in range(10)])
             marker = cycle(params.get("marker") or ["o", "s", "^", "p", "*", "D", "h", "."])
             lines = []
 
-            for inst, col, mk in zip(insts, color, marker):
-                y = data.get_ydata(inst)
+            for ch, col, mk in zip(channels, color, marker):
+                y = data.get_ydata(ch)
                 lw = 1.0 if params.get("linewidth") is None else params.get("linewidth")
-                lines.append(ax.plot(x, y, label=inst, color=col, linewidth=lw)[0])
+                lines.append(ax.plot(x, y, label=ch, color=col, linewidth=lw)[0])
 
             # set_xlim and set_ylim should be called after all plots to auto-scale properly
             ax.set_xlim(params.get("xmin"), params.get("xmax"))

@@ -56,15 +56,15 @@ class PlotWidget(QtWidgets.QWidget):
         self.graphicsView.setCentralItem(self.layout)
 
     def set_axes(self, data: RecorderData):
-        unit_to_insts = data.get_unit_to_insts()
+        unit_to_channels = data.get_unit_to_channels()
 
-        if self._units == list(unit_to_insts.keys()):
+        if self._units == list(unit_to_channels.keys()):
             return
 
-        self._units = list(unit_to_insts.keys())
+        self._units = list(unit_to_channels.keys())
         self._plots = []
         self.layout.clear()
-        for i, unit in enumerate(unit_to_insts):
+        for i, unit in enumerate(unit_to_channels):
             plot = self.layout.addPlot(row=i, col=0, lockAspect=False)
             plot.showGrid(x=True, y=True)
 
@@ -77,21 +77,21 @@ class PlotWidget(QtWidgets.QWidget):
     def refresh(self, data: RecorderData):
         self.set_axes(data)
 
-        unit_to_insts = data.get_unit_to_insts()
+        unit_to_channels = data.get_unit_to_channels()
         x = data.get_xdata()
-        for plot, insts in zip(self._plots, unit_to_insts.values()):
+        for plot, channels in zip(self._plots, unit_to_channels.values()):
             plot.clearPlots()
-            for inst, color in zip(insts, cycle(colors_tab10())):
-                y = data.get_ydata(inst)
-                plot.plot(x, y, name=inst, pen=color, width=1)
+            for ch, color in zip(channels, cycle(colors_tab10())):
+                y = data.get_ydata(ch)
+                plot.plot(x, y, name=ch, pen=color, width=1)
 
         latest_data = []
-        for inst in data.get_insts():
-            y = data.get_ydata(inst)
-            unit = data.get_unit(inst)
+        for ch in data.get_channels():
+            y = data.get_ydata(ch)
+            unit = data.get_unit(ch)
             if len(y):
                 scale, prefix = SI_scale(y[-1])
-                latest_data.append(f"{inst}: {y[-1]*scale:.3f} {prefix}{unit}")
+                latest_data.append(f"{ch}: {y[-1]*scale:.3f} {prefix}{unit}")
         self.label.setText(" ".join(latest_data))
 
 
