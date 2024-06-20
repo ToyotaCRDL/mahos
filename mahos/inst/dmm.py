@@ -33,6 +33,9 @@ class ADC_7352E(VisaInstrument):
             conf["timeout"] = 2_000.0
 
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
+
+        # Continuous measurement will send us data without any query.
+        # So reset and disable continuous measurement here.
         self.rst()
         time.sleep(1e-3)
         self.inst.write("INIC0")
@@ -42,19 +45,28 @@ class ADC_7352E(VisaInstrument):
     def query_error(self):
         return self.inst.query("ERR?")
 
+    def wait_for_opc(self) -> bool:
+        for _ in range(25):
+            if self.query_opc():
+                return True
+            time.sleep(0.2)
+
+        return self.fail_with("OPC status cannot be reached.")
+
     def set_DCV_auto(self, ch: int = 1) -> bool:
         code = 1 if ch == 1 else 12
-        self.inst.write(f"DSP{ch},F{code},R0,AZ1")  # dcv mode, auto range enable, auto zero enable
-        #
+        self.inst.write(f"DSP{ch},F{code},R0,AZ1")  # dcv, auto range enable, auto zero enable
         return True
 
     def set_DCI_auto(self, ch: int = 1) -> bool:
-        code = 5 if ch == 1 else 35
-        self.inst.write(f"DSP{ch},F{code},R0,AZ1")  # dci mode, auto range enable, auto zero enable
+        if ch == 1:
+            self.inst.write("DSP1,F5,R0,AZ1")  # dci at chA, auto range enable, auto zero enable
+        else:  # ch == 2
+            self.inst.write("DSP2,F35,R8,AZ1")  # dci at chB, range is fixed, auto zero enable
         return True
 
     def set_Temp_auto(self, ch: int = 1) -> bool:
-        self.inst.write(f"DSP{ch},F40,AZ1")  # temp mode, auto zero enable
+        self.inst.write(f"DSP{ch},F40,AZ1")  # temp, auto zero enable
 
         return True
 
@@ -68,9 +80,18 @@ class ADC_7352E(VisaInstrument):
     def configure_DCV(self, sampling_rate: int = 3, ch: int = 1) -> bool:
         """Setup DC Voltage (on-demand) measurement."""
 
+        # sending sequential command without wait can cause error.
+        # sleep and wait for OPC to avoid this.
+        time.sleep(20e-3)
         success = self.set_DCV_auto(ch)
-        time.sleep(1e-3)
+        time.sleep(20e-3)
+        success &= self.wait_for_opc()
+        time.sleep(20e-3)
         success &= self.set_sampling_rate(sampling_rate)
+        time.sleep(20e-3)
+        success &= self.wait_for_opc()
+        time.sleep(20e-3)
+        success &= self.check_error()
 
         if success:
             self._mode[ch] = Mode.DCV
@@ -83,9 +104,17 @@ class ADC_7352E(VisaInstrument):
     def configure_DCI(self, sampling_rate: int = 3, ch: int = 1) -> bool:
         """Setup DC Current (on-demand) measurement."""
 
+        time.sleep(20e-3)
         success = self.set_DCI_auto(ch)
-        time.sleep(1e-3)
+        time.sleep(20e-3)
+        success &= self.wait_for_opc()
+        time.sleep(20e-3)
         success &= self.set_sampling_rate(sampling_rate)
+        time.sleep(20e-3)
+        success &= self.wait_for_opc()
+        time.sleep(20e-3)
+        success &= self.check_error()
+
         if success:
             self._mode[ch] = Mode.DCI
             self.logger.info("Configured for DC Current measurement.")
@@ -97,9 +126,16 @@ class ADC_7352E(VisaInstrument):
     def configure_Temp(self, sampling_rate: int = 3, ch: int = 1) -> bool:
         """Setup Temperature (on-demand) measurement."""
 
+        time.sleep(20e-3)
         success = self.set_Temp_auto(ch)
-        time.sleep(1e-3)
+        time.sleep(20e-3)
+        success &= self.wait_for_opc()
+        time.sleep(20e-3)
         success &= self.set_sampling_rate(sampling_rate)
+        time.sleep(20e-3)
+        success &= self.wait_for_opc()
+        time.sleep(20e-3)
+        success &= self.check_error()
 
         if success:
             self._mode[ch] = Mode.Temp
