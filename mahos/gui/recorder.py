@@ -27,6 +27,7 @@ from .common_widget import ClientWidget
 from .dialog import save_dialog, load_dialog, export_dialog
 from ..node.node import local_conf, join_name
 from ..util.plot import colors_tab10
+from ..util.unit import SI_scale
 
 
 class PlotWidget(QtWidgets.QWidget):
@@ -43,8 +44,10 @@ class PlotWidget(QtWidgets.QWidget):
 
     def init_ui(self):
         self.graphicsView = pg.GraphicsView(parent=self)
-
+        self.label = QtWidgets.QLabel("")
+        self.label.setStyleSheet("QLabel {font: bold 32pt;}")
         vl = QtWidgets.QVBoxLayout()
+        vl.addWidget(self.label)
         vl.addWidget(self.graphicsView)
         self.setLayout(vl)
 
@@ -81,6 +84,15 @@ class PlotWidget(QtWidgets.QWidget):
             for inst, color in zip(insts, cycle(colors_tab10())):
                 y = data.get_ydata(inst)
                 plot.plot(x, y, name=inst, pen=color, width=1)
+
+        latest_data = []
+        for inst in data.get_insts():
+            y = data.get_ydata(inst)
+            unit = data.get_unit(inst)
+            if len(y):
+                scale, prefix = SI_scale(y[-1])
+                latest_data.append(f"{inst}: {y[-1]*scale:.3f} {prefix}{unit}")
+        self.label.setText(" ".join(latest_data))
 
 
 class RecorderWidget(ClientWidget, Ui_Recorder):
