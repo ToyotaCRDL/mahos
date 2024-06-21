@@ -24,6 +24,8 @@
       ~PosTweaker.main
       ~PosTweaker.save
       ~PosTweaker.set_target
+      ~PosTweaker.stop
+      ~PosTweaker.stop_all
       ~PosTweaker.wait
    
    

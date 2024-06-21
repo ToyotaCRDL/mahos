@@ -25,7 +25,7 @@
       ~SpectroscopyWidget.init_widgets
       ~SpectroscopyWidget.init_with_status
       ~SpectroscopyWidget.load_data
-      ~SpectroscopyWidget.refresh_plot
+      ~SpectroscopyWidget.refresh_all
       ~SpectroscopyWidget.request_start
       ~SpectroscopyWidget.request_stop
       ~SpectroscopyWidget.save_data

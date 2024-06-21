@@ -21,6 +21,7 @@
       ~BasePiezo3Axes.get_limit
       ~BasePiezo3Axes.get_range
       ~BasePiezo3Axes.get_target
+      ~BasePiezo3Axes.init_limit_target
       ~BasePiezo3Axes.init_transform_matrix
       ~BasePiezo3Axes.move
       ~BasePiezo3Axes.set_target

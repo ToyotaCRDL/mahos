@@ -27,7 +27,7 @@
       ~ODMRWidget.init_widgets
       ~ODMRWidget.init_with_status
       ~ODMRWidget.load_data
-      ~ODMRWidget.refresh_plot
+      ~ODMRWidget.refresh_all
       ~ODMRWidget.request_start
       ~ODMRWidget.request_stop
       ~ODMRWidget.save_data

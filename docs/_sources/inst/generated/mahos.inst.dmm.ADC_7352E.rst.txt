@@ -1,0 +1,43 @@
+﻿mahos.inst.dmm.ADC\_7352E
+=========================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.dmm
+
+.. autoclass:: ADC_7352E
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ADC_7352E.__init__
+      ~ADC_7352E.configure
+      ~ADC_7352E.configure_DCI
+      ~ADC_7352E.configure_DCV
+      ~ADC_7352E.configure_TEMP
+      ~ADC_7352E.get
+      ~ADC_7352E.get_data
+      ~ADC_7352E.get_param_dict
+      ~ADC_7352E.get_param_dict_labels
+      ~ADC_7352E.get_unit
+      ~ADC_7352E.query_error
+      ~ADC_7352E.set_DCI_auto
+      ~ADC_7352E.set_DCV_auto
+      ~ADC_7352E.set_TEMP_auto
+      ~ADC_7352E.set_sampling_rate
+      ~ADC_7352E.start
+      ~ADC_7352E.stop
+      ~ADC_7352E.wait_opc
+      ~ADC_7352E.wait_opc_and_check_error
+   
+   
+
+   
+   
+   

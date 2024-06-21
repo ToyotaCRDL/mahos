@@ -1,0 +1,44 @@
+﻿mahos.inst.dmm.Keysight\_34410A
+===============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.dmm
+
+.. autoclass:: Keysight_34410A
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Keysight_34410A.__init__
+      ~Keysight_34410A.configure
+      ~Keysight_34410A.configure_DCV
+      ~Keysight_34410A.get
+      ~Keysight_34410A.get_data
+      ~Keysight_34410A.get_data_DCV
+      ~Keysight_34410A.get_param_dict
+      ~Keysight_34410A.get_param_dict_labels
+      ~Keysight_34410A.get_unit
+      ~Keysight_34410A.set_DCV_auto
+      ~Keysight_34410A.set_DCV_nplc
+      ~Keysight_34410A.set_trig_source
+      ~Keysight_34410A.start
+      ~Keysight_34410A.stop
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Keysight_34410A.TRIG_SOURCE
+   
+   

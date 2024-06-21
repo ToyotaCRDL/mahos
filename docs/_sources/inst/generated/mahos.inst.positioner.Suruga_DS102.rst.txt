@@ -17,6 +17,7 @@
    .. autosummary::
    
       ~Suruga_DS102.__init__
+      ~Suruga_DS102.configure
       ~Suruga_DS102.get
       ~Suruga_DS102.get_all
       ~Suruga_DS102.get_param_dict
@@ -31,6 +32,7 @@
       ~Suruga_DS102.move
       ~Suruga_DS102.reset
       ~Suruga_DS102.set
+      ~Suruga_DS102.stop
    
    
 

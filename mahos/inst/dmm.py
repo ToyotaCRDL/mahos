@@ -209,8 +209,12 @@ class ADC_7352E(VisaInstrument):
             return True
 
 
-class Agilent34410A(VisaInstrument):
-    """Agilent 34410A Digital MultiMeter module."""
+class Keysight_34410A(VisaInstrument):
+    """Keysight 34410A Digital MultiMeter.
+
+    NOTE that this class is not quite feature-complete yet.
+
+    """
 
     TRIG_SOURCE = (
         "IMM",

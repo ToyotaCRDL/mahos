@@ -36,7 +36,7 @@
       ~SPODMRWidget.init_widgets
       ~SPODMRWidget.init_with_status
       ~SPODMRWidget.load_data
-      ~SPODMRWidget.refresh_plot
+      ~SPODMRWidget.refresh_all
       ~SPODMRWidget.request_start
       ~SPODMRWidget.request_stop
       ~SPODMRWidget.reset_tau_modes

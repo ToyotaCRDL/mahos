@@ -18,6 +18,7 @@
    
       ~Thorlabs_KCube_DCServo.__init__
       ~Thorlabs_KCube_DCServo.close_resources
+      ~Thorlabs_KCube_DCServo.configure
       ~Thorlabs_KCube_DCServo.done_callback
       ~Thorlabs_KCube_DCServo.get
       ~Thorlabs_KCube_DCServo.get_all
@@ -34,6 +35,8 @@
       ~Thorlabs_KCube_DCServo.move_wait
       ~Thorlabs_KCube_DCServo.reset
       ~Thorlabs_KCube_DCServo.set
+      ~Thorlabs_KCube_DCServo.stop
+      ~Thorlabs_KCube_DCServo.stop_wait
    
    
 

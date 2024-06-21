@@ -17,6 +17,7 @@ Instrument modules
    InstrumentInterface
    camera
    daq
+   dmm
    fg
    lockin
    pd
