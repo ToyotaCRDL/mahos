@@ -128,6 +128,8 @@ class PODMR(BasicMeasNode):
             self.pub_timer = self.worker.timer.clone()
 
         self.state = msg.state
+        # publish changed state immediately to prevent StateManager from missing the change
+        self.status_pub.publish(PODMRStatus(state=self.state, pg_freq=self.worker.conf["pg_freq"]))
         return Reply(True)
 
     def update_plot_params(self, msg: UpdatePlotParamsReq) -> Reply:

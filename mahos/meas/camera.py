@@ -65,6 +65,8 @@ class Camera(BasicMeasNode):
                 return Reply(False, "Failed to start internal worker.", ret=self.state)
 
         self.state = msg.state
+        # publish changed state immediately to prevent StateManager from missing the change
+        self.status_pub.publish(BinaryStatus(state=self.state))
         return Reply(True)
 
     def save_data(self, msg: SaveDataReq) -> Reply:

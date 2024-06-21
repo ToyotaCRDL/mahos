@@ -121,6 +121,8 @@ class Qdyne(BasicMeasNode):
             self.pub_timer = self.worker.timer.clone()
 
         self.state = msg.state
+        # publish changed state immediately to prevent StateManager from missing the change
+        self.status_pub.publish(BinaryStatus(state=self.state))
         return Reply(True)
 
     def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:

@@ -370,6 +370,11 @@ class Confocal(Node):
             return self.fail_with("Failed to start internal worker.")
 
         self.state = msg.state
+        # publish changed state immediately to prevent StateManager from missing the change
+        status = ConfocalStatus(
+            state=self.state, pos=self.piezo.get_pos(), tracer_paused=self.tracer.is_paused()
+        )
+        self.status_pub.publish(status)
         return Reply(True)
 
     def restore_state(self):
