@@ -22,7 +22,7 @@ class Collector(Worker):
     def __init__(self, cli, logger, conf: dict, mode: dict | None = None):
         Worker.__init__(self, cli, logger)
 
-        self.interval_sec = conf.get("interval_sec", 0.1)
+        self.interval_sec = conf.get("interval_sec", 1.0)
         self.insts = self.cli.insts()
         self.add_instruments([InstrumentInterface(self.cli, inst) for inst in self.insts])
 
@@ -41,7 +41,10 @@ class Collector(Worker):
             return None
 
         pd = P.ParamDict()
-        pd["max_len"] = P.IntParam(1000, 1, 100_000_000)
+        pd["max_len"] = P.IntParam(1000, 1, 100_000_000, doc="maximum data length")
+        pd["interval"] = P.FloatParam(
+            self.interval_sec, 0.01, 100.0, unit="s", doc="polling interval"
+        )
         for channel, (inst, inst_label) in self.mode_dicts[label].items():
             d = self.cli.get_param_dict(inst, inst_label)
             if d is None:
@@ -87,7 +90,7 @@ class Collector(Worker):
                     f"Failed to start channel {channel} ({inst}, {inst_label})"
                 )
 
-        self.timer = IntervalTimer(self.interval_sec)
+        self.timer = IntervalTimer(params.get("interval", self.interval_sec))
 
         self.data = RecorderData(params, label)
         self.data.set_units(units)

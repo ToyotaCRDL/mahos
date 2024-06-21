@@ -20,7 +20,7 @@ class Mode(enum.Enum):
     UNCONFIGURED = 0
     DCV = 1
     DCI = 2
-    Temp = 3
+    TEMP = 3
 
 
 class ADC_7352E(VisaInstrument):
@@ -45,7 +45,7 @@ class ADC_7352E(VisaInstrument):
     def query_error(self):
         return self.inst.query("ERR?")
 
-    def wait_for_opc(self) -> bool:
+    def wait_opc(self) -> bool:
         for _ in range(25):
             if self.query_opc():
                 return True
@@ -53,45 +53,43 @@ class ADC_7352E(VisaInstrument):
 
         return self.fail_with("OPC status cannot be reached.")
 
+    def wait_opc_and_check_error(self) -> bool:
+        # sending sequential query commands without wait can cause error.
+        # sleep and wait for OPC to avoid this.
+
+        time.sleep(20e-3)
+        success = self.wait_opc()
+        time.sleep(20e-3)
+        success &= self.check_error()
+        return success
+
     def set_DCV_auto(self, ch: int = 1) -> bool:
         code = 1 if ch == 1 else 12
         self.inst.write(f"DSP{ch},F{code},R0,AZ1")  # dcv, auto range enable, auto zero enable
-        return True
+        return self.wait_opc_and_check_error()
 
     def set_DCI_auto(self, ch: int = 1) -> bool:
         if ch == 1:
             self.inst.write("DSP1,F5,R0,AZ1")  # dci at chA, auto range enable, auto zero enable
         else:  # ch == 2
             self.inst.write("DSP2,F35,R8,AZ1")  # dci at chB, range is fixed, auto zero enable
-        return True
+        return self.wait_opc_and_check_error()
 
-    def set_Temp_auto(self, ch: int = 1) -> bool:
+    def set_TEMP_auto(self, ch: int = 1) -> bool:
         self.inst.write(f"DSP{ch},F40,AZ1")  # temp, auto zero enable
-
-        return True
+        return self.wait_opc_and_check_error()
 
     def set_sampling_rate(self, sampling_rate: int) -> bool:
         if sampling_rate not in (1, 2, 3, 4):
             return self.fail_with("Sampling rate must be one of 1, 2, 3, 4.")
 
         self.inst.write(f"PR{sampling_rate}")
-        return True
+        return self.wait_opc_and_check_error()
 
     def configure_DCV(self, sampling_rate: int = 3, ch: int = 1) -> bool:
         """Setup DC Voltage (on-demand) measurement."""
 
-        # sending sequential command without wait can cause error.
-        # sleep and wait for OPC to avoid this.
-        time.sleep(20e-3)
-        success = self.set_DCV_auto(ch)
-        time.sleep(20e-3)
-        success &= self.wait_for_opc()
-        time.sleep(20e-3)
-        success &= self.set_sampling_rate(sampling_rate)
-        time.sleep(20e-3)
-        success &= self.wait_for_opc()
-        time.sleep(20e-3)
-        success &= self.check_error()
+        success = self.set_DCV_auto(ch) and self.set_sampling_rate(sampling_rate)
 
         if success:
             self._mode[ch] = Mode.DCV
@@ -104,16 +102,7 @@ class ADC_7352E(VisaInstrument):
     def configure_DCI(self, sampling_rate: int = 3, ch: int = 1) -> bool:
         """Setup DC Current (on-demand) measurement."""
 
-        time.sleep(20e-3)
-        success = self.set_DCI_auto(ch)
-        time.sleep(20e-3)
-        success &= self.wait_for_opc()
-        time.sleep(20e-3)
-        success &= self.set_sampling_rate(sampling_rate)
-        time.sleep(20e-3)
-        success &= self.wait_for_opc()
-        time.sleep(20e-3)
-        success &= self.check_error()
+        success = self.set_DCI_auto(ch) and self.set_sampling_rate(sampling_rate)
 
         if success:
             self._mode[ch] = Mode.DCI
@@ -123,22 +112,13 @@ class ADC_7352E(VisaInstrument):
             self.logger.info("Failed to configure DC Current measurement.")
         return success
 
-    def configure_Temp(self, sampling_rate: int = 3, ch: int = 1) -> bool:
+    def configure_TEMP(self, sampling_rate: int = 3, ch: int = 1) -> bool:
         """Setup Temperature (on-demand) measurement."""
 
-        time.sleep(20e-3)
-        success = self.set_Temp_auto(ch)
-        time.sleep(20e-3)
-        success &= self.wait_for_opc()
-        time.sleep(20e-3)
-        success &= self.set_sampling_rate(sampling_rate)
-        time.sleep(20e-3)
-        success &= self.wait_for_opc()
-        time.sleep(20e-3)
-        success &= self.check_error()
+        success = self.set_TEMP_auto(ch) and self.set_sampling_rate(sampling_rate)
 
         if success:
-            self._mode[ch] = Mode.Temp
+            self._mode[ch] = Mode.TEMP
             self.logger.info("Configured for Temperature measurement.")
         else:
             self._mode[ch] = Mode.UNCONFIGURED
@@ -165,7 +145,7 @@ class ADC_7352E(VisaInstrument):
         if self._mode[ch] == Mode.DCI:
             return "A"
 
-        if self._mode[ch] == Mode.Temp:
+        if self._mode[ch] == Mode.TEMP:
             return "℃"
 
         else:
@@ -191,7 +171,9 @@ class ADC_7352E(VisaInstrument):
     def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
         if label in self.get_param_dict_labels():
             return P.ParamDict(
-                sampling_rate=P.IntChoiceParam(3, [1, 2, 3, 4]),
+                sampling_rate=P.IntChoiceParam(
+                    3, [1, 2, 3, 4], doc="small (large) value for fast (slow) sampling"
+                ),
             )
         else:
             return self.fail_with(f"unknown label {label}")
@@ -207,7 +189,7 @@ class ADC_7352E(VisaInstrument):
                 sampling_rate=params.get("sampling_rate", 3), ch=int(label[2])
             )
         if label in ["ch1_temp", "ch2_temp"]:
-            return self.configure_Temp(
+            return self.configure_TEMP(
                 sampling_rate=params.get("sampling_rate", 3), ch=int(label[2])
             )
         else:
