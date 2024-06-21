@@ -74,6 +74,8 @@ class PODMR(BasicMeasNode):
         :type pulser.block_base: int
         :param pulser.divide_block: (has preset) Default value of divide_block.
         :type pulser.divide_block: bool
+        :param pulser.sg_freq: default value of sg frequency
+        :type pulser.sg_freq: float
 
         :param fitter.rabi.c: default value of param "c" (base line) in RabiFitter.
             You can set the bounds using "c_min" and "c_max" too.
