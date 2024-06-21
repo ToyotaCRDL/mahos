@@ -93,7 +93,7 @@ class ADC_7352E(VisaInstrument):
 
         if success:
             self._mode[ch] = Mode.DCV
-            self.logger.info("Configured for DC Voltage measurement.")
+            self.logger.info(f"Configured ch{ch} for DC Voltage measurement.")
         else:
             self._mode[ch] = Mode.UNCONFIGURED
             self.logger.info("Failed to configure DC Voltage measurement.")
@@ -106,7 +106,7 @@ class ADC_7352E(VisaInstrument):
 
         if success:
             self._mode[ch] = Mode.DCI
-            self.logger.info("Configured for DC Current measurement.")
+            self.logger.info(f"Configured ch{ch} for DC Current measurement.")
         else:
             self._mode[ch] = Mode.UNCONFIGURED
             self.logger.info("Failed to configure DC Current measurement.")
@@ -119,7 +119,7 @@ class ADC_7352E(VisaInstrument):
 
         if success:
             self._mode[ch] = Mode.TEMP
-            self.logger.info("Configured for Temperature measurement.")
+            self.logger.info(f"Configured ch{ch} for Temperature measurement.")
         else:
             self._mode[ch] = Mode.UNCONFIGURED
             self.logger.info("Failed to configure Temperature measurement.")
