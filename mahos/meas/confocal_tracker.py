@@ -304,9 +304,11 @@ class ConfocalTracker(Node):
 
         if self.idx == 0:
             self.img_buf.push_pos(pos)
-            self.prepare_states()
-            self.request_scan(pos)
-            self.idx += 1
+            if self.prepare_states() and self.request_scan(pos):
+                self.idx += 1
+            else:
+                self.logger.error("Failed to start scan. Restarting.")
+                self.restart(True)
             return
 
         # finished scanning
@@ -322,11 +324,15 @@ class ConfocalTracker(Node):
             # all scans are finished
             if self.idx >= len(self.track_params["order"]):
                 self.restore_states()
-                self.restart(clear_buffer=False)
+                self.restart(False)
                 return
 
-            self.request_scan(pos)
-            self.idx += 1
+            # start next scan
+            if self.request_scan(pos):
+                self.idx += 1
+            else:
+                self.logger.error("Failed to start scan. Restarting.")
+                self.restart(True)
 
     def optimize(self, image: Image):
         def _fmt_float_opt(v):
@@ -451,7 +457,7 @@ class ConfocalTracker(Node):
 
         return xb, yb
 
-    def request_scan(self, pos):
+    def request_scan(self, pos) -> bool:
         d = self.track_params["order"][self.idx]
         self.scan_params = copy.copy(self.track_params[d])
 
@@ -477,16 +483,20 @@ class ConfocalTracker(Node):
         # delete opt_mode here because it causes error when saving confocal image
         p = copy.copy(self.scan_params)
         del p["opt_mode"]
-        self.cli.change_state(ConfocalState.SCAN, params=p)
+        return self.cli.change_state(ConfocalState.SCAN, params=p)
 
-    def prepare_states(self):
-        self.sm_cli.command("prepare_scan")
+    def prepare_states(self) -> bool:
+        if not self.sm_cli.command("prepare_scan"):
+            self.logger.error("Failed to execute prepare_scan command.")
+            return False
         s = self.cli.get_status().state
         if s == ConfocalState.SCAN:
-            self.logger.warn("Aborting another scan. Falling back previous state as IDLE.")
-            s = ConfocalState.IDLE
+            self.logger.error("Cannot start tracking because another scan is running.")
+            return False
+
         self._prev_confocal_state = s
         self.logger.info("Store confocal state {}".format(s))
+        return True
 
     def restore_states(self):
         if (
@@ -495,6 +505,19 @@ class ConfocalTracker(Node):
         ):
             self.cli.change_state(self._prev_confocal_state)
         self.sm_cli.restore("prepare_scan")
+
+    def finalize_states(self):
+        s = self.cli.get_status().state
+        if (
+            isinstance(self._prev_confocal_state, ConfocalState)
+            and self._prev_confocal_state != ConfocalState.SCAN
+        ):
+            self.cli.change_state(self._prev_confocal_state)
+
+        # invoke restore of manager only when scan is ongoing.
+        # (the other nodes are interrupted.)
+        if s == ConfocalState.SCAN:
+            self.sm_cli.restore("prepare_scan")
 
     def restart(self, clear_buffer: bool):
         self.timer = OneshotTimer(self.track_params["interval_sec"])
@@ -505,11 +528,11 @@ class ConfocalTracker(Node):
 
     def start(self, track_params):
         self.track_params = track_params
-        self.restart(clear_buffer=True)
+        self.restart(True)
         self.logger.info("Started waiting for track.")
 
     def stop(self):
         self.track_params = self.scan_params = self.timer = self.img_buf = None
         self.idx = 0
-        self.restore_states()
+        self.finalize_states()
         self.logger.info("Stopped waiting for track.")

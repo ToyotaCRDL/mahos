@@ -78,9 +78,13 @@ class StateManager(Node):
 
         self.store_states(msg.name)
         for node_name, state in self._commands[msg.name].items():
+            last_state = self._last_states[msg.name][node_name]
             if not self._clis[node_name].is_up():
                 self.logger.warn(f"Node {node_name} is not up. Skipping.")
                 continue
+            if state == last_state:
+                continue
+            self.logger.info(f"command[{msg.name}][{node_name}]: {last_state} to {state}")
             success = self._clis[node_name].change_state(state)
             if not success:
                 return self.fail_with(f"Failed to change state of {node_name} to {state}")
@@ -92,10 +96,15 @@ class StateManager(Node):
         if self._last_states[msg.name] is None:
             return self.fail_with(f"Last state is not stored for command {msg.name}.")
 
+        states = self.get_states()
         for node_name, state in self._last_states[msg.name].items():
+            current_state = states[node_name]
             if state is None:
                 self.logger.warn(f"Last state is not stored for {node_name}. Skipping.")
                 continue
+            if state == current_state:
+                continue
+            self.logger.info(f"restore[{msg.name}][{node_name}]: {current_state} to {state}")
             success = self._clis[node_name].change_state(state)
             if not success:
                 return self.fail_with(f"Failed to change state of {node_name} to {state}")
