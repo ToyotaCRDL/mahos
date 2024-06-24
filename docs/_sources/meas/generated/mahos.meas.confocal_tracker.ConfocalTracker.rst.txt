@@ -18,6 +18,7 @@
    
       ~ConfocalTracker.__init__
       ~ConfocalTracker.change_state
+      ~ConfocalTracker.finalize_states
       ~ConfocalTracker.get_bounds
       ~ConfocalTracker.get_new_pos
       ~ConfocalTracker.get_z
