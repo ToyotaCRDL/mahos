@@ -10,6 +10,7 @@ Base implementation for mahos Node.
 
 from __future__ import annotations
 import typing as T
+import os
 import multiprocessing as mp
 import threading as mt
 import logging
@@ -74,9 +75,14 @@ class PickleableTomlDecoder(toml.TomlDecoder):
 
 
 def load_gconf(filename: str) -> dict:
-    """load (global) configuration dict from `filename`."""
+    """load (global) configuration dict from `filename`.
 
-    return toml.load(filename, decoder=PickleableTomlDecoder())
+    Since the `filename` is passed to os.path.expanduser(),
+    you can use ~ to specify user home directory.
+
+    """
+
+    return toml.load(os.path.expanduser(filename), decoder=PickleableTomlDecoder())
 
 
 def local_conf(gconf: dict, name: NodeName) -> dict:
