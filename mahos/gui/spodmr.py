@@ -274,6 +274,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
         self._finalizing = False
         self._has_fg = False
+        self._has_sg2 = False
 
         self.init_radiobuttons()
         self.init_widgets()
@@ -386,21 +387,15 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
     def update_inst_bounds(self):
         params = self.cli.get_param_dict("rabi")
-        if "power" in params:
-            power: FloatParam = params["power"]
-            self.powerBox.setMinimum(power.minimum())
-            self.powerBox.setMaximum(power.maximum())
-            self.powerBox.setValue(power.value())
-        else:
-            print(f"[ERROR] no key 'power' in params: {params}")
 
-        if "freq" in params:
-            freq: FloatParam = params["freq"]
-            self.freqBox.setMinimum(freq.minimum() * 1e-6)  # Hz -> MHz
-            self.freqBox.setMaximum(freq.maximum() * 1e-6)
-            self.freqBox.setValue(freq.value() * 1e-6)
+        if "freq2" in params:
+            self._has_sg2 = True
+            apply_widgets(params, [("freq2", self.freq2Box, 1e-6), ("power2", self.power2Box)])
         else:
-            print(f"[ERROR] no key 'freq' in params: {params}")
+            self._has_sg2 = False
+            self.nomw2Box.setChecked(True)
+            for w in (self.freq2Box, self.power2Box, self.nomw2Box):
+                w.setEnabled(False)
 
         if "fg" in params:
             self._has_fg = True
@@ -422,6 +417,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         apply_widgets(
             params,
             [
+                ("freq", self.freqBox, 1e-6),  # Hz to MHz
+                ("power", self.powerBox),
                 ("accum_window", self.accumwindowBox, 1e3),  # sec to ms
                 ("accum_rep", self.accumrepBox),
                 ("drop_rep", self.droprepBox),
@@ -778,6 +775,11 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["90pulse"] = self.tpwidthBox.value() * 1e-9
         params["180pulse"] = self.tp2widthBox.value() * 1e-9
 
+        if self.has_sg2():
+            params["freq2"] = self.freq2Box.value() * 1e6  # MHz to Hz
+            params["power2"] = self.power2Box.value()
+            params["nomw2"] = self.nomw2Box.isChecked()
+
         params["plot"] = self.get_plot_params()
         params["fg"] = self.get_fg_params()
 
@@ -949,12 +951,19 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
                 for w in (self.fg_waveBox, self.fg_freqBox, self.fg_amplBox, self.fg_phaseBox):
                     w.setEnabled(False)
 
+        if self.has_sg2():
+            for w in (self.freq2Box, self.power2Box, self.nomw2Box):
+                w.setEnabled(state == BinaryState.IDLE)
+
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
 
     # helper functions
 
     def has_fg(self):
         return self._has_fg
+
+    def has_sg2(self):
+        return self._has_sg2
 
     def round_box_values(self):
         """check and round to half-integer values of QDoubleSpinBox for timing parameters."""

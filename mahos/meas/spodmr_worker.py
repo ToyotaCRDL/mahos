@@ -116,6 +116,7 @@ class SPODMRDataOperator(object):
 class Bounds(object):
     def __init__(self):
         self._sg = None
+        self._sg2 = None
         self._fg = None
 
     def has_sg(self):
@@ -126,6 +127,15 @@ class Bounds(object):
 
     def set_sg(self, sg_bounds):
         self._sg = sg_bounds
+
+    def has_sg2(self):
+        return self._sg2 is not None
+
+    def sg2(self):
+        return self._sg2
+
+    def set_sg2(self, sg2_bounds):
+        self._sg2 = sg2_bounds
 
     def has_fg(self):
         return self._fg is not None
@@ -169,6 +179,32 @@ class BlockSeqBuilder(object):
             ch = seqs[-1].last_pulse().channels
             seqs.append(Block("eos", [(ch, self.eos_margin)]))
 
+    def _encode_mw_phase(self, bs: BlockSeq, params) -> BlockSeq:
+        # Fixed version of K.encode_mw_phase for double mw mode.
+        # (i, q), (i2, q2) is same phase now.
+        # Maybe we could change relative readout phase.
+
+        nomw = params.get("nomw", False)
+        nomw2 = "nomw2" not in params or params["nomw2"]
+        if nomw2:
+            return K.encode_mw_phase(bs)
+        elif nomw:  # mw2 only
+            iq_phase_dict = {
+                "mw_x": ("mw_i2", "mw_q2"),
+                "mw_y": ("mw_q2",),
+                "mw_x_inv": (),
+                "mw_y_inv": ("mw_i2",),
+            }
+        else:  # both mw and mw2
+            iq_phase_dict = {
+                "mw_x": ("mw_i", "mw_q", "mw_i2", "mw_q2"),
+                "mw_y": ("mw_q", "mw_q2"),
+                "mw_x_inv": (),
+                "mw_y_inv": ("mw_i", "mw_i2"),
+            }
+
+        return bs.replace(iq_phase_dict)
+
     def build_complementary(
         self,
         blocks: list[Blocks[Block]],
@@ -184,7 +220,7 @@ class BlockSeqBuilder(object):
         markers = [0]
 
         for blks in blocks:
-            blks = blks.remove("sync")
+            blks = blks.remove("sync").remove("trigger")
             assert len(blks) == 4
             blk0 = self.fix_block_base(blks[:2].collapse())  # Pi-0, readi-0 -> Pi-0
             blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
@@ -266,7 +302,7 @@ class BlockSeqBuilder(object):
         markers = [0]
 
         for blks in blocks:
-            blks = blks.remove("sync")
+            blks = blks.remove("sync").remove("trigger")
             assert len(blks) == 2
             blk = self.fix_block_base(blks.collapse())
             blkR = blk.suffix("R")
@@ -322,7 +358,7 @@ class BlockSeqBuilder(object):
         markers = [0]
 
         for blks in blocks:
-            blks = blks.remove("sync")
+            blks = blks.remove("sync").remove("trigger")
             assert len(blks) == 4
             blk0 = self.fix_block_base(blks[:2].collapse())  # Pi-0, readi-0 -> Pi-0
             blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
@@ -441,7 +477,7 @@ class BlockSeqBuilder(object):
         blockseq = blockseq.simplify()
         if invertY:
             blockseq = K.invert_y_phase(blockseq)
-        blockseq = K.encode_mw_phase(blockseq)
+        blockseq = self._encode_mw_phase(blockseq, params)
 
         return blockseq, laser_duties, markers, oversample
 
@@ -458,6 +494,10 @@ class Pulser(Worker):
         self.load_conf_preset(cli)
 
         self.sg = SGInterface(cli, "sg")
+        if "sg2" in cli.insts():
+            self.sg2 = SGInterface(cli, "sg2")
+        else:
+            self.sg2 = None
         self.pg = PGInterface(cli, "pg")
         self.pd_names = self.conf.get("pd_names", ["pd0"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
@@ -777,7 +817,6 @@ class Pulser(Worker):
 
         ## common switches
         d["invertsweep"] = P.BoolParam(False)
-        d["nomw"] = P.BoolParam(False)
         d["enable_reduce"] = P.BoolParam(False)
         d["divide_block"] = P.BoolParam(True)
         d["partial"] = P.IntChoiceParam(
@@ -862,6 +901,7 @@ class Pulser(Worker):
             quick_resume=P.BoolParam(False),
             freq=P.FloatParam(sg_freq, f_min, f_max),
             power=P.FloatParam(p_min, p_min, p_max),
+            nomw=P.BoolParam(False),
             sweeps=P.IntParam(0, 0, 9999999),
             ident=P.UUIDParam(optional=True, enable=False),
             pd_rate=P.FloatParam(
@@ -883,6 +923,22 @@ class Pulser(Worker):
                 self.conf.get("lockin_rep", 1), 1, 10000, doc="number of lockin repetitions"
             ),
         )
+
+        if self.sg2 is not None:
+            if self.bounds.has_sg2():
+                sg2 = self.bounds.sg2()
+            else:
+                sg2 = self.sg2.get_bounds()
+                if sg2 is None:
+                    self.logger.error("Failed to get SG2 bounds.")
+                    return None
+                self.bounds.set_sg2(sg2)
+            f_min, f_max = sg2["freq"]
+            p_min, p_max = sg2["power"]
+            sg2_freq = max(min(self.conf.get("sg2_freq", 2.8e9), f_max), f_min)
+            d["freq2"] = P.FloatParam(sg2_freq, f_min, f_max)
+            d["power2"] = P.FloatParam(p_min, p_min, p_max)
+            d["nomw2"] = P.BoolParam(False)
 
         self._get_param_dict_pulse(label, d)
         self._get_param_dict_pulse_opt(label, d)
