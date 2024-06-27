@@ -439,9 +439,9 @@ class BlockSeqBuilder(object):
 
         # shaping blockseq
         blockseq = blockseq.simplify()
-        blockseq = K.encode_mw_phase(blockseq)
         if invertY:
             blockseq = K.invert_y_phase(blockseq)
+        blockseq = K.encode_mw_phase(blockseq)
 
         return blockseq, laser_duties, markers, oversample
 

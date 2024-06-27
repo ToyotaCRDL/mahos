@@ -109,9 +109,9 @@ class BlocksBuilder(object):
         blocks = K.merge_short_blocks(blocks, minimum_block_length)
 
         blocks = blocks.simplify()
-        blocks = K.encode_mw_phase(blocks)
         if invertY:
             blocks = K.invert_y_phase(blocks)
+        blocks = K.encode_mw_phase(blocks)
 
         return blocks, laser_timing
 

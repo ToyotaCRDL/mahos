@@ -207,9 +207,9 @@ def build_blocks(
         blocks = merge_short_blocks(blocks, minimum_block_length)
 
     blocks = blocks.simplify()
-    blocks = encode_mw_phase(blocks)
     if invertY:
         blocks = invert_y_phase(blocks)
+    blocks = encode_mw_phase(blocks)
 
     return blocks, laser_timing
 
@@ -234,7 +234,7 @@ def encode_mw_phase(blocks: Blocks[Block] | BlockSeq) -> Blocks[Block] | BlockSe
 
 
 def invert_y_phase(blocks: Blocks[Block] | BlockSeq) -> Blocks[Block] | BlockSeq:
-    """y ==> y_inv, y_inv ==> y (invert i <==> q)."""
+    """swap mw_y and mw_y_inv."""
 
     def invert(ch):
         if ch is None:
@@ -242,15 +242,12 @@ def invert_y_phase(blocks: Blocks[Block] | BlockSeq) -> Blocks[Block] | BlockSeq
 
         new_ch = list(ch)
 
-        _i = "mw_i" in new_ch
-        _q = "mw_q" in new_ch
-
-        if _i and not _q:
-            new_ch.remove("mw_i")
-            new_ch.append("mw_q")
-        if _q and not _i:
-            new_ch.remove("mw_q")
-            new_ch.append("mw_i")
+        if "mw_y" in new_ch:
+            new_ch.remove("mw_y")
+            new_ch.append("mw_y_inv")
+        elif "mw_y_inv" in new_ch:
+            new_ch.remove("mw_y_inv")
+            new_ch.append("mw_y")
 
         return tuple(new_ch)
 

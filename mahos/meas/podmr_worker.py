@@ -677,11 +677,11 @@ class Pulser(Worker):
 
         f_min, f_max = sg["freq"]
         p_min, p_max = sg["power"]
-
+        sg_freq = max(min(self.conf.get("sg_freq", 2.8e9), f_max), f_min)
         # fundamentals
         d = P.ParamDict(
             resume=P.BoolParam(False),
-            freq=P.FloatParam(self.conf.get("sg_freq", 2.80e9), f_min, f_max),
+            freq=P.FloatParam(sg_freq, f_min, f_max),
             power=P.FloatParam(p_min, p_min, p_max),
             timebin=P.FloatParam(3.2e-9, 0.1e-9, 100e-9),
             interval=P.FloatParam(1.0, 0.1, 10.0),
