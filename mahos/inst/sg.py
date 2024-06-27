@@ -444,9 +444,6 @@ class N5182B(VisaInstrument):
             return False
 
     def configure(self, params: dict, label: str = "") -> bool:
-        if not self.check_required_params(params, ("mode",)):
-            return False
-
         label = label.lower()
         if label == "point_trig_freq_sweep":
             if not self.check_required_params(params, ("start", "stop", "num", "power")):
@@ -1161,9 +1158,6 @@ class DS_SG(VisaInstrument):
             return False
 
     def configure(self, params: dict, label: str = "") -> bool:
-        if not self.check_required_params(params, ("mode",)):
-            return False
-
         label = label.lower()
         if label == "point_trig_freq_sweep":
             if not self.check_required_params(params, ("start", "stop", "num", "power")):
