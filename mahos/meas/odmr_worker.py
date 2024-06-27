@@ -50,6 +50,7 @@ class Sweeper(Worker):
         self._block_base = self.conf["block_base"]
         self._start_delay = self.conf.get("start_delay", 0.0)
         self._sg_first = self.conf.get("sg_first", False)
+        self._trigger_ch = self.conf.get("trigger_channel", "trigger")
         self._continue_mw = False
 
         self.data = ODMRData()
@@ -232,7 +233,7 @@ class Sweeper(Worker):
                     (None, max(unit, bg_delay)),
                     ("gate", unit),
                     ("laser", window),
-                    ("trigger", unit),
+                    (self._trigger_ch, unit),
                 ],
                 trigger=True,
             )
@@ -243,7 +244,7 @@ class Sweeper(Worker):
                     (None, max(unit, delay)),
                     ("gate", unit),
                     (("laser", "mw"), window),
-                    ("trigger", unit),
+                    (self._trigger_ch, unit),
                 ],
                 trigger=True,
             )
@@ -271,7 +272,7 @@ class Sweeper(Worker):
                     (None, max(unit, bg_delay)),
                     ("gate", unit),
                     ("laser", window),
-                    (("gate", "trigger"), unit),
+                    (("gate", self._trigger_ch), unit),
                 ],
                 trigger=True,
             )
@@ -282,7 +283,7 @@ class Sweeper(Worker):
                     (None, max(unit, delay)),
                     ("gate", unit),
                     (("laser", "mw"), window),
-                    (("gate", "trigger"), unit),
+                    (("gate", self._trigger_ch), unit),
                 ],
                 trigger=True,
             )
@@ -322,7 +323,7 @@ class Sweeper(Worker):
         final = Block(
             "FINAL",
             [
-                (["gate", "trigger"], trigger_width),
+                (["gate", self._trigger_ch], trigger_width),
                 (None, max(0, min_len - trigger_width)),
             ],
         )
@@ -399,7 +400,7 @@ class Sweeper(Worker):
         final_bg = Block(
             "FINAL-BG",
             [
-                (["gate", "trigger"], trigger_width),
+                (["gate", self._trigger_ch], trigger_width),
                 (None, max(0, min_len - trigger_width)),
             ],
         )
