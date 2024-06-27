@@ -19,7 +19,8 @@
       ~N5182B.__init__
       ~N5182B.abort
       ~N5182B.configure
-      ~N5182B.configure_CW
+      ~N5182B.configure_cw
+      ~N5182B.configure_cw_iq
       ~N5182B.configure_point_trig_freq_sweep
       ~N5182B.get
       ~N5182B.get_bounds

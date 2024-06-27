@@ -636,6 +636,8 @@ document.write(`
 <dt class="sig sig-object py" id="mahos.load_gconf">
 <span class="sig-prename descclassname"><span class="pre">mahos.</span></span><span class="sig-name descname"><span class="pre">load_gconf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mahos.load_gconf" title="Permalink to this definition">#</a></dt>
 <dd><p>load (global) configuration dict from <cite>filename</cite>.</p>
+<p>Since the <cite>filename</cite> is passed to os.path.expanduser(),
+you can use ~ to specify user home directory.</p>
 </dd></dl>
 
 <dl class="py function">

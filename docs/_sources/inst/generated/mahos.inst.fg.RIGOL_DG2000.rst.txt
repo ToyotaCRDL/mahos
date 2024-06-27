@@ -19,8 +19,8 @@
       ~RIGOL_DG2000.__init__
       ~RIGOL_DG2000.align_phase
       ~RIGOL_DG2000.configure
-      ~RIGOL_DG2000.configure_CW
       ~RIGOL_DG2000.configure_burst
+      ~RIGOL_DG2000.configure_cw
       ~RIGOL_DG2000.configure_gate
       ~RIGOL_DG2000.configure_output
       ~RIGOL_DG2000.get

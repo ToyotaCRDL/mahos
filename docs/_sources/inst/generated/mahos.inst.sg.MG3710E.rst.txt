@@ -19,7 +19,8 @@
       ~MG3710E.__init__
       ~MG3710E.abort
       ~MG3710E.configure
-      ~MG3710E.configure_CW
+      ~MG3710E.configure_cw
+      ~MG3710E.configure_cw_iq
       ~MG3710E.configure_point_trig_freq_sweep
       ~MG3710E.get
       ~MG3710E.get_bounds

@@ -18,8 +18,8 @@
    
       ~SIGLENT_SDG2000X.__init__
       ~SIGLENT_SDG2000X.configure
-      ~SIGLENT_SDG2000X.configure_CW
       ~SIGLENT_SDG2000X.configure_burst
+      ~SIGLENT_SDG2000X.configure_cw
       ~SIGLENT_SDG2000X.configure_gate
       ~SIGLENT_SDG2000X.configure_output
       ~SIGLENT_SDG2000X.get

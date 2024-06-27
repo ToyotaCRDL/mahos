@@ -17,6 +17,7 @@
    .. autosummary::
    
       ~SGInterface.configure_cw
+      ~SGInterface.configure_cw_iq
       ~SGInterface.configure_point_trig_freq_sweep
       ~SGInterface.get_bounds
       ~SGInterface.get_opc

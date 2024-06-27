@@ -19,7 +19,7 @@
       ~DS_SG.__init__
       ~DS_SG.abort
       ~DS_SG.configure
-      ~DS_SG.configure_CW
+      ~DS_SG.configure_cw
       ~DS_SG.configure_point_trig_freq_sweep
       ~DS_SG.get
       ~DS_SG.get_bounds
