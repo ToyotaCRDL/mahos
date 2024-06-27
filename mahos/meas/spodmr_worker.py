@@ -538,14 +538,7 @@ class Pulser(Worker):
 
     def init_inst(self, params: dict) -> bool:
         # SG
-        success = (
-            self.sg.configure_cw(params["freq"], params["power"])
-            and self.sg.set_modulation(True)
-            and self.sg.set_dm_source("EXT")
-            and self.sg.set_dm(True)
-            and self.sg.get_opc()
-        )
-        if not success:
+        if not self.sg.configure_cw_iq(params["freq"], params["power"]):
             self.logger.error("Error initializing SG.")
             return False
 

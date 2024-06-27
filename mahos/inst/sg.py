@@ -341,7 +341,7 @@ class N5182B(VisaInstrument):
             self.logger.info("Modulation OFF.")
         return True
 
-    def configure_CW(self, freq, power) -> bool:
+    def configure_cw(self, freq, power) -> bool:
         """Setup Continuous Wave output with fixed freq and power."""
 
         self._mode = Mode.UNCONFIGURED
@@ -358,6 +358,18 @@ class N5182B(VisaInstrument):
             self.logger.info("Configured for CW output.")
         else:
             self.logger.info("Failed to configure CW output.")
+        return success
+
+    def configure_cw_iq(self, freq, power) -> bool:
+        """Setup Continuous Wave output with fixed freq and power and external IQ modulation."""
+
+        success = (
+            self.configure_cw(freq, power)
+            and self.set_modulation(True)
+            and self.set_dm_source("EXT")
+            and self.set_dm(True)
+            and self.query_opc()
+        )
         return success
 
     def configure_point_trig_freq_sweep(
@@ -435,8 +447,8 @@ class N5182B(VisaInstrument):
         if not self.check_required_params(params, ("mode",)):
             return False
 
-        mode = params["mode"].lower()
-        if mode == "point_trig_freq_sweep":
+        label = label.lower()
+        if label == "point_trig_freq_sweep":
             if not self.check_required_params(params, ("start", "stop", "num", "power")):
                 return False
             return self.configure_point_trig_freq_sweep(
@@ -448,12 +460,16 @@ class N5182B(VisaInstrument):
                 ext_trig=params.get("ext_trig", ""),
                 sweep_out_ch=params.get("sweep_out_ch", 0),
             )
-        elif mode == "cw":
+        elif label == "cw":
             if not self.check_required_params(params, ("freq", "power")):
                 return False
-            return self.configure_CW(params["freq"], params["power"])
+            return self.configure_cw(params["freq"], params["power"])
+        elif label == "cw_iq":
+            if not self.check_required_params(params, ("freq", "power")):
+                return False
+            return self.configure_cw_iq(params["freq"], params["power"])
         else:
-            self.logger.error("Unknown conf['mode']")
+            self.logger.error(f"Unknown label {label}")
             return False
 
     def start(self, label: str = "") -> bool:
@@ -796,7 +812,7 @@ class MG3710E(VisaInstrument):
             self.inst.write(":RAD:ARB OFF")
         return True
 
-    def configure_CW(self, freq, power) -> bool:
+    def configure_cw(self, freq, power) -> bool:
         """Setup Continuous Wave output with fixed freq and power."""
 
         self._mode = Mode.UNCONFIGURED
@@ -815,6 +831,18 @@ class MG3710E(VisaInstrument):
             self.logger.info("Configured for CW output.")
         else:
             self.logger.info("Failed to configure CW output.")
+        return success
+
+    def configure_cw_iq(self, freq, power) -> bool:
+        """Setup Continuous Wave output with fixed freq and power and external IQ modulation."""
+
+        success = (
+            self.configure_cw(freq, power)
+            and self.set_modulation(True)
+            and self.set_dm_source("EXT")
+            and self.set_dm(True)
+            and self.query_opc()
+        )
         return success
 
     def configure_point_trig_freq_sweep(
@@ -887,11 +915,8 @@ class MG3710E(VisaInstrument):
             return False
 
     def configure(self, params: dict, label: str = "") -> bool:
-        if not self.check_required_params(params, ("mode",)):
-            return False
-
-        mode = params["mode"].lower()
-        if mode == "point_trig_freq_sweep":
+        label = label.lower()
+        if label == "point_trig_freq_sweep":
             if not self.check_required_params(params, ("start", "stop", "num", "power")):
                 return False
             return self.configure_point_trig_freq_sweep(
@@ -901,12 +926,16 @@ class MG3710E(VisaInstrument):
                 params["power"],
                 trig=params.get("trig", ""),
             )
-        elif mode == "cw":
+        elif label == "cw":
             if not self.check_required_params(params, ("freq", "power")):
                 return False
-            return self.configure_CW(params["freq"], params["power"])
+            return self.configure_cw(params["freq"], params["power"])
+        elif label == "cw_iq":
+            if not self.check_required_params(params, ("freq", "power")):
+                return False
+            return self.configure_cw_iq(params["freq"], params["power"])
         else:
-            self.logger.error("Unknown conf['mode']")
+            self.logger.error(f"Unknown label {label}")
             return False
 
     def start(self, label: str = "") -> bool:
@@ -1061,7 +1090,7 @@ class DS_SG(VisaInstrument):
         on_off = "ON" if on else "OFF"
         self.inst.write(f"*BUZZER {on_off}")
 
-    def configure_CW(self, freq, power) -> bool:
+    def configure_cw(self, freq, power) -> bool:
         """Setup Continuous Wave output with fixed freq and power."""
 
         success = (
@@ -1135,8 +1164,8 @@ class DS_SG(VisaInstrument):
         if not self.check_required_params(params, ("mode",)):
             return False
 
-        mode = params["mode"].lower()
-        if mode == "point_trig_freq_sweep":
+        label = label.lower()
+        if label == "point_trig_freq_sweep":
             if not self.check_required_params(params, ("start", "stop", "num", "power")):
                 return False
             return self.configure_point_trig_freq_sweep(
@@ -1145,10 +1174,10 @@ class DS_SG(VisaInstrument):
                 params["num"],
                 params["power"],
             )
-        elif mode == "cw":
+        elif label == "cw":
             if not self.check_required_params(params, ("freq", "power")):
                 return False
-            return self.configure_CW(params["freq"], params["power"])
+            return self.configure_cw(params["freq"], params["power"])
         else:
-            self.logger.error("Unknown conf['mode']")
+            self.logger.error(f"Unknown label {label}")
             return False

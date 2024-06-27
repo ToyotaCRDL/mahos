@@ -70,7 +70,17 @@ class SGInterface(InstrumentInterface):
 
         """
 
-        return self.configure({"mode": "cw", "freq": freq, "power": power})
+        return self.configure({"freq": freq, "power": power}, label="cw")
+
+    def configure_cw_iq(self, freq: float, power: float) -> bool:
+        """Configure Continuous Wave output with external IQ modulation.
+
+        :param freq: (Hz) frequnecy.
+        :param power: (dBm) RF power.
+
+        """
+
+        return self.configure({"freq": freq, "power": power}, label="cw_iq")
 
     def configure_point_trig_freq_sweep(
         self, start: float, stop: float, num: int, power: float, params: dict | None = None
@@ -92,10 +102,9 @@ class SGInterface(InstrumentInterface):
 
         if params is None:
             params = {}
-        params["mode"] = "point_trig_freq_sweep"
         params["start"] = start
         params["stop"] = stop
         params["num"] = num
         params["power"] = power
 
-        return self.configure(params)
+        return self.configure(params, label="point_trig_freq_sweep")

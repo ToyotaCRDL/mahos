@@ -352,7 +352,7 @@ class RIGOL_DG2000(VisaInstrument):
         self.logger.info("Executed phase alignment")
         return True
 
-    def configure_CW(
+    def configure_cw(
         self,
         wave: str | None,
         freq: float | None,
@@ -639,7 +639,7 @@ class RIGOL_DG2000(VisaInstrument):
                 reset=params.get("reset", False),
             )
         elif label == "cw":
-            return self.configure_CW(
+            return self.configure_cw(
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
@@ -649,7 +649,7 @@ class RIGOL_DG2000(VisaInstrument):
                 reset=params.get("reset", False),
             )
         elif label == "ch1_cw":
-            return self.configure_CW(
+            return self.configure_cw(
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
@@ -659,7 +659,7 @@ class RIGOL_DG2000(VisaInstrument):
                 reset=False,
             )
         elif label == "ch2_cw":
-            return self.configure_CW(
+            return self.configure_cw(
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
@@ -987,7 +987,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
         self.logger.info(f"Reference clock: {source}")
         return True
 
-    def configure_CW(
+    def configure_cw(
         self,
         wave: str | None,
         freq: float | None,
@@ -1283,7 +1283,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
                 reset=params.get("reset", False),
             )
         elif label == "cw":
-            return self.configure_CW(
+            return self.configure_cw(
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
@@ -1293,7 +1293,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
                 reset=params.get("reset", False),
             )
         elif label == "ch1_cw":
-            return self.configure_CW(
+            return self.configure_cw(
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),
@@ -1303,7 +1303,7 @@ class SIGLENT_SDG2000X(VisaInstrument):
                 reset=False,
             )
         elif label == "ch2_cw":
-            return self.configure_CW(
+            return self.configure_cw(
                 params.get("wave"),
                 params.get("freq"),
                 params.get("ampl"),

@@ -79,7 +79,7 @@ class IODMRSweeperCommand(InstrumentOverlay):
         self._queue = LockedQueue(self._queue_size)
 
         if not (
-            self.sg.configure_CW(self.start_f, self.power)
+            self.sg.configure_cw(self.start_f, self.power)
             and self.camera.configure_soft_trigger(
                 self.exposure_time, burst_num=self.burst_num, binning=self.binning, roi=self.roi
             )

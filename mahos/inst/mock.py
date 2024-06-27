@@ -119,10 +119,20 @@ class SG_mock(Instrument):
             "freq": self.get_freq_bounds(),
         }
 
-    def configure_CW(self, freq, power) -> bool:
+    def configure_cw(self, freq, power) -> bool:
         """Setup Continuous Wave output with fixed freq and power."""
 
         self.logger.info("Mock configuration CW mode.")
+        return True
+
+    def configure_cw_iq(self, freq, power) -> bool:
+        """Setup Continuous Wave output with fixed freq and power and external IQ modulation."""
+
+        self.logger.info("Mock configuration CW mode with external IQ modulation.")
+        return True
+
+    def configure_point_trig_freq_sweep(self, start, stop, num, power) -> bool:
+        self.logger.info("Mock configuration point trig freq sweep mode.")
         return True
 
     def set_freq_CW(self, freq) -> bool:
@@ -159,7 +169,20 @@ class SG_mock(Instrument):
             return None
 
     def configure(self, params: dict, label: str = "") -> bool:
-        return True
+        if label == "cw":
+            return self.configure_cw(params["freq"], params["power"])
+        elif label == "cw_iq":
+            return self.configure_cw_iq(params["freq"], params["power"])
+        elif label == "point_trig_freq_sweep":
+            return self.configure_point_trig_freq_sweep(
+                params["start"],
+                params["stop"],
+                params["num"],
+                params["power"],
+            )
+        else:
+            self.logger.error(f"Unknown label {label}")
+            return False
 
     def start(self, label: str = "") -> bool:
         return True
