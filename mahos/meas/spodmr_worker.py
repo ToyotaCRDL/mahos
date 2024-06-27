@@ -506,7 +506,7 @@ class Pulser(Worker):
             self.fg = FGInterface(cli, "fg")
         else:
             self.fg = None
-        self.add_instruments(self.sg, self.pg, self.fg, *self.pds)
+        self.add_instruments(self.sg, self.sg2, self.pg, self.fg, *self.pds)
 
         self.length = self.offsets = self.freq = self.oversample = None
 
@@ -581,6 +581,9 @@ class Pulser(Worker):
         # SG
         if not self.sg.configure_cw_iq(params["freq"], params["power"]):
             self.logger.error("Error initializing SG.")
+            return False
+        if self.sg2 is not None and not self.sg2.configure_cw_iq(params["freq"], params["power"]):
+            self.logger.error("Error initializing SG2.")
             return False
 
         # FG
@@ -748,6 +751,8 @@ class Pulser(Worker):
             return self.fail_with_release("Error initializing or starting PDs.")
 
         success = self.sg.set_output(not self.data.params.get("nomw", False))
+        if self.sg2 is not None:
+            success &= self.sg2.set_output(not self.data.params.get("nomw2", False))
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(True)
         # time.sleep(1)
@@ -758,6 +763,8 @@ class Pulser(Worker):
             if self._fg_enabled(self.data.params):
                 self.fg.set_output(False)
             self.sg.set_output(False)
+            if self.sg2 is not None:
+                self.sg2.set_output(False)
             for pd in self.pds:
                 pd.stop()
             self.clock.stop()
@@ -789,6 +796,8 @@ class Pulser(Worker):
             and self.sg.set_output(False)
             and self.sg.release()
         )
+        if self.sg2 is not None:
+            success &= self.sg2.set_output(False) and self.sg2.release()
         success &= all([pd.stop() for pd in self.pds]) and all([pd.release() for pd in self.pds])
         success &= self.clock.stop()
         if self._fg_enabled(self.data.params):
