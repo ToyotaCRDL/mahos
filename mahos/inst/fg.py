@@ -820,6 +820,8 @@ class SIGLENT_SDG2000X(VisaInstrument):
     @ch_setter((1, 2))
     def set_function(self, func: str, ch: int = 1) -> bool:
         func = func.upper()
+        if func in ("SIN", "SINUSOID"):
+            func = "SINE"
         if func not in ("SINE", "SQUARE", "RAMP", "PULSE", "NOISE", "ARB", "DC", "PRBS", "IQ"):
             return self.fail_with(f"Invalid function: {func}")
         self.inst.write(f"C{ch}:BSWV WVTP,{func}")
@@ -951,6 +953,8 @@ class SIGLENT_SDG2000X(VisaInstrument):
     @ch_setter((1, 2))
     def set_burst_function(self, func: str, ch: int = 1) -> bool:
         func = func.upper()
+        if func in ("SIN", "SINUSOID"):
+            func = "SINE"
         if func not in ("SINE", "SQUARE", "RAMP", "PULSE", "NOISE", "ARB"):
             return self.fail_with(f"Invalid function: {func}")
         self.inst.write(f"C{ch}:BTWV CARR,WVTP,{func}")
