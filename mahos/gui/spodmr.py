@@ -638,6 +638,13 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         # MW
         self.freqBox.setValue(p.get("freq", 2740e6) * 1e-6)  # [Hz] ==> [MHz]
         self.powerBox.setValue(p.get("power", 0.0))
+        self.nomwBox.setChecked(p.get("nomw", False))
+        if "freq2" in p:
+            self.freq2Box.setValue(p["freq2"] * 1e-6)  # [Hz] ==> [MHz]
+        if "power2" in p:
+            self.power2Box.setValue(p["power2"])
+        if "nomw2" in p:
+            self.nomw2Box.setChecked(p["nomw2"])
 
         # sequence parameters
         self.startBox.setValue(p.get("start", 0.0) * 1e9)  # [sec] ==> [ns]
@@ -661,7 +668,6 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.reinitXBox.setChecked(p.get("reinitX", False))
         self.readYBox.setChecked(p.get("readY", False))
         self.flipheadBox.setChecked(p.get("flip_head", False))
-        self.nomwBox.setChecked(p.get("nomw", False))
         self.invertinitBox.setChecked(p.get("invertinit", False))
         self.reduceBox.setChecked(p.get("enable_reduce", False))
         partial = p.get("partial")
