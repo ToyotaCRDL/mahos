@@ -582,7 +582,9 @@ class Pulser(Worker):
         if not self.sg.configure_cw_iq(params["freq"], params["power"]):
             self.logger.error("Error initializing SG.")
             return False
-        if self.sg2 is not None and not self.sg2.configure_cw_iq(params["freq"], params["power"]):
+        if self.sg2 is not None and not self.sg2.configure_cw_iq(
+            params["freq2"], params["power2"]
+        ):
             self.logger.error("Error initializing SG2.")
             return False
 
@@ -696,6 +698,10 @@ class Pulser(Worker):
         params["base_width"] = params["trigger_width"] = 0.0
         params["init_delay"] = params["final_delay"] = 0.0
         params["fix_base_width"] = 1  # ignore base_width
+        if self.sg2 is not None:
+            # disable nomw feature at generator
+            # because nomw = True, nomw2 = False is possible usage (using SG2 only)
+            params["nomw"] = False
 
         blocks, freq, common_pulses = generate(data.xdata, params)
         blockseq, laser_duties, markers, oversample = self.builder.build_blocks(
