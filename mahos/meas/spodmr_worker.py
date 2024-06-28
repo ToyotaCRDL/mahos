@@ -213,6 +213,7 @@ class BlockSeqBuilder(object):
         drop_rep: int,
         laser_width: int,
         trigger_width: int,
+        sync_mode: str,
     ):
         seqs = []
         laser_duties = []
@@ -220,10 +221,13 @@ class BlockSeqBuilder(object):
         markers = [0]
 
         for blks in blocks:
-            blks = blks.remove("sync").remove("trigger")
+            blks = blks.remove("trigger")
+            if sync_mode != "laser":
+                blks = blks.remove("sync")
             assert len(blks) == 4
             blk0 = self.fix_block_base(blks[:2].collapse())  # Pi-0, readi-0 -> Pi-0
-            blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
+            if sync_mode == "lockin":
+                blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
             blk1 = self.fix_block_base(blks[2:].collapse())  # Pi-1, readi-1 -> Pi-1
             blk0R = blk0.suffix("R")
             blk1R = blk1.suffix("R")
@@ -295,6 +299,7 @@ class BlockSeqBuilder(object):
         drop_rep: int,
         laser_width: int,
         trigger_width: int,
+        sync_mode: str,
     ):
         seqs = []
         laser_duties = []
@@ -302,7 +307,9 @@ class BlockSeqBuilder(object):
         markers = [0]
 
         for blks in blocks:
-            blks = blks.remove("sync").remove("trigger")
+            blks = blks.remove("trigger")
+            if sync_mode != "laser":
+                blks = blks.remove("sync")
             assert len(blks) == 2
             blk = self.fix_block_base(blks.collapse())
             blkR = blk.suffix("R")
@@ -351,6 +358,7 @@ class BlockSeqBuilder(object):
         drop_rep: int,
         laser_width: int,
         trigger_width: int,
+        sync_mode: str,
     ):
         seqs = []
         laser_duties = []
@@ -358,10 +366,13 @@ class BlockSeqBuilder(object):
         markers = [0]
 
         for blks in blocks:
-            blks = blks.remove("sync").remove("trigger")
+            blks = blks.remove("trigger")
+            if sync_mode != "laser":
+                blks = blks.remove("sync")
             assert len(blks) == 4
             blk0 = self.fix_block_base(blks[:2].collapse())  # Pi-0, readi-0 -> Pi-0
-            blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
+            if sync_mode == "lockin":
+                blk0 = blk0.union(Block("sync", [("sync", blk0.total_length())]))
             blk1 = self.fix_block_base(blks[2:].collapse())  # Pi-1, readi-1 -> Pi-1
             blk0R = blk0.suffix("R")
             blk1R = blk1.suffix("R")
@@ -430,7 +441,9 @@ class BlockSeqBuilder(object):
 
         return BlockSeq("top", seqs), laser_duties, markers
 
-    def build_blocks(self, blocks: list[Blocks[Block]], freq: float, common_pulses, params):
+    def build_blocks(
+        self, blocks: list[Blocks[Block]], freq: float, common_pulses, params, sync_mode
+    ):
         invertY = params.get("invertY", False)
 
         (
@@ -454,18 +467,25 @@ class BlockSeqBuilder(object):
         partial = params["partial"]
         if partial == -1:
             blockseq, laser_duties, markers = self.build_complementary(
-                blocks, accum_window, accum_rep, drop_rep, laser_width, trigger_width
+                blocks, accum_window, accum_rep, drop_rep, laser_width, trigger_width, sync_mode
             )
             oversample = (accum_window * accum_rep) // pd_period
         elif partial in (0, 1):
             blockseq, laser_duties, markers = self.build_partial(
-                blocks, accum_window, accum_rep, drop_rep, laser_width, trigger_width
+                blocks, accum_window, accum_rep, drop_rep, laser_width, trigger_width, sync_mode
             )
             oversample = (accum_window * accum_rep) // pd_period
         elif partial == 2:
             lockin_rep = params["lockin_rep"]
             blockseq, laser_duties, markers = self.build_lockin(
-                blocks, accum_window, accum_rep, lockin_rep, drop_rep, laser_width, trigger_width
+                blocks,
+                accum_window,
+                accum_rep,
+                lockin_rep,
+                drop_rep,
+                laser_width,
+                trigger_width,
+                sync_mode,
             )
             oversample = (2 * accum_window * accum_rep * lockin_rep) // pd_period
         else:
@@ -594,7 +614,7 @@ class Pulser(Worker):
             return False
 
         # PG
-        if not self.init_pg(params):
+        if not self.init_pg():
             self.logger.error("Error initializing PG.")
             return False
 
@@ -669,7 +689,7 @@ class Pulser(Worker):
             return False
         return True
 
-    def init_pg(self, params: dict) -> bool:
+    def init_pg(self) -> bool:
         if not (self.pg.stop() and self.pg.clear()):
             self.logger.error("Error stopping PG.")
             return False
@@ -688,6 +708,31 @@ class Pulser(Worker):
 
         return True
 
+    def _sync_mode(self, params: dict) -> str:
+        gated_fg = "fg" in params and params["fg"]["mode"] == "gate"
+        lockin = params["partial"] == 2
+        if gated_fg and lockin:
+            # This case is TODO
+            msg = "Cannot determine default sync_mode as FG is gate and partial is lockin."
+            msg += "defaulting to laser, but consider fixing code (to use multiple sync ch)!"
+            self.logger.warn(msg)
+            default = "laser"
+        elif gated_fg:
+            default = "laser"
+        else:  # lockin or unused
+            default = "lockin"
+
+        if "sync_mode" not in params or params["sync_mode"] == "default":
+            self.logger.debug(f"Defaulting sync_mode to {default}")
+            return default
+        if params["sync_mode"] == default:
+            return default
+
+        msg = f"Overriding default sync_mode = {default} with params['sync_mode'] = "
+        msg += params["sync_mode"]
+        self.logger.warn(msg)
+        return params["sync_mode"]
+
     def generate_blocks(self, data: SPODMRData | None = None):
         if data is None:
             data = self.data
@@ -704,8 +749,9 @@ class Pulser(Worker):
             params["nomw"] = False
 
         blocks, freq, common_pulses = generate(data.xdata, params)
+        sync_mode = self._sync_mode(params)
         blockseq, laser_duties, markers, oversample = self.builder.build_blocks(
-            blocks, freq, common_pulses, params
+            blocks, freq, common_pulses, params, sync_mode
         )
 
         self.logger.info(f"Built BlockSeq. total pattern #: {blockseq.total_pattern_num()}")
@@ -937,6 +983,9 @@ class Pulser(Worker):
             lockin_rep=P.IntParam(
                 self.conf.get("lockin_rep", 1), 1, 10000, doc="number of lockin repetitions"
             ),
+            sync_mode=P.StrChoiceParam(
+                "default", ("default", "lockin", "laser"), doc="mode of sync channel"
+            ),
         )
 
         if self.sg2 is not None:
@@ -1029,7 +1078,7 @@ class Pulser(Worker):
 class DebugPulser(Pulser):
     def init_inst(self, params: dict) -> bool:
         # PG
-        if not self.init_pg(params):
+        if not self.init_pg():
             self.logger.error("Error initializing PG.")
             return False
 
