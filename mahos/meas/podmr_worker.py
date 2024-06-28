@@ -717,7 +717,7 @@ class Pulser(Worker):
                 "wave": P.StrParam("sinusoid"),
                 "freq": P.FloatParam(1e6, f_min, f_max),
                 "ampl": P.FloatParam(a_min, a_min, a_max),
-                "phase": P.FloatParam(0.0, -180.0, 180.0),
+                "phase": P.FloatParam(0.0, 0.0, 360.0),
             }
 
         taumodes = ["raw", "total", "freq", "index", "head"]

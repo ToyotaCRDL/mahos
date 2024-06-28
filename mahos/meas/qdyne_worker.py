@@ -609,7 +609,7 @@ class Pulser(Worker):
                 "wave": P.StrParam("sinusoid"),
                 "freq": P.FloatParam(1e6, f_min, f_max, unit="Hz", SI_prefix=True),
                 "ampl": P.FloatParam(a_min, a_min, a_max, unit="Vpp"),
-                "phase": P.FloatParam(0.0, -180.0, 180.0),
+                "phase": P.FloatParam(0.0, 0.0, 360.0),
             }
 
         d["plot"] = {

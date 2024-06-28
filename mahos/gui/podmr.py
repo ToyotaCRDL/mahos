@@ -761,9 +761,13 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.fg_amplBox.setMaximum(ampl.maximum())
             self.fg_amplBox.setValue(ampl.value())
             freq: FloatParam = params["fg"]["freq"]
-            self.fg_freqBox.setMinimum(freq.minimum() * 1e-6)
-            self.fg_freqBox.setMaximum(freq.maximum() * 1e-6)
-            self.fg_freqBox.setValue(freq.value() * 1e-6)
+            self.fg_freqBox.setMinimum(freq.minimum() * 1e-3)
+            self.fg_freqBox.setMaximum(freq.maximum() * 1e-3)
+            self.fg_freqBox.setValue(freq.value() * 1e-3)
+            phase: FloatParam = params["fg"]["phase"]
+            self.fg_phaseBox.setMinimum(phase.minimum())
+            self.fg_phaseBox.setMaximum(phase.maximum())
+            self.fg_phaseBox.setValue(phase.value())
         else:
             self._has_fg = False
 
@@ -1053,7 +1057,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         wave_dict = {"Sinusoid": 0, "Square": 1}
         self.fg_waveBox.setCurrentIndex(wave_dict[params.get("wave", 0)])
-        self.fg_freqBox.setValue(params.get("freq", 1e6) * 1e-6)  # [Hz] ==> [MHz]
+        self.fg_freqBox.setValue(params.get("freq", 1e6) * 1e-3)  # Hz to kHz
         self.fg_amplBox.setValue(params.get("ampl", 0.0))
         self.fg_phaseBox.setValue(params.get("phase", 0.0))
 
@@ -1149,7 +1153,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params = {}
         params["mode"] = self.get_fg_mode()
         params["wave"] = self.fg_waveBox.currentText()
-        params["freq"] = self.fg_freqBox.value() * 1.0e6  # MHz ==> Hz
+        params["freq"] = self.fg_freqBox.value() * 1e3  # kHz to Hz
         params["ampl"] = self.fg_amplBox.value()
         params["phase"] = self.fg_phaseBox.value()
         return params

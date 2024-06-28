@@ -1310,10 +1310,10 @@
                  <number>4</number>
                 </property>
                 <property name="minimum">
-                 <double>-180.000000000000000</double>
+                 <double>0.000000000000000</double>
                 </property>
                 <property name="maximum">
-                 <double>180.000000000000000</double>
+                 <double>360.000000000000000</double>
                 </property>
                 <property name="singleStep">
                  <double>0.100000000000000</double>
@@ -1352,10 +1352,10 @@
                  <string>freq: </string>
                 </property>
                 <property name="suffix">
-                 <string> MHz</string>
+                 <string> kHz</string>
                 </property>
                 <property name="decimals">
-                 <number>13</number>
+                 <number>9</number>
                 </property>
                 <property name="minimum">
                  <double>0.000001000000000</double>
@@ -1364,7 +1364,7 @@
                  <double>200.000000000000000</double>
                 </property>
                 <property name="singleStep">
-                 <double>0.100000000000000</double>
+                 <double>1.000000000000000</double>
                 </property>
                 <property name="value">
                  <double>1.000000000000000</double>
@@ -1480,13 +1480,13 @@
   <tabstop>logYBox</tabstop>
   <tabstop>fftBox</tabstop>
   <tabstop>complexBox</tabstop>
+  <tabstop>fg_disableButton</tabstop>
+  <tabstop>fg_cwButton</tabstop>
   <tabstop>fg_gateButton</tabstop>
   <tabstop>fg_waveBox</tabstop>
   <tabstop>fg_amplBox</tabstop>
   <tabstop>fg_phaseBox</tabstop>
   <tabstop>fg_freqBox</tabstop>
-  <tabstop>fg_cwButton</tabstop>
-  <tabstop>fg_disableButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>
