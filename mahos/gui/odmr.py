@@ -573,9 +573,6 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         ):
             b.valueChanged.connect(self.update_pulse_label)
 
-        self.cwButton.toggled.connect(self.switch_cw)
-        self.pulseButton.toggled.connect(self.switch_pulse)
-
     def init_widgets(self):
         self.tabWidget.setCurrentIndex(0)
 
@@ -600,6 +597,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             params["timing"],
             [
                 ("time_window", self.windowBox, 1e3),
+                ("gate_delay", self.gatedelayBox, 1e3),
             ],
         )
 
@@ -652,20 +650,6 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         boxes = (self.laserdelayBox, self.laserwidthBox, self.mwdelayBox, self.mwwidthBox)
         return sum([b.value() for b in boxes]) * 1e-9
 
-    def switch_cw(self, checked):
-        self.windowBox.setEnabled(checked)
-
-    def switch_pulse(self, checked):
-        for w in (
-            self.laserdelayBox,
-            self.laserwidthBox,
-            self.mwdelayBox,
-            self.mwwidthBox,
-            self.triggerwidthBox,
-            self.bnumBox,
-        ):
-            w.setEnabled(checked)
-
     def apply_widgets(self, data: ODMRData):
         start, stop = data.bounds()
         self.startBox.setValue(start * 1e-6)
@@ -691,6 +675,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         if data.label == "cw":
             self.cwButton.setChecked(True)
             self.windowBox.setValue(timing["time_window"] * 1e3)
+            self.gatedelayBox.setValue(timing.get("gate_delay", 0.0) * 1e3)
         else:
             self.pulseButton.setChecked(True)
             self.laserdelayBox.setValue(timing["laser_delay"] * 1e9)
@@ -773,7 +758,10 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
 
         if self.cwButton.isChecked():
             label = "cw"
-            t = {"time_window": self.windowBox.value() * 1e-3}  # ms to s
+            t = {
+                "time_window": self.windowBox.value() * 1e-3,  # ms to s
+                "gate_delay": self.gatedelayBox.value() * 1e-3,  # ms to s
+            }
         else:
             label = "pulse"
             t = {}
@@ -858,6 +846,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.bgdelayBox.setEnabled(state == BinaryState.IDLE and self.backgroundBox.isChecked())
 
         self.windowBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())
+        self.gatedelayBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())
 
         for w in (
             self.laserdelayBox,

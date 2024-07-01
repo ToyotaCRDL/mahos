@@ -99,7 +99,12 @@ class Sweeper(Worker):
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         if label == "cw":
             timing = P.ParamDict(
-                time_window=P.FloatParam(self.conf.get("time_window", 10e-3), 0.1e-3, 1.0)
+                time_window=P.FloatParam(
+                    self.conf.get("time_window", 10e-3), 0.1e-3, 1.0, unit="s", SI_prefix=True
+                ),
+                gate_delay=P.FloatParam(
+                    self.conf.get("gate_delay", 0.0), 0.0, 1.0, unit="s", SI_prefix=True
+                ),
             )
         elif label == "pulse":
             timing = P.ParamDict(
@@ -221,9 +226,29 @@ class Sweeper(Worker):
         # gate / trigger pulse width
         unit = round(freq * 1.0e-6)
         window = round(freq * params["timing"]["time_window"])
+        gate_delay = round(freq * params["timing"].get("gate_delay", 0.0))
         delay = round(freq * params.get("delay", 0.0))
         bg_delay = round(freq * params.get("background_delay", 0.0))
-        if params.get("background", False):
+        background = params.get("background", False)
+        if background and gate_delay:
+            b = Block(
+                "CW-ODMR",
+                [
+                    (None, max(unit, delay)),
+                    (("laser", "mw"), gate_delay),
+                    (("laser", "mw", "gate"), unit),
+                    # As measurement window is defined by DAQ sampling side,
+                    # here we give long enough laser / mw pulse width (no "window - unit" below).
+                    (("laser", "mw"), window),
+                    (None, max(unit, bg_delay)),
+                    ("laser", gate_delay),
+                    (("laser", "gate"), unit),
+                    ("laser", window),
+                    (self._trigger_ch, unit),
+                ],
+                trigger=True,
+            )
+        elif background:  # no gate_delay
             b = Block(
                 "CW-ODMR",
                 [
@@ -237,7 +262,19 @@ class Sweeper(Worker):
                 ],
                 trigger=True,
             )
-        else:
+        elif gate_delay:  # no background
+            b = Block(
+                "CW-ODMR",
+                [
+                    (None, max(unit, delay)),
+                    (("laser", "mw"), gate_delay),
+                    (("laser", "mw", "gate"), unit),
+                    (("laser", "mw"), window),
+                    (self._trigger_ch, unit),
+                ],
+                trigger=True,
+            )
+        else:  # no gate_delay, no background
             b = Block(
                 "CW-ODMR",
                 [
@@ -259,14 +296,37 @@ class Sweeper(Worker):
         # gate / trigger pulse width
         unit = round(freq * 1.0e-6)
         window = round(freq * params["timing"]["time_window"])
+        gate_delay = round(freq * params["timing"].get("gate_delay", 0.0))
         delay = round(freq * params.get("delay", 0.0))
         bg_delay = round(freq * params.get("background_delay", 0.0))
-        if params.get("background", False):
+        background = params.get("background", False)
+        if background and gate_delay:
+            b = Block(
+                "CW-ODMR",
+                [
+                    (None, max(unit, delay)),
+                    (("laser", "mw"), gate_delay),
+                    # here we define measurement window using interval between gate pulses
+                    (("laser", "mw", "gate"), unit),
+                    (("laser", "mw"), window - unit),
+                    (("laser", "mw", "gate"), unit),
+                    (None, max(unit, bg_delay)),
+                    ("laser", gate_delay),
+                    (("laser" "gate"), unit),
+                    ("laser", window - unit),
+                    (("laser" "gate"), unit),
+                    (self._trigger_ch, unit),
+                ],
+                trigger=True,
+            )
+        elif background:  # no gate_delay
             b = Block(
                 "CW-ODMR",
                 [
                     (None, max(unit, delay)),
                     ("gate", unit),
+                    # here we define measurement window using laser / mw pulse width
+                    # (no "window - unit" below)
                     (("laser", "mw"), window),
                     ("gate", unit),
                     (None, max(unit, bg_delay)),
@@ -276,7 +336,20 @@ class Sweeper(Worker):
                 ],
                 trigger=True,
             )
-        else:
+        elif gate_delay:  # no background
+            b = Block(
+                "CW-ODMR",
+                [
+                    (None, max(unit, delay)),
+                    (("laser", "mw"), gate_delay),
+                    (("laser", "mw", "gate"), unit),
+                    (("laser", "mw"), window - unit),
+                    (("laser", "mw", "gate"), unit),
+                    (self._trigger_ch, unit),
+                ],
+                trigger=True,
+            )
+        else:  # no gate_delay, no background
             b = Block(
                 "CW-ODMR",
                 [
