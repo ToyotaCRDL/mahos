@@ -10,7 +10,7 @@ Message Types for ConfocalTracker.
 
 import enum
 
-from .common_msgs import Message, Request
+from .common_msgs import Message, Status, Request, BinaryState
 
 
 class OptMode(Message, enum.Enum):
@@ -22,6 +22,12 @@ class OptMode(Message, enum.Enum):
     Max2D = 5  # Maximum Pixel
     Max1D_0 = 6  # 1D Maximum along axis 0 (take average along axis 1)
     Max1D_1 = 7  # 1D Maximum along axis 1 (take average along axis 0)
+
+
+class ConfocalTrackerStatus(Status):
+    def __init__(self, state: BinaryState, tracking: bool):
+        self.state = state
+        self.tracking = tracking
 
 
 class SaveParamsReq(Request):

@@ -25,12 +25,12 @@ except ImportError:
 
 from .. import CONFIG_DIR
 from .confocal import ConfocalClient
-from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Reply, StateReq, BinaryState
 from ..msgs import confocal_msgs
 from ..msgs.confocal_msgs import Image, ScanDirection, ScanMode, PiezoPos
 from ..msgs.confocal_msgs import ConfocalState
 from ..msgs.confocal_msgs import direction_to_labels, direction_to_axes
-from ..msgs.confocal_tracker_msgs import OptMode
+from ..msgs.confocal_tracker_msgs import OptMode, ConfocalTrackerStatus
 from ..msgs.confocal_tracker_msgs import SaveParamsReq, LoadParamsReq, TrackNowReq
 from ..msgs import confocal_tracker_msgs
 from ..node.node import Node
@@ -209,6 +209,7 @@ class ConfocalTracker(Node):
         self.track_params = self.scan_params = self.timer = self.img_buf = None
         self._prev_confocal_state = None
         self.idx = 0
+        self.tracking = False
 
     def wait(self):
         self.logger.info("Waiting for Confocal and StateManager...")
@@ -292,12 +293,14 @@ class ConfocalTracker(Node):
         self._publish()
 
     def _publish(self):
-        status = BinaryStatus(state=self.state)
+        status = ConfocalTrackerStatus(state=self.state, tracking=self.tracking)
         self.status_pub.publish(status)
 
     def _work(self):
         if not self.timer.check():
+            self.tracking = False
             return
+        self.tracking = True
 
         image = self.cli.get_image()
         pos = self.cli.get_status().pos
@@ -535,6 +538,7 @@ class ConfocalTracker(Node):
         if clear_buffer:
             self.img_buf = ImageBuffer()
         self.idx = 0
+        self.tracking = False
 
     def start(self, track_params):
         self.track_params = track_params
@@ -544,5 +548,6 @@ class ConfocalTracker(Node):
     def stop(self):
         self.track_params = self.scan_params = self.timer = self.img_buf = None
         self.idx = 0
+        self.tracking = False
         self.finalize_states()
         self.logger.info("Stopped waiting for track.")
