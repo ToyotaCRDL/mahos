@@ -520,7 +520,17 @@ class ConfocalTracker(Node):
             self.sm_cli.restore("prepare_scan")
 
     def restart(self, clear_buffer: bool):
-        self.timer = OneshotTimer(self.track_params["interval_sec"])
+        interval = self.track_params["interval_sec"]
+        if interval == 0.0:
+            # Setting 0.0 interval means infinite interval.
+            # In this case, tracking is invoked only by TrackNowReq.
+            interval = float("inf")
+            self.logger.info("Resetting timer. Infinite interval (manual start only).")
+        else:
+            t = time.strftime("%H:%M:%S", time.localtime(time.time() + interval))
+            self.logger.info(f"Resetting timer. Next track starts at {t}.")
+
+        self.timer = OneshotTimer(interval)
         self.scan_params = None
         if clear_buffer:
             self.img_buf = ImageBuffer()
