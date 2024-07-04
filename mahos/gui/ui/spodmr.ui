@@ -1096,6 +1096,16 @@
               </item>
               <item>
                <property name="text">
+                <string>normalize-data0</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>normalize-data1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
                 <string>normalize</string>
                </property>
               </item>

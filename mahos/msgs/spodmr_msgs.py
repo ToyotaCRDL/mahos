@@ -138,6 +138,12 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
                 return i1
             elif plotmode == "average":
                 return (i0 + i1) / 2
+            elif plotmode == "normalize-data0":
+                mean = np.mean(i0)
+                return (i0 - mean) / mean
+            elif plotmode == "normalize-data1":
+                mean = np.mean(i1)
+                return (i1 - mean) / mean
             elif plotmode == "normalize":
                 if flip:
                     return (i1 - i0) / (i0 + i1) * 2
@@ -325,6 +331,12 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
                 return s0 - s1, None
         elif plotmode == "average":
             return (s0 + s1) / 2, None
+        elif plotmode == "normalize-data0":
+            mean = np.mean(s0)
+            return (s0 - mean) / mean, None
+        elif plotmode == "normalize-data1":
+            mean = np.mean(s1)
+            return (s1 - mean) / mean, None
         elif plotmode == "normalize":
             if flip:
                 return (s1 - s0) / (s0 + s1) * 2, None
