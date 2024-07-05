@@ -197,6 +197,19 @@ class DummyLogger(object):
             self.print_exc()
 
 
+class NullLogger(DummyLogger):
+    """Dummy for logger. Silently discard debug / info messages."""
+
+    def __init__(self, name: str = ""):
+        self.name = name
+
+    def debug(self, msg, *args, **kwargs):
+        pass
+
+    def info(self, msg, *args, **kwargs):
+        pass
+
+
 def get_topic_logger(prefix, name):
     if prefix:
         full_name = ".".join((prefix, name))
