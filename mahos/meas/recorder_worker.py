@@ -99,6 +99,22 @@ class Collector(Worker):
 
         return True
 
+    def reset(self, label) -> bool:
+        if self.data.running:
+            self.logger.error("reset() is called while running.")
+            return False
+
+        if label not in self.mode_dicts:
+            self.logger.error(f"Invalid mode label {label}")
+            return False
+
+        success = True
+        for channel, (inst, inst_label) in self.mode_dicts[label].items():
+            if not self.cli.reset(inst, label=inst_label):
+                self.logger.error(f"Failed to reset channel {channel} ({inst}, {inst_label})")
+                success = False
+        return success
+
     def work(self) -> bool:
         # TODO: treatment of time stamp is quite rough now
 

@@ -10,11 +10,11 @@ Generic data-logging measurement for time-series data.
 
 from __future__ import annotations
 
-from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Request, Reply, StateReq, BinaryState, BinaryStatus
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..msgs import recorder_msgs
-from ..msgs.recorder_msgs import RecorderData
+from ..msgs.recorder_msgs import RecorderData, ResetReq
 from .common_meas import BasicMeasClient, BasicMeasNode
 from ..util.timer import IntervalTimer
 from .recorder_worker import Collector
@@ -26,6 +26,10 @@ class RecorderClient(BasicMeasClient):
 
     #: Message types for Recorder.
     M = recorder_msgs
+
+    def reset(self, label: str) -> bool:
+        res = self.req.request(ResetReq(label))
+        return res.success
 
 
 class Recorder(BasicMeasNode):
@@ -63,6 +67,11 @@ class Recorder(BasicMeasNode):
         self.status_pub.publish(BinaryStatus(state=self.state))
         return Reply(True)
 
+    def reset(self, msg: ResetReq) -> Reply:
+        if self.state == BinaryState.ACTIVE:
+            return Reply(False, "Cannot perform reset while in ACTIVE state.")
+        return Reply(self.worker.reset(msg.label))
+
     def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:
         return Reply(True, ret=self.worker.get_param_dict_labels())
 
@@ -98,6 +107,10 @@ class Recorder(BasicMeasNode):
             return Reply(False, "Cannot load data when active.")
         self.worker.data = data
         return Reply(True, ret=data)
+
+    def handle_req(self, msg: Request) -> Reply:
+        if isinstance(msg, ResetReq):
+            return self.reset(msg)
 
     def wait(self):
         self.logger.info("Waiting for instrument server...")

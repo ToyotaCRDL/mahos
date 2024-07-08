@@ -13,7 +13,13 @@ from __future__ import annotations
 import numpy as np
 import msgpack
 
+from .common_msgs import Request
 from .common_meas_msgs import BasicMeasData
+
+
+class ResetReq(Request):
+    def __init__(self, label: str):
+        self.label = label
 
 
 class RecorderData(BasicMeasData):

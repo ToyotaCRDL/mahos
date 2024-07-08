@@ -17,7 +17,7 @@ import pyqtgraph as pg
 from .Qt import QtCore, QtWidgets
 
 from .ui.recorder import Ui_Recorder
-from .client import QBasicMeasClient
+from .recorder_client import QRecorderClient
 
 from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.recorder_msgs import RecorderData
@@ -105,7 +105,7 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
         self.plot = plot
         self.data = RecorderData()
 
-        self.cli = QBasicMeasClient(gconf, name, context=context, parent=self)
+        self.cli = QRecorderClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -142,6 +142,7 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
     def init_connection(self):
         self.startButton.clicked.connect(self.request_start)
         self.stopButton.clicked.connect(self.request_stop)
+        self.resetButton.clicked.connect(self.request_reset)
         self.saveButton.clicked.connect(self.save_data)
         self.exportButton.clicked.connect(self.export_data)
         self.loadButton.clicked.connect(self.load_data)
@@ -204,6 +205,9 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
     def request_start(self):
         self.cli.start(self.paramTable.params(), self.labelBox.currentText())
 
+    def request_reset(self):
+        self.cli.reset(self.labelBox.currentText())
+
     def apply_widgets(self, data: RecorderData):
         if not data.has_data():
             return
@@ -219,6 +223,7 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
         for w in (
             self.labelBox,
             self.startButton,
+            self.resetButton,
             self.saveButton,
             self.exportButton,
             self.loadButton,
