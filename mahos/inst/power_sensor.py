@@ -188,6 +188,24 @@ class RS_NRPZ(Instrument):
             self.dll.rsnrpz_close(session)
             self.logger.info(f"Closed session {session}")
 
+    def reset(self, label: str = "") -> bool:
+        if self._running:
+            self.logger.error("Cannot perform reset (zeroing) while running.")
+            return False
+        success = True
+        for session in self._sessions:
+            if not self.check_error(session, self.dll.rsnrpz_chan_zero(session, 1)):
+                self.logger.error(f"Failed to start zeroing of session {session}.")
+                success = False
+            while True:
+                compl = C.c_uint16(0)
+                self.dll.rsnrpz_chan_isZeroComplete(session, 1, C.byref(compl))
+                if compl.value:
+                    self.logger.info(f"Completed zeroing of sesion {session}")
+                    break
+                time.sleep(0.1)
+        return success
+
     def start(self, label: str = "") -> bool:
         """Start measurement."""
 
