@@ -658,6 +658,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.powerBox.setValue(data.params["power"])
         bg = data.params.get("background", False)
         self.backgroundBox.setChecked(bg)
+        if "sweeps" in data.params:
+            self.sweepsBox.setValue(data.params["sweeps"])
         if "delay" in data.params:
             self.delayBox.setValue(data.params["delay"] * 1e3)
         if bg and "background_delay" in data.params:
