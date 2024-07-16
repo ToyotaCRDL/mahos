@@ -5,8 +5,8 @@ matplotlib ~= 3.9.0
 pandas ~= 2.2.2
 ipython ~= 8.24.0
 # data analysis
-scikit-learn ~= 1.3.0
-lmfit ~= 1.1.0
+scikit-learn ~= 1.5.1
+lmfit ~= 1.3.1
 # data transport, IO
 pyzmq ~= 25.1.0
 h5py ~= 3.11.0
