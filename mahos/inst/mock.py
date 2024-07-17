@@ -375,11 +375,13 @@ class MCS_mock(Instrument):
         self.resolution_sec = 0.2e-9
         self._bin = 0.2e-9
         self._starts = 0
+        self._mean_events = 0.0
         self._tstart = time.time()
         self._running = False
 
     def get_data(self, nDisplay: int):
-        data = np.random.normal(0.0, 1.0, size=self._range)
+        self._mean_events += 1.0
+        data = np.random.normal(self._mean_events, 1.0, size=self._range)
         return data
 
     def get_data_roi(self, nDisplay: int, roi: list[tuple[int, int]]) -> list[np.ndarray] | None:
@@ -452,6 +454,7 @@ class MCS_mock(Instrument):
         self.logger.info("Started dummy MCS.")
         self._running = True
         self._starts = 0
+        self._mean_events = 0.0
         self._tstart = time.time()
         return True
 

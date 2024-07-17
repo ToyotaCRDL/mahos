@@ -54,6 +54,9 @@ class SPODMR(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         """Pulse ODMR measurement with Slow detectors.
 
+        :param pulser.quick_resume: default value of quick_resume.
+            If True, it skips instrument configurations on resume.
+        :type pulser.quick_resume: bool
         :param pulser.pd_trigger: DAQ terminal name for PD trigger.
         :type pulser.pd_trigger: str
         :param pulser.trigger_channel: (default: gate) PG channel name for PD trigger.

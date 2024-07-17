@@ -87,6 +87,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="quickresumeBox">
+         <property name="text">
+          <string>Quick resume</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -1795,6 +1802,7 @@
   <tabstop>loadButton</tabstop>
   <tabstop>discardButton</tabstop>
   <tabstop>enablediscardBox</tabstop>
+  <tabstop>quickresumeBox</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>sweepsBox</tabstop>
   <tabstop>binBox</tabstop>

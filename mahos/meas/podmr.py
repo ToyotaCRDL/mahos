@@ -58,6 +58,9 @@ class PODMR(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         """Pulse ODMR measurement.
 
+        :param pulser.quick_resume: default value of quick_resume.
+            If True, it skips instrument configurations on resume.
+        :type pulser.quick_resume: bool
         :param pulser.split_fraction: (default: 4) fraction factor (F) to split the free period
             for MW phase modulation. the period (T) is split into (T // F, T - T // F) and MW phase
             is switched at T // F. Thus, larger F results in "quicker start" of the phase

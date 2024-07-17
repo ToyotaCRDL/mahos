@@ -10,6 +10,7 @@ Worker for Pulse ODMR.
 
 from __future__ import annotations
 import time
+import copy
 
 import numpy as np
 
@@ -296,6 +297,9 @@ class Pulser(Worker):
             print_fn=self.logger.info,
         )
         self.eos_margin = self.conf.get("eos_margin", 1e-6)
+        self._quick_resume = self.conf.get("quick_resume", True)
+        self._resume_raw_data = None
+        self._resume_tdc_status = None
 
         self.data = PODMRData()
         self.op = PODMRDataOperator()
@@ -445,7 +449,11 @@ class Pulser(Worker):
             data1 = self.tdc.get_data(1)
 
         if data0 is not None and data1 is not None:
-            self.op.update(self.data, data0 + data1, self.get_tdc_status())
+            if self._resume_raw_data is not None:
+                new_data = data0 + data1 + self._resume_raw_data
+            else:
+                new_data = data0 + data1
+            self.op.update(self.data, new_data, self.get_tdc_status())
             self.op.get_marker_indices(self.data)
             self.op.analyze(self.data)
 
@@ -469,6 +477,10 @@ class Pulser(Worker):
         if params is not None:
             params = P.unwrap(params)
         resume = params is None or ("resume" in params and params["resume"])
+        if params is None:
+            quick_resume = resume and self._quick_resume
+        else:
+            quick_resume = resume and params.get("quick_resume", self._quick_resume)
         if not resume:
             self.data = PODMRData(params, label)
             self.op.update_axes(self.data)
@@ -479,23 +491,29 @@ class Pulser(Worker):
         if not self.lock_instruments():
             return self.fail_with_release("Error acquiring instrument locks.")
 
-        if not resume and not self.init_inst(self.data.params):
+        if quick_resume:
+            self.logger.info("Quick resume enabled: skipping initial inst configurations.")
+        if not quick_resume and not self.init_inst(self.data.params):
             return self.fail_with_release("Error initializing instruments.")
+        if resume:
+            self._resume_raw_data = self.data.raw_data.copy()
+            self._resume_tdc_status = copy.copy(self.data.tdc_status)
+        else:
+            self._resume_raw_data = None
+            self._resume_tdc_status = None
+
+        # update duration here because duration means duration of additional measurement.
+        # this treatise is different from sweeps (sweeps limit is considered total).
+        if (
+            quick_resume
+            and params is not None
+            and params.get("duration", 0.0) != _last_duration
+            and not self.tdc.set_duration(params["duration"])
+        ):
+            return self.fail_with_release("Failed to set tdc duration.")
 
         # start instruments
-        if resume:
-            # update duration here because duration means duration of additional measurement.
-            # this treatise is different from sweeps (sweeps limit is considered total).
-            if params is not None and params.get("duration", 0.0) != _last_duration:
-                success = self.tdc.set_duration(params["duration"])
-            else:
-                success = True
-            success &= self.tdc.resume()
-        else:
-            success = self.tdc.stop()
-            success &= self.tdc.clear()
-            success &= self.tdc.start()
-
+        success = self.tdc.stop() and self.tdc.clear() and self.tdc.start()
         success &= self.sg.set_output(not self.data.params.get("nomw", False))
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(True)
@@ -562,7 +580,13 @@ class Pulser(Worker):
         st0 = self.tdc.get_status(0)
         st1 = self.tdc.get_status(1)
 
-        return TDCStatus(round(st0.runtime), st0.starts, st0.total, st1.total)
+        if self._resume_tdc_status:
+            r: TDCStatus = self._resume_tdc_status
+            return TDCStatus(
+                round(st0.runtime) + r[0], st0.starts + r[1], st0.total + r[2], st1.total + r[3]
+            )
+        else:
+            return TDCStatus(round(st0.runtime), st0.starts, st0.total, st1.total)
 
     def get_tdc_running(self) -> bool:
         """return True if TDC is running."""
@@ -674,6 +698,7 @@ class Pulser(Worker):
         # fundamentals
         d = P.ParamDict(
             resume=P.BoolParam(False),
+            quick_resume=P.BoolParam(False),
             freq=P.FloatParam(sg_freq, f_min, f_max),
             power=P.FloatParam(p_min, p_min, p_max),
             timebin=P.FloatParam(3.2e-9, 0.1e-9, 100e-9),

@@ -1093,6 +1093,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
     def get_params(self) -> tuple[dict, str]:
         label = self.get_method()
         params = {}
+        params["quick_resume"] = self.quickresumeBox.isChecked()
         params["freq"] = self.freqBox.value() * 1e6  # [MHz] ==> [Hz]
         params["power"] = self.powerBox.value()
         params["timebin"] = self.binBox.value() * 1e-9  # [ns] ==> [sec]
@@ -1300,6 +1301,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.saveButton,
             self.exportButton,
             self.loadButton,
+            self.quickresumeBox,
             self.binBox,
             self.freqBox,
             self.powerBox,

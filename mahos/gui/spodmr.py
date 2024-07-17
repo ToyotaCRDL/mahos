@@ -728,6 +728,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
     def get_params(self) -> tuple[dict, str]:
         label = self.get_method()
         params = {}
+        params["quick_resume"] = self.quickresumeBox.isChecked()
         params["partial"] = self.partialBox.currentIndex() - 1
         params["freq"] = self.freqBox.value() * 1e6  # [MHz] ==> [Hz]
         params["power"] = self.powerBox.value()
@@ -880,6 +881,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             self.saveButton,
             self.exportButton,
             self.loadButton,
+            self.quickresumeBox,
             self.freqBox,
             self.powerBox,
             self.nomwBox,

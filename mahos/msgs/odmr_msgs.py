@@ -198,6 +198,7 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
             self.params["start"] == p["start"]
             and self.params["stop"] == p["stop"]
             and self.params["num"] == p["num"]
+            and self.params["power"] == p["power"]
             and self.measure_background() == p.get("background")
         )
 
