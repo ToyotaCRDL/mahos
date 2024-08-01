@@ -10,7 +10,7 @@ Qt signal-based clients of Spectroscopy.
 
 from .Qt import QtCore
 
-from ..msgs.spectroscopy_msgs import SpectroscopyData
+from ..msgs.spectroscopy_msgs import SpectroscopyData, SpectroscopyStatus
 from .client import QBasicMeasClient
 
 
@@ -19,3 +19,4 @@ class QSpectroscopyClient(QBasicMeasClient):
 
     dataUpdated = QtCore.pyqtSignal(SpectroscopyData)
     stopped = QtCore.pyqtSignal(SpectroscopyData)
+    statusUpdated = QtCore.pyqtSignal(SpectroscopyStatus)

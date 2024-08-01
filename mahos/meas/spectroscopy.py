@@ -8,13 +8,13 @@ Logic and instrument control part of Spectroscopy.
 
 """
 
-from ..msgs.common_msgs import Reply, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Reply, StateReq, BinaryState
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import GetParamDictReq, GetParamDictLabelsReq
 from ..msgs.param_msgs import prefix_labels, remove_label_prefix
 from ..msgs import spectroscopy_msgs
-from ..msgs.spectroscopy_msgs import SpectroscopyData
+from ..msgs.spectroscopy_msgs import SpectroscopyData, SpectroscopyStatus
 from ..util.timer import IntervalTimer
 from .common_meas import BasicMeasClient, BasicMeasNode
 from .common_worker import DummyWorker, PulseGen_CW, Switch
@@ -81,7 +81,9 @@ class Spectroscopy(BasicMeasNode):
 
         self.state = msg.state
         # publish changed state immediately to prevent StateManager from missing the change
-        self.status_pub.publish(BinaryStatus(state=self.state))
+        self.status_pub.publish(
+            SpectroscopyStatus(state=self.state, temperature=self.worker.get_temperature())
+        )
         return Reply(True)
 
     def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:
@@ -136,6 +138,8 @@ class Spectroscopy(BasicMeasNode):
         self._work()
         finished = self._check_finished()
         time_to_pub = self.pub_timer.check()
+        if time_to_pub:
+            self.worker.update_temperature()
         self._publish((self.state == BinaryState.ACTIVE) or finished or time_to_pub, time_to_pub)
 
     def _work(self):
@@ -143,7 +147,9 @@ class Spectroscopy(BasicMeasNode):
             self.worker.work()
 
     def _publish(self, publish_data: bool, publish_buffer: bool):
-        self.status_pub.publish(BinaryStatus(state=self.state))
+        self.status_pub.publish(
+            SpectroscopyStatus(state=self.state, temperature=self.worker.get_temperature())
+        )
         if publish_data:
             self.data_pub.publish(self.worker.data_msg())
         if publish_buffer:

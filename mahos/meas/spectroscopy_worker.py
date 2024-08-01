@@ -27,6 +27,7 @@ class Repeater(Worker):
         self.add_instruments(self.spectrometer)
 
         self.data = SpectroscopyData()
+        self._temperature = 0.0
 
     def get_param_dict(self) -> P.ParamDict[str, P.PDValue] | None:
         base_configs = self.spectrometer.get_base_configs()
@@ -104,3 +105,9 @@ class Repeater(Worker):
 
     def data_msg(self) -> SpectroscopyData:
         return self.data
+
+    def update_temperature(self):
+        self._temperature = self.spectrometer.get_temperature()
+
+    def get_temperature(self) -> float:
+        return self._temperature

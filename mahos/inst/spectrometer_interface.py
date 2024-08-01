@@ -45,7 +45,7 @@ class SpectrometerInterface(InstrumentInterface):
         return self.get("config")
 
     def get_base_config(self) -> str | None:
-        """get current base config (saved experiment)."""
+        """get current base config name."""
 
         return self.get("base_config")
 
@@ -55,9 +55,14 @@ class SpectrometerInterface(InstrumentInterface):
         return self.get("base_configs")
 
     def set_base_config(self, name: str) -> bool:
-        """set and load a base config (saved experiment)."""
+        """set and load a base config."""
 
         return self.set("base_config", name)
+
+    def get_temperature(self) -> float:
+        """Get detector temperature in degC."""
+
+        return self.get("temperature")
 
     def get_exposure_time(self) -> float:
         """Get exposure time in ms."""

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Spectrometer module.
+Princeton Instruments Spectrometer module.
 
 .. This file is a part of MAHOS project, which is released under the 3-Clause BSD license.
 .. See included LICENSE file or https://github.com/ToyotaCRDL/mahos/blob/main/LICENSE for details.
@@ -14,7 +14,7 @@ import os
 
 import numpy as np
 
-from .instrument import Instrument
+from ..instrument import Instrument
 
 
 # imports for LightField
@@ -38,7 +38,7 @@ try:
     from PrincetonInstruments.LightField.AddIns import FrameCombinationMethod  # noqa: E402
 
     # from PrincetonInstruments.LightField.AddIns import DeviceType
-except ImportError:
+except (ImportError, KeyError):
     print("mahos.inst.spectrometer: failed to import pythonnet or PrincetonInstruments modules")
 
 

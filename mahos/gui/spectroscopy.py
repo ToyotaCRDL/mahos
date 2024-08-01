@@ -21,9 +21,9 @@ from .Qt import QtCore, QtWidgets, QtGui
 from .ui.spectroscopy import Ui_Spectroscopy
 from .spectroscopy_client import QSpectroscopyClient
 
-from ..msgs.common_msgs import BinaryState, BinaryStatus
+from ..msgs.common_msgs import BinaryState
 from ..msgs.common_meas_msgs import Buffer
-from ..msgs.spectroscopy_msgs import SpectroscopyData
+from ..msgs.spectroscopy_msgs import SpectroscopyData, SpectroscopyStatus
 from ..node.global_params import GlobalParamsClient
 from ..meas.confocal import ConfocalIORequester
 from .gui_node import GUINode
@@ -251,7 +251,7 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
 
         self.setEnabled(False)
 
-    def init_with_status(self, status: BinaryStatus):
+    def init_with_status(self, status: SpectroscopyStatus):
         """initialize widget after receiving first status."""
 
         # only once.
@@ -265,6 +265,7 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
         self.update_state(status.state, last_state=BinaryState.IDLE)
 
         self.cli.stateUpdated.connect(self.update_state)
+        self.cli.statusUpdated.connect(self.update_temperature)
         self.cli.dataUpdated.connect(self.update_data)
         self.cli.bufferUpdated.connect(self.update_buffer)
         self.cli.stopped.connect(self.finalize)
@@ -428,6 +429,9 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
             w.setEnabled(state == BinaryState.IDLE)
 
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
+
+    def update_temperature(self, status: SpectroscopyStatus):
+        self.temp_label.setText(f"Detector temperature: {status.temperature:.1f} degC")
 
 
 class SpectroscopyMainWindow(QtWidgets.QMainWindow):
