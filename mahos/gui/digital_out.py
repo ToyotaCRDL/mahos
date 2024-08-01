@@ -33,6 +33,7 @@ class DigitalOutWidget(ClientTopWidget):
 
         self.conf = local_conf(gconf, name)
         servers: dict = self.conf["target"]["servers"]
+        self.alias: dict = self.conf.get("alias", {})
         fontsize = self.conf.get("fontsize", 26)
 
         self.cli = MultiInstrumentClient(gconf, servers, context=context)
@@ -64,10 +65,11 @@ class DigitalOutWidget(ClientTopWidget):
 
     def switch(self, name: str, checked: bool):
         if self.request_switch(name, checked):
+            labels = self.alias.get(name, ("Low", "High"))
             if checked:
-                self.buttons[name].setText("High")
+                self.buttons[name].setText(labels[1])
             else:
-                self.buttons[name].setText("Low")
+                self.buttons[name].setText(labels[0])
         else:
             self.buttons[name].setText("Failed")
 
