@@ -177,6 +177,10 @@ class LightField(Instrument):
             return self.get_base_config()
         elif key == "base_configs":
             return self.get_base_configs()
+        elif key == "temperature":
+            # TODO: get detector temperature
+            self.logger.warn("TODO: get temperature")
+            return 0.0
         elif key == "exposure_time":
             return self.get_exposure_time()
         elif key == "exposures":

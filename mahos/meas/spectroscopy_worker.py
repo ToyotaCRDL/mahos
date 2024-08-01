@@ -35,8 +35,9 @@ class Repeater(Worker):
             return None
         d = P.ParamDict(
             base_config=P.StrChoiceParam(base_configs[0], base_configs),
+            acquisitions=P.IntParam(0, 0, 10000, doc="number of acquisitions (0 for inf)"),
             exposure_time=P.FloatParam(1000.0, 1.0, 1e6, doc="exposure time in ms"),
-            exposures=P.IntParam(0, 0, 10000, doc="number of exposures (0 for inf.)"),
+            exposures=P.IntParam(1, 0, 10000, doc="number of exposures in one acquisition"),
             center_wavelength=P.FloatParam(700.0, 200.0, 1300.0, doc="center wavelength in nm"),
             resume=P.BoolParam(False),
             ident=P.UUIDParam(optional=True, enable=False),
