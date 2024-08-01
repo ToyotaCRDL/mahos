@@ -14,7 +14,11 @@ import time
 import glob
 
 import numpy as np
-import TimeTagger as tt
+
+try:
+    import TimeTagger as tt
+except ImportError:
+    print("mahos.inst.tdc: failed to import TimeTagger module")
 
 from ..instrument import Instrument
 from ...msgs.inst.tdc_msgs import ChannelStatus, RawEvents
