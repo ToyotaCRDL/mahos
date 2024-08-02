@@ -159,7 +159,9 @@ class Andor_Spectrometer(Instrument):
             self.check_sdk(ret)
             and self.check_sdk(self.sdk.SetImage(1, 1, 1, self.xpixels, 1, self.ypixels))
             and self.set_exposure_time(exposure_time_ms)
-            and self.sdk.PrepareAcquisition()
+            # and self.sdk.PrepareAcquisition()
+            # Don't use PrepareAcquisition() here because intensity of first data gets
+            # slightly higher compared to second or later (reason unknown).
         ):
             return False
 
