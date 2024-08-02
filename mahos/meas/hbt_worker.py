@@ -32,9 +32,6 @@ class Listener(Worker):
 
         if self.tdc_correlation and "t0_ns" in conf:
             self.logger.warn("conf['t0_ns'] is irrelevant if conf['tdc_correlation'] is True.")
-        elif "default_t0_ns" in conf:
-            self.logger.warn("conf['default_t0_ns'] is deprecated. use 't0_ns' instead.")
-            self._t0 = conf.get("default_t0_ns", 100.0) * 1e-9
         else:
             self._t0 = conf.get("t0_ns", 100.0) * 1e-9
 
