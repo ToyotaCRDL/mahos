@@ -28,6 +28,7 @@
       ~RS_NRPZ.get_param_dict
       ~RS_NRPZ.get_param_dict_labels
       ~RS_NRPZ.get_unit
+      ~RS_NRPZ.reset
       ~RS_NRPZ.set_unit
       ~RS_NRPZ.start
       ~RS_NRPZ.stop

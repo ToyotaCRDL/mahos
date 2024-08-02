@@ -24,6 +24,7 @@
       ~RecorderWidget.init_with_status
       ~RecorderWidget.load_data
       ~RecorderWidget.refresh_plot
+      ~RecorderWidget.request_reset
       ~RecorderWidget.request_start
       ~RecorderWidget.request_stop
       ~RecorderWidget.save_data

@@ -18,19 +18,24 @@ from ..util.conv import invert_mapping
 
 
 class Thorlabs_FW102(Instrument):
-    """Thorlabs Filter Wheel.
+    """Thorlabs Filter Wheel FW102.
 
-    You need following:
-    1. Place SDK native DLLs somewhere.
+    You need to place the native (C) DLL somewhere.
 
-    :param dll_dir: The directory path containing SDK DLLs.
+    :param dll_dir: The directory path containing DLL.
     :type dll_dir: str
-    :param serial: (default: "") Serial string to discriminate multiple cameras.
-        Blank is fine if only one Thorlabs camera is connected.
+    :param dll_name: (default: FilterWheel102_win64.dll) The file name of DLL.
+    :type dll_name: str
+    :param serial: (default: "") Serial string to discriminate multiple wheels.
+        Blank is fine if only one wheel is connected.
     :type serial: str
     :param pos_filter: Mapping from filter position (int) to name (str).
         Note that this mapping must be injective (every name must be unique).
     :type pos_filter: dict[int, str]
+    :param baud_rate: (default: 115200) Baud rate for connection.
+    :type baud_rate: int
+    :param timeout: (default: 3) Timeout (in sec) for connection.
+    :type timeout: int
 
     """
 
@@ -42,6 +47,7 @@ class Thorlabs_FW102(Instrument):
             os.environ["PATH"] += os.pathsep + p
             os.add_dll_directory(p)
 
+        dll_name = self.conf.get("dll_name", "FilterWheel102_win64.dll")
         baud_rate = self.conf.get("baud_rate", 115200)
         timeout = int(self.conf.get("timeout", 3))
 
@@ -54,7 +60,7 @@ class Thorlabs_FW102(Instrument):
         else:
             self.pos_filter = self.filter_pos = None
 
-        self.dll = C.windll.LoadLibrary("FilterWheel102_win64.dll")
+        self.dll = C.windll.LoadLibrary(dll_name)
         buf = C.create_string_buffer(1024)
         self.dll.List(buf, 1024)
         serials = buf.value.decode().split(",")[::2]

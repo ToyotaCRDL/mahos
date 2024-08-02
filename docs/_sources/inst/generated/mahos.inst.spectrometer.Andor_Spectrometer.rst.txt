@@ -1,0 +1,40 @@
+﻿mahos.inst.spectrometer.Andor\_Spectrometer
+===========================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.spectrometer
+
+.. autoclass:: Andor_Spectrometer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Andor_Spectrometer.__init__
+      ~Andor_Spectrometer.capture
+      ~Andor_Spectrometer.check_sdk
+      ~Andor_Spectrometer.check_spc
+      ~Andor_Spectrometer.close_resources
+      ~Andor_Spectrometer.configure
+      ~Andor_Spectrometer.configure_base_config
+      ~Andor_Spectrometer.get
+      ~Andor_Spectrometer.get_base_config
+      ~Andor_Spectrometer.get_base_configs
+      ~Andor_Spectrometer.get_grating_center_wavelength
+      ~Andor_Spectrometer.get_temperature
+      ~Andor_Spectrometer.set
+      ~Andor_Spectrometer.set_exposure_time
+      ~Andor_Spectrometer.set_exposures_per_frame
+      ~Andor_Spectrometer.set_grating_center_wavelength
+   
+   
+
+   
+   
+   

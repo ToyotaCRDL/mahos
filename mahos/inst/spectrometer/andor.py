@@ -32,14 +32,14 @@ class Andor_Spectrometer(Instrument):
     """Andor Spectrometer.
 
     :param base_configs: The base configurations.
-    :param base_configs: dict
+    :type base_configs: dict
     :param detector_temperature: Set value of detector temperature.
-    :param detector_temperature: float
+    :type detector_temperature: float
     :param invert_wavelength: (default: False) Set True to invert wavelength (x-axis).
         This is relevant only if the detector is attached in inverted position.
-    :param invert_wavelength: bool
+    :type invert_wavelength: bool
     :param device_id: (default: 0) Device ID for spectrometer.
-    :param device_id: int
+    :type device_id: int
 
     """
 

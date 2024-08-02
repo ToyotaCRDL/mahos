@@ -19,6 +19,7 @@ Instrument modules
    daq
    dmm
    fg
+   filter_wheel
    lockin
    pd
    pg

@@ -24,3 +24,4 @@ Instruments
    :toctree: generated
 
    LightField
+   Andor_Spectrometer

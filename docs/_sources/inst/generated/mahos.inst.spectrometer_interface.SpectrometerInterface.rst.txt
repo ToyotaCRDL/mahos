@@ -24,6 +24,7 @@
       ~SpectrometerInterface.get_data
       ~SpectrometerInterface.get_exposure_time
       ~SpectrometerInterface.get_exposures
+      ~SpectrometerInterface.get_temperature
       ~SpectrometerInterface.set_base_config
       ~SpectrometerInterface.set_center_wavelength
       ~SpectrometerInterface.set_exposure_time

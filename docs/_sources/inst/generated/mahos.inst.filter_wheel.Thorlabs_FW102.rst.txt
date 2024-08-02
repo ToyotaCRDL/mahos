@@ -1,0 +1,34 @@
+﻿mahos.inst.filter\_wheel.Thorlabs\_FW102
+========================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.filter_wheel
+
+.. autoclass:: Thorlabs_FW102
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Thorlabs_FW102.__init__
+      ~Thorlabs_FW102.close_resources
+      ~Thorlabs_FW102.configure
+      ~Thorlabs_FW102.get
+      ~Thorlabs_FW102.get_filter
+      ~Thorlabs_FW102.get_param_dict
+      ~Thorlabs_FW102.get_param_dict_labels
+      ~Thorlabs_FW102.get_pos
+      ~Thorlabs_FW102.get_pos_count
+      ~Thorlabs_FW102.set_pos
+   
+   
+
+   
+   
+   

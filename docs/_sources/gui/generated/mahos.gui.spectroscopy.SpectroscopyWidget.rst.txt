@@ -33,6 +33,7 @@
       ~SpectroscopyWidget.update_buffer
       ~SpectroscopyWidget.update_data
       ~SpectroscopyWidget.update_state
+      ~SpectroscopyWidget.update_temperature
       ~SpectroscopyWidget.validate
    
    

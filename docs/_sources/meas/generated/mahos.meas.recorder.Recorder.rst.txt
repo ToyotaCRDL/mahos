@@ -22,8 +22,10 @@
       ~Recorder.export_data
       ~Recorder.get_param_dict
       ~Recorder.get_param_dict_labels
+      ~Recorder.handle_req
       ~Recorder.load_data
       ~Recorder.main
+      ~Recorder.reset
       ~Recorder.save_data
       ~Recorder.wait
    

@@ -13,9 +13,11 @@ Added
 - inst: new module dmm (for Digital Multi Meter).
 - inst: new module power_sensor (for RF / MW power sensor).
 - inst: new module positioner.
+- inst: new module filter_wheel.
 - inst.tdc: new instrument TimeTagger (Swabian Instruments).
 - inst.fg: new instrument SIGLENT_SDG2000X.
 - inst.pg: new instrument SpinCore_PulseBlasterESR_PRO.
+- inst.spectrometer: new instrument Andor_Spectrometer.
 
 Changed
 ^^^^^^^
