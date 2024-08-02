@@ -108,7 +108,9 @@ class Repeater(Worker):
         return self.data
 
     def update_temperature(self):
-        self._temperature = self.spectrometer.get_temperature()
+        T = self.spectrometer.get_temperature()
+        if T is not None:
+            self._temperature = T
 
     def get_temperature(self) -> float:
         return self._temperature

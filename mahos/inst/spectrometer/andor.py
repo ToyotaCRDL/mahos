@@ -33,6 +33,13 @@ class Andor_Spectrometer(Instrument):
 
     :param base_configs: The base configurations.
     :param base_configs: dict
+    :param detector_temperature: Set value of detector temperature.
+    :param detector_temperature: float
+    :param invert_wavelength: (default: False) Set True to invert wavelength (x-axis).
+        This is relevant only if the detector is attached in inverted position.
+    :param invert_wavelength: bool
+    :param device_id: (default: 0) Device ID for spectrometer.
+    :param device_id: int
 
     """
 
@@ -43,25 +50,26 @@ class Andor_Spectrometer(Instrument):
         self._base_configs = self.conf["base_configs"]
         self._base_config = self.conf.get("base_config", list(self._base_configs.keys())[0])
         self._invert_wavelength = self.conf.get("invert_wavelength", False)
+        self._device = self.conf.get("device_id", 0)
 
         self.sdk = atmcd()
         self.spc = ATSpectrograph()
 
         if self.spc.Initialize("") == SPC_OK:
-            self.logger.info("Initialized Shamrock.")
+            self.logger.info("Initialized ATSpectrograph (Shamrock).")
         else:
-            raise RuntimeError("Failed to initialize Shamrock.")
+            raise RuntimeError("Failed to initialize ATSpectrograph (Shamrock).")
 
         if self.sdk.Initialize("") == SDK_OK:
-            self.logger.info("Initialized SDK.")
+            self.logger.info("Initialized atmcd (SDK).")
         else:
-            raise RuntimeError("Failed to initialize SDK.")
+            raise RuntimeError("Failed to initialize atmcd (SDK).")
 
         _, serial = self.sdk.GetCameraSerialNumber()
         self.logger.info(f"Camera Serial: {serial}")
-        self.device = 0
 
-        if self.check_sdk(self.sdk.SetTemperature(-60)) and self.check_sdk(self.sdk.CoolerON()):
+        T = self.conf.get("detector_temperature", -60)
+        if self.check_sdk(self.sdk.SetTemperature(T)) and self.check_sdk(self.sdk.CoolerON()):
             self.logger.info("Cooler ON")
         else:
             self.logger.error("Failed to Cooler ON")
@@ -99,11 +107,11 @@ class Andor_Spectrometer(Instrument):
         if wavelength_nm <= 0.0:
             self.logger.error("wavelength_nm must be a positive float.")
             return False
-        self.spc.SetWavelength(self.device, wavelength_nm)
+        self.spc.SetWavelength(self._device, wavelength_nm)
         return True
 
     def get_grating_center_wavelength(self) -> float:
-        ret, wavelength = self.spc.GetWavelength(self.device)
+        ret, wavelength = self.spc.GetWavelength(self._device)
         if ret == SPC_OK:
             return wavelength
         else:
@@ -114,31 +122,44 @@ class Andor_Spectrometer(Instrument):
         _, temperature = self.sdk.GetTemperature()
         return temperature
 
-    def configure_base_config(self, base_config: str) -> bool:
+    def configure_base_config(self, params: dict) -> bool:
+        base_config = params["base_config"]
         if base_config not in self._base_configs:
-            return self.fail_with(f"Unknown base_config: {base_config}")
+            return self.fail_with(f"base_config {base_config} is unknown.")
         c = self._base_configs[base_config]
+
+        # For now, we don't expect the grating in params.
+        grating = c.get("grating", 1)
+
+        if "center_wavelength" not in params and "center_wavelength" not in c:
+            return self.fail_with("center_wavelength must be given in params or base_config.")
+        wavelength = params.get("center_wavelength", c["center_wavelength"])
+        exposure_time_ms = params.get("exposure_time", c.get("exposure_time", 1.0))
+        exposures = params.get("exposures", c.get("exposures", 1))
+        # cycle_time is period of multiple exposures. convert ms to sec here.
+        # in our usage, putting 0 is fine (minimum possible cycle_time is automatically set).
+        cycle_time_sec = params.get("cycle_time", c.get("cycle_time", 0.0) * 1e-3)
 
         if not (
             self.check_sdk(self.sdk.SetAcquisitionMode(codes.Acquisition_Mode.ACCUMULATE))
             and self.check_sdk(self.sdk.SetReadMode(codes.Read_Mode.FULL_VERTICAL_BINNING))
             and self.check_sdk(self.sdk.SetTriggerMode(codes.Trigger_Mode.INTERNAL))
-            and self.check_sdk(self.sdk.SetNumberAccumulations(c.get("exposures", 1)))
-            and self.check_sdk(self.sdk.SetAccumulationCycleTime(c.get("cycle_time", 0.0) * 1e-3))
+            and self.check_sdk(self.sdk.SetNumberAccumulations(exposures))
+            and self.check_sdk(self.sdk.SetAccumulationCycleTime(cycle_time_sec))
         ):
             return False
         (ret, self.xpixels, self.ypixels) = self.sdk.GetDetector()
         if not (
             self.check_sdk(ret)
             and self.check_sdk(self.sdk.SetImage(1, 1, 1, self.xpixels, 1, self.ypixels))
-            and self.set_exposure_time(c.get("exposure_time", 1.0))
+            and self.set_exposure_time(exposure_time_ms)
             and self.sdk.PrepareAcquisition()
         ):
             return False
 
         if not (
-            self.check_spc(self.spc.SetGrating(0, c.get("grating", 1)))
-            and self.set_grating_center_wavelength(c["center_wavelength"])
+            self.check_spc(self.spc.SetGrating(self._device, grating))
+            and self.set_grating_center_wavelength(wavelength)
         ):
             return False
         self._base_config = base_config
@@ -181,8 +202,6 @@ class Andor_Spectrometer(Instrument):
             )
             return None
 
-        # self.logger.debug(f"Temperature: {self.get_temperature()}")
-
         if self._invert_wavelength:
             x = x[::-1]
         return np.vstack((x, y))
@@ -198,21 +217,6 @@ class Andor_Spectrometer(Instrument):
             return self.get_base_configs()
         elif key == "temperature":
             return self.get_temperature()
-        # elif key == "config":
-        #    base = self.get_base_config()
-        #    c = self._base_configs[base]
-        #    return {
-        #        "base_config": base,
-        #        "exposure_time": c.get("exposure_time", 1e-3),
-        #        "exposures": c.get("exposures", 1),
-        #        "center_wavelength": c["center_wavelength"],
-        #    }
-        # elif key == "exposure_time":
-        #     return self.get_exposure_time()
-        # elif key == "exposures":
-        #     return self.get_exposures_per_frame()
-        # elif key == "center_wavelength":
-        #     return self.get_grating_center_wavelength()
         else:
             self.logger.error(f"Unknown get() key: {key}.")
             return None
@@ -230,17 +234,6 @@ class Andor_Spectrometer(Instrument):
             return self.fail_with(f"Unknown set() key: {key}.")
 
     def configure(self, params: dict, label: str = "") -> bool:
-        success = True
-        if params.get("base_config"):
-            success &= self.configure_base_config(params["base_config"])
-        if params.get("exposure_time"):
-            success &= self.set_exposure_time(params["exposure_time"])
-        if params.get("exposures"):
-            success &= self.set_exposures_per_frame(params["exposures"])
-        if params.get("center_wavelength"):
-            success &= self.set_grating_center_wavelength(params["center_wavelength"])
-
-        if not success:
-            self.fail_with("Failed to configure.")
-
-        return success
+        if not self.check_required_params(params, "base_config"):
+            return False
+        return self.configure_base_config(params)

@@ -431,7 +431,8 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
 
     def update_temperature(self, status: SpectroscopyStatus):
-        self.temp_label.setText(f"Detector temperature: {status.temperature:.1f} degC")
+        if status.temperature is not None:
+            self.temp_label.setText(f"Detector temperature: {status.temperature:.1f} degC")
 
 
 class SpectroscopyMainWindow(QtWidgets.QMainWindow):
