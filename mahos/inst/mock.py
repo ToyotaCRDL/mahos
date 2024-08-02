@@ -20,6 +20,7 @@ from ..msgs.confocal_msgs import Axis
 from ..msgs.inst.camera_msgs import FrameResult
 from ..msgs.inst.tdc_msgs import ChannelStatus, RawEvents
 from ..msgs.inst.pg_msgs import Block, Blocks, BlockSeq
+from ..msgs.inst.spectrometer_msgs import Temperature
 from ..msgs import param_msgs as P
 
 
@@ -532,34 +533,24 @@ class Spectrometer_mock(Instrument):
     def get_grating_center_wavelength(self) -> float:
         return self._center_wavelength
 
+    def get_temperature(self) -> Temperature:
+        return Temperature(-59.9, -60.0)
+
     def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.capture()
-        elif key == "config":
-            return {
-                "base_config": self.get_base_config(),
-                "exposure_time": self.get_exposure_time(),
-                "exposures": self.get_exposures_per_frame(),
-                "center_wavelength": self.get_grating_center_wavelength(),
-            }
         elif key == "base_config":
             return self.get_base_config()
         elif key == "base_configs":
             return self.get_base_configs()
-        elif key == "exposure_time":
-            return self.get_exposure_time()
-        elif key == "exposures":
-            return self.get_exposures_per_frame()
-        elif key == "center_wavelength":
-            return self.get_grating_center_wavelength()
+        elif key == "temperature":
+            return self.get_temperature()
         else:
             self.logger.error(f"Unknown get() key: {key}.")
             return None
 
     def set(self, key: str, value=None, label: str = "") -> bool:
-        if key == "base_config":
-            return self.set_base_config(value)
-        elif key == "exposure_time":
+        if key == "exposure_time":
             return self.set_exposure_time(value)
         elif key == "exposures":
             return self.set_exposures_per_frame(value)

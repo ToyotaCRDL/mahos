@@ -13,6 +13,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..instrument import Instrument
+from ...msgs.inst.spectrometer_msgs import Temperature
 
 
 # imports for Andor
@@ -51,6 +52,7 @@ class Andor_Spectrometer(Instrument):
         self._base_config = self.conf.get("base_config", list(self._base_configs.keys())[0])
         self._invert_wavelength = self.conf.get("invert_wavelength", False)
         self._device = self.conf.get("device_id", 0)
+        self._target_T = self.conf.get("detector_temperature", -60)
 
         self.sdk = atmcd()
         self.spc = ATSpectrograph()
@@ -68,8 +70,9 @@ class Andor_Spectrometer(Instrument):
         _, serial = self.sdk.GetCameraSerialNumber()
         self.logger.info(f"Camera Serial: {serial}")
 
-        T = self.conf.get("detector_temperature", -60)
-        if self.check_sdk(self.sdk.SetTemperature(T)) and self.check_sdk(self.sdk.CoolerON()):
+        if self.check_sdk(self.sdk.SetTemperature(self._target_T)) and self.check_sdk(
+            self.sdk.CoolerON()
+        ):
             self.logger.info("Cooler ON")
         else:
             self.logger.error("Failed to Cooler ON")
@@ -118,9 +121,9 @@ class Andor_Spectrometer(Instrument):
             self.logger.error("spc.GetWavelength() failed.")
             return 0.0
 
-    def get_temperature(self) -> float:
-        _, temperature = self.sdk.GetTemperature()
-        return temperature
+    def get_temperature(self) -> Temperature:
+        _, current = self.sdk.GetTemperature()
+        return Temperature(current, self._target_T)
 
     def configure_base_config(self, params: dict) -> bool:
         base_config = params["base_config"]
@@ -222,9 +225,7 @@ class Andor_Spectrometer(Instrument):
             return None
 
     def set(self, key: str, value=None, label: str = "") -> bool:
-        if key == "base_config":
-            return self.configure_base_config(value)
-        elif key == "exposure_time":
+        if key == "exposure_time":
             return self.set_exposure_time(value)
         elif key == "exposures":
             return self.set_exposures_per_frame(value)

@@ -8,7 +8,7 @@ Spectrometer module
 
 """
 
-from .princeton import LightField
+from .princeton import Princeton_LightField
 from .andor import Andor_Spectrometer
 
-__all__ = ["LightField", "Andor_Spectrometer"]
+__all__ = ["Princeton_LightField", "Andor_Spectrometer"]

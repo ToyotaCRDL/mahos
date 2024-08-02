@@ -13,6 +13,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..msgs.spectroscopy_msgs import SpectroscopyData
+from ..msgs.inst.spectrometer_msgs import Temperature
 from ..msgs import param_msgs as P
 from ..inst.spectrometer_interface import SpectrometerInterface
 from .common_worker import Worker
@@ -27,7 +28,7 @@ class Repeater(Worker):
         self.add_instruments(self.spectrometer)
 
         self.data = SpectroscopyData()
-        self._temperature = 0.0
+        self._temperature = None
 
     def get_param_dict(self) -> P.ParamDict[str, P.PDValue] | None:
         base_configs = self.spectrometer.get_base_configs()
@@ -112,5 +113,5 @@ class Repeater(Worker):
         if T is not None:
             self._temperature = T
 
-    def get_temperature(self) -> float:
+    def get_temperature(self) -> Temperature:
         return self._temperature

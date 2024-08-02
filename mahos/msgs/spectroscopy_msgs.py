@@ -16,20 +16,21 @@ import msgpack
 from .common_msgs import Status, BinaryState
 from .common_meas_msgs import BasicMeasData
 from .fit_msgs import PeakType
+from .inst.spectrometer_msgs import Temperature
 
 from ..util.stat import filter_outlier_2d
 
 
 class SpectroscopyStatus(Status):
-    def __init__(self, state: BinaryState, temperature: float):
+    def __init__(self, state: BinaryState, temperature: Temperature | None):
         self.state = state
         self.temperature = temperature
 
     def __repr__(self):
-        return f"SpectroscopyStatus({self.state}, {self.temperature:.1f})"
+        return f"SpectroscopyStatus({self.state}, {self.temperature})"
 
     def __str__(self):
-        return f"Spectroscopy({self.state.name}, {self.temperature:.1f})"
+        return f"Spectroscopy({self.state.name}, {self.temperature})"
 
 
 class SpectroscopyData(BasicMeasData):

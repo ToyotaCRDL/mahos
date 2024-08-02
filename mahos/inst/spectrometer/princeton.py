@@ -15,6 +15,7 @@ import os
 import numpy as np
 
 from ..instrument import Instrument
+from ...msgs.spectroscopy_msgs import Temperature
 
 
 # imports for LightField
@@ -42,8 +43,8 @@ except (ImportError, KeyError):
     print("mahos.inst.spectrometer: failed to import pythonnet or PrincetonInstruments modules")
 
 
-class LightField(Instrument):
-    """Wrapper for LightField Software from Princeton Instrument.
+class Princeton_LightField(Instrument):
+    """Spectrometer using LightField Software from Princeton Instrument.
 
     :param base_config: A base configuration (Experiment) name to load on init.
     :param base_config: str | None
@@ -138,6 +139,12 @@ class LightField(Instrument):
     def get_grating_center_wavelength(self) -> float:
         return self.expt.GetValue(SpectrometerSettings.GratingCenterWavelength)
 
+    def get_temperature(self) -> Temperature:
+        return Temperature(
+            self.expt.GetValue(CameraSettings.SensorTemperatureReading),
+            self.expt.GetValue(CameraSettings.SensorTemperatureSetPoint),
+        )
+
     def capture(self) -> np.ndarray | None:
         nframes = 1
         frames = self.expt.Capture(nframes)
@@ -166,35 +173,18 @@ class LightField(Instrument):
     def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.capture()
-        elif key == "config":
-            return {
-                "base_config": self.get_base_config(),
-                "exposure_time": self.get_exposure_time(),
-                "exposures": self.get_exposures_per_frame(),
-                "center_wavelength": self.get_grating_center_wavelength(),
-            }
         elif key == "base_config":
             return self.get_base_config()
         elif key == "base_configs":
             return self.get_base_configs()
         elif key == "temperature":
-            # TODO: get detector temperature
-            self.logger.warn("TODO: get temperature")
-            return 0.0
-        elif key == "exposure_time":
-            return self.get_exposure_time()
-        elif key == "exposures":
-            return self.get_exposures_per_frame()
-        elif key == "center_wavelength":
-            return self.get_grating_center_wavelength()
+            return self.get_temperature()
         else:
             self.logger.error(f"Unknown get() key: {key}.")
             return None
 
     def set(self, key: str, value=None, label: str = "") -> bool:
-        if key == "base_config":
-            return self.set_base_config(value)
-        elif key == "exposure_time":
+        if key == "exposure_time":
             return self.set_exposure_time(value)
         elif key == "exposures":
             return self.set_exposures_per_frame(value)

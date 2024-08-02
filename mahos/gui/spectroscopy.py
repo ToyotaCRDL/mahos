@@ -24,6 +24,7 @@ from .spectroscopy_client import QSpectroscopyClient
 from ..msgs.common_msgs import BinaryState
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.spectroscopy_msgs import SpectroscopyData, SpectroscopyStatus
+from ..msgs.inst.spectrometer_msgs import Temperature
 from ..node.global_params import GlobalParamsClient
 from ..meas.confocal import ConfocalIORequester
 from .gui_node import GUINode
@@ -431,8 +432,9 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
 
     def update_temperature(self, status: SpectroscopyStatus):
-        if status.temperature is not None:
-            self.temp_label.setText(f"Detector temperature: {status.temperature:.1f} degC")
+        T = status.temperature
+        if isinstance(T, Temperature):
+            self.temp_label.setText(f"Detector temperature: {T.current:.1f} ({T.target:.1f}) degC")
 
 
 class SpectroscopyMainWindow(QtWidgets.QMainWindow):

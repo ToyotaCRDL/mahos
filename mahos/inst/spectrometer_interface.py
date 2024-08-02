@@ -13,6 +13,7 @@ from __future__ import annotations
 import numpy as np
 
 from .interface import InstrumentInterface
+from ..msgs.inst.spectrometer_msgs import Temperature
 
 
 class SpectrometerInterface(InstrumentInterface):
@@ -31,19 +32,6 @@ class SpectrometerInterface(InstrumentInterface):
 
         return self.get("data")
 
-    def get_config(self) -> dict:
-        """Get config dict including following parameters.
-
-        :returns: dict[str, Any] with following keys.
-            base_config (str): loaded base config.
-            exposure_time (float): exposure time in ms.
-            exposures (int): number of repeated exposures.
-            center_wavelength (float): center wavelength in nm.
-
-        """
-
-        return self.get("config")
-
     def get_base_config(self) -> str | None:
         """get current base config name."""
 
@@ -54,40 +42,20 @@ class SpectrometerInterface(InstrumentInterface):
 
         return self.get("base_configs")
 
-    def set_base_config(self, name: str) -> bool:
-        """set and load a base config."""
-
-        return self.set("base_config", name)
-
-    def get_temperature(self) -> float:
-        """Get detector temperature in degC."""
+    def get_temperature(self) -> Temperature:
+        """Get detector temperature information."""
 
         return self.get("temperature")
-
-    def get_exposure_time(self) -> float:
-        """Get exposure time in ms."""
-
-        return self.get("exposure_time")
 
     def set_exposure_time(self, time_ms: float) -> bool:
         """Set exposure time."""
 
         return self.set("exposure_time", time_ms)
 
-    def get_exposures(self) -> int:
-        """Get repeated exposures per acquisitions."""
-
-        return self.get("exposures")
-
     def set_exposures(self, exposures: int) -> bool:
         """Set repeated exposures per acquisitions."""
 
         return self.set("exposures", exposures)
-
-    def get_center_wavelength(self) -> float:
-        """Get center wavelength in nm."""
-
-        return self.get("center_wavelength")
 
     def set_center_wavelength(self, wavelength_nm: float) -> bool:
         """Set center wavelength."""
