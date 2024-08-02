@@ -27,6 +27,7 @@ Changed
   and configure() in meas / inst APIs.
 - inst: argument "label" has been added to start(), stop(), reset(), set(), and get() inst API.
 - inst.fg: class name DG2000 -> RIGOL_DG2000.
+- inst.spectrometer: class name LightField -> Princeton_LightField.
 
 [0.2.3] - 2023-11-06
 --------------------

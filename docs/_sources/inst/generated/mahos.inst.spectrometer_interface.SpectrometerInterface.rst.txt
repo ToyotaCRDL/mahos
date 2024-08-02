@@ -19,13 +19,8 @@
       ~SpectrometerInterface.configure_acquisition
       ~SpectrometerInterface.get_base_config
       ~SpectrometerInterface.get_base_configs
-      ~SpectrometerInterface.get_center_wavelength
-      ~SpectrometerInterface.get_config
       ~SpectrometerInterface.get_data
-      ~SpectrometerInterface.get_exposure_time
-      ~SpectrometerInterface.get_exposures
       ~SpectrometerInterface.get_temperature
-      ~SpectrometerInterface.set_base_config
       ~SpectrometerInterface.set_center_wavelength
       ~SpectrometerInterface.set_exposure_time
       ~SpectrometerInterface.set_exposures

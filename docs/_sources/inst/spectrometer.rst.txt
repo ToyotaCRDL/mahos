@@ -23,5 +23,5 @@ Instruments
 .. autosummary::
    :toctree: generated
 
-   LightField
+   Princeton_LightField
    Andor_Spectrometer

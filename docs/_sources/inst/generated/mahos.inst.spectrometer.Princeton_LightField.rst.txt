@@ -1,0 +1,42 @@
+﻿mahos.inst.spectrometer.Princeton\_LightField
+=============================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.spectrometer
+
+.. autoclass:: Princeton_LightField
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Princeton_LightField.__init__
+      ~Princeton_LightField.capture
+      ~Princeton_LightField.close_resources
+      ~Princeton_LightField.configure
+      ~Princeton_LightField.get
+      ~Princeton_LightField.get_base_config
+      ~Princeton_LightField.get_base_configs
+      ~Princeton_LightField.get_exposure_time
+      ~Princeton_LightField.get_exposures_per_frame
+      ~Princeton_LightField.get_frame_combination_method
+      ~Princeton_LightField.get_grating_center_wavelength
+      ~Princeton_LightField.get_temperature
+      ~Princeton_LightField.set
+      ~Princeton_LightField.set_base_config
+      ~Princeton_LightField.set_exposure_time
+      ~Princeton_LightField.set_exposures_per_frame
+      ~Princeton_LightField.set_frame_combination_method
+      ~Princeton_LightField.set_grating_center_wavelength
+   
+   
+
+   
+   
+   
