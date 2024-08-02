@@ -136,7 +136,10 @@ class Andor_Spectrometer(Instrument):
 
         if "center_wavelength" not in params and "center_wavelength" not in c:
             return self.fail_with("center_wavelength must be given in params or base_config.")
-        wavelength = params.get("center_wavelength", c["center_wavelength"])
+        if "center_wavelength" in params:
+            wavelength = params["center_wavelength"]
+        else:
+            wavelength = c["center_wavelength"]
         exposure_time_ms = params.get("exposure_time", c.get("exposure_time", 1.0))
         exposures = params.get("exposures", c.get("exposures", 1))
         # cycle_time is period of multiple exposures. convert ms to sec here.
@@ -206,7 +209,7 @@ class Andor_Spectrometer(Instrument):
             return None
 
         if self._invert_wavelength:
-            x = x[::-1]
+            y = y[::-1]
         return np.vstack((x, y))
 
     # Standard API
