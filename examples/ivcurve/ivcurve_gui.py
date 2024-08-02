@@ -24,7 +24,7 @@ class IVCurveWidget(ClientTopWidget):
         self.conf = local_conf(gconf, name)
         self.cli = QBasicMeasClient(gconf, name, context=context, parent=self)
         self.cli.statusUpdated.connect(self.init_with_status)
-        self.add_client(self.cli)
+        self.add_clients(self.cli)
 
         self.setEnabled(False)
 

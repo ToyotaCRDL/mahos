@@ -86,7 +86,7 @@ class A(Node):
         self.B_cli = BClient(
             gconf, self.conf["target"]["B"], context=self.ctx, data_handler=self.set_dataB
         )
-        self.add_client(self.B_cli)
+        self.add_clients(self.B_cli)
         self.add_rep(self.set_dataA)
         self.data_pub = self.add_pub("data")
         self.both_pub = self.add_pub("both")
@@ -114,7 +114,7 @@ class B(Node):
         self.A_cli = AClient(
             gconf, self.conf["target"]["A"], context=self.ctx, data_handler=self.set_dataA
         )
-        self.add_client(self.A_cli)
+        self.add_clients(self.A_cli)
         self.add_rep(self.set_dataB)
         self.data_pub = self.add_pub("data")
         self.both_pub = self.add_pub("both")
