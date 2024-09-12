@@ -439,6 +439,8 @@ class PODMRData(BasicMeasData):
         return dt, total
 
     def get_pulse_params(self) -> dict:
+        if not self.has_params():
+            return {}
         if not ("90pulse" in self.params and "180pulse" in self.params):
             return self.params.copy()
 

@@ -668,9 +668,9 @@ class Ui_PODMR(object):
         self.autosaveTab = QtWidgets.QWidget()
         self.autosaveTab.setObjectName("autosaveTab")
         self.tabWidget.addTab(self.autosaveTab, "")
-        self.indicaTab = QtWidgets.QWidget()
-        self.indicaTab.setObjectName("indicaTab")
-        self.tabWidget.addTab(self.indicaTab, "")
+        self.tableTab = QtWidgets.QWidget()
+        self.tableTab.setObjectName("tableTab")
+        self.tabWidget.addTab(self.tableTab, "")
         self.verticalLayout_3.addWidget(self.tabWidget)
         self.horizontalLayout_2.addLayout(self.verticalLayout_3)
 
@@ -916,4 +916,4 @@ class Ui_PODMR(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.extraTab), _translate("PODMR", "Extra"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.fiTab), _translate("PODMR", "Fit"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.autosaveTab), _translate("PODMR", "Auto Save"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.indicaTab), _translate("PODMR", "Indicator"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tableTab), _translate("PODMR", "NMR Table"))

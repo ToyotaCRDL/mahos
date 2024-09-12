@@ -23,7 +23,7 @@ from . import Qt
 from .Qt import QtCore, QtWidgets, QtGui
 
 from .ui.podmr import Ui_PODMR
-from .ui.podmr_indicator import Ui_PODMRIndicator
+from .ui.podmr_nmr_table import Ui_NMRTable
 from .ui.podmr_autosave import Ui_PODMRAutoSave
 from .podmr_client import QPODMRClient
 
@@ -46,17 +46,20 @@ from ..util.math_phys import round_halfint, round_evenint
 Policy = QtWidgets.QSizePolicy.Policy
 
 
-class QSortingTableWidgetItem(QtWidgets.QTableWidgetItem):
-    """for numerical sorting"""
+class QNumTableWidgetItem(QtWidgets.QTableWidgetItem):
+    """TableWidgetItem for numerical sorting"""
 
     def __init__(self, value):
-        super(QSortingTableWidgetItem, self).__init__("%s" % value)
+        super(QNumTableWidgetItem, self).__init__(str(value))
 
     def __lt__(self, other):
-        if isinstance(other, QSortingTableWidgetItem):
-            selfDataValue = float(self.data(QtCore.Qt.EditRole))
-            otherDataValue = float(other.data(QtCore.Qt.EditRole))
-            return selfDataValue < otherDataValue
+        if isinstance(other, QNumTableWidgetItem):
+            try:
+                selfv = float(self.data(QtCore.Qt.ItemDataRole.EditRole))
+                otherv = float(other.data(QtCore.Qt.ItemDataRole.EditRole))
+                return selfv < otherv
+            except ValueError:
+                return QtWidgets.QTableWidgetItem.__lt__(self, other)
         else:
             return QtWidgets.QTableWidgetItem.__lt__(self, other)
 
@@ -372,14 +375,14 @@ class RawPlotWidget(QtWidgets.QWidget):
             self.raw_plot.getAxis(p).setTickFont(font)
 
 
-class PODMRIndicatorWidget(QtWidgets.QWidget, Ui_PODMRIndicator):
+class NMRTableWidget(QtWidgets.QWidget, Ui_NMRTable):
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
 
     def init_connection(self, update_slot):
         for b in (
-            self.staticfieldBox,
+            self.B0Box,
             self.TiterBox,
             self.ind1HgammaBox,
             self.ind13CgammaBox,
@@ -412,10 +415,20 @@ class PODMRIndicatorWidget(QtWidgets.QWidget, Ui_PODMRIndicator):
             self.indacpeakEdit,
             self.indac2peakEdit,
         ):
-            e.textChanged.connect(update_slot)
+            e.editingFinished.connect(update_slot)
 
-    def convert_freq(f, TL):
-        """frequency ==> delta, LO"""
+        self.tpimanualBox.toggled.connect(self.set_tpi_manual)
+        self.tpimanualBox.toggled.connect(update_slot)
+        self.tpiBox.editingFinished.connect(update_slot)
+
+    def set_tpi_manual(self, manual: bool):
+        self.tpiBox.setReadOnly(not manual)
+
+    def downconv_freq(self, f, TL):
+        """down convert frequency to (delta, LO)."""
+
+        if TL == 0.0:
+            return [float("nan")] * len(f), [float("nan")] * len(f)
 
         fTL = f * TL
         m = np.rint(fTL)
@@ -424,68 +437,74 @@ class PODMRIndicatorWidget(QtWidgets.QWidget, Ui_PODMRIndicator):
         return d, f_LO
 
     def update(self, data: PODMRData):
-        res = []  # No, Nuclei, Harmonics, Larmor freq., 2/(Larmor freq.), corresponding tau
+        params = data.get_pulse_params()
+        if "180pulse" in params and not self.tpimanualBox.isChecked():
+            self.tpiBox.setValue(params["180pulse"] * 1e9)
+        t_pi = self.tpiBox.value() * 1e-9
+        t_iter = self.TiterBox.value() * 1e-6
+
+        res = []  # No, Nuclei, Harmonics, Larmor freq., 2/(Larmor freq.), tau, folded freq.
         nuclei = ["1H", "13C", "14N", "15N", "19F", "31P", "ac", "ac2"]
         for nuc_label in nuclei:
             enabled = eval("self.ind%sBox" % nuc_label).isChecked()
             if not enabled:
                 continue
 
-            peaks, harmonics = self.calc_peak_position(nuc_label)
-            t_pi = data.get_pulse_params()["180pulse"]
-            tau = 1 / 4 / np.array(peaks) - t_pi / 2
-            invfl = 2 / np.array(peaks)
-
-            t_iter = self.TiterBox.value() * 1e-6
-            delta, LO = self.convert_freq(np.array(peaks), t_iter)
+            peaks, harm_label = self.calc_peak_position(nuc_label)
+            peaks_arr = np.array(peaks)
+            tau = 1.0 / (4.0 * peaks_arr) - t_pi / 2
+            invfl = 2.0 / peaks_arr
+            delta, LO = self.downconv_freq(peaks_arr, t_iter)
 
             for i in range(len(peaks)):
                 res.append(
                     (
                         nuc_label,
-                        harmonics[i],
-                        "%.6f" % (peaks[i] / 1e6),
-                        "%.2f" % (invfl[i] * 1e9),
-                        "%.2f" % (tau[i] * 1e9),
-                        "%.3f" % (delta[i] * 1e-3),
+                        harm_label[i],
+                        "{:.6f}".format(peaks[i] / 1e6),
+                        "{:.2f}".format(invfl[i] * 1e9),
+                        "{:.2f}".format(tau[i] * 1e9),
+                        "{:.3f}".format(delta[i] * 1e-3),
                     )
                 )
 
-        res = [(str(i),) + r for i, r in enumerate(res)]  # insert the column of No.
+        res = [(str(i + 1),) + r for i, r in enumerate(res)]  # insert the column of No.
 
         # rebuild table
-        sorting = self.indtableWidget.isSortingEnabled()
-        self.indtableWidget.setSortingEnabled(False)
-        for i in range(self.indtableWidget.rowCount()):
-            self.indtableWidget.removeRow(0)
-        self.indtableWidget.setRowCount(len(res))
+        sorting = self.tableWidget.isSortingEnabled()
+        self.tableWidget.setSortingEnabled(False)
+        self.tableWidget.clearContents()
+        self.tableWidget.setRowCount(len(res))
 
         for (i, j), s in np.ndenumerate(res):
-            self.indtableWidget.setItem(i, j, QSortingTableWidgetItem(s))
+            self.tableWidget.setItem(i, j, QNumTableWidgetItem(s))
 
-        self.indtableWidget.resizeColumnsToContents()
-        self.indtableWidget.setSortingEnabled(sorting)
+        self.tableWidget.resizeColumnsToContents()
+        self.tableWidget.setSortingEnabled(sorting)
 
-    def calc_peak_position(self, nuc_label):
-        """[(Larmor freq, 'harmonics label'), ...]"""
-        staticfield = self.staticfieldBox.value() * 1e-3  # mT to T
+    def calc_peak_position(self, nuc_label) -> list[tuple[float, str]]:
+        """list of (Larmor freq: float, harmonics label: str)"""
+
+        B0 = self.B0Box.value() * 1e-3  # mT to T
 
         if nuc_label in ["ac", "ac2"]:
-            lamor_freq = abs(eval("self.ind%sfreqBox" % nuc_label).value() * 1e6)  # MHz to Hz
+            lamor_freq = abs(getattr(self, f"ind{nuc_label}freqBox").value() * 1e6)  # MHz to Hz
         else:
-            gamma = eval("self.ind%sgammaBox" % nuc_label).value() * 1e6  # MHz/T to Hz/T
-            lamor_freq = abs(staticfield * gamma)  # [Hz]
+            gamma = getattr(self, f"ind{nuc_label}gammaBox").value() * 1e6  # MHz/T to Hz/T
+            lamor_freq = abs(B0 * gamma)  # Hz
 
-        peaks_str = eval("self.ind%speakEdit" % nuc_label).text()
+        peaks_str = getattr(self, f"ind{nuc_label}peakEdit").text()
         peaks = []
         harmonics = peaks_str.replace(" ", "").split(",")
         for harm in harmonics:
-            if harm.find("/") >= 0:  # rational number
-                a, b = harm.split("/")
-                h = float(a) / float(b)
-            else:  # integer or float
-                h = float(harm)
-
+            try:
+                if harm.find("/") >= 0:  # rational number
+                    a, b = harm.split("/")
+                    h = float(a) / float(b)
+                else:  # integer or float
+                    h = float(harm)
+            except (TypeError, ValueError):
+                pass
             peaks.append(lamor_freq * h)
         return peaks, harmonics
 
@@ -620,10 +639,10 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self._autosaveTab_layout.addWidget(self.autosave)
         self.autosave.init_connection()
 
-        self._indicaTab_layout = QtWidgets.QVBoxLayout(self.indicaTab)
-        self.indicator = PODMRIndicatorWidget(parent=self.indicaTab)
-        self._indicaTab_layout.addWidget(self.indicator)
-        self.indicator.init_connection(self.update_indicator)
+        self._table_layout = QtWidgets.QVBoxLayout(self.tableTab)
+        self.table = NMRTableWidget(parent=self.tableTab)
+        self._table_layout.addWidget(self.table)
+        self.table.init_connection(self.update_table)
 
         self.setEnabled(False)
 
@@ -733,8 +752,8 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
     # Widget status updates
 
-    def update_indicator(self):
-        self.indicator.update(self.data)
+    def update_table(self):
+        self.table.update(self.data)
 
     def init_widgets_with_params(self):
         params = self.cli.get_param_dict("rabi")

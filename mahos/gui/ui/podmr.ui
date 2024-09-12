@@ -1783,9 +1783,9 @@
          <string>Auto Save</string>
         </attribute>
        </widget>
-       <widget class="QWidget" name="indicaTab">
+       <widget class="QWidget" name="tableTab">
         <attribute name="title">
-         <string>Indicator</string>
+         <string>NMR Table</string>
         </attribute>
        </widget>
       </widget>
