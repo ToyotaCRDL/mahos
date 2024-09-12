@@ -133,13 +133,14 @@ class NumberParam(Param):
     """Base class for Param types represents a number."""
 
     def __init__(
-        self, typ, default, minimum, maximum, unit, SI_prefix, digit, optional, enable, doc
+        self, typ, default, minimum, maximum, unit, SI_prefix, digit, step, optional, enable, doc
     ):
         self._minimum = minimum
         self._maximum = maximum
         self._unit = unit
         self._SI_prefix = SI_prefix
         self._digit = digit
+        self._step = step
 
         Param.__init__(self, typ, default, optional, enable, doc)
 
@@ -202,6 +203,9 @@ class NumberParam(Param):
 
     def digit(self) -> int:
         return self._digit
+
+    def step(self) -> float | int:
+        return self._step
 
     def minimum(self):
         """Get minimum value (lower bound) of this NumberParam."""
@@ -267,12 +271,24 @@ class IntParam(NumberParam):
         unit: str = "",
         SI_prefix: bool = False,
         digit: int = 6,
+        step: int = 1,
         optional: bool = False,
         enable: bool = True,
         doc: str = "",
     ):
         NumberParam.__init__(
-            self, int, default, minimum, maximum, unit, SI_prefix, digit, optional, enable, doc
+            self,
+            int,
+            default,
+            minimum,
+            maximum,
+            unit,
+            SI_prefix,
+            digit,
+            step,
+            optional,
+            enable,
+            doc,
         )
 
 
@@ -287,12 +303,24 @@ class FloatParam(NumberParam):
         unit: str = "",
         SI_prefix: bool = False,
         digit: int = 6,
+        step: float = 1.0,
         optional: bool = False,
         enable: bool = True,
         doc: str = "",
     ):
         NumberParam.__init__(
-            self, float, default, minimum, maximum, unit, SI_prefix, digit, optional, enable, doc
+            self,
+            float,
+            default,
+            minimum,
+            maximum,
+            unit,
+            SI_prefix,
+            digit,
+            step,
+            optional,
+            enable,
+            doc,
         )
 
 

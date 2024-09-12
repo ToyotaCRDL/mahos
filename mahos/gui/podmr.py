@@ -12,7 +12,6 @@ from __future__ import annotations
 import typing as T
 import os
 import time
-import re
 from datetime import datetime
 import uuid
 
@@ -29,13 +28,13 @@ from .podmr_client import QPODMRClient
 
 from ..msgs.common_msgs import BinaryState
 from ..msgs.common_meas_msgs import Buffer
-from ..msgs.param_msgs import FloatParam
-from ..msgs.podmr_msgs import PODMRStatus, PODMRData, is_CPlike
+from ..msgs import param_msgs as P
+from ..msgs.podmr_msgs import PODMRStatus, PODMRData
 from ..node.global_params import GlobalParamsClient
 from .gui_node import GUINode
 from .common_widget import ClientWidget
 from .fit_widget import FitWidget
-from .param import set_enabled
+from .param import set_enabled, apply_widgets
 from .dialog import save_dialog, load_dialog, export_dialog
 from ..node.node import local_conf, join_name
 from ..util.plot import colors_tab20_pair
@@ -615,9 +614,10 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self._finalizing = False
         self._has_fg = False
         self._pg_freq = None
+        self._params = None
 
         self.init_radiobuttons()
-        self.init_widgets()
+        self.tabWidget.setCurrentIndex(0)
         self.plot = plot
         self.raw_plot = raw_plot
 
@@ -657,39 +657,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.fg_buttons = QtWidgets.QButtonGroup(parent=self)
         set_group(self.fg_buttons, 0, [b for b, l in self.get_fg_mode_dict()])
 
-    def init_widgets(self):
-        self.tabWidget.setCurrentIndex(0)
-
-        self.startBox.setValue(1)
-        self.stepBox.setValue(1)
-        self.numBox.setValue(100)
-        self.tauconstBox.setValue(0)
-
-        self.NstartBox.setValue(1)
-        self.NstepBox.setValue(1)
-        self.NnumBox.setValue(100)
-        self.NconstBox.setValue(1)
-
-        self.basewidthBox.setValue(320)
-        self.ldelayBox.setValue(45)
-        self.lwidthBox.setValue(5000)
-        self.mdelayBox.setValue(1000)
-        self.trigwidthBox.setValue(20)
-        self.initdelayBox.setValue(0)
-        self.finaldelayBox.setValue(5000)
-
-        self.tpwidthBox.setValue(10)
-        self.tp2widthBox.setValue(-1)
-        self.iqdelayBox.setValue(10)
-
-        self.init_delay()
-
-    def init_delay(self):
-        self.sigdelayBox.setValue(190)
-        self.sigwidthBox.setValue(300)
-        self.refdelayBox.setValue(2200)
-        self.refwidthBox.setValue(2400)
-
     def init_with_status(self, status: PODMRStatus):
         """initialize widget after receiving first status."""
 
@@ -699,6 +666,10 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self._pg_freq = status.pg_freq
         self.pgfreqLabel.setText(f"PG freq: {self._pg_freq*1e-9:.2f} GHz")
         self.update_timing_box_step()
+
+        self.methodBox.clear()
+        methods = P.filter_out_label_prefix("fit", self.cli.get_param_dict_labels())
+        self.methodBox.addItems(methods)
 
         self.init_widgets_with_params()
         self.init_connection()
@@ -733,7 +704,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             w.valueChanged.connect(self.update_Nstop)
 
         self.methodBox.currentIndexChanged.connect(self.switch_method)
-        self.sweepNBox.toggled.connect(self.switch_method)
         self.partialBox.currentIndexChanged.connect(self.switch_partial)
 
         self._wire_plot_widgets(True)
@@ -742,7 +712,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         self.fftBox.toggled.connect(self.plot.update_fft_mode)
         self.taumodeBox.currentIndexChanged.connect(self.plot.enable_auto_range)
-        self.ddgatephaseEdit.textChanged.connect(self.check_ddphase)
 
         # extra tab
         if self.has_fg():
@@ -757,40 +726,44 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
     def init_widgets_with_params(self):
         params = self.cli.get_param_dict("rabi")
-        if "power" in params:
-            power: FloatParam = params["power"]
-            self.powerBox.setMinimum(power.minimum())
-            self.powerBox.setMaximum(power.maximum())
-            self.powerBox.setValue(power.value())
-        else:
-            print(f"[ERROR] no key 'power' in params: {params}")
-
-        if "freq" in params:
-            freq: FloatParam = params["freq"]
-            self.freqBox.setMinimum(freq.minimum() * 1e-6)  # Hz -> MHz
-            self.freqBox.setMaximum(freq.maximum() * 1e-6)
-            self.freqBox.setValue(freq.value() * 1e-6)
-        else:
-            print(f"[ERROR] no key 'freq' in params: {params}")
 
         if "fg" in params:
             self._has_fg = True
-            ampl: FloatParam = params["fg"]["ampl"]
-            self.fg_amplBox.setMinimum(ampl.minimum())
-            self.fg_amplBox.setMaximum(ampl.maximum())
-            self.fg_amplBox.setValue(ampl.value())
-            freq: FloatParam = params["fg"]["freq"]
-            self.fg_freqBox.setMinimum(freq.minimum() * 1e-3)
-            self.fg_freqBox.setMaximum(freq.maximum() * 1e-3)
-            self.fg_freqBox.setValue(freq.value() * 1e-3)
-            phase: FloatParam = params["fg"]["phase"]
-            self.fg_phaseBox.setMinimum(phase.minimum())
-            self.fg_phaseBox.setMaximum(phase.maximum())
-            self.fg_phaseBox.setValue(phase.value())
+            apply_widgets(
+                params["fg"],
+                [
+                    ("ampl", self.fg_amplBox),
+                    ("freq", self.fg_freqBox, 1e-3),
+                    ("phase", self.fg_phaseBox),
+                ],
+            )
         else:
             self._has_fg = False
 
-        self.divideblockBox.setChecked(params["divide_block"].value())
+        apply_widgets(
+            params,
+            [
+                ("power", self.powerBox),
+                ("freq", self.freqBox, 1e-6),
+                ("divide_block", self.divideblockBox),
+                ("base_width", self.basewidthBox, 1e9),
+                ("laser_delay", self.ldelayBox, 1e9),
+                ("laser_width", self.lwidthBox, 1e9),
+                ("mw_delay", self.mdelayBox, 1e9),
+                ("trigger_width", self.trigwidthBox, 1e9),
+                ("init_delay", self.initdelayBox, 1e9),
+                ("final_delay", self.finaldelayBox, 1e9),
+            ],
+        )
+        apply_widgets(
+            params["plot"],
+            [
+                ("sigdelay", self.sigdelayBox, 1e9),
+                ("sigwidth", self.sigwidthBox, 1e9),
+                ("refdelay", self.refdelayBox, 1e9),
+                ("refwidth", self.refwidthBox, 1e9),
+            ],
+        )
 
     def update_plot_enable(self, enable: bool):
         for w in (
@@ -824,38 +797,36 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             w.setEnabled(not disabled)
         self.fg_phaseBox.setEnabled(self.fg_gateButton.isChecked())
 
-    def switch_method(self):
-        method = self.get_method()
-        self.sweepNBox.setEnabled(is_CPlike(method))
-        params = self.cli.get_param_dict(method)
-        name_widgets = [
-            ("Nstart", self.NstartBox),
-            ("Nnum", self.NnumBox),
-            ("Nstep", self.NstepBox),
-            ("start", self.startBox),
-            ("num", self.numBox),
-            ("step", self.stepBox),
-            ("log", self.logBox),
-            ("supersample", self.qisampleBox),
-            ("invertsweep", self.invertsweepBox),
-            ("90pulse", self.tpwidthBox),
-            ("180pulse", self.tp2widthBox),
-            ("tauconst", self.tauconstBox),
-            ("tau2const", self.tau2constBox),
-            ("iq_delay", self.iqdelayBox),
-            ("Nconst", self.NconstBox),
-            ("N2const", self.N2constBox),
-            ("N3const", self.N3constBox),
-            ("ddphase", self.ddgatephaseEdit),
-            ("invertinit", self.invertinitBox),
-            ("invertY", self.invertYBox),
-            ("readY", self.readYBox),
-            ("reinitX", self.reinitXBox),
-            ("flip_head", self.flipheadBox),
-        ]
-        set_enabled(params, name_widgets)
+    # consider putting these additional keys in sub ParamDict?
+    _OPT_KEYS = [
+        "90pulse",
+        "180pulse",
+        "tauconst",
+        "tau2const",
+        "iq_delay",
+        "Nconst",
+        "N2const",
+        "N3const",
+        "ddphase",
+        "invertinit",
+        "readY",
+        "invertY",
+        "reinitX",
+        "flip_head",
+        "supersample",
+    ]
 
-        self.reset_tau_modes(params["plot"]["taumode"].options())
+    def _opt_params(self, params: dict):
+        """Pick-up additional pulse parameters."""
+
+        return {k: v for k, v in params.items() if k in self._OPT_KEYS}
+
+    def switch_method(self):
+        method = self.methodBox.currentText()
+        self._params = self.cli.get_param_dict(method)
+        self.update_sweep_widgets()
+        self.paramTable.update_contents(P.ParamDict(self._opt_params(self._params)))
+        self.reset_tau_modes(self._params["plot"]["taumode"].options())
         self.plot.update_label(self.data)
 
     def switch_partial(self, index):
@@ -903,32 +874,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             b.setValue(v_ / 10)
             b.setSingleStep(tbin / 10 + 0.01)
         self._wire_plot_timing_widgets(True)
-
-    def check_ddphase(self):
-        """Validate input of ddgatephaseEdit. If input is invalid, set background color.
-
-        Available labels: X Y iX iY n
-        , is the single delimiter between data0 and data1: data0, data1
-        : is the delimiters for each π/2 pulses
-        All the whitespaces are ignored.
-
-        Example:
-        X/2--DDa--Y/2--DDb--X/2--DDa--Y/2 and the last pulse is inverted for data1:
-        "X:Y:X:Y,X:Y:X:iY"
-
-        """
-
-        # parse
-        c = "|".join(["X", "Y", "iX", "iY", "n"])
-        p = "^({c:s}):({c:s}):({c:s}):({c:s}),({c:s}):({c:s}):({c:s}):({c:s})$".format(c=c)
-
-        current = self.ddgatephaseEdit.text().replace(" ", "")
-        m = re.match(p, current)
-
-        # validation
-        ## empty str is OK because it will be substituted by self.ddgatephaseEdit.placeholderText()
-        bg = "none" if (m is not None or current == "") else "pink"
-        self.ddgatephaseEdit.setStyleSheet("background: {:s};".format(bg))
 
     # data managements
 
@@ -990,7 +935,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.apply_fg_widgets()
         if self.plotenableBox.isChecked():
             self.apply_plot_widgets()
-        self.switch_method()
         self.refresh_plot()
         self.update_widgets()
 
@@ -1011,34 +955,25 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         # method
         self.set_method(self.data.label)
 
+        for k, v in self._opt_params(p).items():
+            self.paramTable.apply_value(k, v)
+
         # MW
-        self.freqBox.setValue(p.get("freq", 2740e6) * 1e-6)  # [Hz] ==> [MHz]
+        self.freqBox.setValue(p.get("freq", 2740e6) * 1e-6)  # Hz to MHz
         self.powerBox.setValue(p.get("power", 0.0))
 
         # sequence parameters
-        self.startBox.setValue(p.get("start", 0.0) * 1e9)  # [sec] ==> [ns]
+        self.startBox.setValue(p.get("start", 0.0) * 1e9)  # sec to ns
         self.numBox.setValue(p.get("num", 1))
-        self.stepBox.setValue(p.get("step", 0.0) * 1e9)  # [sec] ==> [ns]
+        self.stepBox.setValue(p.get("step", 0.0) * 1e9)  # sec to ns
         self.logBox.setChecked(p.get("log", False))
-        self.tauconstBox.setValue(p.get("tauconst", 0.0) * 1e9)  # [sec] ==> [ns]
         self.NstartBox.setValue(p.get("Nstart", 1))
         self.NnumBox.setValue(p.get("Nnum", 1))
         self.NstepBox.setValue(p.get("Nstep", 1))
-        self.NconstBox.setValue(p.get("Nconst", 1))
-        self.qisampleBox.setValue(p.get("supersample", 1))
-        self.tau2constBox.setValue(p.get("tau2const", 0.0) * 1e9)  # [sec] ==> [ns]
-        self.N2constBox.setValue(p.get("N2const", 1))
-        self.N3constBox.setValue(p.get("N3const", 1))
-        self.ddgatephaseEdit.setText(p.get("ddphase", ""))
 
         # method params
         self.invertsweepBox.setChecked(p.get("invertsweep", False))
-        self.invertYBox.setChecked(p.get("invertY", False))
-        self.reinitXBox.setChecked(p.get("reinitX", False))
-        self.readYBox.setChecked(p.get("readY", False))
-        self.flipheadBox.setChecked(p.get("flip_head", False))
         self.nomwBox.setChecked(p.get("nomw", False))
-        self.invertinitBox.setChecked(p.get("invertinit", False))
         self.reduceBox.setChecked(p.get("enable_reduce", False))
         self.divideblockBox.setChecked(p.get("divide_block", False))
         partial = p.get("partial")
@@ -1047,7 +982,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         else:
             self.partialBox.setCurrentIndex(0)
 
-        # sequence parameters (pulses)  [sec] ==> [ns]
+        # sequence parameters (pulses) sec to ns
         self.basewidthBox.setValue(p.get("base_width", 0.0) * 1e9)
         self.ldelayBox.setValue(p.get("laser_delay", 0.0) * 1e9)
         self.lwidthBox.setValue(p.get("laser_width", 0.0) * 1e9)
@@ -1055,9 +990,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.trigwidthBox.setValue(p.get("trigger_width", 0.0) * 1e9)
         self.initdelayBox.setValue(p.get("init_delay", 0.0) * 1e9)
         self.finaldelayBox.setValue(p.get("final_delay", 0.0) * 1e9)
-        self.iqdelayBox.setValue(p.get("iq_delay", 0.0) * 1e9)
-        self.tpwidthBox.setValue(p.get("90pulse", 0.0) * 1e9)
-        self.tp2widthBox.setValue(p.get("180pulse", 0.0) * 1e9)
 
     def apply_fg_widgets(self, params=None):
         if params is None:
@@ -1110,49 +1042,20 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.update_plot_params()
 
     def get_params(self) -> tuple[dict, str]:
-        label = self.get_method()
+        label = self.methodBox.currentText()
         params = {}
+        # fundamentals
         params["quick_resume"] = self.quickresumeBox.isChecked()
-        params["freq"] = self.freqBox.value() * 1e6  # [MHz] ==> [Hz]
+        params["freq"] = self.freqBox.value() * 1e6  # MHz to Hz
         params["power"] = self.powerBox.value()
-        params["timebin"] = self.binBox.value() * 1e-9  # [ns] ==> [sec]
-        params["interval"] = self.intervalBox.value() * 1e-3  # [ms] ==> [sec]
+        params["timebin"] = self.binBox.value() * 1e-9  # ns to sec
+        params["interval"] = self.intervalBox.value() * 1e-3  # ms to sec
         params["sweeps"] = self.sweepsBox.value()
         params["duration"] = self.durationBox.value()
         params["roi_head"] = self.roiheadBox.value() * 1e-9  # ns to sec
         params["roi_tail"] = self.roitailBox.value() * 1e-9  # ns to sec
 
-        params["start"] = self.startBox.value() * 1e-9  # [ns] ==> [sec]
-        params["num"] = self.numBox.value()
-        params["step"] = self.stepBox.value() * 1e-9  # [ns] ==> [sec]
-        params["log"] = self.logBox.isChecked()
-        params["tauconst"] = self.tauconstBox.value() * 1e-9  # [ns] ==> [sec]
-
-        params["Nstart"] = self.NstartBox.value()
-        params["Nnum"] = self.NnumBox.value()
-        params["Nstep"] = self.NstepBox.value()
-        params["Nconst"] = self.NconstBox.value()
-        params["supersample"] = self.qisampleBox.value()
-
-        params["tau2const"] = self.tau2constBox.value() * 1e-9  # [ns] ==> [sec]
-        params["N2const"] = self.N2constBox.value()
-        params["N3const"] = self.N3constBox.value()
-        params["ddphase"] = self.ddgatephaseEdit.text()
-        if not params["ddphase"]:
-            params["ddphase"] = self.ddgatephaseEdit.placeholderText()
-
-        params["invertsweep"] = self.invertsweepBox.isChecked()
-        params["invertY"] = self.invertYBox.isChecked()
-        params["reinitX"] = self.reinitXBox.isChecked()
-        params["readY"] = self.readYBox.isChecked()
-        params["flip_head"] = self.flipheadBox.isChecked()
-        params["partial"] = self.partialBox.currentIndex() - 1
-        params["nomw"] = self.nomwBox.isChecked()
-        params["invertinit"] = self.invertinitBox.isChecked()
-        params["enable_reduce"] = self.reduceBox.isChecked()
-        params["divide_block"] = self.divideblockBox.isChecked()
-
-        # [ns] ==> [sec]
+        # common_pulses
         params["base_width"] = self.basewidthBox.value() * 1e-9
         params["laser_delay"] = self.ldelayBox.value() * 1e-9
         params["laser_width"] = self.lwidthBox.value() * 1e-9
@@ -1160,9 +1063,26 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["trigger_width"] = self.trigwidthBox.value() * 1e-9
         params["init_delay"] = self.initdelayBox.value() * 1e-9
         params["final_delay"] = self.finaldelayBox.value() * 1e-9
-        params["iq_delay"] = self.iqdelayBox.value() * 1e-9
-        params["90pulse"] = self.tpwidthBox.value() * 1e-9
-        params["180pulse"] = self.tp2widthBox.value() * 1e-9
+
+        # common switches
+        params["invertsweep"] = self.invertsweepBox.isChecked()
+        params["nomw"] = self.nomwBox.isChecked()
+        params["enable_reduce"] = self.reduceBox.isChecked()
+        params["divide_block"] = self.divideblockBox.isChecked()
+        params["partial"] = self.partialBox.currentIndex() - 1
+
+        ## sweep params (tau / N)
+        if self.NstartBox.isEnabled():
+            params["Nstart"] = self.NstartBox.value()
+            params["Nnum"] = self.NnumBox.value()
+            params["Nstep"] = self.NstepBox.value()
+        else:
+            params["start"] = self.startBox.value() * 1e-9  # ns to sec
+            params["num"] = self.numBox.value()
+            params["step"] = self.stepBox.value() * 1e-9  # ns to sec
+            params["log"] = self.logBox.isChecked()
+
+        params.update(P.unwrap(self.paramTable.params()))
 
         params["plot"] = self.get_plot_params()
         params["fg"] = self.get_fg_params()
@@ -1314,6 +1234,20 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.update_save_button(False)
         self._finalizing = False
 
+    def update_sweep_widgets(self):
+        if self._params is None:
+            return
+        name_widgets = [
+            ("Nstart", self.NstartBox),
+            ("Nstep", self.NstepBox),
+            ("Nnum", self.NnumBox),
+            ("start", self.startBox),
+            ("step", self.stepBox),
+            ("num", self.numBox),
+            ("log", self.logBox),
+        ]
+        set_enabled(self._params, name_widgets)
+
     def update_state(self, state: BinaryState, last_state: BinaryState):
         for w in (
             self.startButton,
@@ -1342,38 +1276,23 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.trigwidthBox,
             self.initdelayBox,
             self.finaldelayBox,
+            self.paramTable,
         ):
             w.setEnabled(state == BinaryState.IDLE)
 
-        # Widgets enable/disable of which depends on selected method
+        # Sweep widgets' enable/disable depends on selected method
         if state == BinaryState.IDLE:
             if last_state == BinaryState.ACTIVE:
-                self.switch_method()
+                self.update_sweep_widgets()
         else:
             for w in (
                 self.startBox,
                 self.stepBox,
                 self.numBox,
                 self.logBox,
-                self.tauconstBox,
-                self.qisampleBox,
-                self.sweepNBox,
                 self.NstartBox,
                 self.NstepBox,
                 self.NnumBox,
-                self.NconstBox,
-                self.invertYBox,
-                self.reinitXBox,
-                self.readYBox,
-                self.flipheadBox,
-                self.invertinitBox,
-                self.iqdelayBox,
-                self.tpwidthBox,
-                self.tp2widthBox,
-                self.tau2constBox,
-                self.N2constBox,
-                self.N3constBox,
-                self.ddgatephaseEdit,
             ):
                 w.setEnabled(False)
 
@@ -1404,8 +1323,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         return (
             self.startBox,
             self.stepBox,
-            self.tauconstBox,
-            self.tau2constBox,
             self.basewidthBox,
             self.ldelayBox,
             self.lwidthBox,
@@ -1413,9 +1330,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.trigwidthBox,
             self.initdelayBox,
             self.finaldelayBox,
-            self.tpwidthBox,
-            self.tp2widthBox,
-            self.iqdelayBox,
         )
 
     def update_timing_box_step(self):
@@ -1448,43 +1362,11 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         for b in self.timing_boxes():
             b.setValue(_round(b.value()))
 
-    METHODS = (
-        "rabi",
-        "t1",
-        "fid",
-        "spinecho",
-        "trse",
-        "cp",
-        "cpmg",
-        "xy4",
-        "xy8",
-        "xy16",
-        "180train",
-        "se90sweep",
-        "recovery",
-        "spinlock",
-        "xy8cl",
-        "xy8cl1flip",
-        "xy8clNflip",
-        "ddgate",
-    )
-
-    def get_method(self) -> str:
-        i = self.methodBox.currentIndex()
-        m = self.METHODS[i]
-        if m in ("cp", "cpmg", "xy4", "xy8", "xy16", "ddgate") and self.sweepNBox.isChecked():
-            m = m + "N"
-        return m
-
     def set_method(self, method: str):
-        is_N_sweep = re.match("(cp|cpmg|xy4|xy8|xy16)N", method)
-        if is_N_sweep is not None:
-            method = is_N_sweep.group(1)
-            self.sweepNBox.setChecked(True)
-
-        try:
-            self.methodBox.setCurrentIndex(self.METHODS.index(method))
-        except ValueError:
+        i = self.methodBox.findText(method)
+        if i >= 0:
+            self.methodBox.setCurrentIndex(i)
+        else:
             print(f"[ERROR] unknown method: {method}")
 
     def set_plot_mode(self, mode: str):

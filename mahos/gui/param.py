@@ -78,6 +78,7 @@ class ParamTable(QtWidgets.QTableWidget):
                 suffix=param.unit(),
                 siPrefix=param.SI_prefix(),
                 decimals=param.digit(),
+                step=param.step(),
             )
         elif isinstance(param, P.IntParam):
             widget = SpinBox(
@@ -88,6 +89,7 @@ class ParamTable(QtWidgets.QTableWidget):
                 suffix=param.unit(),
                 siPrefix=param.SI_prefix(),
                 decimals=param.digit(),
+                step=param.step(),
             )
         widget.valueChanged.connect(param.set)
 
@@ -236,6 +238,9 @@ class ParamTable(QtWidgets.QTableWidget):
             return
         param = self._params_f[keyf]
         w = self.cellWidget(self._to_row[keyf], 1)
+
+        if isinstance(val, P.Param):
+            val = val.value()
 
         if isinstance(param, P.NumberParam):
             w: SpinBox
