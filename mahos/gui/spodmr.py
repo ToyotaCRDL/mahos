@@ -441,7 +441,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
         self._finalizing = False
         self._has_fg = False
-        self._has_sg2 = False
+        self._found_sg2 = False
+        self._pg_freq = None
         self._params = None
 
         self.init_radiobuttons()
@@ -542,15 +543,6 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
     def init_widgets_with_params(self):
         params = self.cli.get_param_dict("rabi")
 
-        if "freq2" in params:
-            self._has_sg2 = True
-            apply_widgets(params, [("freq2", self.freq2Box, 1e-6), ("power2", self.power2Box)])
-        else:
-            self._has_sg2 = False
-            self.nomw2Box.setChecked(True)
-            for w in (self.freq2Box, self.power2Box, self.nomw2Box):
-                w.setEnabled(False)
-
         if "fg" in params:
             self._has_fg = True
             apply_widgets(
@@ -634,10 +626,20 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
 
         return {k: v for k, v in params.items() if k in self._OPT_KEYS}
 
+    def _apply_sg2(self, params: dict):
+        """Check existence of SG2 (freq2 in params) and apply bound of SG2."""
+
+        if self._found_sg2:
+            return
+        if "freq2" in params:
+            apply_widgets(params, [("freq2", self.freq2Box, 1e-6), ("power2", self.power2Box)])
+            self._found_sg2 = True
+
     def switch_method(self):
         method = self.methodBox.currentText()
         self._params = self.cli.get_param_dict(method)
-        self.update_sweep_widgets()
+        self.update_cond_widgets()
+        self._apply_sg2(self._params)
         self.paramTable.update_contents(P.ParamDict(self._opt_params(self._params)))
         self.reset_tau_modes(self._params["plot"]["taumode"].options())
         self.plot.update_label(self.data)
@@ -869,13 +871,13 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params = {}
         # fundamentals
         params["quick_resume"] = self.quickresumeBox.isChecked()
-        params["freq"] = self.freqBox.value() * 1e6  # [MHz] ==> [Hz]
+        params["freq"] = self.freqBox.value() * 1e6  # MHz to Hz
         params["power"] = self.powerBox.value()
         params["nomw"] = self.nomwBox.isChecked()
         params["sweeps"] = self.sweepsBox.value()
-        params["pd_rate"] = self.pdrateBox.value() * 1e3  # [kHz] ==> [Hz]
+        params["pd_rate"] = self.pdrateBox.value() * 1e3  # kHz to Hz
         params["pd_bounds"] = [self.pd_lbBox.value(), self.pd_ubBox.value()]
-        params["accum_window"] = self.accumwindowBox.value() * 1e-3  # [ms] ==> [sec]
+        params["accum_window"] = self.accumwindowBox.value() * 1e-3  # ms to sec
         params["accum_rep"] = self.accumrepBox.value()
         params["drop_rep"] = self.droprepBox.value()
         params["partial"] = self.partialBox.currentIndex() - 1
@@ -883,7 +885,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             params["lockin_rep"] = self.lockinrepBox.value()
         ## no sync_mode for now
 
-        if self.has_sg2():
+        if "freq2" in self._params:
             params["freq2"] = self.freq2Box.value() * 1e6  # MHz to Hz
             params["power2"] = self.power2Box.value()
             params["nomw2"] = self.nomw2Box.isChecked()
@@ -899,7 +901,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         ## no divide_block for now, partial is above.
 
         ## sweep params (tau / N)
-        if self.NstartBox.isEnabled():
+        if "Nstart" in self._params:
             params["Nstart"] = self.NstartBox.value()
             params["Nnum"] = self.NnumBox.value()
             params["Nstep"] = self.NstepBox.value()
@@ -1009,7 +1011,9 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.update_save_button(False)
         self._finalizing = False
 
-    def update_sweep_widgets(self):
+    def update_cond_widgets(self, force_disable=False):
+        """Update enable/disable state of widgets depending on param existence."""
+
         if self._params is None:
             return
         name_widgets = [
@@ -1020,8 +1024,15 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             ("step", self.stepBox),
             ("num", self.numBox),
             ("log", self.logBox),
+            ("freq2", self.freq2Box),
+            ("power2", self.power2Box),
+            ("nomw2", self.nomw2Box),
         ]
-        set_enabled(self._params, name_widgets)
+        if force_disable:
+            for _, w in name_widgets:
+                w.setEnabled(False)
+        else:
+            set_enabled(self._params, name_widgets)
 
     def update_state(self, state: BinaryState, last_state: BinaryState):
         for w in (
@@ -1059,18 +1070,9 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         # Sweep widgets' enable/disable depends on selected method
         if state == BinaryState.IDLE:
             if last_state == BinaryState.ACTIVE:
-                self.update_sweep_widgets()
+                self.update_cond_widgets()
         else:
-            for w in (
-                self.startBox,
-                self.stepBox,
-                self.numBox,
-                self.logBox,
-                self.NstartBox,
-                self.NstepBox,
-                self.NnumBox,
-            ):
-                w.setEnabled(False)
+            self.update_cond_widgets(force_disable=True)
 
         if self.has_fg():
             for w in (self.fg_disableButton, self.fg_cwButton, self.fg_gateButton):
@@ -1083,19 +1085,12 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
                 for w in (self.fg_waveBox, self.fg_freqBox, self.fg_amplBox, self.fg_phaseBox):
                     w.setEnabled(False)
 
-        if self.has_sg2():
-            for w in (self.freq2Box, self.power2Box, self.nomw2Box):
-                w.setEnabled(state == BinaryState.IDLE)
-
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
 
     # helper functions
 
     def has_fg(self):
         return self._has_fg
-
-    def has_sg2(self):
-        return self._has_sg2
 
     def timing_boxes(self):
         return (
@@ -1205,7 +1200,7 @@ class SPODMRMainWindow(QtWidgets.QMainWindow):
         self.d_plot.setWidget(self.plot)
         self.d_alt_plot = QtWidgets.QDockWidget("Alt Plot", parent=self)
         self.d_alt_plot.setWidget(self.alt_plot)
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, self.d_alt_plot)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.d_alt_plot)
         self.tabifyDockWidget(self.d_alt_plot, self.d_plot)
 
         self.view_menu = self.menuBar().addMenu("View")

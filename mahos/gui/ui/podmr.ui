@@ -166,6 +166,37 @@
             <string>Fundamental</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_2">
+            <item row="3" column="1">
+             <widget class="QDoubleSpinBox" name="freqBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="prefix">
+               <string>freq: </string>
+              </property>
+              <property name="suffix">
+               <string> MHz</string>
+              </property>
+              <property name="decimals">
+               <number>4</number>
+              </property>
+              <property name="minimum">
+               <double>1.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>3000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>100.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>2740.000000000000000</double>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="1">
              <widget class="QSpinBox" name="sweepsBox">
               <property name="enabled">
@@ -194,13 +225,6 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="4">
-             <widget class="QCheckBox" name="nomwBox">
-              <property name="text">
-               <string>Do not turn on MW (for reference)</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label">
               <property name="text">
@@ -208,27 +232,7 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="7">
-             <spacer name="horizontalSpacer_10">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="2" column="4">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>a negative value disables ROI</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
+            <item row="6" column="1">
              <widget class="QComboBox" name="methodBox">
               <item>
                <property name="text">
@@ -322,32 +326,53 @@
               </item>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_10">
-              <property name="text">
-               <string>ROI margin</string>
+            <item row="6" column="3">
+             <widget class="QComboBox" name="partialBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
+              <item>
+               <property name="text">
+                <string>Complementary</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Pattern 0 only</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Pattern 1 only</string>
+               </property>
+              </item>
              </widget>
             </item>
-            <item row="2" column="3">
-             <widget class="QDoubleSpinBox" name="roitailBox">
-              <property name="prefix">
-               <string>tail: </string>
+            <item row="1" column="3">
+             <widget class="QSpinBox" name="intervalBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
               <property name="suffix">
-               <string> ns</string>
+               <string> ms</string>
               </property>
-              <property name="decimals">
-               <number>1</number>
+              <property name="prefix">
+               <string>interval: </string>
               </property>
               <property name="minimum">
-               <double>-1.000000000000000</double>
+               <number>1000</number>
               </property>
               <property name="maximum">
-               <double>10000.000000000000000</double>
+               <number>999999999</number>
               </property>
-              <property name="value">
-               <double>-1.000000000000000</double>
+              <property name="singleStep">
+               <number>500</number>
               </property>
              </widget>
             </item>
@@ -379,35 +404,122 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="3">
-             <widget class="QComboBox" name="partialBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+            <item row="0" column="7">
+             <spacer name="horizontalSpacer_10">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-              <item>
-               <property name="text">
-                <string>Complementary</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Pattern 0 only</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Pattern 1 only</string>
-               </property>
-              </item>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Micro Wave</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QDoubleSpinBox" name="roitailBox">
+              <property name="prefix">
+               <string>tail: </string>
+              </property>
+              <property name="suffix">
+               <string> ns</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>-1.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>10000.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>-1.000000000000000</double>
+              </property>
              </widget>
             </item>
             <item row="0" column="3">
              <widget class="QLabel" name="sweptLabel">
               <property name="text">
                <string>0 swept</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>ROI margin</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="roiheadBox">
+              <property name="prefix">
+               <string>head: </string>
+              </property>
+              <property name="suffix">
+               <string> ns</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>-1.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>10000.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>-1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>PG</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLabel" name="rangeLabel">
+              <property name="text">
+               <string>range: </string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="4">
+             <widget class="QCheckBox" name="nomwBox">
+              <property name="text">
+               <string>Do not turn on MW</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>method</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="3">
+             <widget class="QCheckBox" name="divideblockBox">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string>divide long blocks</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -421,34 +533,10 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
-             <widget class="QDoubleSpinBox" name="freqBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="prefix">
-               <string>freq: </string>
-              </property>
-              <property name="suffix">
-               <string> MHz</string>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="minimum">
-               <double>1.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>3000.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>100.000000000000000</double>
-              </property>
-              <property name="value">
-               <double>2740.000000000000000</double>
+            <item row="5" column="4">
+             <widget class="QLabel" name="pgfreqLabel">
+              <property name="text">
+               <string>PG freq: Unknown</string>
               </property>
              </widget>
             </item>
@@ -480,105 +568,56 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_6">
-              <property name="text">
-               <string>Micro Wave</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="0">
-             <widget class="QLabel" name="label_5">
-              <property name="text">
-               <string>method</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QDoubleSpinBox" name="roiheadBox">
-              <property name="prefix">
-               <string>head: </string>
-              </property>
-              <property name="suffix">
-               <string> ns</string>
-              </property>
-              <property name="decimals">
-               <number>1</number>
-              </property>
-              <property name="minimum">
-               <double>-1.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>10000.000000000000000</double>
-              </property>
-              <property name="value">
-               <double>-1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>PG</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
+            <item row="5" column="1">
              <widget class="QCheckBox" name="reduceBox">
               <property name="text">
                <string>reduce pg freq</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="3">
-             <widget class="QCheckBox" name="divideblockBox">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
+            <item row="2" column="4">
+             <widget class="QLabel" name="label_11">
               <property name="text">
-               <string>divide long blocks</string>
+               <string>a negative value disables ROI</string>
               </property>
-              <property name="checked">
-               <bool>true</bool>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QDoubleSpinBox" name="freq2Box">
+              <property name="prefix">
+               <string>freq2: </string>
+              </property>
+              <property name="suffix">
+               <string> MHz</string>
+              </property>
+              <property name="decimals">
+               <number>4</number>
+              </property>
+              <property name="maximum">
+               <double>10000.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>1000.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="3">
+             <widget class="QDoubleSpinBox" name="power2Box">
+              <property name="prefix">
+               <string>power2: </string>
+              </property>
+              <property name="suffix">
+               <string> dBm</string>
+              </property>
+              <property name="decimals">
+               <number>4</number>
               </property>
              </widget>
             </item>
             <item row="4" column="4">
-             <widget class="QLabel" name="pgfreqLabel">
+             <widget class="QCheckBox" name="nomw2Box">
               <property name="text">
-               <string>PG freq: Unknown</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
-             <widget class="QSpinBox" name="intervalBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="suffix">
-               <string> ms</string>
-              </property>
-              <property name="prefix">
-               <string>interval: </string>
-              </property>
-              <property name="minimum">
-               <number>1000</number>
-              </property>
-              <property name="maximum">
-               <number>999999999</number>
-              </property>
-              <property name="singleStep">
-               <number>500</number>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="4">
-             <widget class="QLabel" name="rangeLabel">
-              <property name="text">
-               <string>range: </string>
+               <string>Do not turn on MW2</string>
               </property>
              </widget>
             </item>
@@ -1579,6 +1618,9 @@
   <tabstop>freqBox</tabstop>
   <tabstop>powerBox</tabstop>
   <tabstop>nomwBox</tabstop>
+  <tabstop>freq2Box</tabstop>
+  <tabstop>power2Box</tabstop>
+  <tabstop>nomw2Box</tabstop>
   <tabstop>reduceBox</tabstop>
   <tabstop>divideblockBox</tabstop>
   <tabstop>methodBox</tabstop>

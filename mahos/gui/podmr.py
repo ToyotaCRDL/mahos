@@ -768,6 +768,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         self._finalizing = False
         self._has_fg = False
+        self._found_sg2 = False
         self._pg_freq = None
         self._params = None
 
@@ -976,10 +977,20 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         return {k: v for k, v in params.items() if k in self._OPT_KEYS}
 
+    def _apply_sg2(self, params: dict):
+        """Check existence of SG2 (freq2 in params) and apply bound of SG2."""
+
+        if self._found_sg2:
+            return
+        if "freq2" in params:
+            apply_widgets(params, [("freq2", self.freq2Box, 1e-6), ("power2", self.power2Box)])
+            self._found_sg2 = True
+
     def switch_method(self):
         method = self.methodBox.currentText()
         self._params = self.cli.get_param_dict(method)
-        self.update_sweep_widgets()
+        self.update_cond_widgets()
+        self._apply_sg2(self._params)
         self.paramTable.update_contents(P.ParamDict(self._opt_params(self._params)))
         self.reset_tau_modes(self._params["plot"]["taumode"].options())
         self.plot.update_label(self.data)
@@ -1140,6 +1151,13 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         # MW
         self.freqBox.setValue(p.get("freq", 2740e6) * 1e-6)  # Hz to MHz
         self.powerBox.setValue(p.get("power", 0.0))
+        self.nomwBox.setChecked(p.get("nomw", False))
+        if "freq2" in p:
+            self.freq2Box.setValue(p["freq2"] * 1e-6)  # Hz to MHz
+        if "power2" in p:
+            self.power2Box.setValue(p["power2"])
+        if "nomw2" in p:
+            self.nomw2Box.setChecked(p["nomw2"])
 
         # sequence parameters
         self.startBox.setValue(p.get("start", 0.0) * 1e9)  # sec to ns
@@ -1152,7 +1170,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         # method params
         self.invertsweepBox.setChecked(p.get("invertsweep", False))
-        self.nomwBox.setChecked(p.get("nomw", False))
         self.reduceBox.setChecked(p.get("enable_reduce", False))
         self.divideblockBox.setChecked(p.get("divide_block", False))
         partial = p.get("partial")
@@ -1233,6 +1250,11 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["roi_head"] = self.roiheadBox.value() * 1e-9  # ns to sec
         params["roi_tail"] = self.roitailBox.value() * 1e-9  # ns to sec
 
+        if "freq2" in self._params:
+            params["freq2"] = self.freq2Box.value() * 1e6  # MHz to Hz
+            params["power2"] = self.power2Box.value()
+            params["nomw2"] = self.nomw2Box.isChecked()
+
         # common_pulses
         params["base_width"] = self.basewidthBox.value() * 1e-9
         params["laser_delay"] = self.ldelayBox.value() * 1e-9
@@ -1250,7 +1272,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["partial"] = self.partialBox.currentIndex() - 1
 
         ## sweep params (tau / N)
-        if self.NstartBox.isEnabled():
+        if "Nstart" in self._params:
             params["Nstart"] = self.NstartBox.value()
             params["Nnum"] = self.NnumBox.value()
             params["Nstep"] = self.NstepBox.value()
@@ -1285,7 +1307,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["logY"] = self.logYBox.isChecked()
         params["flipY"] = self.flipYBox.isChecked()
 
-        # [us] or [ns] ==> [sec]
+        # ns to sec
         params["sigdelay"] = self.sigdelayBox.value() * 1e-9
         params["sigwidth"] = self.sigwidthBox.value() * 1e-9
         params["refdelay"] = self.refdelayBox.value() * 1e-9
@@ -1412,7 +1434,9 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.update_save_button(False)
         self._finalizing = False
 
-    def update_sweep_widgets(self):
+    def update_cond_widgets(self, force_disable=False):
+        """Update enable/disable state of widgets depending on param existence."""
+
         if self._params is None:
             return
         name_widgets = [
@@ -1423,6 +1447,9 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             ("step", self.stepBox),
             ("num", self.numBox),
             ("log", self.logBox),
+            ("freq2", self.freq2Box),
+            ("power2", self.power2Box),
+            ("nomw2", self.nomw2Box),
         ]
         set_enabled(self._params, name_widgets)
 
@@ -1462,18 +1489,9 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         # Sweep widgets' enable/disable depends on selected method
         if state == BinaryState.IDLE:
             if last_state == BinaryState.ACTIVE:
-                self.update_sweep_widgets()
+                self.update_cond_widgets()
         else:
-            for w in (
-                self.startBox,
-                self.stepBox,
-                self.numBox,
-                self.logBox,
-                self.NstartBox,
-                self.NstepBox,
-                self.NnumBox,
-            ):
-                w.setEnabled(False)
+            self.update_cond_widgets(force_disable=True)
 
         if self.has_fg():
             for w in (self.fg_disableButton, self.fg_cwButton, self.fg_gateButton):
