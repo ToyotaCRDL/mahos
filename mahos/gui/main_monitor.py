@@ -29,9 +29,9 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
     def __init__(self, gconf: dict, name, context):
         ClientTopWidget.__init__(self)
         self.setupUi(self)
-
-        for table in (self.lockTable, self.stateTable):
-            table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.stateTable.horizontalHeader().setSectionResizeMode(
+            QtWidgets.QHeaderView.ResizeMode.Stretch
+        )
         self.setWindowTitle(f"MAHOS.MainMonitor ({join_name(name)})")
 
         self.conf = local_conf(gconf, name)
@@ -187,6 +187,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
                 item = QtWidgets.QTableWidgetItem(str(s))
                 self._set_table_item_flags(item)
                 self.lockTable.setItem(row, col, item)
+        self.lockTable.resizeColumnsToContents()
 
     def update_states(self, states: dict):
         if not self.stateTable.rowCount():

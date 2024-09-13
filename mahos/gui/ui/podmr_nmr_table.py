@@ -200,6 +200,7 @@ class Ui_NMRTable(object):
         self.tableWidget.horizontalHeader().setMinimumSectionSize(23)
         self.tableWidget.horizontalHeader().setSortIndicatorShown(True)
         self.tableWidget.horizontalHeader().setStretchLastSection(False)
+        self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.verticalHeader().setCascadingSectionResizes(False)
         self.tableWidget.verticalHeader().setDefaultSectionSize(25)
         self.tableWidget.verticalHeader().setSortIndicatorShown(False)

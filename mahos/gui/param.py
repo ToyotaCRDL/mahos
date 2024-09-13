@@ -66,7 +66,6 @@ class ParamTable(QtWidgets.QTableWidget):
         self._params = P.ParamDict()
         self._params_f = P.ParamDict()
         self._to_row = {}
-        self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.verticalHeader().hide()
 
     def _add_widget_number(self, param: P.Numberparam):
@@ -229,6 +228,7 @@ class ParamTable(QtWidgets.QTableWidget):
 
             # doc
             add_label_item(i, 3, param.doc())
+        self.resizeColumnsToContents()
 
     def params(self) -> P.ParamDict:
         return self._params
