@@ -34,6 +34,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
         self.gparams_cli = gparams_cli
         self.buffer = Buffer()
 
+        self.init_widgets()
         self.update_buffer_table()
 
     # application specific method to be overridden
@@ -62,6 +63,11 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
         if labels:
             self.update_param_table()
 
+    def init_widgets(self):
+        self.bufferTable.horizontalHeader().setSectionResizeMode(
+            QtWidgets.QHeaderView.ResizeMode.Stretch
+        )
+
     def update_buffer(self, buffer: Buffer[tuple[str, BasicMeasData]]):
         if buffer.file_names() == self.buffer.file_names():
             self.buffer = buffer
@@ -74,6 +80,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
         def make_name_item(name: str):
             item = QtWidgets.QTableWidgetItem(str(name))
             item.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+            item.setToolTip(str(name))
             return item
 
         def make_show_items():
@@ -131,7 +138,6 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
             else:
                 item = self.bufferTable.item(row, 3)
                 item.setBackground(QtGui.QColor(color))
-        self.bufferTable.resizeColumnsToContents()
 
     def update_param_table(self):
         label = self.labelBox.currentText()
