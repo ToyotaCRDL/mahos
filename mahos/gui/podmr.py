@@ -240,6 +240,16 @@ class AltPlotWidget(QtWidgets.QWidget):
         self.modeBox.addItem("None")
         self.modeBox.addItem("FFT")
 
+        self.zeropadBox = QtWidgets.QSpinBox(parent=self)
+        self.zeropadBox.setPrefix("FFT zero pad: ")
+        self.zeropadBox.setSuffix(" points")
+        self.zeropadBox.setMinimum(0)
+        self.zeropadBox.setValue(0)
+        self.zeropadBox.setMaximum(10000)
+
+        self.removeDCBox = QtWidgets.QCheckBox("FFT remove DC", parent=self)
+        self.removeDCBox.setChecked(True)
+
         self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
         self.fontsizeBox.setPrefix("font size: ")
         self.fontsizeBox.setSuffix(" pt")
@@ -247,21 +257,11 @@ class AltPlotWidget(QtWidgets.QWidget):
         self.fontsizeBox.setValue(12)
         self.fontsizeBox.setMaximum(99)
 
-        self.zeropadBox = QtWidgets.QSpinBox(parent=self)
-        self.zeropadBox.setPrefix("FFT zero pad: ")
-        self.zeropadBox.setSuffix(" points")
-        self.zeropadBox.setMinimum(0)
-        self.zeropadBox.setValue(0)
-        self.zeropadBox.setMaximum(10000)
-        for w in (self.fontsizeBox, self.zeropadBox):
+        for w in (self.zeropadBox, self.fontsizeBox):
             w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             w.setMaximumWidth(200)
-
-        self.removeDCBox = QtWidgets.QCheckBox("FFT remove DC", parent=self)
-        self.removeDCBox.setChecked(True)
-
         spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
-        for w in (self.modeBox, self.fontsizeBox, self.zeropadBox, self.removeDCBox):
+        for w in (self.modeBox, self.zeropadBox, self.removeDCBox, self.fontsizeBox):
             hl0.addWidget(w)
         hl0.addItem(spacer)
 
@@ -309,7 +309,8 @@ class AltPlotWidget(QtWidgets.QWidget):
             except ValueError as e:
                 print("Error getting xdata: " + repr(e))
                 continue
-
+            if len(x) == 1:
+                continue
             try:
                 y0, y1 = data.get_ydata()
                 if y0 is None:
@@ -874,11 +875,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.fg_cwButton.toggled.connect(self.switch_fg)
             self.fg_gateButton.toggled.connect(self.switch_fg)
 
-    # Widget status updates
-
-    def update_table(self):
-        self.table.update(self.data)
-
     def init_widgets_with_params(self):
         params = self.cli.get_param_dict("rabi")
 
@@ -919,6 +915,11 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
                 ("refwidth", self.refwidthBox, 1e9),
             ],
         )
+
+    # Widget status updates
+
+    def update_table(self):
+        self.table.update(self.data)
 
     def update_plot_enable(self, enable: bool):
         for w in (
@@ -1430,6 +1431,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.startButton,
             self.saveButton,
             self.exportButton,
+            self.exportaltButton,
             self.loadButton,
             self.quickresumeBox,
             self.binBox,

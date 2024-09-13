@@ -868,7 +868,7 @@ class Pulser(Worker):
     def _get_param_dict_pulse(self, label: str, d: dict):
         ## common_pulses
         d["laser_delay"] = P.FloatParam(45e-9, 0.0, 1e-4)
-        d["laser_width"] = P.FloatParam(5e-6, 1e-9, 1e-4)
+        d["laser_width"] = P.FloatParam(3e-6, 1e-9, 1e-4)
         d["mw_delay"] = P.FloatParam(1e-6, 0.0, 1e-4)
         # below are unused
         # d["base_width"] = P.FloatParam(320e-9, 1e-9, 1e-4)
@@ -900,39 +900,65 @@ class Pulser(Worker):
     def _get_param_dict_pulse_opt(self, label: str, d: dict):
         pulse_params = self.generators[label].pulse_params()
 
-        if "supersample" in pulse_params:
-            d["supersample"] = P.IntParam(1, 1, 1000)
         if "90pulse" in pulse_params:
-            d["90pulse"] = P.FloatParam(10e-9, 1e-9, 1000e-9)
+            d["90pulse"] = P.FloatParam(
+                10e-9,
+                1e-9,
+                1000e-9,
+                unit="s",
+                SI_prefix=True,
+                step=1e-9,
+                doc="90 deg (pi/2) pulse width",
+            )
         if "180pulse" in pulse_params:
-            d["180pulse"] = P.FloatParam(-1.0e-9, -1.0e-9, 1000e-9)
+            d["180pulse"] = P.FloatParam(
+                -1.0e-9,
+                -1.0e-9,
+                1000e-9,
+                unit="s",
+                SI_prefix=True,
+                step=1e-9,
+                doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+            )
 
         if "tauconst" in pulse_params:
-            d["tauconst"] = P.FloatParam(1.0e-9, 1.0e-9, 1.0e-3)
+            d["tauconst"] = P.FloatParam(
+                1.0e-9, 1.0e-9, 1.0e-3, unit="s", SI_prefix=True, step=1e-9, doc="constant time"
+            )
         if "tau2const" in pulse_params:
-            d["tau2const"] = P.FloatParam(1.0e-9, 1.0e-9, 1.0e-3)
+            d["tau2const"] = P.FloatParam(
+                1.0e-9,
+                1.0e-9,
+                1.0e-3,
+                unit="s",
+                SI_prefix=True,
+                step=1e-9,
+                doc="constant time (2)",
+            )
         if "iq_delay" in pulse_params:
-            d["iq_delay"] = P.FloatParam(10e-9, 1e-9, 1000e-9)
+            d["iq_delay"] = P.FloatParam(10e-9, 1e-9, 1000e-9, unit="s", SI_prefix=True, step=1e-9)
 
         if "Nconst" in pulse_params:
-            d["Nconst"] = P.IntParam(4, 1, 10000)
+            d["Nconst"] = P.IntParam(4, 1, 10000, doc="constant N")
         if "N2const" in pulse_params:
-            d["N2const"] = P.IntParam(2, 1, 10000)
+            d["N2const"] = P.IntParam(2, 1, 10000, doc="constant N (2)")
         if "N3const" in pulse_params:
-            d["N3const"] = P.IntParam(2, 1, 10000)
+            d["N3const"] = P.IntParam(2, 1, 10000, doc="constant N (3)")
         if "ddphase" in pulse_params:
             d["ddphase"] = P.StrParam("Y:X:Y:X,Y:X:Y:iX")
 
         if "invertinit" in pulse_params:
-            d["invertinit"] = P.BoolParam(False)
+            d["invertinit"] = P.BoolParam(False, doc="invert initialization phase")
 
         if "readY" in pulse_params:
-            d["readY"] = P.BoolParam(False)
-            d["invertY"] = P.BoolParam(False)
+            d["readY"] = P.BoolParam(False, doc="set readout (pi/2 pulse) phase as Y")
+            d["invertY"] = P.BoolParam(False, doc="invert Y phase")
         if "reinitX" in pulse_params:
-            d["reinitX"] = P.BoolParam(False)
+            d["reinitX"] = P.BoolParam(False, doc="reinitialize X")
         if "flip_head" in pulse_params:
-            d["flip_head"] = P.BoolParam(False)
+            d["flip_head"] = P.BoolParam(False, doc="flip the population at head")
+        if "supersample" in pulse_params:
+            d["supersample"] = P.IntParam(1, 1, 1000, doc="coefficient for supersampling")
 
         return d
 
@@ -968,6 +994,10 @@ class Pulser(Worker):
             pd_rate=P.FloatParam(
                 self.conf.get("pd_rate", 500e3), 1e3, 10000e3, doc="PD sampling rate"
             ),
+            pd_bounds=[
+                P.FloatParam(-10.0, -10.0, +10.0, doc="PD voltage lower bound"),
+                P.FloatParam(+10.0, -10.0, +10.0, doc="PD voltage upper bound"),
+            ],
             accum_window=P.FloatParam(
                 self.conf.get("accum_window", 1e-3), 1e-5, 1.0, doc="accumulation time window"
             ),
@@ -1038,14 +1068,13 @@ class Pulser(Worker):
                 "data01",
                 ("data01", "data0", "data1", "diff", "average", "normalize", "concatenate"),
             ),
-            "normalize": P.BoolParam(True, doc="normalize data using laser duties"),
-            "offset": P.FloatParam(0.0, SI_prefix=True, doc="offset value for normalization"),
-            "complex_conv": P.StrChoiceParam("real", ("real", "imag", "abs", "angle")),
             "taumode": P.StrChoiceParam("raw", taumodes),
             "logX": P.BoolParam(False),
             "logY": P.BoolParam(False),
-            "fft": P.BoolParam(False),
             "flipY": P.BoolParam(False),
+            "normalize": P.BoolParam(True, doc="normalize data using laser duties"),
+            "offset": P.FloatParam(0.0, SI_prefix=True, doc="offset value for normalization"),
+            "complex_conv": P.StrChoiceParam("real", ("real", "imag", "abs", "angle")),
         }
         return d
 

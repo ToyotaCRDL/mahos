@@ -14,7 +14,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from ..util.comp import dict_isclose
-from .common_msgs import Request
+from .common_msgs import Request, BinaryState, Status
 from .common_meas_msgs import BasicMeasData
 from .data_msgs import ComplexDataMixin
 
@@ -57,6 +57,18 @@ def is_CPlike(method: str) -> bool:
 
 def is_correlation(method: str) -> bool:
     return method in ("xy8cl", "xy8cl1flip", "xy8clNflip")
+
+
+class SPODMRStatus(Status):
+    def __init__(self, state: BinaryState, pg_freq: float):
+        self.state = state
+        self.pg_freq = pg_freq
+
+    def __repr__(self):
+        return f"SPODMRStatus({self.state}, {self.pg_freq*1e-9:.2f} GHz)"
+
+    def __str__(self):
+        return f"SPODMR({self.state.name}, {self.pg_freq*1e-9:.2f} GHz)"
 
 
 class SPODMRData(BasicMeasData, ComplexDataMixin):

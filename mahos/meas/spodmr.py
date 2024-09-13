@@ -10,13 +10,13 @@ Logic and instrument control part of Pulse ODMR with Slow detectors.
 
 from __future__ import annotations
 
-from ..msgs.common_msgs import Reply, Request, StateReq, BinaryState, BinaryStatus
+from ..msgs.common_msgs import Reply, Request, StateReq, BinaryState
 from ..msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.param_msgs import GetParamDictLabelsReq, GetParamDictReq
 from ..msgs.param_msgs import prefix_labels, remove_label_prefix
 from ..msgs import spodmr_msgs
-from ..msgs.spodmr_msgs import SPODMRData, UpdatePlotParamsReq, ValidateReq
+from ..msgs.spodmr_msgs import SPODMRStatus, SPODMRData, UpdatePlotParamsReq, ValidateReq
 from ..util.timer import IntervalTimer
 from .common_meas import BasicMeasClient, BasicMeasNode
 from .common_worker import DummyWorker, Switch
@@ -134,7 +134,9 @@ class SPODMR(BasicMeasNode):
 
         self.state = msg.state
         # publish changed state immediately to prevent StateManager from missing the change
-        self.status_pub.publish(BinaryStatus(state=self.state))
+        self.status_pub.publish(
+            SPODMRStatus(state=self.state, pg_freq=self.worker.conf["pg_freq"])
+        )
         return Reply(True)
 
     def update_plot_params(self, msg: UpdatePlotParamsReq) -> Reply:
@@ -221,7 +223,9 @@ class SPODMR(BasicMeasNode):
             self.worker.work()
 
     def _publish(self, publish_data: bool, publish_other: bool):
-        self.status_pub.publish(BinaryStatus(state=self.state))
+        self.status_pub.publish(
+            SPODMRStatus(state=self.state, pg_freq=self.worker.conf["pg_freq"])
+        )
         if publish_data:
             self.data_pub.publish(self.worker.data_msg())
         if publish_other:

@@ -10,7 +10,7 @@ Qt signal-based clients of Pulse ODMR with Slow detectors.
 
 from .Qt import QtCore
 
-from ..msgs.spodmr_msgs import SPODMRData
+from ..msgs.spodmr_msgs import SPODMRData, SPODMRStatus
 from ..msgs.spodmr_msgs import UpdatePlotParamsReq, ValidateReq
 from .client import QBasicMeasClient
 
@@ -18,6 +18,7 @@ from .client import QBasicMeasClient
 class QSPODMRClient(QBasicMeasClient):
     """Qt-based client for SPODMR."""
 
+    statusUpdated = QtCore.pyqtSignal(SPODMRStatus)
     dataUpdated = QtCore.pyqtSignal(SPODMRData)
     stopped = QtCore.pyqtSignal(SPODMRData)
 

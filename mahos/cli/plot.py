@@ -171,7 +171,7 @@ def plot_spodmr(args):
     io = SPODMRIO()
 
     plot_params = {}
-    for key in ("plotmode", "taumode", "logX", "logY", "fft", "normalize", "offset", "flipY"):
+    for key in ("plotmode", "taumode", "logX", "logY", "normalize", "offset", "flipY"):
         value = getattr(args, key)
         if value is not None:
             plot_params[key] = value
@@ -189,6 +189,7 @@ def plot_spodmr(args):
         "fit_label": args.method,
         "show_fit": args.show_fit,
         "show_std": args.show_std,
+        "fft": args.fft,
         "color0": args.color0,
         "color1": args.color1,
         "color_fit": args.color_fit,
@@ -590,6 +591,7 @@ def add_spodmr_parser(sub_parsers):
     p.add_argument(
         "-F", "--no-fit", dest="show_fit", action="store_false", help="Don't show fitting result"
     )
+    p.add_argument("--fft", action=BooleanOptionalAction, help="FFT data")
     p.add_argument(
         "-M",
         "--plotmode",
@@ -597,7 +599,6 @@ def add_spodmr_parser(sub_parsers):
         help="[plot] Plot mode (data01|data0|data1|diff|average|normalize|normalize1|concatenate)",
     )
     p.add_argument("-T", "--taumode", type=str, help="[plot] Tau mode (raw|total|freq|index)")
-    p.add_argument("--fft", action=BooleanOptionalAction, help="[plot] FFT mode")
     p.add_argument("--logX", action=BooleanOptionalAction, help="[plot] logscale X axis")
     p.add_argument("--logY", action=BooleanOptionalAction, help="[plot] logscale Y axis")
     p.add_argument(
