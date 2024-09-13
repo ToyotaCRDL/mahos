@@ -191,6 +191,7 @@ class ParamTable(QtWidgets.QTableWidget):
                 | QtCore.Qt.ItemFlag.ItemIsEnabled
             )
             self.setItem(row, col, item)
+            return item
 
         for i, (key, param) in enumerate(self._params_f.items()):
             self._to_row[key] = i
@@ -227,7 +228,7 @@ class ParamTable(QtWidgets.QTableWidget):
                 add_label_item(i, 2, "")
 
             # doc
-            add_label_item(i, 3, param.doc())
+            add_label_item(i, 3, param.doc()).setToolTip(param.doc())
         self.resizeColumnsToContents()
 
     def params(self) -> P.ParamDict:
