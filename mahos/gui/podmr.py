@@ -215,9 +215,6 @@ class PlotWidget(QtWidgets.QWidget):
             self.plot.getAxis(p).label.setFont(font)
             self.plot.getAxis(p).setTickFont(font)
 
-    def update_fft_mode(self, enable):
-        self.plot.ctrl.fftCheck.setChecked(enable)
-
     def enable_auto_range(self):
         if self._auto_range:
             self.plot.enableAutoRange()
@@ -284,6 +281,11 @@ class AltPlotWidget(QtWidgets.QWidget):
         # TODO only for FFT
         self.plot.setLabel("left", "FFT spectrum")
 
+    def get_mode(self) -> str:
+        """Get current AltPlot's mode. One of (None, FFT)."""
+
+        return self.modeBox.currentText()
+
     def real_fft(self, x, y) -> tuple[np.ndarray, np.ndarray]:
         if self.removeDCBox.isChecked():
             y = y - np.mean(y)
@@ -339,7 +341,7 @@ class AltPlotWidget(QtWidgets.QWidget):
                 )
 
     def refresh(self, data_list, data: PODMRData):
-        if self.modeBox.currentText() == "None":
+        if self.get_mode() == "None":
             self.plot.clearPlots()
             return
 
@@ -846,6 +848,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.stopButton.clicked.connect(self.request_stop)
         self.saveButton.clicked.connect(self.save_data)
         self.exportButton.clicked.connect(self.export_data)
+        self.exportaltButton.clicked.connect(self.export_alt_data)
         self.loadButton.clicked.connect(self.load_data)
 
         self.discardButton.clicked.connect(self.discard_data)
@@ -863,7 +866,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.plotenableBox.toggled.connect(self.update_plot_enable)
         self.plotenableBox.setChecked(True)
 
-        self.fftBox.toggled.connect(self.plot.update_fft_mode)
         self.taumodeBox.currentIndexChanged.connect(self.plot.enable_auto_range)
 
         # extra tab
@@ -931,7 +933,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             self.autoadjustBox,
             self.logXBox,
             self.logYBox,
-            self.fftBox,
             self.flipYBox,
         ):
             w.setEnabled(enable)
@@ -1012,7 +1013,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
                 cb.currentIndexChanged.connect(self.update_plot_params)
             else:
                 cb.currentIndexChanged.disconnect(self.update_plot_params)
-        for b in (self.refavgBox, self.logXBox, self.logYBox, self.fftBox, self.flipYBox):
+        for b in (self.refavgBox, self.logXBox, self.logYBox, self.flipYBox):
             if connect:
                 b.toggled.connect(self.update_plot_params)
             else:
@@ -1061,6 +1062,30 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["color0"] = [color.color0 for (_, _, color) in data_list]
         params["color1"] = [color.color1 for (_, _, color) in data_list]
         params["show_fit"] = any([show_fit for (_, show_fit, _) in data_list])
+        self.cli.export_data(fn, data=data, params=params)
+
+    def export_alt_data(self):
+        if self.alt_plot.get_mode() == "None":
+            QtWidgets.QMessageBox.warning(self, "No alt plot", "Alt plot is disabled.")
+            return
+
+        # Assume FFT
+        data_list = self.get_plottable_data()
+        if not data_list:
+            return
+
+        default_path = str(self.gparams_cli.get_param("work_dir"))
+        fn = export_dialog(self, default_path, "PODMR", (".png", ".pdf", ".eps", ".txt"))
+        if not fn:
+            return
+
+        params = {}
+        data = [d for (d, _, _) in data_list]
+        params["color_fit"] = [color.color0 for (_, _, color) in data_list]
+        params["color0"] = [color.color0 for (_, _, color) in data_list]
+        params["color1"] = [color.color1 for (_, _, color) in data_list]
+        params["show_fit"] = False
+        params["fft"] = True
         self.cli.export_data(fn, data=data, params=params)
 
     def load_data(self):
@@ -1181,7 +1206,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         self.logXBox.setChecked(p.get("logX", False))
         self.logYBox.setChecked(p.get("logY", False))
-        self.fftBox.setChecked(p.get("fft", False))
         self.flipYBox.setChecked(p.get("flipY", False))
 
         self.sigdelayBox.setValue(p.get("sigdelay", 0.0) * 1e9)
@@ -1258,7 +1282,6 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         params["logX"] = self.logXBox.isChecked()
         params["logY"] = self.logYBox.isChecked()
-        params["fft"] = self.fftBox.isChecked()
         params["flipY"] = self.flipYBox.isChecked()
 
         # [us] or [ns] ==> [sec]

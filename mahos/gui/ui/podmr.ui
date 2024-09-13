@@ -50,6 +50,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="exportaltButton">
+         <property name="text">
+          <string>Export Alt</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="loadButton">
          <property name="text">
           <string>Load</string>
@@ -1168,13 +1175,6 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="3">
-             <widget class="QCheckBox" name="fftBox">
-              <property name="text">
-               <string>FFT</string>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="1">
              <widget class="QComboBox" name="plotmodeBox">
               <property name="sizePolicy">
@@ -1303,7 +1303,7 @@
               </property>
              </spacer>
             </item>
-            <item row="1" column="4">
+            <item row="4" column="3">
              <widget class="QCheckBox" name="flipYBox">
               <property name="text">
                <string>flip Y</string>
@@ -1564,6 +1564,7 @@
   <tabstop>stopButton</tabstop>
   <tabstop>saveButton</tabstop>
   <tabstop>exportButton</tabstop>
+  <tabstop>exportaltButton</tabstop>
   <tabstop>loadButton</tabstop>
   <tabstop>discardButton</tabstop>
   <tabstop>enablediscardBox</tabstop>
@@ -1601,7 +1602,6 @@
   <tabstop>plotenableBox</tabstop>
   <tabstop>plotmodeBox</tabstop>
   <tabstop>taumodeBox</tabstop>
-  <tabstop>flipYBox</tabstop>
   <tabstop>sigdelayBox</tabstop>
   <tabstop>sigwidthBox</tabstop>
   <tabstop>refdelayBox</tabstop>
@@ -1611,7 +1611,7 @@
   <tabstop>autoadjustBox</tabstop>
   <tabstop>logXBox</tabstop>
   <tabstop>logYBox</tabstop>
-  <tabstop>fftBox</tabstop>
+  <tabstop>flipYBox</tabstop>
   <tabstop>fg_disableButton</tabstop>
   <tabstop>fg_cwButton</tabstop>
   <tabstop>fg_gateButton</tabstop>

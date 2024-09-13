@@ -785,7 +785,6 @@ class Pulser(Worker):
             "taumode": P.StrChoiceParam("raw", taumodes),
             "logX": P.BoolParam(False),
             "logY": P.BoolParam(False),
-            "fft": P.BoolParam(False),
             "sigdelay": P.FloatParam(200e-9, 0.0, 10e-6),
             "sigwidth": P.FloatParam(300e-9, 1e-9, 10e-6),
             "refdelay": P.FloatParam(2200e-9, 1e-9, 100e-6),

@@ -134,7 +134,7 @@ def plot_podmr(args):
     if args.timings is not None:
         for key, value in zip(("sigdelay", "sigwidth", "refdelay", "refwidth"), args.timings):
             plot_params[key] = value * 1e-9  # ns to sec
-    for key in ("plotmode", "taumode", "logX", "logY", "fft", "refmode", "refaverage", "flipY"):
+    for key in ("plotmode", "taumode", "logX", "logY", "refmode", "refaverage", "flipY"):
         value = getattr(args, key)
         if value is not None:
             plot_params[key] = value
@@ -148,6 +148,7 @@ def plot_podmr(args):
         "fit": fit_params,
         "fit_label": args.method,
         "show_fit": args.show_fit,
+        "fft": args.fft,
         "color0": args.color0,
         "color1": args.color1,
         "color_fit": args.color_fit,
@@ -512,6 +513,7 @@ def add_podmr_parser(sub_parsers):
     p.add_argument(
         "-F", "--no-fit", dest="show_fit", action="store_false", help="Don't show fitting result"
     )
+    p.add_argument("--fft", action=BooleanOptionalAction, help="FFT data")
     p.add_argument(
         "-t",
         "--timings",
@@ -530,7 +532,6 @@ def add_podmr_parser(sub_parsers):
     p.add_argument(
         "-R", "--refmode", type=str, help="[plot] Reference mode (subtract|divide|ignore)"
     )
-    p.add_argument("--fft", action=BooleanOptionalAction, help="[plot] FFT mode")
     p.add_argument("--logX", action=BooleanOptionalAction, help="[plot] logscale X axis")
     p.add_argument("--logY", action=BooleanOptionalAction, help="[plot] logscale Y axis")
     p.add_argument("--flipY", action=BooleanOptionalAction, help="[plot] flip Y axis")

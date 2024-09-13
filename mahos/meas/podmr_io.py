@@ -77,6 +77,8 @@ class PODMRIO(object):
         :type params.plot: dict|None
         :param params.fit: fit parameter. if given, refit data.
         :type params.fit: dict|None
+        :param params.fft: perform FFT on data.
+        :type params.fft: bool
         :param params.offset: offset along y-axis
         :type params.offset: list[float]
         :param params.xmin: lower limit of x-axis
@@ -195,7 +197,7 @@ class PODMRIO(object):
 
     def _export_data_image(self, fn, data_list: list[PODMRData], params: dict) -> bool:
         d0: PODMRData = data_list[0]
-        do_fft = d0.params["plot"]["fft"]
+        do_fft = params.get("fft", False)
 
         if do_fft:
             xs = [self._fft_freq(data) for data in data_list]
