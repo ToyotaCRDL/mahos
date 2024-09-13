@@ -40,6 +40,7 @@ from ..node.node import local_conf, join_name
 from ..util.plot import colors_tab20_pair
 from ..util.timer import seconds_to_hms
 from ..util.math_phys import round_halfint, round_evenint
+from ..util.conv import real_fft
 
 
 Policy = QtWidgets.QSizePolicy.Policy
@@ -220,6 +221,156 @@ class PlotWidget(QtWidgets.QWidget):
     def enable_auto_range(self):
         if self._auto_range:
             self.plot.enableAutoRange()
+
+
+class AltPlotWidget(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.init_ui()
+        self.init_view()
+        self.update_font_size()
+        self.fontsizeBox.editingFinished.connect(self.update_font_size)
+
+    def sizeHint(self):
+        return QtCore.QSize(1400, 1000)
+
+    def init_ui(self):
+        hl0 = QtWidgets.QHBoxLayout()
+
+        # TODO: mode is only FFT for now. We can add other modes to select here.
+        self.modeBox = QtWidgets.QComboBox(parent=self)
+        self.modeBox.addItem("None")
+        self.modeBox.addItem("FFT")
+
+        self.fontsizeBox = QtWidgets.QSpinBox(parent=self)
+        self.fontsizeBox.setPrefix("font size: ")
+        self.fontsizeBox.setSuffix(" pt")
+        self.fontsizeBox.setMinimum(1)
+        self.fontsizeBox.setValue(12)
+        self.fontsizeBox.setMaximum(99)
+
+        self.zeropadBox = QtWidgets.QSpinBox(parent=self)
+        self.zeropadBox.setPrefix("FFT zero pad: ")
+        self.zeropadBox.setSuffix(" points")
+        self.zeropadBox.setMinimum(0)
+        self.zeropadBox.setValue(0)
+        self.zeropadBox.setMaximum(10000)
+        for w in (self.fontsizeBox, self.zeropadBox):
+            w.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
+            w.setMaximumWidth(200)
+
+        self.removeDCBox = QtWidgets.QCheckBox("FFT remove DC", parent=self)
+        self.removeDCBox.setChecked(True)
+
+        spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
+        for w in (self.modeBox, self.fontsizeBox, self.zeropadBox, self.removeDCBox):
+            hl0.addWidget(w)
+        hl0.addItem(spacer)
+
+        vl = QtWidgets.QVBoxLayout()
+        self.graphicsView = pg.GraphicsView(parent=self)
+
+        vl.addLayout(hl0)
+        vl.addWidget(self.graphicsView)
+        self.setLayout(vl)
+
+    def init_view(self):
+        self.layout = pg.GraphicsLayout()
+        self.graphicsView.setCentralItem(self.layout)
+        self.plot = self.layout.addPlot(row=0, col=0, lockAspect=False)
+        self.plot.showGrid(x=True, y=True)
+
+        # TODO only for FFT
+        self.plot.setLabel("left", "FFT spectrum")
+
+    def real_fft(self, x, y) -> tuple[np.ndarray, np.ndarray]:
+        if self.removeDCBox.isChecked():
+            y = y - np.mean(y)
+
+        padN = self.zeropadBox.value()
+        if padN:
+            xstep = abs(x[1] - x[0])
+            x = np.concatenate((x, np.linspace(x[-1] + xstep, x[-1] + xstep * padN, num=padN)))
+            y = np.concatenate((y, np.zeros(padN)))
+
+        # don't use remove_dc at util function side (already done above).
+        return real_fft(x, y, remove_dc=False)
+
+    def plot_fft(self, data_list):
+        self.plot.clearPlots()
+
+        # don't plot fit result for now
+        for data, _, c in data_list:
+            try:
+                x = data.get_xdata()
+            except ValueError as e:
+                print("Error getting xdata: " + repr(e))
+                continue
+
+            try:
+                y0, y1 = data.get_ydata()
+                if y0 is None:
+                    return
+            except ValueError as e:
+                print("Error getting ydata: " + repr(e))
+                continue
+
+            f, S0 = self.real_fft(x, y0)
+            self.plot.plot(
+                f,
+                S0,
+                pen=pg.mkPen(c.color0, width=1.0),
+                symbolPen=None,
+                symbol="o",
+                symbolSize=8,
+                symbolBrush=c.color0,
+            )
+            if y1 is not None:
+                f, S1 = self.real_fft(x, y1)
+                self.plot.plot(
+                    f,
+                    S1,
+                    pen=pg.mkPen(c.color1, width=1.0),
+                    symbolPen=None,
+                    symbol="o",
+                    symbolSize=8,
+                    symbolBrush=c.color1,
+                )
+
+    def refresh(self, data_list, data: PODMRData):
+        if self.modeBox.currentText() == "None":
+            self.plot.clearPlots()
+            return
+
+        try:
+            self.plot_fft(data_list)
+        except TypeError as e:
+            # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
+            print("Error in plot_fft " + repr(e))
+
+        self.update_label(data)
+
+    def update_label(self, data: PODMRData):
+        if not data.has_params():
+            return
+
+        # TODO only for FFT
+        if data.xunit == "s":
+            self.plot.setLabel("bottom", "Frequency", "Hz")
+        elif data.xunit == "Hz":
+            self.plot.setLabel("bottom", "Time", "s")
+        else:
+            self.plot.setLabel("bottom", "Unknown domain")
+        # we shouldn't reflect data's attribute directly.
+        # self.plot.setLogMode(x=data.xscale == "log", y=data.yscale == "log")
+
+    def update_font_size(self):
+        font = QtGui.QFont()
+        font.setPointSize(self.fontsizeBox.value())
+        for p in ("bottom", "left"):
+            self.plot.getAxis(p).label.setFont(font)
+            self.plot.getAxis(p).setTickFont(font)
 
 
 class RawPlotWidget(QtWidgets.QWidget):
@@ -602,6 +753,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         name,
         gparams_name,
         plot: PlotWidget,
+        alt_plot: AltPlotWidget,
         raw_plot: RawPlotWidget,
         context,
         parent=None,
@@ -619,6 +771,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.init_radiobuttons()
         self.tabWidget.setCurrentIndex(0)
         self.plot = plot
+        self.alt_plot = alt_plot
         self.raw_plot = raw_plot
 
         self.data = PODMRData()
@@ -1225,6 +1378,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
     def refresh_plot(self):
         self.plot.refresh(self.get_plottable_data(), self.data)
+        self.alt_plot.refresh(self.get_plottable_data(), self.data)
         self.raw_plot.refresh(self.data)
 
     def finalize(self, data: PODMRData):
@@ -1420,12 +1574,14 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
         target = lconf["target"]
 
         self.plot = PlotWidget(parent=self)
+        self.alt_plot = AltPlotWidget(parent=self)
         self.raw_plot = RawPlotWidget(parent=self)
         self.podmr = PODMRWidget(
             gconf,
             target["podmr"],
             target["gparams"],
             self.plot,
+            self.alt_plot,
             self.raw_plot,
             context,
             parent=self,
@@ -1436,13 +1592,17 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.podmr)
         self.d_plot = QtWidgets.QDockWidget("Plot", parent=self)
         self.d_plot.setWidget(self.plot)
+        self.d_alt_plot = QtWidgets.QDockWidget("Alt Plot", parent=self)
+        self.d_alt_plot.setWidget(self.alt_plot)
         self.d_raw_plot = QtWidgets.QDockWidget("Raw Plot", parent=self)
         self.d_raw_plot.setWidget(self.raw_plot)
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.d_plot)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.d_alt_plot)
+        self.tabifyDockWidget(self.d_alt_plot, self.d_plot)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, self.d_raw_plot)
 
         self.view_menu = self.menuBar().addMenu("View")
         self.view_menu.addAction(self.d_plot.toggleViewAction())
+        self.view_menu.addAction(self.d_alt_plot.toggleViewAction())
         self.view_menu.addAction(self.d_raw_plot.toggleViewAction())
 
         self.option_menu = self.menuBar().addMenu("Option")
