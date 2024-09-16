@@ -544,7 +544,7 @@ def add_podmr_parser(sub_parsers):
         "-m",
         "--method",
         type=str,
-        help="[fit] Fitting method (rabi|fid|spinecho|gaussian|lorentzian). Invokes re-fitting.",
+        help="[fit] Fitting method (rabi|fid|spinecho|...). Invokes re-fitting.",
     )
     p.add_argument(
         "-P",

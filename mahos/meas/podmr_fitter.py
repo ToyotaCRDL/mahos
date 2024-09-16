@@ -9,16 +9,20 @@ Fitter for Pulse ODMR.
 """
 
 from __future__ import annotations
+from functools import reduce
+from operator import add
 
-import lmfit as F
 import numpy as np
 from numpy.typing import NDArray
+import lmfit as F
 
 from ..msgs.podmr_msgs import PODMRData
+from ..msgs.fit_msgs import PeakType
 from ..msgs import param_msgs as P
 from ..node.log import DummyLogger
 from ..util.conv import real_fft
-from .common_fitter import gaussian, lorentzian, BaseFitter
+from .common_fitter import gaussian, lorentzian, voigt, BaseFitter
+from .odmr_fitter import guess_single_peak, guess_multi_peak, guess_background
 
 
 class Fitter(BaseFitter):
@@ -215,64 +219,284 @@ class FIDFitter(Fitter):
         return baseline + F.Model(fid_decay_cos)
 
 
-class GaussianFitter(Fitter):
-    def model_params(self) -> P.ParamDict[str, P.PDValue]:
-        return P.ParamDict(
-            c=self.make_model_param(0.0, -1.0, 1.0, doc="constant baseline"),
-            amplitude=self.make_model_param(0.1, 0.0, 1.0, doc="peak amplitude"),
-            center=self.make_model_param(
-                10e-6, 1e-9, 1.0, unit="s", SI_prefix=True, doc="peak center position"
+class SinglePeakFitter(Fitter):
+    def param_dict(self) -> P.ParamDict[str, P.PDValue]:
+        params = P.ParamDict(
+            peak_type=P.EnumParam(PeakType, PeakType.Voigt),
+            dip=P.BoolParam(
+                self.conf.get("dip", True), doc="dip-shape instead of peak. used for guess."
             ),
-            sigma=self.make_model_param(
-                10e-9, 0.0, 1e9, unit="s", SI_prefix=True, doc="peak width parameter"
+            n_guess=P.IntParam(
+                self.conf.get("n_guess", 20),
+                1,
+                1000,
+                doc="number of data points in peak center guess.",
+            ),
+            n_guess_bg=P.IntParam(
+                self.conf.get("n_guess_bg", 40),
+                5,
+                1000,
+                doc="number of histogram bins in background guess.",
             ),
         )
+        params.update(self.common_param_dict())
+        return params
 
-    def guess_fit_params(
-        self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
-    ):
-        if fit_params["c"].vary:
-            fit_params["c"].set(np.min(ydata))
-        if fit_params["amplitude"].vary:
-            fit_params["amplitude"].set(np.max(ydata) - np.min(ydata))
-        if fit_params["center"].vary:
-            fit_params["center"].set(xdata[np.argmax(ydata)])
-        if fit_params["sigma"].vary:
-            fit_params["sigma"].set(0.1 * (np.max(xdata) - np.min(xdata)))
-
-    def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
-        baseline = F.models.ConstantModel()
-        return baseline + F.Model(gaussian)
-
-
-class LorentzianFitter(Fitter):
     def model_params(self) -> P.ParamDict[str, P.PDValue]:
         return P.ParamDict(
-            c=self.make_model_param(0.0, -1.0, 1.0, doc="constant baseline"),
-            amplitude=self.make_model_param(0.1, 0.0, 1.0, doc="peak amplitude"),
+            slope=self.make_model_param(
+                0.0, -1.0, 1.0, doc="baseline slope", SI_prefix=True, fixable=True, fixed=True
+            ),
+            intercept=self.make_model_param(
+                0.0, -10, 10, doc="baseline y-intercept", fixable=True
+            ),
+            amplitude=self.make_model_param(0.1, -10, 10, doc="peak amplitude"),
             center=self.make_model_param(
-                10e-6, 1e-9, 1.0, unit="s", SI_prefix=True, doc="peak center position"
+                10e-6, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak center position"
             ),
             gamma=self.make_model_param(
-                10e-9, 0.0, 1e9, unit="s", SI_prefix=True, doc="peak HWHM"
+                10e-9,
+                1e-9,
+                1e-3,
+                unit="s",
+                SI_prefix=True,
+                doc="peak width param (Voigt or Lorentzian)",
+            ),
+            sigma=self.make_model_param(
+                10e-9,
+                1e-9,
+                1e-3,
+                unit="s",
+                SI_prefix=True,
+                doc="peak width param (Voigt or Gaussian)",
             ),
         )
+
+    def model_params_for_fit(
+        self, raw_params: dict[str, P.RawPDValue]
+    ) -> P.ParamDict[str, P.PDValue]:
+        params = self.model_params()
+        if raw_params["peak_type"] == PeakType.Gaussian:
+            del params["gamma"]
+        elif raw_params["peak_type"] == PeakType.Lorentzian:
+            del params["sigma"]
+        return params
+
+    def _guess_bg_ampl(self, ydata, fit_params, raw_params) -> float:
+        dip = raw_params.get("dip", True)
+        n_guess_bg = raw_params.get("n_guess_bg", 40)
+        if n_guess_bg:
+            bg = guess_background(ydata, n_guess_bg)
+        else:
+            if dip:
+                bg = np.max(ydata)
+            else:
+                bg = np.min(ydata)
+
+        if dip:
+            fit_params["intercept"].set(bg)
+            return np.min(ydata) - bg
+        else:
+            fit_params["intercept"].set(bg)
+            return np.max(ydata) - bg
 
     def guess_fit_params(
         self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
     ):
-        if fit_params["c"].vary:
-            fit_params["c"].set(np.min(ydata))
-        if fit_params["amplitude"].vary:
-            fit_params["amplitude"].set(np.max(ydata) - np.min(ydata))
-        if fit_params["center"].vary:
-            fit_params["center"].set(xdata[np.argmax(ydata)])
-        if fit_params["gamma"].vary:
-            fit_params["gamma"].set(0.1 * (np.max(xdata) - np.min(xdata)))
+        ampl = self._guess_bg_ampl(ydata, fit_params, raw_params)
+        fit_params["amplitude"].set(ampl)
+        peak_type = raw_params.get("peak_type", PeakType.Voigt)
+
+        fit_params["center"].set(
+            guess_single_peak(
+                xdata, ydata, raw_params.get("dip", True), num=raw_params.get("n_guess", 20)
+            ),
+            min=np.min(xdata),
+            max=np.max(xdata),
+        )
+        xrange = np.max(xdata) - np.min(xdata)
+
+        if peak_type == PeakType.Voigt:
+            fit_params["sigma"].set(xrange * 0.01, min=xdata[1] - xdata[0], max=xrange)
+            fit_params["gamma"].set(xrange * 0.01, min=xdata[1] - xdata[0], max=xrange)
+        elif peak_type == PeakType.Gaussian:
+            fit_params["sigma"].set(xrange * 0.01, min=xdata[1] - xdata[0], max=xrange)
+        elif peak_type == PeakType.Lorentzian:
+            fit_params["gamma"].set(xrange * 0.01, min=xdata[1] - xdata[0], max=xrange)
+        else:
+            raise ValueError("Unexpected peak_type: " + str(peak_type))
 
     def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
-        baseline = F.models.ConstantModel()
-        return baseline + F.Model(lorentzian)
+        baseline = F.models.LinearModel()
+        peak_type = raw_params.get("peak_type", PeakType.Voigt)
+        if peak_type == PeakType.Voigt:
+            return baseline + F.Model(voigt)
+        elif peak_type == PeakType.Gaussian:
+            return baseline + F.Model(gaussian)
+        elif peak_type == PeakType.Lorentzian:
+            return baseline + F.Model(lorentzian)
+        else:
+            raise ValueError("Unexpected peak_type: " + str(peak_type))
+
+
+class MultiPeakFitter(SinglePeakFitter):
+    def param_dict(self) -> P.ParamDict[str, P.PDValue]:
+        params = P.ParamDict(
+            n_peaks=P.IntParam(2, 2, 100, doc="number of peaks"),
+            peak_type=P.EnumParam(PeakType, PeakType.Voigt),
+            dip=P.BoolParam(
+                self.conf.get("dip", True), doc="dip-shape instead of peak. used for guess."
+            ),
+            n_guess=P.IntParam(
+                self.conf.get("n_guess", 20),
+                1,
+                1000,
+                doc="number of data points in peak center guess.",
+            ),
+            n_guess_bg=P.IntParam(
+                self.conf.get("n_guess_bg", 40),
+                5,
+                1000,
+                doc="number of histogram bins in background guess.",
+            ),
+        )
+        params.update(self.common_param_dict())
+        return params
+
+    def model_params(self) -> P.ParamDict[str, P.PDValue]:
+        return P.ParamDict(
+            slope=self.make_model_param(
+                0.0, -1.0, 1.0, doc="baseline slope", SI_prefix=True, fixable=True, fixed=True
+            ),
+            intercept=self.make_model_param(
+                0.0, -10, 10, doc="baseline y-intercept", fixable=True
+            ),
+            amplitude=self.make_model_param(0.1, -10, 10, doc="peak amplitude"),
+            center=self.make_model_param(
+                10e-6, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak center position"
+            ),
+            gamma=self.make_model_param(
+                10e-9,
+                1e-9,
+                1e-3,
+                unit="s",
+                SI_prefix=True,
+                doc="peak width param (Voigt or Lorentzian)",
+            ),
+            sigma=self.make_model_param(
+                10e-9,
+                1e-9,
+                1e-3,
+                unit="s",
+                SI_prefix=True,
+                doc="peak width param (Voigt or Gaussian)",
+            ),
+            # manually add many centers and filter them later
+            p0_center=self.make_model_param(
+                100e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak position"
+            ),
+            p1_center=self.make_model_param(
+                100e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak position"
+            ),
+            p2_center=self.make_model_param(
+                100e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak position"
+            ),
+            p3_center=self.make_model_param(
+                100e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak position"
+            ),
+            p4_center=self.make_model_param(
+                100e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak position"
+            ),
+            p5_center=self.make_model_param(
+                100e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak position"
+            ),
+            p6_center=self.make_model_param(
+                100e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak position"
+            ),
+            p7_center=self.make_model_param(
+                100e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="peak position"
+            ),
+        )
+
+    def model_params_for_fit(
+        self, raw_params: dict[str, P.RawPDValue]
+    ) -> P.ParamDict[str, P.PDValue]:
+        params = P.ParamDict(
+            slope=self.make_model_param(0.0, -1.0, 1.0, fixable=True, fixed=True),
+            intercept=self.make_model_param(0.0, -1.0, 1.0, fixable=True),
+        )
+        for i in range(raw_params["n_peaks"]):
+            params[f"p{i}_center"] = self.make_model_param(100e-9, 1e-9, 1e-3)
+            params[f"p{i}_amplitude"] = self.make_model_param(0.1, -10, 10)
+
+            if raw_params["peak_type"] == PeakType.Voigt:
+                params[f"p{i}_gamma"] = self.make_model_param(10e-9, 1e-9, 1e-3)
+                params[f"p{i}_sigma"] = self.make_model_param(10e-9, 1e-9, 1e-3)
+            elif raw_params["peak_type"] == PeakType.Gaussian:
+                params[f"p{i}_sigma"] = self.make_model_param(10e-9, 1e-9, 1e-3)
+            elif raw_params["peak_type"] == PeakType.Lorentzian:
+                params[f"p{i}_gamma"] = self.make_model_param(10e-9, 1e-9, 1e-3)
+        return params
+
+    def add_fit_params(
+        self, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue], xdata, ydata
+    ):
+        for i in range(1, raw_params["n_peaks"]):
+            fit_params.add(
+                f"center_diff{i}", expr=f"p{i}_center-p{i-1}_center", min=0.0, max=np.max(xdata)
+            )
+
+    def guess_fit_params(
+        self, xdata, ydata, fit_params: F.Parameters, raw_params: dict[str, P.RawPDValue]
+    ):
+        ampl = self._guess_bg_ampl(ydata, fit_params, raw_params)
+        n_peaks = raw_params["n_peaks"]
+        peak_type = raw_params.get("peak_type", PeakType.Voigt)
+
+        centers = guess_multi_peak(
+            xdata,
+            ydata,
+            raw_params.get("dip", True),
+            n_peaks=n_peaks,
+            n_samples=raw_params.get("n_guess", 20),
+        )
+        for i, c in enumerate(centers):
+            fit_params[f"p{i}_center"].set(c, min=np.min(xdata), max=np.max(xdata))
+            fit_params[f"p{i}_amplitude"].set(ampl)
+
+        xrange = np.max(xdata) - np.min(xdata)
+        if peak_type == PeakType.Voigt:
+            for i in range(n_peaks):
+                fit_params[f"p{i}_sigma"].set(xrange * 0.01, min=xdata[1] - xdata[0], max=xrange)
+                fit_params[f"p{i}_gamma"].set(xrange * 0.01, min=xdata[1] - xdata[0], max=xrange)
+        elif peak_type == PeakType.Gaussian:
+            for i in range(n_peaks):
+                fit_params[f"p{i}_sigma"].set(xrange * 0.01, min=xdata[1] - xdata[0], max=xrange)
+        elif peak_type == PeakType.Lorentzian:
+            for i in range(n_peaks):
+                fit_params[f"p{i}_gamma"].set(xrange * 0.01, min=xdata[1] - xdata[0], max=xrange)
+        else:
+            raise ValueError("Unexpected peak_type: " + str(peak_type))
+
+    def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
+        n_peaks = raw_params["n_peaks"]
+        peak_type = raw_params.get("peak_type", PeakType.Voigt)
+        baseline = F.models.LinearModel()
+
+        if peak_type == PeakType.Voigt:
+            return reduce(
+                add, [baseline] + [F.Model(voigt, prefix=f"p{i}_") for i in range(n_peaks)]
+            )
+        elif peak_type == PeakType.Gaussian:
+            return reduce(
+                add, [baseline] + [F.Model(gaussian, prefix=f"p{i}_") for i in range(n_peaks)]
+            )
+        elif peak_type == PeakType.Lorentzian:
+            return reduce(
+                add, [baseline] + [F.Model(lorentzian, prefix=f"p{i}_") for i in range(n_peaks)]
+            )
+        else:
+            raise ValueError("Unexpected peak_type: " + str(peak_type))
 
 
 class PODMRFitter(object):
@@ -291,8 +515,8 @@ class PODMRFitter(object):
             "T1": T1Fitter(self.logger.info, conf.get("T1")),
             "spinecho": SpinEchoFitter(self.logger.info, conf.get("spinecho")),
             "fid": FIDFitter(self.logger.info, conf.get("fid")),
-            "gaussian": GaussianFitter(self.logger.info, conf.get("gaussian")),
-            "lorentzian": LorentzianFitter(self.logger.info, conf.get("lorentzian")),
+            "single_peak": SinglePeakFitter(self.logger.info, conf.get("single_peak")),
+            "multi_peak": MultiPeakFitter(self.logger.info, conf.get("multi_peak")),
         }
 
     def get_param_dict_labels(self) -> list[str]:
