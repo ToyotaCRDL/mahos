@@ -602,30 +602,6 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             w.setEnabled(not disabled)
         self.fg_phaseBox.setEnabled(self.fg_gateButton.isChecked())
 
-    # consider putting these additional keys in sub ParamDict?
-    _OPT_KEYS = [
-        "90pulse",
-        "180pulse",
-        "tauconst",
-        "tau2const",
-        "iq_delay",
-        "Nconst",
-        "N2const",
-        "N3const",
-        "ddphase",
-        "invertinit",
-        "readY",
-        "invertY",
-        "reinitX",
-        "flip_head",
-        "supersample",
-    ]
-
-    def _opt_params(self, params: dict):
-        """Pick-up additional pulse parameters."""
-
-        return {k: v for k, v in params.items() if k in self._OPT_KEYS}
-
     def _apply_sg2(self, params: dict):
         """Check existence of SG2 (freq2 in params) and apply bound of SG2."""
 
@@ -640,7 +616,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self._params = self.cli.get_param_dict(method)
         self.update_cond_widgets()
         self._apply_sg2(self._params)
-        self.paramTable.update_contents(P.ParamDict(self._opt_params(self._params)))
+        self.paramTable.update_contents(self._params["pulse"])
         self.reset_tau_modes(self._params["plot"]["taumode"].options())
         self.plot.update_label(self.data)
 
@@ -786,7 +762,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         # method
         self.set_method(self.data.label)
 
-        for k, v in self._opt_params(p).items():
+        for k, v in p["pulse"].items():
             self.paramTable.apply_value(k, v)
 
         # MW
@@ -810,7 +786,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self.NstepBox.setValue(p.get("Nstep", 1))
 
         # method params
-        self.invertsweepBox.setChecked(p.get("invertsweep", False))
+        self.invertsweepBox.setChecked(p.get("invert_sweep", False))
         self.reduceBox.setChecked(p.get("enable_reduce", False))
         partial = p.get("partial")
         if partial in (-1, 0, 1, 2):
@@ -896,7 +872,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         params["mw_delay"] = self.mdelayBox.value() * 1e-9
 
         ## common switches
-        params["invertsweep"] = self.invertsweepBox.isChecked()
+        params["invert_sweep"] = self.invertsweepBox.isChecked()
         params["enable_reduce"] = self.reduceBox.isChecked()
         ## no divide_block for now, partial is above.
 
@@ -911,8 +887,7 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             params["step"] = self.stepBox.value() * 1e-9  # ns to sec
             params["log"] = self.logBox.isChecked()
 
-        params.update(P.unwrap(self.paramTable.params()))
-
+        params["pulse"] = P.unwrap(self.paramTable.params())
         params["plot"] = self.get_plot_params()
         params["fg"] = self.get_fg_params()
 

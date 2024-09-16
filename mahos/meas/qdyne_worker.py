@@ -348,8 +348,8 @@ class Pulser(Worker):
         generate = self.generators[data.label].generate_raw_blocks
 
         # fill unused parameters
-        xdata = [data.params["tauconst"]]
-        params = data.get_pulse_params()
+        xdata = [data.params["pulse"]["tauconst"]]
+        params = data.get_params()
         params["init_delay"] = params["final_delay"] = 0.0
 
         blocks, freq, common_pulses = generate(xdata, params)
@@ -539,7 +539,6 @@ class Pulser(Worker):
     def _get_param_dict_pulse_opt(self, label: str, d: dict):
         pulse_params = self.generators[label].pulse_params()
 
-        d["tauconst"] = P.FloatParam(1.0e-9, 1.0e-9, 1.0e-3, unit="s", SI_prefix=True)
         d["Nconst"] = P.IntParam(1, 1, 10000)
 
         if "90pulse" in pulse_params:
@@ -590,7 +589,10 @@ class Pulser(Worker):
         )
 
         self._get_param_dict_pulse(label, d)
-        self._get_param_dict_pulse_opt(label, d)
+        d["pulse"] = self.generators[label].pulse_params()
+        if "supersample" in d["pulse"]:
+            del d["pulse"]["supersample"]
+        d["pulse"]["tauconst"] = P.FloatParam(1.0e-9, 1.0e-9, 1.0e-3, unit="s", SI_prefix=True)
 
         if self.fg is not None:
             if self.bounds.has_fg():

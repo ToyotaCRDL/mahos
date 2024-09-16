@@ -73,7 +73,7 @@ class SPODMRStatus(Status):
 
 class SPODMRData(BasicMeasData, ComplexDataMixin):
     def __init__(self, params: dict | None = None, label: str = ""):
-        self.set_version(2)
+        self.set_version(3)
         self.init_params(params, label)
         self.init_attrs()
 
@@ -97,8 +97,8 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
             # supersampling
             if self.is_supersampling():
                 i = np.arange(self.params["num"])
-                pulse_num = {"xy8": 8, "xy16": 16}[self.label] * self.params["Nconst"]
-                sample = np.linspace(0, 1, num=self.params["supersample"] + 1)
+                pulse_num = {"xy8": 8, "xy16": 16}[self.label] * self.params["pulse"]["Nconst"]
+                sample = np.linspace(0, 1, num=self.params["pulse"]["supersample"] + 1)
                 i_sub = (sample * pulse_num).astype(np.int64)[:-1] / pulse_num
 
                 i = np.array([i_sub + j for j in i]).reshape(len(i) * len(i_sub))
@@ -121,7 +121,7 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
                 i = np.arange(self.params["num"])
                 self.xdata = self.params["start"] + i * self.params["step"]
 
-        if self.params.get("invertsweep", False):
+        if self.params.get("invert_sweep", False):
             self.xdata = self.xdata[::-1]
 
     # getters
@@ -188,36 +188,37 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
         """
 
         m = self.get_method()
+        pp = self.get_pulse_params()
         a, b = 1, 0
         if m == "spinecho":
             a = 2
         elif m == "trse":
-            b = self.params["tauconst"]
+            b = pp["tauconst"]
         elif m in ["cp", "cpmg", "ddgate"]:
-            a = 2 * self.params["Nconst"]
+            a = 2 * pp["Nconst"]
         elif m == "xy4":
-            a = 2 * self.params["Nconst"] * 4
+            a = 2 * pp["Nconst"] * 4
         elif m == "xy8":
-            a = 2 * self.params["Nconst"] * 8
+            a = 2 * pp["Nconst"] * 8
         elif m == "xy16":
-            a = 2 * self.params["Nconst"] * 16
+            a = 2 * pp["Nconst"] * 16
 
         elif m in ["cpN", "cpmgN"]:
-            a = 2 * self.params["tauconst"]
+            a = 2 * pp["tauconst"]
         elif m == "xy4N":
-            a = 2 * self.params["tauconst"] * 4
+            a = 2 * pp["tauconst"] * 4
         elif m == "xy8N":
-            a = 2 * self.params["tauconst"] * 8
+            a = 2 * pp["tauconst"] * 8
         elif m == "xy16N":
-            a = 2 * self.params["tauconst"] * 16
+            a = 2 * pp["tauconst"] * 16
 
         elif m == "xy8cl":
             a = 1
         elif m == "xy8cl1flip":
             a = 2
-            b = self.params["180pulse"]
+            b = pp["180pulse"]
         elif m == "xy8clNflip":
-            a = 2 * self.params["tauconst"] + self.params["180pulse"]
+            a = 2 * pp["tauconst"] + pp["180pulse"]
             b = 0
         else:
             raise ValueError(f"invalid method {m} for taumode == total")
@@ -367,16 +368,26 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
         else:
             raise ValueError(f"unknown plotmode {plotmode}")
 
-    def get_pulse_params(self) -> dict:
-        if not ("90pulse" in self.params and "180pulse" in self.params):
-            return self.params.copy()
+    def get_params(self) -> dict:
+        if not self.has_params():
+            return {}
+        p = self.params.copy()
+        p["pulse"] = self.get_pulse_params()
+        return p
 
-        p90, p180 = [self.params[k] for k in ("90pulse", "180pulse")]
+    def get_pulse_params(self) -> dict:
+        if not self.has_params():
+            return {}
+        pp = self.params["pulse"]
+        if not ("90pulse" in pp and "180pulse" in pp):
+            return pp.copy()
+
+        p90, p180 = [pp[k] for k in ("90pulse", "180pulse")]
 
         if p180 <= 0:
             p180 = p90 * 2
 
-        p = self.params.copy()
+        p = pp.copy()
         p["90pulse"] = p90
         p["180pulse"] = p180
 
@@ -445,8 +456,8 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
     def is_supersampling(self):
         return (
             self.label in ("xy8", "xy16")
-            and "supersample" in self.params
-            and self.params["supersample"] != 1
+            and "supersample" in self.params["pulse"]
+            and self.params["pulse"]["supersample"] != 1
         )
 
     def is_complex(self) -> bool:
@@ -495,5 +506,26 @@ def update_data(data: SPODMRData):
             data.fit_label = data.fit_params["method"]
             del data.fit_params["method"]
         data.set_version(2)
+
+    if data.version() <= 2:
+        # version 2 to 3
+        ## fixed location of optional pulse params
+        ## here's only keys actually used for experiments before patch
+        keys = [
+            "90pulse",
+            "180pulse",
+            "tauconst",
+            "Nconst",
+            "readY",
+            "invertY",
+            "supersample",
+            "flip_head",
+        ]
+        data.params["pulse"] = {}
+        for k in keys:
+            if k in data.params:
+                data.params["pulse"][k] = data.params[k]
+                del data.params[k]
+        data.set_version(3)
 
     return data

@@ -36,7 +36,7 @@ class DiscardReq(Request):
 
 class QdyneData(BasicMeasData):
     def __init__(self, params: dict | None = None, label: str = ""):
-        self.set_version(1)
+        self.set_version(2)
         self.init_params(params, label)
         self.init_attrs()
 
@@ -181,21 +181,33 @@ class QdyneData(BasicMeasData):
 
         return self.fft_data if fft else self.data
 
-    def get_pulse_params(self) -> dict:
-        if not ("90pulse" in self.params and "180pulse" in self.params):
-            return self.params.copy()
+    def get_params(self) -> dict:
+        if not self.has_params():
+            return {}
+        p = self.params.copy()
+        # fill unused parameters
+        p["init_delay"] = 0.0
+        p["final_delay"] = 0.0
 
-        p90, p180 = [self.params[k] for k in ("90pulse", "180pulse")]
+        p["pulse"] = self.get_pulse_params()
+        return p
+
+    def get_pulse_params(self) -> dict:
+        if not self.has_params():
+            return {}
+        pp = self.params["pulse"]
+        if not ("90pulse" in pp and "180pulse" in pp):
+            return pp.copy()
+
+        p90, p180 = [pp[k] for k in ("90pulse", "180pulse")]
 
         if p180 <= 0:
             p180 = p90 * 2
 
-        p = self.params.copy()
+        p = pp.copy()
         p["90pulse"] = p90
         p["180pulse"] = p180
         # fill unused parameters
-        p["init_delay"] = 0.0
-        p["final_delay"] = 0.0
         p["supersample"] = 1
 
         return p
@@ -247,5 +259,26 @@ def update_data(data: QdyneData):
             data.fit_label = data.fit_params["method"]
             del data.fit_params["method"]
         data.set_version(1)
+
+    if data.version() <= 1:
+        # version 1 to 2
+        ## fixed location of optional pulse params
+        ## here's only keys actually used for experiments before patch
+        keys = [
+            "90pulse",
+            "180pulse",
+            "tauconst",
+            "Nconst",
+            "readY",
+            "invertY",
+            # "supersample",
+            "flip_head",
+        ]
+        data.params["pulse"] = {}
+        for k in keys:
+            if k in data.params:
+                data.params["pulse"][k] = data.params[k]
+                del data.params[k]
+        data.set_version(2)
 
     return data

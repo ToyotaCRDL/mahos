@@ -738,7 +738,7 @@ class Pulser(Worker):
             data = self.data
         generate = self.generators[data.label].generate_raw_blocks
 
-        params = data.get_pulse_params()
+        params = data.get_params()
         # fill unused params
         params["base_width"] = params["trigger_width"] = 0.0
         params["init_delay"] = params["final_delay"] = 0.0
@@ -877,7 +877,7 @@ class Pulser(Worker):
         # d["final_delay"] = P.FloatParam(5e-6, 0.0, 1e-4)
 
         ## common switches
-        d["invertsweep"] = P.BoolParam(False)
+        d["invert_sweep"] = P.BoolParam(False)
         d["enable_reduce"] = P.BoolParam(False)
         d["divide_block"] = P.BoolParam(True)
         d["partial"] = P.IntChoiceParam(
@@ -894,71 +894,6 @@ class Pulser(Worker):
             d["num"] = P.IntParam(50, 1, 10000)
             d["step"] = P.FloatParam(1.0e-9, 1.0e-9, 1.0e-3)
             d["log"] = P.BoolParam(False)
-
-        return d
-
-    def _get_param_dict_pulse_opt(self, label: str, d: dict):
-        pulse_params = self.generators[label].pulse_params()
-
-        if "90pulse" in pulse_params:
-            d["90pulse"] = P.FloatParam(
-                10e-9,
-                1e-9,
-                1000e-9,
-                unit="s",
-                SI_prefix=True,
-                step=1e-9,
-                doc="90 deg (pi/2) pulse width",
-            )
-        if "180pulse" in pulse_params:
-            d["180pulse"] = P.FloatParam(
-                -1.0e-9,
-                -1.0e-9,
-                1000e-9,
-                unit="s",
-                SI_prefix=True,
-                step=1e-9,
-                doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
-            )
-
-        if "tauconst" in pulse_params:
-            d["tauconst"] = P.FloatParam(
-                1.0e-9, 1.0e-9, 1.0e-3, unit="s", SI_prefix=True, step=1e-9, doc="constant time"
-            )
-        if "tau2const" in pulse_params:
-            d["tau2const"] = P.FloatParam(
-                1.0e-9,
-                1.0e-9,
-                1.0e-3,
-                unit="s",
-                SI_prefix=True,
-                step=1e-9,
-                doc="constant time (2)",
-            )
-        if "iq_delay" in pulse_params:
-            d["iq_delay"] = P.FloatParam(10e-9, 1e-9, 1000e-9, unit="s", SI_prefix=True, step=1e-9)
-
-        if "Nconst" in pulse_params:
-            d["Nconst"] = P.IntParam(4, 1, 10000, doc="constant N")
-        if "N2const" in pulse_params:
-            d["N2const"] = P.IntParam(2, 1, 10000, doc="constant N (2)")
-        if "N3const" in pulse_params:
-            d["N3const"] = P.IntParam(2, 1, 10000, doc="constant N (3)")
-        if "ddphase" in pulse_params:
-            d["ddphase"] = P.StrParam("Y:X:Y:X,Y:X:Y:iX")
-
-        if "invertinit" in pulse_params:
-            d["invertinit"] = P.BoolParam(False, doc="invert initialization phase")
-
-        if "readY" in pulse_params:
-            d["readY"] = P.BoolParam(False, doc="set readout (pi/2 pulse) phase as Y")
-            d["invertY"] = P.BoolParam(False, doc="invert Y phase")
-        if "reinitX" in pulse_params:
-            d["reinitX"] = P.BoolParam(False, doc="reinitialize X")
-        if "flip_head" in pulse_params:
-            d["flip_head"] = P.BoolParam(False, doc="flip the population at head")
-        if "supersample" in pulse_params:
-            d["supersample"] = P.IntParam(1, 1, 1000, doc="coefficient for supersampling")
 
         return d
 
@@ -1035,7 +970,7 @@ class Pulser(Worker):
             d["nomw2"] = P.BoolParam(False)
 
         self._get_param_dict_pulse(label, d)
-        self._get_param_dict_pulse_opt(label, d)
+        d["pulse"] = self.generators[label].pulse_params()
 
         if self.fg is not None:
             if self.bounds.has_fg():

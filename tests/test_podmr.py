@@ -57,6 +57,14 @@ def test_podmr_pattern_divide():
         "trigger_width": 20e-9,
         "init_delay": 0.0,
         "final_delay": 5e-6,
+        "partial": -1,
+        "nomw": False,
+        "start": 100e-9,
+        "num": 2,
+        "step": 100e-9,
+        "divide_block": False,
+    }
+    params["pulse"] = {
         "90pulse": 10e-9,
         "180pulse": 20e-9,
         "tauconst": 150e-9,
@@ -67,16 +75,11 @@ def test_podmr_pattern_divide():
         "ddphase": "Y:X:Y:X,Y:X:Y:iX",
         "supersample": 1,
         "iq_delay": 16e-9,
-        "partial": -1,
-        "nomw": False,
         "readY": False,
-        "invertinit": False,
+        "invertY": False,
+        "invert_init": False,
         "reinitX": False,
         "flip_head": True,
-        "start": 100e-9,
-        "num": 2,
-        "step": 100e-9,
-        "divide_block": False,
     }
     params_divide = params.copy()
     params_divide["divide_block"] = True
@@ -103,6 +106,14 @@ def test_podmr_patterns():
         "trigger_width": 20e-9,
         "init_delay": 0.0,
         "final_delay": 5e-6,
+        "partial": -1,
+        "nomw": False,
+        "start": 100e-9,
+        "num": 2,
+        "step": 100e-9,
+        "divide_block": False,
+    }
+    params["pulse"] = {
         "90pulse": 10e-9,
         "180pulse": 20e-9,
         "tauconst": 150e-9,
@@ -113,16 +124,11 @@ def test_podmr_patterns():
         "ddphase": "Y:X:Y:X,Y:X:Y:iX",
         "supersample": 1,
         "iq_delay": 16e-9,
-        "partial": -1,
-        "nomw": False,
         "readY": False,
-        "invertinit": False,
+        "invertY": False,
+        "invert_init": False,
         "reinitX": False,
         "flip_head": True,
-        "start": 100e-9,
-        "num": 2,
-        "step": 100e-9,
-        "divide_block": False,
     }
 
     generators = make_generators()
@@ -152,8 +158,7 @@ def test_podmr_patterns():
 
     for meth in ("xy8", "xy16"):
         ps = copy.copy(params)
-        ps["supersample"] = 2
-        ps["method"] = meth
+        ps["pulse"]["supersample"] = 2
         data = PODMRData(ps, meth)
         ptn = generators[meth].generate(data.xdata, ps)
         assert pattern_equal(ptn, patterns[meth + "ss"])
@@ -200,9 +205,11 @@ def test_podmr(server, podmr, server_conf, podmr_conf):
         params = podmr.get_param_dict(m)
         params["num"].set(2)  # small num for quick test
         if "90pulse" in params:
-            params["90pulse"].set(10e-9)
+            params["pulse"]["90pulse"].set(10e-9)
         if "180pulse" in params:
-            params["180pulse"].set(20e-9)  # default negative value causes error in se90sweep
+            params["pulse"]["180pulse"].set(
+                20e-9
+            )  # default negative value causes error in se90sweep
         assert podmr.validate(params, m)
         assert podmr.start(params, m)
         assert expect_podmr(podmr, params["num"].value(), poll_timeout_ms)

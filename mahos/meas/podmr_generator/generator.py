@@ -14,6 +14,7 @@ import re
 import numpy as np
 from . import generator_kernel as K
 
+from ...msgs import param_msgs as P
 from ...msgs.inst.pg_msgs import Channels
 
 
@@ -36,10 +37,15 @@ class PatternGenerator(object):
         self.print_fn = print_fn
         self.method = method
 
-    def pulse_params(self) -> list[str]:
-        """Return list of names of required pulse params."""
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        """Return ParamDict of additional pulse params."""
 
-        return []
+        return P.ParamDict()
+
+    def num_mw(self) -> int:
+        """Return number of required MW channels."""
+
+        return 1
 
     def get_common_pulses(self, params: dict):
         keys = [
@@ -56,8 +62,9 @@ class PatternGenerator(object):
     def is_sweepN(self) -> bool:
         return False
 
-    def get_pulse_params(self, params: dict):
-        return [params[k] for k in self.pulse_params()]
+    def get_pulse_params(self, params: dict) -> dict:
+        pp = params.get("pulse", {})
+        return {k: pp[k] for k in self.pulse_params()}
 
     def generate(self, xdata, params: dict):
         """Generate the blocks."""
@@ -67,10 +74,11 @@ class PatternGenerator(object):
         else:
             reduce_start_divisor = 0
 
+        pulse_params = self.get_pulse_params(params)
         blocks, freq, common_pulses = self._generate(
             xdata,
             self.get_common_pulses(params),
-            self.get_pulse_params(params),
+            pulse_params,
             params.get("partial", -1),
             params.get("nomw", False),
             reduce_start_divisor,
@@ -81,7 +89,7 @@ class PatternGenerator(object):
             blocks,
             common_pulses,
             divide=params.get("divide_block", False),
-            invertY=params.get("invertY", False),
+            invertY=pulse_params.get("invertY", False),
             minimum_block_length=self.minimum_block_length,
             block_base=self.block_base,
         )
@@ -110,7 +118,7 @@ class PatternGenerator(object):
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
@@ -131,7 +139,7 @@ class RabiGenerator(PatternGenerator):
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
@@ -181,20 +189,25 @@ class T1Generator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["180pulse", "flip_head"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["180pulse"] = P.FloatParam(
+            10e-9, 1e-9, 1e-6, unit="s", SI_prefix=True, step=1e-9, doc="180 deg (pi) pulse width."
+        )
+        pd["flip_head"] = P.BoolParam(False)
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p180, flip_head = pulse_params
+        p180, flip_head = pulse_params["180pulse"], pulse_params["flip_head"]
 
         p0 = [p180]
         p1 = [p180]
@@ -243,20 +256,30 @@ class FIDGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90 = pulse_params[0]
+        p90 = pulse_params["90pulse"]
 
         p0 = [p90]
         p1 = [p90]
@@ -309,20 +332,41 @@ class SpinEchoGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse", "readY"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["readY"] = P.BoolParam(False, doc="readout (apply pi/2 pulse) with phase Y.")
+        pd["invertY"] = P.BoolParam(False, doc="invert Y phase.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, readY = pulse_params
+        p90, p180, readY = [pulse_params[k] for k in ["90pulse", "180pulse", "readY"]]
 
         read_phase0 = "mw_y" if readY else "mw_x"
         read_phase1 = "mw_y_inv" if readY else "mw_x_inv"
@@ -375,20 +419,39 @@ class DRamseyGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180 = pulse_params
+        p90, p180 = [pulse_params[k] for k in ["90pulse", "180pulse"]]
 
         p0 = [p90, p180]
         p1 = [p90, p180]
@@ -441,20 +504,39 @@ class TEchoGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180 = pulse_params
+        p90, p180 = [pulse_params[k] for k in ["90pulse", "180pulse"]]
 
         p0 = [p90, p180]
         p1 = [p90, p180]
@@ -515,20 +597,42 @@ class TRSEGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse", "tauconst"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["tauconst"] = P.FloatParam(
+            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="first inter-pulse time."
+        )
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, tauconst = pulse_params
+        p90, p180, tauconst = [pulse_params[k] for k in ["90pulse", "180pulse", "tauconst"]]
 
         p0 = [p90, p180, tauconst]
         p1 = [p90, p180, tauconst]
@@ -587,24 +691,45 @@ class DDGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        params = ["90pulse", "180pulse", "Nconst", "readY"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
+        pd["readY"] = P.BoolParam(False, doc="readout (apply pi/2 pulse) with phase Y.")
+        pd["invertY"] = P.BoolParam(False, doc="invert Y phase.")
         if self.method in ("xy8", "xy16"):
-            params.append("supersample")
-        return params
+            pd["supersample"] = P.IntParam(1, 1, 1000, doc="coefficient for supersamling.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
         if self.method in ("xy8", "xy16"):
-            supersample = pulse_params[-1]
+            supersample = pulse_params["supersample"]
         else:
             supersample = 1
 
@@ -633,13 +758,15 @@ class DDGenerator(PatternGenerator):
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, Nconst, readY = pulse_params[:4]
+        p90, p180, Nconst, readY = [
+            pulse_params[k] for k in ["90pulse", "180pulse", "Nconst", "readY"]
+        ]
         read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
         read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
         p0 = [p90, p180]
@@ -719,13 +846,15 @@ class DDGenerator(PatternGenerator):
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, Nconst, readY, supersample = pulse_params
+        p90, p180, Nconst, readY, supersample = [
+            pulse_params[k] for k in ["90pulse", "180pulse", "Nconst", "readY", "supersample"]
+        ]
         read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
         read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
         p0 = [p90, p180]
@@ -860,20 +989,46 @@ class DDNGenerator(PatternGenerator):
     def is_sweepN(self) -> bool:
         return True
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse", "tauconst", "readY"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["tauconst"] = P.FloatParam(
+            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="free evolution time."
+        )
+        pd["readY"] = P.BoolParam(False, doc="readout (apply pi/2 pulse) with phase Y.")
+        pd["invertY"] = P.BoolParam(False, doc="invert Y phase.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, tauconst, readY = pulse_params
+        p90, p180, tauconst, readY = [
+            pulse_params[k] for k in ["90pulse", "180pulse", "tauconst", "readY"]
+        ]
 
         read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
         read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
@@ -962,20 +1117,25 @@ class PiTrainGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["tauconst", "Nconst"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["tauconst"] = P.FloatParam(
+            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="first inter-pulse time."
+        )
+        pd["Nconst"] = P.IntParam(1, 1, 10000, doc="Number of pulse repetitions.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        tauconst, Nconst = pulse_params
+        tauconst, Nconst = [pulse_params[k] for k in ["tauconst", "Nconst"]]
 
         p0 = [tauconst]
         p1 = [tauconst]
@@ -1031,20 +1191,27 @@ class SEHalfPiSweepGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["180pulse", "tauconst"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["180pulse"] = P.FloatParam(
+            10e-9, 1e-9, 1e-6, unit="s", SI_prefix=True, step=1e-9, doc="180 deg (pi) pulse width."
+        )
+        pd["tauconst"] = P.FloatParam(
+            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="inter-pulse time."
+        )
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p180, tauconst = pulse_params
+        p180, tauconst = [pulse_params[k] for k in ["180pulse", "tauconst"]]
 
         p0 = [p180, tauconst]
         p1 = [p180, tauconst]
@@ -1093,32 +1260,43 @@ class RecoveryGenerator(PatternGenerator):
 
     :param 180pulse: duration of 180 deg (pi) pulse
     :type 180pulse: float
-    :param invertinit: If True, invert initialization.
-    :type invertinit: bool
+    :param invert_init: If True, invert initial state.
+    :type invert_init: bool
 
-    If invertinit is False:
+    If invert_init is False:
         pattern0 => |0> recovery ( tau     , read |0>)
         pattern1 => |0> recovery ( tau - pi, read |1>)
-    If invertinit is True:
+    If invert_init is True:
         pattern0 => |1> recovery ( pi - tau - pi, read |0>)
         pattern1 => |1> recovery ( pi - tau     , read |1>)
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["180pulse", "invertinit"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["180pulse"] = P.FloatParam(
+            10e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["invert_init"] = P.BoolParam(False, doc="invert initial state.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p180, invertinit = pulse_params
+        p180, invertinit = [pulse_params[k] for k in ["180pulse", "invert_init"]]
 
         if invertinit:
             p0 = [p180, p180]
@@ -1170,20 +1348,31 @@ class SpinLockGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "iq_delay"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["iq_delay"] = P.FloatParam(10e-9, 1e-9, 1000e-9, unit="s", SI_prefix=True, step=1e-9)
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, iq_delay = pulse_params
+        p90, iq_delay = [pulse_params[k] for k in ["90pulse", "iq_delay"]]
 
         p0 = [p90, iq_delay]
         p1 = [p90, iq_delay]
@@ -1242,20 +1431,49 @@ class XY8CorrelationGenerator(PatternGenerator):
 
     """
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse", "tauconst", "Nconst", "reinitX", "readY"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["tauconst"] = P.FloatParam(
+            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="first inter-pulse time."
+        )
+        pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
+        pd["reinitX"] = P.BoolParam(False, doc="reinitialize X.")
+        pd["readY"] = P.BoolParam(False, doc="readout (apply pi/2 pulse) with phase Y.")
+        pd["invertY"] = P.BoolParam(False, doc="invert Y phase.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, tauconst, Nconst, reinitX, readY = pulse_params
+        p90, p180, tauconst, Nconst, reinitX, readY = [
+            pulse_params[k]
+            for k in ["90pulse", "180pulse", "tauconst", "Nconst", "reinitX", "readY"]
+        ]
 
         read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
         read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
@@ -1352,20 +1570,49 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
     def is_sweepN(self) -> bool:
         return True
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse", "tauconst", "Nconst", "reinitX", "readY"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["tauconst"] = P.FloatParam(
+            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="first inter-pulse time."
+        )
+        pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
+        pd["reinitX"] = P.BoolParam(False, doc="reinitialize X.")
+        pd["readY"] = P.BoolParam(False, doc="readout (apply pi/2 pulse) with phase Y.")
+        pd["invertY"] = P.BoolParam(False, doc="invert Y phase.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, tauconst, Nconst, reinitX, readY = pulse_params
+        p90, p180, tauconst, Nconst, reinitX, readY = [
+            pulse_params[k]
+            for k in ["90pulse", "180pulse", "tauconst", "Nconst", "reinitX", "readY"]
+        ]
 
         read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
         read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
@@ -1503,20 +1750,55 @@ class DDGateGenerator(PatternGenerator):
 
         return pih_ch0, pih_ch1
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse", "tauconst", "Nconst", "N2const", "N3const", "ddphase"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["tauconst"] = P.FloatParam(
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="duration of free-evolution.",
+        )
+        pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
+        pd["N2const"] = P.IntParam(2, 1, 10000, doc="Number of pulse train repetitions.")
+        pd["N3const"] = P.IntParam(2, 1, 10000, doc="Number of pulse train repetitions.")
+        pd["ddphase"] = P.StrParam("Y:X:Y:X,Y:X:Y:iX", doc="Phase patterns.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, tauconst, Nconst, N2const, N3const, ddphase = pulse_params
+        p90, p180, tauconst, Nconst, N2const, N3const, ddphase = [
+            pulse_params[k]
+            for k in ["90pulse", "180pulse", "tauconst", "Nconst", "N2const", "N3const", "ddphase"]
+        ]
 
         pih_ch0, pih_ch1 = self.parse_phase_for_ddgate(ddphase)
 
@@ -1607,20 +1889,62 @@ class DDNGateGenerator(DDGateGenerator):
     def is_sweepN(self) -> bool:
         return True
 
-    def pulse_params(self) -> list[str]:
-        return ["90pulse", "180pulse", "tauconst", "tau2const", "Nconst", "ddphase"]
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["tauconst"] = P.FloatParam(
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="duration of free-evolution.",
+        )
+        pd["tau2const"] = P.FloatParam(
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="duration of free-evolution.",
+        )
+        pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
+        pd["ddphase"] = P.StrParam("Y:X:Y:X,Y:X:Y:iX", doc="Phase patterns.")
+        return pd
 
     def _generate(
         self,
         xdata,
         common_pulses: list[float],
-        pulse_params: list,
+        pulse_params: dict,
         partial: int,
         nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        p90, p180, tauconst, tau2const, Nconst, ddphase = pulse_params
+        p90, p180, tauconst, tau2const, Nconst, ddphase = [
+            pulse_params[k]
+            for k in ["90pulse", "180pulse", "tauconst", "tau2const", "Nconst", "ddphase"]
+        ]
 
         pih_ch0, pih_ch1 = self.parse_phase_for_ddgate(ddphase)
 
@@ -1676,55 +2000,6 @@ class DDNGateGenerator(DDGateGenerator):
                 p1,
                 read_phase0=pih_ch0[-1][0],
                 read_phase1=pih_ch1[-1][0],
-                partial=partial,
-                nomw=nomw,
-                fix_base_width=fix_base_width,
-            )
-            for i, v in enumerate(xdata)
-        ]
-        return blocks, freq, common_pulses
-
-
-class CWODMRGenerator(PatternGenerator):
-    """Generate Pulse Pattern for CW-ODMR measurement.
-
-    pattern0 => only laser
-    pattern1 => laser and MW
-
-    """
-
-    def _generate(
-        self,
-        xdata,
-        common_pulses: list[float],
-        pulse_params: list,
-        partial: int,
-        nomw: bool,
-        reduce_start_divisor: int,
-        fix_base_width: int | None,
-    ):
-        freq, xdata, common_pulses, p0, p1 = K.round_pulses(
-            self.freq, xdata, common_pulses, [], [], reduce_start_divisor, self.print_fn
-        )
-        p0 = p0 + [False]
-        p1 = p1 + [True]
-
-        def gen_single_ptn_ODMRdiff(v, operate):
-            if operate:
-                return [(("mw_x", "laser", "mw"), v)]
-            else:
-                return [(("mw_x", "laser"), v)]
-
-        blocks = [
-            K.generate_blocks(
-                i,
-                v,
-                common_pulses,
-                gen_single_ptn_ODMRdiff,
-                p0,
-                p1,
-                read_phase0="mw_x",
-                read_phase1="mw_x",
                 partial=partial,
                 nomw=nomw,
                 fix_base_width=fix_base_width,
