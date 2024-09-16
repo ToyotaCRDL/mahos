@@ -84,7 +84,10 @@ class QdyneData(BasicMeasData):
         self.params["instrument"]["tbin"] = tbin
         self.params["instrument"]["pg_freq"] = pg_freq
         self.params["instrument"]["pg_length"] = pg_length
-        self.params["instrument"]["pg_offsets"] = pg_offsets
+        if all([ofs == 0 for ofs in pg_offsets]):
+            self.params["instrument"]["pg_offsets"] = []
+        else:
+            self.params["instrument"]["pg_offsets"] = pg_offsets
 
     def set_status(self, tdc_status: TDCStatus):
         self.tdc_status = tdc_status

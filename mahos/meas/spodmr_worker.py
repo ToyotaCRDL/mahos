@@ -41,7 +41,10 @@ class SPODMRDataOperator(object):
         data.params["instrument"] = {}
         data.params["instrument"]["pg_freq"] = pg_freq
         data.params["instrument"]["length"] = length
-        data.params["instrument"]["offsets"] = offsets
+        if all([ofs == 0 for ofs in offsets]):
+            data.params["instrument"]["offsets"] = []
+        else:
+            data.params["instrument"]["offsets"] = offsets
 
     def _append_line_single(self, data, line):
         if data is None:

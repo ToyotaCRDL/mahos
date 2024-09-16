@@ -43,7 +43,10 @@ class PODMRDataOperator(object):
         data.params["instrument"]["trange"] = trange
         data.params["instrument"]["tbin"] = tbin
         data.params["instrument"]["pg_freq"] = pg_freq
-        data.params["instrument"]["offsets"] = offsets
+        if all([ofs == 0 for ofs in offsets]):
+            data.params["instrument"]["offsets"] = []
+        else:
+            data.params["instrument"]["offsets"] = offsets
 
     def update(self, data: PODMRData, data_new, tdc_status):
         data.raw_data = data_new
