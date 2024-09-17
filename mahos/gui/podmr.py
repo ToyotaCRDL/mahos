@@ -1426,7 +1426,11 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             ("power1", self.power1Box),
             ("nomw1", self.nomw1Box),
         ]
-        set_enabled(self._params, name_widgets)
+        if force_disable:
+            for _, w in name_widgets:
+                w.setEnabled(False)
+        else:
+            set_enabled(self._params, name_widgets)
 
     def update_state(self, state: BinaryState, last_state: BinaryState):
         for w in (
