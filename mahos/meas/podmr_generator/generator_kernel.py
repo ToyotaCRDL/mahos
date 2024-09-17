@@ -88,8 +88,9 @@ def generate_blocks(
     gen_single_ptn,
     args0,
     args1,
-    read_phase0: str = "mw_x",
-    read_phase1: str = "mw_x_inv",
+    read_phase0: str | tuple[str] = "mw_x",
+    read_phase1: str | tuple[str] = "mw_x_inv",
+    laser_phase: str | tuple[str] = "mw_x",
     partial: int = -1,
     fix_base_width: int | None = None,
 ) -> Blocks[Block]:
@@ -112,10 +113,20 @@ def generate_blocks(
     ptn0 = gen_single_ptn(v, *args0)
     ptn1 = gen_single_ptn(v, *args1)
 
-    ptn_former = [(("mw_x",), mw_delay)]
-    ptn_latter0 = [((read_phase0,), laser_delay)]
-    ptn_latter1 = [((read_phase1,), laser_delay)]
-    ptn_laser = [(("mw_x", "laser", "sync"), laser_width)]
+    if isinstance(laser_phase, str):
+        ptn_former = [((laser_phase,), mw_delay)]
+        ptn_laser = [((laser_phase, "laser", "sync"), laser_width)]
+    else:
+        ptn_former = [(tuple(laser_phase), mw_delay)]
+        ptn_laser = [(tuple(laser_phase) + ("laser", "sync"), laser_width)]
+    if isinstance(read_phase0, str):
+        ptn_latter0 = [((read_phase0,), laser_delay)]
+    else:
+        ptn_latter0 = [(tuple(read_phase0), laser_delay)]
+    if isinstance(read_phase1, str):
+        ptn_latter1 = [((read_phase1,), laser_delay)]
+    else:
+        ptn_latter1 = [(tuple(read_phase1), laser_delay)]
 
     # base width offset (operation)
     total0 = sum([s[1] for s in ptn_former + ptn0 + ptn_latter0])

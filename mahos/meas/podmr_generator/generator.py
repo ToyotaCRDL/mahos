@@ -1943,6 +1943,88 @@ class DDNGateGenerator(DDGateGenerator):
         return blocks, freq, common_pulses
 
 
+class DRabiGenerator(PatternGenerator):
+    """Generate Pulse Pattern for Rabi nutation (Double Resonance, ENDOR) measurement.
+
+    :param 180pulse: duration of 180 deg (pi) pulse at mw channel 1
+    :type 180pulse: float
+    :param mw1_delay: small wait time between mw and mw1 pulses
+    :type mw1_delay: float
+
+    pattern0 => D-Rabi: mw(pi) - NOP(mw1_delay) - mw1(tau) - NOP(mw1_delay) - mw(pi)
+    pattern1 => No mw1: mw(pi) - NOP(mw1_delay) - NOP      - NOP(mw1_delay) - mw(pi)
+
+    """
+
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["180pulse"] = P.FloatParam(
+            10e-9, 1e-9, 1e-6, unit="s", SI_prefix=True, step=1e-9, doc="180 deg (pi) pulse width."
+        )
+        pd["mw1_delay"] = P.FloatParam(
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="small wait time between mw and mw1 pulses.",
+        )
+        return pd
+
+    def num_mw(self) -> int:
+        return 2
+
+    def _generate(
+        self,
+        xdata,
+        common_pulses: list[float],
+        pulse_params: dict,
+        partial: int,
+        reduce_start_divisor: int,
+        fix_base_width: int | None,
+    ):
+        p180, delay = [pulse_params[k] for k in ["180pulse", "mw1_delay"]]
+
+        p0 = [p180, delay]
+        p1 = [p180, delay]
+        freq, xdata, common_pulses, p0, p1 = K.round_pulses(
+            self.freq, xdata, common_pulses, p0, p1, reduce_start_divisor, self.print_fn
+        )
+        p0 = p0 + [True]
+        p1 = p1 + [False]
+
+        def gen(v, p180, delay, operate):
+            p = [
+                (("mw_x", "mw1_x", "mw"), p180),
+                (("mw_x", "mw1_x"), delay),
+                (("mw_x", "mw1_x", "mw1"), v),
+                (("mw_x", "mw1_x"), delay),
+                (("mw_x", "mw1_x", "mw"), p180),
+            ]
+            if not operate:
+                p[2] = (("mw_x", "mw1_x"), v)
+            return p
+
+        blocks = [
+            K.generate_blocks(
+                i,
+                v,
+                common_pulses,
+                gen,
+                p0,
+                p1,
+                read_phase0=("mw_x", "mw1_x"),
+                read_phase1=("mw_x", "mw1_x"),
+                laser_phase=("mw_x", "mw1_x"),
+                partial=partial,
+                fix_base_width=fix_base_width,
+            )
+            for i, v in enumerate(xdata)
+        ]
+        return blocks, freq, common_pulses
+
+
 def make_generators(
     freq: float = 2.0e9,
     reduce_start_divisor: int = 2,
@@ -1986,7 +2068,9 @@ def make_generators(
         "ddgate": DDGateGenerator(*args),
         "ddgateN": DDNGateGenerator(*args),
     }
-    if mw_modes[0] == 1:
+    if len(mw_modes) > 1:
+        generators["drabi"] = DRabiGenerator(*args)
+    if all([m == 1 for m in mw_modes]):
         # these methods requires 4 phases (x, y, x_inv, y_inv) and unavailable in 2-phase mode.
         for key in ["xy16", "xy16N", "ddgate", "ddgateN"]:
             del generators[key]
