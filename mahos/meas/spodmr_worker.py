@@ -182,8 +182,13 @@ class BlockSeqBuilder(object):
             ch = seqs[-1].last_pulse().channels
             seqs.append(Block("eos", [(ch, self.eos_margin)]))
 
-    def _encode_mw_phase(self, bs: BlockSeq, params) -> BlockSeq:
-        # Fixed version of K.encode_mw_phase for double mw mode.
+    def _encode_mw_phase(self, bs: BlockSeq, params, num_mw) -> BlockSeq:
+        # if number of MW channels in original sequence is greater than 1,
+        # use original encoding.
+        if num_mw >= 2:
+            return K.encode_mw_phase(bs)
+
+        # Fixed version of K.encode_mw_phase for duplex mw mode.
         # (i, q), (i2, q2) is same phase now.
         # Maybe we could change relative readout phase.
 
@@ -445,7 +450,7 @@ class BlockSeqBuilder(object):
         return BlockSeq("top", seqs), laser_duties, markers
 
     def build_blocks(
-        self, blocks: list[Blocks[Block]], freq: float, common_pulses, params, sync_mode
+        self, blocks: list[Blocks[Block]], freq: float, common_pulses, params, sync_mode, num_mw
     ):
         invertY = params.get("invertY", False)
 
@@ -500,7 +505,7 @@ class BlockSeqBuilder(object):
         blockseq = blockseq.simplify()
         if invertY:
             blockseq = K.invert_y_phase(blockseq)
-        blockseq = self._encode_mw_phase(blockseq, params)
+        blockseq = self._encode_mw_phase(blockseq, params, num_mw)
 
         return blockseq, laser_duties, markers, oversample
 
@@ -737,6 +742,7 @@ class Pulser(Worker):
         if data is None:
             data = self.data
         generate = self.generators[data.label].generate_raw_blocks
+        num_mw = self.generators[data.label].num_mw()
 
         params = data.get_params()
         # fill unused params
@@ -751,7 +757,7 @@ class Pulser(Worker):
         blocks, freq, common_pulses = generate(data.xdata, params)
         sync_mode = self._sync_mode(params)
         blockseq, laser_duties, markers, oversample = self.builder.build_blocks(
-            blocks, freq, common_pulses, params, sync_mode
+            blocks, freq, common_pulses, params, sync_mode, num_mw
         )
 
         self.logger.info(f"Built BlockSeq. total pattern #: {blockseq.total_pattern_num()}")

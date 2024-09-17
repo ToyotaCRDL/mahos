@@ -65,8 +65,8 @@ class = "DTG5274_mock"
 [localhost.server.instrument.pg.conf]
 local_dir = "."
 [localhost.server.instrument.pg.conf.channels]
-mw_i2 = 8  # note that ch8 is out of range for 8ch-PG
-mw_q2 = 7
+mw_i1 = 8  # note that ch8 is out of range for 8ch-PG
+mw_q1 = 7
 laser = 6
 sync = 5
 gate = 4
