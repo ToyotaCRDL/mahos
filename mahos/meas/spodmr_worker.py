@@ -548,9 +548,6 @@ class Pulser(Worker):
             block_base=self.conf["block_base"],
             print_fn=self.logger.info,
         )
-        # disable recovery measurement because Pattern0 and Pattern1 lengths can be different
-        # in current pattern generator.
-        del self.generators["recovery"]
 
         self.builder = BlockSeqBuilder(
             self.conf.get("trigger_width", 1e-6),

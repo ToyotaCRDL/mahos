@@ -44,7 +44,6 @@ def test_spodmr(server, spodmr, server_conf, spodmr_conf):
         "xy16",
         "180train",
         "se90sweep",
-        # "recovery",
         "spinlock",
         "xy8cl",
         "xy8cl1flip",

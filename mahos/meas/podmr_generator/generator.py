@@ -26,6 +26,7 @@ class PatternGenerator(object):
         split_fraction: int = 4,
         minimum_block_length: int = 1000,
         block_base: int = 4,
+        mw_modes: tuple[int] = (0,),
         print_fn=print,
         method: str = "",
     ):
@@ -34,6 +35,7 @@ class PatternGenerator(object):
         self.split_fraction = split_fraction
         self.minimum_block_length = minimum_block_length
         self.block_base = block_base
+        self.mw_modes = mw_modes
         self.print_fn = print_fn
         self.method = method
 
@@ -46,6 +48,11 @@ class PatternGenerator(object):
         """Return number of required MW channels."""
 
         return 1
+
+    def mode(self, ch=0) -> int:
+        """Return MW mode at given ch."""
+
+        return self.mw_modes[ch]
 
     def get_common_pulses(self, params: dict):
         keys = [
@@ -151,7 +158,7 @@ class RabiGenerator(PatternGenerator):
         p0 = [True]
         p1 = [False]
 
-        def gen_single_ptn_Rabi(v, operate):
+        def gen(v, operate):
             if operate:
                 return [(("mw_x", "mw"), v)]
             else:
@@ -162,7 +169,7 @@ class RabiGenerator(PatternGenerator):
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_Rabi,
+                gen,
                 p0,
                 p1,
                 read_phase0="mw_x",
@@ -217,21 +224,21 @@ class T1Generator(PatternGenerator):
         p0 = p0 + [False, flip_head]
         p1 = p1 + [True, flip_head]
 
-        def gen_single_ptn_T1(v, mw_width, operate, flip_head):
+        def gen(v, p180, operate, flip_head):
             if operate:
                 if flip_head:
-                    return [(("mw_x", "mw"), mw_width), (("mw_x",), v)]
+                    return [(("mw_x", "mw"), p180), (("mw_x",), v)]
                 else:
-                    return [(("mw_x",), v), (("mw_x", "mw"), mw_width)]
+                    return [(("mw_x",), v), (("mw_x", "mw"), p180)]
             else:
-                return [(("mw_x",), mw_width + v)]
+                return [(("mw_x",), p180 + v)]
 
         blocks = [
             K.generate_blocks(
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_T1,
+                gen,
                 p0,
                 p1,
                 read_phase0="mw_x",
@@ -289,25 +296,48 @@ class FIDGenerator(PatternGenerator):
         p0 = p0 + ["mw_x"]
         p1 = p1 + ["mw_x_inv"]
 
-        def gen_single_ptn_FID(v, mw_width, mw_read_phase):
-            v_f, v_l = K.split_int(v, self.split_fraction)
-            return [
-                (("mw_x", "mw"), mw_width),
-                (("mw_x",), v_f),
-                ((mw_read_phase,), v_l),
-                ((mw_read_phase, "mw"), mw_width),
-            ]
+        def gen(v, p90, read_phase):
+            if self.mode() == 0:
+                v_f, v_l = K.split_int(v, self.split_fraction)
+                return [
+                    (("mw_x", "mw"), p90),
+                    (("mw_x",), v_f),
+                    ((read_phase,), v_l),
+                    ((read_phase, "mw"), p90),
+                ]
+            elif self.mode() == 1:
+                p = [
+                    (("mw_x", "mw"), p90),
+                    (("mw_x",), v),
+                    (("mw_x", "mw"), p90),
+                ]
+                if read_phase.endswith("_inv"):
+                    # 270 deg pulse
+                    p.append((("mw_x", "mw"), p90 * 2))
+                else:
+                    # same delay time to match length of pattern0 and pattern1.
+                    p.append((("mw_x",), p90 * 2))
+                return p
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
+
+        if self.mode() == 0:
+            read_phase1 = "mw_x_inv"
+        elif self.mode() == 1:
+            read_phase1 = "mw_x"
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
 
         blocks = [
             K.generate_blocks(
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_FID,
+                gen,
                 p0,
                 p1,
                 read_phase0="mw_x",
-                read_phase1="mw_x_inv",
+                read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
                 fix_base_width=fix_base_width,
@@ -378,207 +408,64 @@ class SpinEchoGenerator(PatternGenerator):
         p0 = p0 + [read_phase0]
         p1 = p1 + [read_phase1]
 
-        def gen_single_ptn_SpinEcho(v, mw_width, mw_flip_width, mw_read_phase):
+        def gen(v, p90, p180, read_phase):
             v_f, v_l = K.split_int(v, self.split_fraction)
-            # mw_width_inv = mw_width + mw_flip_width
-            return [
-                (("mw_x", "mw"), mw_width),
-                (("mw_x",), v),
-                (("mw_x", "mw"), mw_flip_width),
-                (("mw_x",), v_f),
-                ((mw_read_phase,), v_l),
-                ((mw_read_phase, "mw"), mw_width),
-            ]
+            if self.mode() == 0:
+                return [
+                    (("mw_x", "mw"), p90),
+                    (("mw_x",), v),
+                    (("mw_x", "mw"), p180),
+                    (("mw_x",), v_f),
+                    ((read_phase,), v_l),
+                    ((read_phase, "mw"), p90),
+                ]
+            elif self.mode() == 1:
+                if read_phase.endswith("_inv"):
+                    phase = read_phase[:4]
+                else:
+                    phase = read_phase
+                p = [
+                    (("mw_x", "mw"), p90),
+                    (("mw_x",), v),
+                    (("mw_x", "mw"), p180),
+                    (("mw_x",), v_f),
+                    ((phase,), v_l),
+                    ((phase, "mw"), p90),
+                ]
+                if read_phase.endswith("_inv"):
+                    p.append(((phase, "mw"), p90 * 2))
+                else:
+                    p.append(((phase,), p90 * 2))
+                return p
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
+
+        if self.mode() == 0:
+            phase0 = read_phase0
+            phase1 = read_phase1
+        elif self.mode() == 1:
+            # Don't use _inv phase.
+            phase0 = phase1 = read_phase0
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
 
         blocks = [
             K.generate_blocks(
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_SpinEcho,
+                gen,
                 p0,
                 p1,
-                read_phase0=read_phase0,
-                read_phase1=read_phase1,
+                read_phase0=phase0,
+                read_phase1=phase1,
                 partial=partial,
                 nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
         ]
-        return blocks, freq, common_pulses
 
-
-class DRamseyGenerator(PatternGenerator):
-    """Generate Pulse Pattern for D Ramsey measurement.
-
-    :param 90pulse: duration of 90 deg (pi/2) pulse
-    :type 90pulse: float
-    :param 180pulse: duration of 180 deg (pi) pulse
-    :type 180pulse: float
-
-    """
-
-    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
-        pd = P.ParamDict()
-        pd["90pulse"] = P.FloatParam(
-            10e-9,
-            1e-9,
-            1e-6,
-            unit="s",
-            SI_prefix=True,
-            step=1e-9,
-            doc="90 deg (pi/2) pulse width.",
-        )
-        pd["180pulse"] = P.FloatParam(
-            -1e-9,
-            -1e-9,
-            1e-6,
-            unit="s",
-            SI_prefix=True,
-            step=1e-9,
-            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
-        )
-        return pd
-
-    def _generate(
-        self,
-        xdata,
-        common_pulses: list[float],
-        pulse_params: dict,
-        partial: int,
-        nomw: bool,
-        reduce_start_divisor: int,
-        fix_base_width: int | None,
-    ):
-        p90, p180 = [pulse_params[k] for k in ["90pulse", "180pulse"]]
-
-        p0 = [p90, p180]
-        p1 = [p90, p180]
-        freq, xdata, common_pulses, p0, p1 = K.round_pulses(
-            self.freq, xdata, common_pulses, p0, p1, reduce_start_divisor, self.print_fn
-        )
-        p0 = p0 + ["mw_x"]
-        p1 = p1 + ["mw_x_inv"]
-
-        def gen_single_ptn_SpinEcho(v, mw_width, mw_flip_width, mw_read_phase):
-            v_f, v_l = K.split_int(v, self.split_fraction)
-            mw_finalflip = mw_width
-            return [
-                (("mw_x", "mw2"), mw_width),
-                (("mw_x",), v),
-                (("mw_x", "mw2"), mw_flip_width),
-                (("mw_x", "mw"), mw_flip_width),
-                (("mw_x", "mw2"), mw_flip_width),
-                (("mw_x",), v_f),
-                ((mw_read_phase,), v_l),
-                ((mw_read_phase, "mw"), mw_finalflip),
-            ]
-
-        blocks = [
-            K.generate_blocks(
-                i,
-                v,
-                common_pulses,
-                gen_single_ptn_SpinEcho,
-                p0,
-                p1,
-                read_phase0="mw_x",
-                read_phase1="mw_x_inv",
-                partial=partial,
-                nomw=nomw,
-                fix_base_width=fix_base_width,
-            )
-            for i, v in enumerate(xdata)
-        ]
-        return blocks, freq, common_pulses
-
-
-class TEchoGenerator(PatternGenerator):
-    """Generate Pulse Pattern for T Echo measurement.
-
-    :param 90pulse: duration of 90 deg (pi/2) pulse
-    :type 90pulse: float
-    :param 180pulse: duration of 180 deg (pi) pulse
-    :type 180pulse: float
-
-    """
-
-    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
-        pd = P.ParamDict()
-        pd["90pulse"] = P.FloatParam(
-            10e-9,
-            1e-9,
-            1e-6,
-            unit="s",
-            SI_prefix=True,
-            step=1e-9,
-            doc="90 deg (pi/2) pulse width.",
-        )
-        pd["180pulse"] = P.FloatParam(
-            -1e-9,
-            -1e-9,
-            1e-6,
-            unit="s",
-            SI_prefix=True,
-            step=1e-9,
-            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
-        )
-        return pd
-
-    def _generate(
-        self,
-        xdata,
-        common_pulses: list[float],
-        pulse_params: dict,
-        partial: int,
-        nomw: bool,
-        reduce_start_divisor: int,
-        fix_base_width: int | None,
-    ):
-        p90, p180 = [pulse_params[k] for k in ["90pulse", "180pulse"]]
-
-        p0 = [p90, p180]
-        p1 = [p90, p180]
-        freq, xdata, common_pulses, p0, p1 = K.round_pulses(
-            self.freq, xdata, common_pulses, p0, p1, reduce_start_divisor, self.print_fn
-        )
-        p0 = p0 + ["mw_x"]
-        p1 = p1 + ["mw_x_inv"]
-
-        def gen_single_ptn_SpinEcho(v, mw_width, mw_flip_width, mw_read_phase):
-            v_f, v_l = K.split_int(v, self.split_fraction)
-            mw_finalflip = mw_width
-            return [
-                (("mw_x", "mw"), mw_width),
-                (("mw_x",), v),
-                (("mw_x", "mw2"), mw_flip_width),
-                (("mw_x", "mw"), mw_flip_width),
-                (("mw_x", "mw2"), mw_flip_width),
-                (("mw_x",), v_f),
-                ((mw_read_phase,), v_l),
-                (("mw_x", "mw"), mw_flip_width),
-                (("mw_x", "mw2"), mw_flip_width),
-                (("mw_x", "mw"), mw_flip_width),
-                ((mw_read_phase, "mw"), mw_finalflip),
-            ]
-
-        blocks = [
-            K.generate_blocks(
-                i,
-                v,
-                common_pulses,
-                gen_single_ptn_SpinEcho,
-                p0,
-                p1,
-                read_phase0="mw_x",
-                read_phase1="mw_x_inv",
-                partial=partial,
-                nomw=nomw,
-                fix_base_width=fix_base_width,
-            )
-            for i, v in enumerate(xdata)
-        ]
         return blocks, freq, common_pulses
 
 
@@ -642,33 +529,59 @@ class TRSEGenerator(PatternGenerator):
         p0 = p0 + ["mw_x"]
         p1 = p1 + ["mw_x_inv"]
 
-        def gen_single_ptn_TRSE(v, mw_width, mw_flip_width, tauconst, mw_read_phase):
-            v_f, v_l = K.split_int(v, self.split_fraction)
-            return [
-                (("mw_x", "mw"), mw_width),
-                (("mw_x",), tauconst),
-                (("mw_x", "mw"), mw_flip_width),
-                (("mw_x",), v_f),
-                ((mw_read_phase,), v_l),
-                ((mw_read_phase, "mw"), mw_width),
-            ]
+        def gen(v, p90, p180, tauconst, read_phase):
+            if self.mode() == 0:
+                v_f, v_l = K.split_int(v, self.split_fraction)
+                return [
+                    (("mw_x", "mw"), p90),
+                    (("mw_x",), tauconst),
+                    (("mw_x", "mw"), p180),
+                    (("mw_x",), v_f),
+                    ((read_phase,), v_l),
+                    ((read_phase, "mw"), p90),
+                ]
+            elif self.mode() == 1:
+                p = [
+                    (("mw_x", "mw"), p90),
+                    (("mw_x",), tauconst),
+                    (("mw_x", "mw"), p180),
+                    (("mw_x",), v),
+                    (("mw_x", "mw"), p90),
+                ]
+                if read_phase.endswith("_inv"):
+                    # 270 deg pulse
+                    p.append((("mw_x", "mw"), p90 * 2))
+                else:
+                    # same delay time to match length of pattern0 and pattern1.
+                    p.append((("mw_x",), p90 * 2))
+                return p
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
+
+        if self.mode() == 0:
+            read_phase1 = "mw_x_inv"
+        elif self.mode() == 1:
+            read_phase1 = "mw_x"
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
 
         blocks = [
             K.generate_blocks(
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_TRSE,
+                gen,
                 p0,
                 p1,
                 read_phase0="mw_x",
-                read_phase1="mw_x_inv",
+                read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
         ]
+
         return blocks, freq, common_pulses
 
 
@@ -767,8 +680,8 @@ class DDGenerator(PatternGenerator):
         p90, p180, Nconst, readY = [
             pulse_params[k] for k in ["90pulse", "180pulse", "Nconst", "readY"]
         ]
-        read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
-        read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
+        read_phase0 = "mw_y_inv" if readY else "mw_x_inv"
+        read_phase1 = "mw_y" if readY else "mw_x"
         p0 = [p90, p180]
         p1 = [p90, p180]
 
@@ -778,25 +691,30 @@ class DDGenerator(PatternGenerator):
         p0 = p0 + [Nconst, read_phase0, self.method]
         p1 = p1 + [Nconst, read_phase1, self.method]
 
-        def gen_single_ptn_DD(tau, mw_width, mw_flip_width, Nconst, read_phase, method):
+        def gen(tau, p90, p180, Nconst, read_phase, method):
             tau_f, tau_l = K.split_int(tau, self.split_fraction)
             tau2_f, tau2_l = K.split_int(tau * 2, self.split_fraction)
-            init_ptn = [(("mw_x", "mw"), mw_width), (("mw_x",), tau_f)]
-            read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), mw_width)]
+            init_ptn = [(("mw_x", "mw"), p90), (("mw_x",), tau_f)]
+            if self.mode() == 0:
+                read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
+            elif self.mode() == 1:
+                if read_phase.endswith("_inv"):
+                    phase = read_phase[:4]
+                else:
+                    phase = read_phase
+                read_ptn = [((phase,), tau_l), ((phase, "mw"), p90)]
+                if read_phase.endswith("_inv"):
+                    read_ptn.append(((phase, "mw"), p90 * 2))
+                else:
+                    read_ptn.append(((phase,), p90 * 2))
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
 
             pattern = []
-            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), mw_flip_width), (("mw_x",), tau2_f)]
-            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), mw_flip_width), (("mw_y",), tau2_f)]
-            ix = [
-                (("mw_x_inv",), tau2_l),
-                (("mw_x_inv", "mw"), mw_flip_width),
-                (("mw_x_inv",), tau2_f),
-            ]
-            iy = [
-                (("mw_y_inv",), tau2_l),
-                (("mw_y_inv", "mw"), mw_flip_width),
-                (("mw_y_inv",), tau2_f),
-            ]
+            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), p180), (("mw_x",), tau2_f)]
+            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), p180), (("mw_y",), tau2_f)]
+            ix = [(("mw_x_inv",), tau2_l), (("mw_x_inv", "mw"), p180), (("mw_x_inv",), tau2_f)]
+            iy = [(("mw_y_inv",), tau2_l), (("mw_y_inv", "mw"), p180), (("mw_y_inv",), tau2_f)]
 
             if method == "cp":
                 pattern = px
@@ -815,24 +733,31 @@ class DDGenerator(PatternGenerator):
 
             pattern *= Nconst
 
-            first_wait = list(pattern[0])
-            first_wait[1] = tau_l
-            last_wait = list(pattern[-1])
-            last_wait[1] = tau_f
-            pattern[0] = tuple(first_wait)
-            pattern[-1] = tuple(last_wait)
+            fst = list(pattern[0])
+            fst[1] = tau_l
+            last = list(pattern[-1])
+            last[1] = tau_f
+            pattern[0] = tuple(fst)
+            pattern[-1] = tuple(last)
 
             return init_ptn + pattern + read_ptn
+
+        if self.mode() == 0:
+            read_phase0_ = read_phase0
+        elif self.mode() == 1:
+            read_phase0_ = read_phase0[:4]
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
 
         blocks = [
             K.generate_blocks(
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_DD,
+                gen,
                 p0,
                 p1,
-                read_phase0=read_phase0,
+                read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
@@ -855,8 +780,8 @@ class DDGenerator(PatternGenerator):
         p90, p180, Nconst, readY, supersample = [
             pulse_params[k] for k in ["90pulse", "180pulse", "Nconst", "readY", "supersample"]
         ]
-        read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
-        read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
+        read_phase0 = "mw_y_inv" if readY else "mw_x_inv"
+        read_phase1 = "mw_y" if readY else "mw_x"
         p0 = [p90, p180]
         p1 = [p90, p180]
 
@@ -905,9 +830,7 @@ class DDGenerator(PatternGenerator):
         p0 = p0 + [dt, read_phase0, pulse_num, phase_list]
         p1 = p1 + [dt, read_phase1, pulse_num, phase_list]
 
-        def gen_single_ptn_DD_Qinterpolation(
-            v, mw_width, mw_flip_width, dt, read_phase, pulse_num, phase_list
-        ):
+        def gen_QI(v, p90, p180, dt, read_phase, pulse_num, phase_list):
             tau, sample = v
 
             U_0 = [tau, 2 * tau, tau]
@@ -925,19 +848,36 @@ class DDGenerator(PatternGenerator):
                     m -= 1
 
             init_ptn = [
-                (("mw_x", "mw"), mw_width),
+                (("mw_x", "mw"), p90),
                 (("mw_x",), K.split_int(tau_list[0], self.split_fraction)[0]),
             ]
-            read_ptn = [
-                ((read_phase,), K.split_int(tau_list[-1], self.split_fraction)[1]),
-                ((read_phase, "mw"), mw_width),
-            ]
+            if self.mode() == 0:
+                read_ptn = [
+                    ((read_phase,), K.split_int(tau_list[-1], self.split_fraction)[1]),
+                    ((read_phase, "mw"), p90),
+                ]
+            elif self.mode() == 1:
+                if read_phase.endswith("_inv"):
+                    phase = read_phase[:4]
+                else:
+                    phase = read_phase
+                read_ptn = [
+                    ((phase,), K.split_int(tau_list[-1], self.split_fraction)[1]),
+                    ((phase, "mw"), p90),
+                ]
+                if read_phase.endswith("_inv"):
+                    read_ptn.append(((phase, "mw"), p90 * 2))
+                else:
+                    read_ptn.append(((phase,), p90 * 2))
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
+
             pattern = []
 
             def mw_pattern(phase_before, tau_before, phase_next, tau_next):
                 return [
                     ((phase_before,), K.split_int(tau_before, self.split_fraction)[1]),
-                    ((phase_before, "mw"), mw_flip_width),
+                    ((phase_before, "mw"), p180),
                     ((phase_next,), K.split_int(tau_next, self.split_fraction)[0]),
                 ]
 
@@ -949,16 +889,23 @@ class DDGenerator(PatternGenerator):
 
             return init_ptn + pattern + read_ptn
 
+        if self.mode() == 0:
+            read_phase0_ = read_phase0
+        elif self.mode() == 1:
+            read_phase0_ = read_phase0[:4]
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
+
         ind = np.arange(len(tau) * len(sample)).reshape((len(tau), len(sample)))
         blocks = [
             K.generate_blocks(
                 i,
                 (tau[j], sample[k]),
                 common_pulses,
-                gen_single_ptn_DD_Qinterpolation,
+                gen_QI,
                 p0,
                 p1,
-                read_phase0=read_phase0,
+                read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
@@ -1030,8 +977,8 @@ class DDNGenerator(PatternGenerator):
             pulse_params[k] for k in ["90pulse", "180pulse", "tauconst", "readY"]
         ]
 
-        read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
-        read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
+        read_phase0 = "mw_y_inv" if readY else "mw_x_inv"
+        read_phase1 = "mw_y" if readY else "mw_x"
         p0 = [p90, p180, tauconst]
         p1 = [p90, p180, tauconst]
         freq, dummy, common_pulses, p0, p1 = K.round_pulses(
@@ -1040,23 +987,36 @@ class DDNGenerator(PatternGenerator):
         p0 = p0 + [read_phase0, self.method]
         p1 = p1 + [read_phase1, self.method]
 
-        def gen_single_ptn_DDN(n, mw_width, mw_flip_width, tauconst, read_phase, method):
+        def gen(n, p90, p180, tauconst, read_phase, method):
             tau_f, tau_l = K.split_int(tauconst, self.split_fraction)
             tau2_f, tau2_l = K.split_int(tauconst * 2, self.split_fraction)
-            init_ptn = [(("mw_x", "mw"), mw_width), (("mw_x",), tau_f)]
-            read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), mw_width)]
+            init_ptn = [(("mw_x", "mw"), p90), (("mw_x",), tau_f)]
+            if self.mode() == 0:
+                read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
+            elif self.mode() == 1:
+                if read_phase.endswith("_inv"):
+                    phase = read_phase[:4]
+                else:
+                    phase = read_phase
+                read_ptn = [((phase,), tau_l), ((phase, "mw"), p90)]
+                if read_phase.endswith("_inv"):
+                    read_ptn.append(((phase, "mw"), p90 * 2))
+                else:
+                    read_ptn.append(((phase,), p90 * 2))
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
 
             pattern = []
-            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), mw_flip_width), (("mw_x",), tau2_f)]
-            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), mw_flip_width), (("mw_y",), tau2_f)]
+            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), p180), (("mw_x",), tau2_f)]
+            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), p180), (("mw_y",), tau2_f)]
             ix = [
                 (("mw_x_inv",), tau2_l),
-                (("mw_x_inv", "mw"), mw_flip_width),
+                (("mw_x_inv", "mw"), p180),
                 (("mw_x_inv",), tau2_f),
             ]
             iy = [
                 (("mw_y_inv",), tau2_l),
-                (("mw_y_inv", "mw"), mw_flip_width),
+                (("mw_y_inv", "mw"), p180),
                 (("mw_y_inv",), tau2_f),
             ]
 
@@ -1076,24 +1036,31 @@ class DDNGenerator(PatternGenerator):
                 raise ValueError(f"Unknown method {method}")
             pattern *= n
 
-            first_wait = list(pattern[0])
-            first_wait[1] = tau_l
-            last_wait = list(pattern[-1])
-            last_wait[1] = tau_f
-            pattern[0] = tuple(first_wait)
-            pattern[-1] = tuple(last_wait)
+            fst = list(pattern[0])
+            fst[1] = tau_l
+            last = list(pattern[-1])
+            last[1] = tau_f
+            pattern[0] = tuple(fst)
+            pattern[-1] = tuple(last)
 
             return init_ptn + pattern + read_ptn
+
+        if self.mode() == 0:
+            read_phase0_ = read_phase0
+        elif self.mode() == 1:
+            read_phase0_ = read_phase0[:4]
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
 
         blocks = [
             K.generate_blocks(
                 i,
                 n,
                 common_pulses,
-                gen_single_ptn_DDN,
+                gen,
                 p0,
                 p1,
-                read_phase0=read_phase0,
+                read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
@@ -1145,7 +1112,7 @@ class PiTrainGenerator(PatternGenerator):
         p0 = p0 + [Nconst, True]
         p1 = p1 + [Nconst, False]
 
-        def gen_single_ptn_pitrain(v, tauconst, Nconst, operate):
+        def gen(v, tauconst, Nconst, operate):
             p = [(("mw_x", "mw"), v), (("mw_x",), tauconst)]
             p *= Nconst
 
@@ -1164,7 +1131,7 @@ class PiTrainGenerator(PatternGenerator):
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_pitrain,
+                gen,
                 p0,
                 p1,
                 read_phase0="mw_x",
@@ -1221,7 +1188,7 @@ class SEHalfPiSweepGenerator(PatternGenerator):
         p0 = p0 + [True]
         p1 = p1 + [False]
 
-        def gen_single_ptn_SpinEcho90sweep(v, mw_flip_width, tauconst, operate):
+        def gen(v, mw_flip_width, tauconst, operate):
             p = [
                 (("mw_x", "mw"), v),
                 (("mw_x",), tauconst),
@@ -1241,87 +1208,7 @@ class SEHalfPiSweepGenerator(PatternGenerator):
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_SpinEcho90sweep,
-                p0,
-                p1,
-                read_phase0="mw_x",
-                read_phase1="mw_x",
-                partial=partial,
-                nomw=nomw,
-                fix_base_width=fix_base_width,
-            )
-            for i, v in enumerate(xdata)
-        ]
-        return blocks, freq, common_pulses
-
-
-class RecoveryGenerator(PatternGenerator):
-    """Generate Pulse Pattern for Recovery measurement.
-
-    :param 180pulse: duration of 180 deg (pi) pulse
-    :type 180pulse: float
-    :param invert_init: If True, invert initial state.
-    :type invert_init: bool
-
-    If invert_init is False:
-        pattern0 => |0> recovery ( tau     , read |0>)
-        pattern1 => |0> recovery ( tau - pi, read |1>)
-    If invert_init is True:
-        pattern0 => |1> recovery ( pi - tau - pi, read |0>)
-        pattern1 => |1> recovery ( pi - tau     , read |1>)
-
-    """
-
-    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
-        pd = P.ParamDict()
-        pd["180pulse"] = P.FloatParam(
-            10e-9,
-            -1e-9,
-            1e-6,
-            unit="s",
-            SI_prefix=True,
-            step=1e-9,
-            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
-        )
-        pd["invert_init"] = P.BoolParam(False, doc="invert initial state.")
-        return pd
-
-    def _generate(
-        self,
-        xdata,
-        common_pulses: list[float],
-        pulse_params: dict,
-        partial: int,
-        nomw: bool,
-        reduce_start_divisor: int,
-        fix_base_width: int | None,
-    ):
-        p180, invertinit = [pulse_params[k] for k in ["180pulse", "invert_init"]]
-
-        if invertinit:
-            p0 = [p180, p180]
-            p1 = [p180, 0]
-        else:
-            p0 = [0, 0]
-            p1 = [0, p180]
-
-        freq, xdata, common_pulses, p0, p1 = K.round_pulses(
-            self.freq, xdata, common_pulses, p0, p1, reduce_start_divisor, self.print_fn
-        )
-
-        def gen_single_ptn_Recovery(v, mw_init_width, mw_read_width):
-            return [
-                (("mw_x", "mw"), mw_init_width),
-                (("mw_x",), v),
-                (("mw_x", "mw"), mw_read_width),
-            ]
-
-        blocks = [
-            K.generate_blocks(
-                i,
-                v,
-                common_pulses,
-                gen_single_ptn_Recovery,
+                gen,
                 p0,
                 p1,
                 read_phase0="mw_x",
@@ -1382,24 +1269,48 @@ class SpinLockGenerator(PatternGenerator):
         p0 = p0 + ["mw_x_inv"]
         p1 = p1 + ["mw_x"]
 
-        def gen_single_ptn_SpinLock(v, mw_width, iq_delay, mw_read_phase):
-            return [
-                (("mw_x", "mw"), mw_width),
-                (("mw_y",), iq_delay),
-                (("mw_y", "mw"), v),
-                ((mw_read_phase,), iq_delay),
-                ((mw_read_phase, "mw"), mw_width),
-            ]
+        def gen(v, p90, iq_delay, read_phase):
+            if self.mode() == 0:
+                p = [
+                    (("mw_x", "mw"), p90),
+                    (("mw_y",), iq_delay),
+                    (("mw_y", "mw"), v),
+                    ((read_phase,), iq_delay),
+                    ((read_phase, "mw"), p90),
+                ]
+                return p
+            elif self.mode() == 1:
+                p = [
+                    (("mw_x", "mw"), p90),
+                    (("mw_y",), iq_delay),
+                    (("mw_y", "mw"), v),
+                    (("mw_x",), iq_delay),
+                    (("mw_x", "mw"), p90),
+                ]
+                if read_phase.endswith("_inv"):
+                    p.append((("mw_x", "mw"), p90 * 2))
+                else:
+                    p.append((("mw_x",), p90 * 2))
+                return p
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
+
+        if self.mode() == 0:
+            read_phase0 = "mw_x_inv"
+        elif self.mode() == 1:
+            read_phase0 = "mw_x"
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
 
         blocks = [
             K.generate_blocks(
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_SpinLock,
+                gen,
                 p0,
                 p1,
-                read_phase0="mw_x_inv",
+                read_phase0=read_phase0,
                 read_phase1="mw_x",
                 partial=partial,
                 nomw=nomw,
@@ -1475,9 +1386,9 @@ class XY8CorrelationGenerator(PatternGenerator):
             for k in ["90pulse", "180pulse", "tauconst", "Nconst", "reinitX", "readY"]
         ]
 
-        read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
-        read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
-        reinit_phase = {True: "mw_x", False: "mw_y"}[reinitX]
+        read_phase0 = "mw_y_inv" if readY else "mw_x_inv"
+        read_phase1 = "mw_y" if readY else "mw_x"
+        reinit_phase = "mw_x" if reinitX else "mw_y"
         p0 = [p90, p180, tauconst]
         p1 = [p90, p180, tauconst]
         freq, xdata, common_pulses, p0, p1 = K.round_pulses(
@@ -1486,27 +1397,38 @@ class XY8CorrelationGenerator(PatternGenerator):
         p0 = p0 + [Nconst, reinit_phase, read_phase0, self.method]
         p1 = p1 + [Nconst, reinit_phase, read_phase1, self.method]
 
-        def gen_single_ptn_xy8cl(
-            tau, mw_width, mw_flip_width, tauconst, Nconst, reinit_phase, read_phase, method
-        ):
+        def gen(tau, p90, p180, tauconst, Nconst, reinit_phase, read_phase, method):
             tau_f, tau_l = K.split_int(tauconst, self.split_fraction)
             tau2_f, tau2_l = K.split_int(tauconst * 2, self.split_fraction)
 
-            init_ptn = [(("mw_x", "mw"), mw_width), (("mw_x",), tau_f)]
-            storage_ptn = [(("mw_y",), tau_l), (("mw_y", "mw"), mw_width)]
-            reinit_ptn = [((reinit_phase, "mw"), mw_width), ((reinit_phase,), tau_f)]
-            read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), mw_width)]
+            init_ptn = [(("mw_x", "mw"), p90), (("mw_x",), tau_f)]
+            storage_ptn = [(("mw_y",), tau_l), (("mw_y", "mw"), p90)]
+            reinit_ptn = [((reinit_phase, "mw"), p90), ((reinit_phase,), tau_f)]
+            if self.mode() == 0:
+                read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
+            elif self.mode() == 1:
+                if read_phase.endswith("_inv"):
+                    phase = read_phase[:4]
+                else:
+                    phase = read_phase
+                read_ptn = [((phase,), tau_l), ((phase, "mw"), p90)]
+                if read_phase.endswith("_inv"):
+                    read_ptn.append(((phase, "mw"), p90 * 2))
+                else:
+                    read_ptn.append(((phase,), p90 * 2))
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
 
-            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), mw_flip_width), (("mw_x",), tau2_f)]
-            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), mw_flip_width), (("mw_y",), tau2_f)]
+            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), p180), (("mw_x",), tau2_f)]
+            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), p180), (("mw_y",), tau2_f)]
             pattern = px + py + px + py + py + px + py + px
             pattern *= Nconst
-            first_wait = list(pattern[0])
-            first_wait[1] = tau_l
-            last_wait = list(pattern[-1])
-            last_wait[1] = tau_f
-            pattern[0] = tuple(first_wait)
-            pattern[-1] = tuple(last_wait)
+            fst = list(pattern[0])
+            fst[1] = tau_l
+            last = list(pattern[-1])
+            last[1] = tau_f
+            pattern[0] = tuple(fst)
+            pattern[-1] = tuple(last)
 
             xy8_first = init_ptn + pattern + storage_ptn
             xy8_second = reinit_ptn + pattern + read_ptn
@@ -1518,7 +1440,7 @@ class XY8CorrelationGenerator(PatternGenerator):
                 interlude = [
                     (("mw_y",), v_l),
                     (("mw_x",), v_f),
-                    (("mw_x", "mw"), mw_flip_width),
+                    (("mw_x", "mw"), p180),
                     (("mw_x",), v_l),
                     ((reinit_phase,), v_f),
                 ]
@@ -1527,15 +1449,22 @@ class XY8CorrelationGenerator(PatternGenerator):
 
             return xy8_first + interlude + xy8_second
 
+        if self.mode() == 0:
+            read_phase0_ = read_phase0
+        elif self.mode() == 1:
+            read_phase0_ = read_phase0[:4]
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
+
         blocks = [
             K.generate_blocks(
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_xy8cl,
+                gen,
                 p0,
                 p1,
-                read_phase0=read_phase0,
+                read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
@@ -1614,9 +1543,9 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
             for k in ["90pulse", "180pulse", "tauconst", "Nconst", "reinitX", "readY"]
         ]
 
-        read_phase0 = {True: "mw_y_inv", False: "mw_x_inv"}[readY]
-        read_phase1 = {True: "mw_y", False: "mw_x"}[readY]
-        reinit_phase = {True: "mw_x", False: "mw_y"}[reinitX]
+        read_phase0 = "mw_y_inv" if readY else "mw_x_inv"
+        read_phase1 = "mw_y" if readY else "mw_x"
+        reinit_phase = "mw_x" if reinitX else "mw_y"
         p0 = [p90, p180, tauconst]
         p1 = [p90, p180, tauconst]
         freq, dummy, common_pulses, p0, p1 = K.round_pulses(
@@ -1625,49 +1554,67 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
         p0 = p0 + [Nconst, reinit_phase, read_phase0]
         p1 = p1 + [Nconst, reinit_phase, read_phase1]
 
-        def gen_single_ptn_xy8clNflip(
-            n, mw_width, mw_flip_width, tauconst, Nconst, reinit_phase, read_phase
-        ):
+        def gen(n, p90, p180, tauconst, Nconst, reinit_phase, read_phase):
             tau_f, tau_l = K.split_int(tauconst, self.split_fraction)
             tau2_f, tau2_l = K.split_int(tauconst * 2, self.split_fraction)
 
-            init_ptn = [(("mw_x", "mw"), mw_width), (("mw_x",), tau_f)]
-            storage_ptn = [(("mw_y",), tau_l), (("mw_y", "mw"), mw_width), (("mw_y",), tau2_f)]
+            init_ptn = [(("mw_x", "mw"), p90), (("mw_x",), tau_f)]
+            storage_ptn = [(("mw_y",), tau_l), (("mw_y", "mw"), p90), (("mw_y",), tau2_f)]
             reinit_ptn = [
                 ((reinit_phase,), tau2_l),
-                ((reinit_phase, "mw"), mw_width),
+                ((reinit_phase, "mw"), p90),
                 ((reinit_phase,), tau_f),
             ]
-            read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), mw_width)]
+            if self.mode() == 0:
+                read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
+            elif self.mode() == 1:
+                if read_phase.endswith("_inv"):
+                    phase = read_phase[:4]
+                else:
+                    phase = read_phase
+                read_ptn = [((phase,), tau_l), ((phase, "mw"), p90)]
+                if read_phase.endswith("_inv"):
+                    read_ptn.append(((phase, "mw"), p90 * 2))
+                else:
+                    read_ptn.append(((phase,), p90 * 2))
+            else:
+                raise ValueError(f"Unknown MW mode: {self.mode()}")
 
-            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), mw_flip_width), (("mw_x",), tau2_f)]
-            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), mw_flip_width), (("mw_y",), tau2_f)]
+            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), p180), (("mw_x",), tau2_f)]
+            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), p180), (("mw_y",), tau2_f)]
             pattern = px + py + px + py + py + px + py + px
             pattern *= Nconst
-            first_wait = list(pattern[0])
-            first_wait[1] = tau_l
-            last_wait = list(pattern[-1])
-            last_wait[1] = tau_f
-            pattern[0] = tuple(first_wait)
-            pattern[-1] = tuple(last_wait)
+            fst = list(pattern[0])
+            fst[1] = tau_l
+            last = list(pattern[-1])
+            last[1] = tau_f
+            pattern[0] = tuple(fst)
+            pattern[-1] = tuple(last)
 
             xy8_first = init_ptn + pattern + storage_ptn
             xy8_second = reinit_ptn + pattern + read_ptn
             # Since timing misalignment of first/last are included in storage_ptn/reinit_ptn,
-            # we don't neet to fix them here.
+            # we don't need to fix them here.
             interlude = px * n
 
             return xy8_first + interlude + xy8_second
+
+        if self.mode() == 0:
+            read_phase0_ = read_phase0
+        elif self.mode() == 1:
+            read_phase0_ = read_phase0[:4]
+        else:
+            raise ValueError(f"Unknown MW mode: {self.mode()}")
 
         blocks = [
             K.generate_blocks(
                 i,
                 n,
                 common_pulses,
-                gen_single_ptn_xy8clNflip,
+                gen,
                 p0,
                 p1,
-                read_phase0=read_phase0,
+                read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
                 nomw=nomw,
@@ -1810,19 +1757,17 @@ class DDGateGenerator(PatternGenerator):
         p0 = p0 + [Nconst, N2const, N3const, pih_ch0]
         p1 = p1 + [Nconst, N2const, N3const, pih_ch1]
 
-        def gen_single_ptn_ddgate(
-            tau, mw_width, mw_flip_width, tauconst, Nconst, N2const, N3const, pih_ch
-        ):
+        def gen(tau, p90, p180, tauconst, Nconst, N2const, N3const, pih_ch):
             tau_f, tau_l = K.split_int(tauconst, self.split_fraction)
             tau2_f, tau2_l = K.split_int(tauconst * 2, self.split_fraction)
 
-            init_ptn = [(pih_ch[0], mw_width), (("mw_x",), tau_f)]
-            storage_ptn = [((pih_ch[1][0],), tau_l), (pih_ch[1], mw_width)]
-            reinit_ptn = [(pih_ch[2], mw_width), (("mw_x",), tau_f)]
-            read_ptn = [((pih_ch[3][0],), tau_l), (pih_ch[3], mw_width)]
+            init_ptn = [(pih_ch[0], p90), (("mw_x",), tau_f)]
+            storage_ptn = [((pih_ch[1][0],), tau_l), (pih_ch[1], p90)]
+            reinit_ptn = [(pih_ch[2], p90), (("mw_x",), tau_f)]
+            read_ptn = [((pih_ch[3][0],), tau_l), (pih_ch[3], p90)]
 
-            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), mw_flip_width), (("mw_x",), tau2_f)]
-            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), mw_flip_width), (("mw_y",), tau2_f)]
+            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), p180), (("mw_x",), tau2_f)]
+            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), p180), (("mw_y",), tau2_f)]
             pattern = px + py + px + py + py + px + py + px
             pattern *= Nconst
             first_wait = list(pattern[0])
@@ -1838,7 +1783,7 @@ class DDGateGenerator(PatternGenerator):
             v_f, v_l = K.split_int(tau, self.split_fraction)
             interlude = [
                 (("mw_y",), tau),
-                (("mw_y", "mw"), mw_flip_width),
+                (("mw_y", "mw"), p180),
                 (("mw_y",), v_l),
                 (("mw_y",), v_f),
             ] * N2const
@@ -1851,7 +1796,7 @@ class DDGateGenerator(PatternGenerator):
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_ddgate,
+                gen,
                 p0,
                 p1,
                 read_phase0=pih_ch0[-1][0],
@@ -1956,17 +1901,17 @@ class DDNGateGenerator(DDGateGenerator):
         p0 = p0 + [Nconst, pih_ch0]
         p1 = p1 + [Nconst, pih_ch1]
 
-        def gen_single_ptn_ddgate(n, mw_width, mw_flip_width, tauconst, tau2const, Nconst, pih_ch):
+        def gen(n, p90, p180, tauconst, tau2const, Nconst, pih_ch):
             tau_f, tau_l = K.split_int(tauconst, self.split_fraction)
             tau2_f, tau2_l = K.split_int(tauconst * 2, self.split_fraction)
 
-            init_ptn = [(pih_ch[0], mw_width), (("mw_x",), tau_f)]
-            storage_ptn = [((pih_ch[1][0],), tau_l), (pih_ch[1], mw_width)]
-            reinit_ptn = [(pih_ch[2], mw_width), (("mw_x",), tau_f)]
-            read_ptn = [((pih_ch[3][0],), tau_l), (pih_ch[3], mw_width)]
+            init_ptn = [(pih_ch[0], p90), (("mw_x",), tau_f)]
+            storage_ptn = [((pih_ch[1][0],), tau_l), (pih_ch[1], p90)]
+            reinit_ptn = [(pih_ch[2], p90), (("mw_x",), tau_f)]
+            read_ptn = [((pih_ch[3][0],), tau_l), (pih_ch[3], p90)]
 
-            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), mw_flip_width), (("mw_x",), tau2_f)]
-            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), mw_flip_width), (("mw_y",), tau2_f)]
+            px = [(("mw_x",), tau2_l), (("mw_x", "mw"), p180), (("mw_x",), tau2_f)]
+            py = [(("mw_y",), tau2_l), (("mw_y", "mw"), p180), (("mw_y",), tau2_f)]
             pattern = px + py + px + py + py + px + py + px
             pattern *= Nconst
             first_wait = list(pattern[0])
@@ -1982,7 +1927,7 @@ class DDNGateGenerator(DDGateGenerator):
             v_f, v_l = K.split_int(tau2const, self.split_fraction)
             interlude = [
                 (("mw_y",), tau2const),
-                (("mw_y", "mw"), mw_flip_width),
+                (("mw_y", "mw"), p180),
                 (("mw_y",), v_l),
                 (("mw_y",), v_f),
             ] * n
@@ -1995,7 +1940,7 @@ class DDNGateGenerator(DDGateGenerator):
                 i,
                 v,
                 common_pulses,
-                gen_single_ptn_ddgate,
+                gen,
                 p0,
                 p1,
                 read_phase0=pih_ch0[-1][0],
@@ -2015,9 +1960,18 @@ def make_generators(
     split_fraction: int = 4,
     minimum_block_length: int = 1000,
     block_base: int = 4,
+    mw_modes: tuple[int] = (0,),
     print_fn=print,
 ):
-    args = (freq, reduce_start_divisor, split_fraction, minimum_block_length, block_base, print_fn)
+    args = (
+        freq,
+        reduce_start_divisor,
+        split_fraction,
+        minimum_block_length,
+        block_base,
+        mw_modes,
+        print_fn,
+    )
     generators = {
         "rabi": RabiGenerator(*args),
         "t1": T1Generator(*args),
@@ -2036,7 +1990,6 @@ def make_generators(
         "xy16N": DDNGenerator(*args, method="xy16N"),
         "180train": PiTrainGenerator(*args),
         "se90sweep": SEHalfPiSweepGenerator(*args),
-        "recovery": RecoveryGenerator(*args),
         "spinlock": SpinLockGenerator(*args),
         "xy8cl": XY8CorrelationGenerator(*args, method="xy8cl"),
         "xy8cl1flip": XY8CorrelationGenerator(*args, method="xy8cl1flip"),
@@ -2044,4 +1997,8 @@ def make_generators(
         "ddgate": DDGateGenerator(*args),
         "ddgateN": DDNGateGenerator(*args),
     }
+    if mw_modes[0] == 1:
+        # these methods requires 4 phases (x, y, x_inv, y_inv) and unavailable in 2-phase mode.
+        for key in ["xy16", "xy16N", "ddgate", "ddgateN"]:
+            del generators[key]
     return generators

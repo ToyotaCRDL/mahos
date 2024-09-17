@@ -77,7 +77,6 @@ def test_podmr_pattern_divide():
         "iq_delay": 16e-9,
         "readY": False,
         "invertY": False,
-        "invert_init": False,
         "reinitX": False,
         "flip_head": True,
     }
@@ -87,7 +86,7 @@ def test_podmr_pattern_divide():
     tau = np.array([100e-6, 200e-6])
     generators = make_generators()
     # for meth in ("rabi", "fid", "spinecho", "trse", "cp", "cpmg", "xy4", "xy8", "xy16", "180train",
-    #              "se90sweep", "recovery", "spinlock", "xy8cl", "xy8cl1flip", "ddgate"):
+    #              "se90sweep", "spinlock", "xy8cl", "xy8cl1flip", "ddgate"):
     for meth in ("rabi", "spinecho"):
         ptn = generators[meth].generate(tau, params)
         ptn_divide = generators[meth].generate(tau, params_divide)
@@ -126,7 +125,6 @@ def test_podmr_patterns():
         "iq_delay": 16e-9,
         "readY": False,
         "invertY": False,
-        "invert_init": False,
         "reinitX": False,
         "flip_head": True,
     }
@@ -147,7 +145,6 @@ def test_podmr_patterns():
         "xy16",
         "180train",
         "se90sweep",
-        "recovery",
         "spinlock",
         "xy8cl",
         "xy8cl1flip",
@@ -195,7 +192,6 @@ def test_podmr(server, podmr, server_conf, podmr_conf):
         "xy16",
         "180train",
         "se90sweep",
-        "recovery",
         "spinlock",
         "xy8cl",
         "xy8cl1flip",
