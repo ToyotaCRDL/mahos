@@ -538,6 +538,8 @@ class Pulser(Worker):
 
         self.length = self.offsets = self.freq = self.oversample = None
 
+        mw_modes = self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0))
+
         self.check_required_conf(
             ["pd_trigger", "block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]
         )
@@ -551,6 +553,7 @@ class Pulser(Worker):
             split_fraction=self.conf.get("split_fraction", 4),
             minimum_block_length=self.conf["minimum_block_length"],
             block_base=self.conf["block_base"],
+            mw_modes=mw_modes,
             print_fn=self.logger.info,
         )
 
@@ -749,10 +752,6 @@ class Pulser(Worker):
         params["base_width"] = params["trigger_width"] = 0.0
         params["init_delay"] = params["final_delay"] = 0.0
         params["fix_base_width"] = 1  # ignore base_width
-        if self.sg1 is not None:
-            # disable nomw feature at generator
-            # because nomw = True, nomw1 = False is possible usage (using SG1 only)
-            params["nomw"] = False
 
         blocks, freq, common_pulses = generate(data.xdata, params)
         sync_mode = self._sync_mode(params)

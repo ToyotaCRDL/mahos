@@ -87,7 +87,6 @@ class PatternGenerator(object):
             self.get_common_pulses(params),
             pulse_params,
             params.get("partial", -1),
-            params.get("nomw", False),
             reduce_start_divisor,
             params.get("fix_base_width"),
         )
@@ -115,7 +114,6 @@ class PatternGenerator(object):
             self.get_common_pulses(params),
             self.get_pulse_params(params),
             params.get("partial", -1),
-            params.get("nomw", False),
             reduce_start_divisor,
             params.get("fix_base_width"),
         )
@@ -127,7 +125,6 @@ class PatternGenerator(object):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -148,7 +145,6 @@ class RabiGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -175,7 +171,6 @@ class RabiGenerator(PatternGenerator):
                 read_phase0="mw_x",
                 read_phase1="mw_x",
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -210,7 +205,6 @@ class T1Generator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -244,7 +238,6 @@ class T1Generator(PatternGenerator):
                 read_phase0="mw_x",
                 read_phase1="mw_x",
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -282,7 +275,6 @@ class FIDGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -339,7 +331,6 @@ class FIDGenerator(PatternGenerator):
                 read_phase0="mw_x",
                 read_phase1=read_phase1,
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -392,7 +383,6 @@ class SpinEchoGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -460,7 +450,6 @@ class SpinEchoGenerator(PatternGenerator):
                 read_phase0=phase0,
                 read_phase1=phase1,
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -515,7 +504,6 @@ class TRSEGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -576,7 +564,6 @@ class TRSEGenerator(PatternGenerator):
                 read_phase0="mw_x",
                 read_phase1=read_phase1,
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -637,7 +624,6 @@ class DDGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -652,7 +638,6 @@ class DDGenerator(PatternGenerator):
                 common_pulses,
                 pulse_params,
                 partial,
-                nomw,
                 reduce_start_divisor,
                 fix_base_width,
             )
@@ -662,7 +647,6 @@ class DDGenerator(PatternGenerator):
                 common_pulses,
                 pulse_params,
                 partial,
-                nomw,
                 reduce_start_divisor,
                 fix_base_width,
             )
@@ -673,7 +657,6 @@ class DDGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -760,7 +743,6 @@ class DDGenerator(PatternGenerator):
                 read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -773,7 +755,6 @@ class DDGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -908,7 +889,6 @@ class DDGenerator(PatternGenerator):
                 read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for (j, k), i in np.ndenumerate(ind)
@@ -969,7 +949,6 @@ class DDNGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -1063,7 +1042,6 @@ class DDNGenerator(PatternGenerator):
                 read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, n in enumerate(xdata)
@@ -1098,7 +1076,6 @@ class PiTrainGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -1137,7 +1114,6 @@ class PiTrainGenerator(PatternGenerator):
                 read_phase0="mw_x",
                 read_phase1="mw_x",
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -1174,7 +1150,6 @@ class SEHalfPiSweepGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -1214,7 +1189,6 @@ class SEHalfPiSweepGenerator(PatternGenerator):
                 read_phase0="mw_x",
                 read_phase1="mw_x",
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -1255,7 +1229,6 @@ class SpinLockGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -1313,7 +1286,6 @@ class SpinLockGenerator(PatternGenerator):
                 read_phase0=read_phase0,
                 read_phase1="mw_x",
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -1377,7 +1349,6 @@ class XY8CorrelationGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -1467,7 +1438,6 @@ class XY8CorrelationGenerator(PatternGenerator):
                 read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -1534,7 +1504,6 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -1617,7 +1586,6 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
                 read_phase0=read_phase0_,
                 read_phase1=read_phase1,
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, n in enumerate(xdata)
@@ -1738,7 +1706,6 @@ class DDGateGenerator(PatternGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -1802,7 +1769,6 @@ class DDGateGenerator(PatternGenerator):
                 read_phase0=pih_ch0[-1][0],
                 read_phase1=pih_ch1[-1][0],
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)
@@ -1882,7 +1848,6 @@ class DDNGateGenerator(DDGateGenerator):
         common_pulses: list[float],
         pulse_params: dict,
         partial: int,
-        nomw: bool,
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
@@ -1946,7 +1911,6 @@ class DDNGateGenerator(DDGateGenerator):
                 read_phase0=pih_ch0[-1][0],
                 read_phase1=pih_ch1[-1][0],
                 partial=partial,
-                nomw=nomw,
                 fix_base_width=fix_base_width,
             )
             for i, v in enumerate(xdata)

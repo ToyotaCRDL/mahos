@@ -91,7 +91,6 @@ def generate_blocks(
     read_phase0: str = "mw_x",
     read_phase1: str = "mw_x_inv",
     partial: int = -1,
-    nomw: bool = False,
     fix_base_width: int | None = None,
 ) -> Blocks[Block]:
     (
@@ -117,10 +116,6 @@ def generate_blocks(
     ptn_latter0 = [((read_phase0,), laser_delay)]
     ptn_latter1 = [((read_phase1,), laser_delay)]
     ptn_laser = [(("mw_x", "laser", "sync"), laser_width)]
-
-    if nomw:
-        ptn0 = [((read_phase0,), sum([s[1] for s in ptn0]))]
-        ptn1 = [((read_phase1,), sum([s[1] for s in ptn1]))]
 
     # base width offset (operation)
     total0 = sum([s[1] for s in ptn_former + ptn0 + ptn_latter0])

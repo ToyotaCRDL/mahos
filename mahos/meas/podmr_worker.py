@@ -244,6 +244,7 @@ class PODMRDataOperator(object):
 class Bounds(object):
     def __init__(self):
         self._sg = None
+        self._sg1 = None
         self._fg = None
 
     def has_sg(self):
@@ -254,6 +255,15 @@ class Bounds(object):
 
     def set_sg(self, sg_bounds):
         self._sg = sg_bounds
+
+    def has_sg1(self):
+        return self._sg1 is not None
+
+    def sg1(self):
+        return self._sg1
+
+    def set_sg1(self, sg1_bounds):
+        self._sg1 = sg1_bounds
 
     def has_fg(self):
         return self._fg is not None
@@ -277,16 +287,22 @@ class Pulser(Worker):
         self.load_conf_preset(cli)
 
         self.sg = SGInterface(cli, "sg")
+        if "sg1" in cli.insts():
+            self.sg1 = SGInterface(cli, "sg1")
+        else:
+            self.sg1 = None
         self.pg = PGInterface(cli, "pg")
         self.tdc = TDCInterface(cli, "tdc")
         if "fg" in cli:
             self.fg = FGInterface(cli, "fg")
         else:
             self.fg = None
-        self.add_instruments(self.sg, self.pg, self.tdc, self.fg)
+        self.add_instruments(self.sg, self.sg1, self.pg, self.tdc, self.fg)
 
         self.timer = None
         self.length = self.offsets = self.freq = self.laser_timing = None
+
+        mw_modes = self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0))
 
         self.check_required_conf(
             ["block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]
@@ -297,6 +313,7 @@ class Pulser(Worker):
             split_fraction=self.conf.get("split_fraction", 4),
             minimum_block_length=self.conf["minimum_block_length"],
             block_base=self.conf["block_base"],
+            mw_modes=mw_modes,
             print_fn=self.logger.info,
         )
         self.eos_margin = self.conf.get("eos_margin", 1e-6)
@@ -347,6 +364,11 @@ class Pulser(Worker):
         # SG
         if not self.sg.configure_cw_iq(params["freq"], params["power"]):
             self.logger.error("Error initializing SG.")
+            return False
+        if self.sg1 is not None and not self.sg1.configure_cw_iq(
+            params["freq1"], params["power1"]
+        ):
+            self.logger.error("Error initializing SG1.")
             return False
 
         if not self.init_fg(params):
@@ -518,12 +540,21 @@ class Pulser(Worker):
         # start instruments
         success = self.tdc.stop() and self.tdc.clear() and self.tdc.start()
         success &= self.sg.set_output(not self.data.params.get("nomw", False))
+        if self.sg1 is not None:
+            success &= self.sg1.set_output(not self.data.params.get("nomw1", False))
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(True)
         # time.sleep(1)
         success &= self.pg.start()
 
         if not success:
+            self.pg.stop()
+            if self._fg_enabled(self.data.params):
+                self.fg.set_output(False)
+            self.sg.set_output(False)
+            if self.sg1 is not None:
+                self.sg1.set_output(False)
+            self.tdc.stop()
             return self.fail_with_release("Error starting pulser.")
 
         self.timer = IntervalTimer(self.data.params["interval"])
@@ -559,10 +590,11 @@ class Pulser(Worker):
             and self.pg.release()
             and self.sg.set_output(False)
             and self.sg.release()
-            and self.tdc.stop()
-            and self.wait_tdc_stop()
-            and self.update()
-            and self.tdc.release()
+        )
+        if self.sg1 is not None:
+            success &= self.sg1.set_output(False) and self.sg1.release()
+        success &= (
+            self.tdc.stop() and self.wait_tdc_stop() and self.update() and self.tdc.release()
         )
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(False)
@@ -685,6 +717,22 @@ class Pulser(Worker):
                 doc="margin at tail of ROI. negative value disables ROI.",
             ),
         )
+
+        if self.sg1 is not None:
+            if self.bounds.has_sg1():
+                sg1 = self.bounds.sg1()
+            else:
+                sg1 = self.sg1.get_bounds()
+                if sg1 is None:
+                    self.logger.error("Failed to get SG1 bounds.")
+                    return None
+                self.bounds.set_sg1(sg1)
+            f_min, f_max = sg1["freq"]
+            p_min, p_max = sg1["power"]
+            sg1_freq = max(min(self.conf.get("sg1_freq", 2.8e9), f_max), f_min)
+            d["freq1"] = P.FloatParam(sg1_freq, f_min, f_max)
+            d["power1"] = P.FloatParam(p_min, p_min, p_max)
+            d["nomw1"] = P.BoolParam(False)
 
         self._get_param_dict_pulse(label, d)
         d["pulse"] = self.generators[label].pulse_params()
