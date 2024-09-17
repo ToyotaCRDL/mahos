@@ -286,87 +286,7 @@
              <widget class="QComboBox" name="methodBox">
               <item>
                <property name="text">
-                <string>Rabi</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>T1</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>FID</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Spin Echo (envelope)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Spin Echo (different tau)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>CP</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>CPMG</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>XY4</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>XY8</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>XY16</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>180 pulse train</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Spin Echo (90 pulse sweep)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Spin Lock</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>XY8 correlation</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>XY8 correlation (1 flip)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>XY8 correlation (N flip)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>ddgate: XY8-CPMG-XY8</string>
+                <string>rabi</string>
                </property>
               </item>
              </widget>
@@ -1247,14 +1167,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>SpinBox</class>
-   <extends>QDoubleSpinBox</extends>
-   <header>pyqtgraph</header>
-  </customwidget>
-  <customwidget>
    <class>ParamTable</class>
    <extends>QTableWidget</extends>
    <header>mahos.gui.param</header>
+  </customwidget>
+  <customwidget>
+   <class>SpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>pyqtgraph</header>
   </customwidget>
  </customwidgets>
  <tabstops>
