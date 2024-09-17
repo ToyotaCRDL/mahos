@@ -45,11 +45,11 @@ resource = "VISA::SG"
 power_bounds = [0.0, 47.0]
 freq_bounds = [9E3, 6E9]
 
-[localhost.server.instrument.sg2]
+[localhost.server.instrument.sg1]
 module = "mock"
 class = "SG_mock"
-[localhost.server.instrument.sg2.conf]
-resource = "VISA:SG2"
+[localhost.server.instrument.sg1.conf]
+resource = "VISA:SG1"
 power_bounds = [1.0, 10.0]
 freq_bounds = [1E6, 6E9]
 
@@ -233,7 +233,7 @@ log = "localhost::log"
 tweakers = ["localhost::tweaker", "localhost::tweaker2", "localhost::pos_tweaker"]
 [localhost.spodmr.target.servers]
 sg = "localhost::server"
-sg2 = "localhost::server"
+sg1 = "localhost::server"
 pg = "localhost::server"
 fg = "localhost::server"
 pd0 = "localhost::server"

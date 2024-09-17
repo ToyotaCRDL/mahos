@@ -119,7 +119,7 @@ class SPODMRDataOperator(object):
 class Bounds(object):
     def __init__(self):
         self._sg = None
-        self._sg2 = None
+        self._sg1 = None
         self._fg = None
 
     def has_sg(self):
@@ -131,14 +131,14 @@ class Bounds(object):
     def set_sg(self, sg_bounds):
         self._sg = sg_bounds
 
-    def has_sg2(self):
-        return self._sg2 is not None
+    def has_sg1(self):
+        return self._sg1 is not None
 
-    def sg2(self):
-        return self._sg2
+    def sg1(self):
+        return self._sg1
 
-    def set_sg2(self, sg2_bounds):
-        self._sg2 = sg2_bounds
+    def set_sg1(self, sg1_bounds):
+        self._sg1 = sg1_bounds
 
     def has_fg(self):
         return self._fg is not None
@@ -188,22 +188,22 @@ class BlockSeqBuilder(object):
         # Maybe we could change relative readout phase.
 
         nomw = params.get("nomw", False)
-        nomw2 = "nomw2" not in params or params["nomw2"]
-        if nomw2:
+        nomw1 = "nomw1" not in params or params["nomw1"]
+        if nomw1:
             return K.encode_mw_phase(bs)
-        elif nomw:  # mw2 only
+        elif nomw:  # mw1 only
             iq_phase_dict = {
-                "mw_x": ("mw_i2", "mw_q2"),
-                "mw_y": ("mw_q2",),
+                "mw_x": ("mw_i1", "mw_q1"),
+                "mw_y": ("mw_q1",),
                 "mw_x_inv": (),
-                "mw_y_inv": ("mw_i2",),
+                "mw_y_inv": ("mw_i1",),
             }
-        else:  # both mw and mw2
+        else:  # both mw and mw1
             iq_phase_dict = {
-                "mw_x": ("mw_i", "mw_q", "mw_i2", "mw_q2"),
-                "mw_y": ("mw_q", "mw_q2"),
+                "mw_x": ("mw_i", "mw_q", "mw_i1", "mw_q1"),
+                "mw_y": ("mw_q", "mw_q1"),
                 "mw_x_inv": (),
-                "mw_y_inv": ("mw_i", "mw_i2"),
+                "mw_y_inv": ("mw_i", "mw_i1"),
             }
 
         return bs.replace(iq_phase_dict)
@@ -517,10 +517,10 @@ class Pulser(Worker):
         self.load_conf_preset(cli)
 
         self.sg = SGInterface(cli, "sg")
-        if "sg2" in cli.insts():
-            self.sg2 = SGInterface(cli, "sg2")
+        if "sg1" in cli.insts():
+            self.sg1 = SGInterface(cli, "sg1")
         else:
-            self.sg2 = None
+            self.sg1 = None
         self.pg = PGInterface(cli, "pg")
         self.pd_names = self.conf.get("pd_names", ["pd0"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
@@ -529,7 +529,7 @@ class Pulser(Worker):
             self.fg = FGInterface(cli, "fg")
         else:
             self.fg = None
-        self.add_instruments(self.sg, self.sg2, self.pg, self.fg, *self.pds)
+        self.add_instruments(self.sg, self.sg1, self.pg, self.fg, *self.pds)
 
         self.length = self.offsets = self.freq = self.oversample = None
 
@@ -602,10 +602,10 @@ class Pulser(Worker):
         if not self.sg.configure_cw_iq(params["freq"], params["power"]):
             self.logger.error("Error initializing SG.")
             return False
-        if self.sg2 is not None and not self.sg2.configure_cw_iq(
-            params["freq2"], params["power2"]
+        if self.sg1 is not None and not self.sg1.configure_cw_iq(
+            params["freq1"], params["power1"]
         ):
-            self.logger.error("Error initializing SG2.")
+            self.logger.error("Error initializing SG1.")
             return False
 
         # FG
@@ -743,9 +743,9 @@ class Pulser(Worker):
         params["base_width"] = params["trigger_width"] = 0.0
         params["init_delay"] = params["final_delay"] = 0.0
         params["fix_base_width"] = 1  # ignore base_width
-        if self.sg2 is not None:
+        if self.sg1 is not None:
             # disable nomw feature at generator
-            # because nomw = True, nomw2 = False is possible usage (using SG2 only)
+            # because nomw = True, nomw1 = False is possible usage (using SG1 only)
             params["nomw"] = False
 
         blocks, freq, common_pulses = generate(data.xdata, params)
@@ -803,8 +803,8 @@ class Pulser(Worker):
             return self.fail_with_release("Error initializing or starting PDs.")
 
         success = self.sg.set_output(not self.data.params.get("nomw", False))
-        if self.sg2 is not None:
-            success &= self.sg2.set_output(not self.data.params.get("nomw2", False))
+        if self.sg1 is not None:
+            success &= self.sg1.set_output(not self.data.params.get("nomw1", False))
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(True)
         # time.sleep(1)
@@ -815,8 +815,8 @@ class Pulser(Worker):
             if self._fg_enabled(self.data.params):
                 self.fg.set_output(False)
             self.sg.set_output(False)
-            if self.sg2 is not None:
-                self.sg2.set_output(False)
+            if self.sg1 is not None:
+                self.sg1.set_output(False)
             for pd in self.pds:
                 pd.stop()
             self.clock.stop()
@@ -848,8 +848,8 @@ class Pulser(Worker):
             and self.sg.set_output(False)
             and self.sg.release()
         )
-        if self.sg2 is not None:
-            success &= self.sg2.set_output(False) and self.sg2.release()
+        if self.sg1 is not None:
+            success &= self.sg1.set_output(False) and self.sg1.release()
         success &= all([pd.stop() for pd in self.pds]) and all([pd.release() for pd in self.pds])
         success &= self.clock.stop()
         if self._fg_enabled(self.data.params):
@@ -953,21 +953,21 @@ class Pulser(Worker):
             ),
         )
 
-        if self.sg2 is not None:
-            if self.bounds.has_sg2():
-                sg2 = self.bounds.sg2()
+        if self.sg1 is not None:
+            if self.bounds.has_sg1():
+                sg1 = self.bounds.sg1()
             else:
-                sg2 = self.sg2.get_bounds()
-                if sg2 is None:
-                    self.logger.error("Failed to get SG2 bounds.")
+                sg1 = self.sg1.get_bounds()
+                if sg1 is None:
+                    self.logger.error("Failed to get SG1 bounds.")
                     return None
-                self.bounds.set_sg2(sg2)
-            f_min, f_max = sg2["freq"]
-            p_min, p_max = sg2["power"]
-            sg2_freq = max(min(self.conf.get("sg2_freq", 2.8e9), f_max), f_min)
-            d["freq2"] = P.FloatParam(sg2_freq, f_min, f_max)
-            d["power2"] = P.FloatParam(p_min, p_min, p_max)
-            d["nomw2"] = P.BoolParam(False)
+                self.bounds.set_sg1(sg1)
+            f_min, f_max = sg1["freq"]
+            p_min, p_max = sg1["power"]
+            sg1_freq = max(min(self.conf.get("sg1_freq", 2.8e9), f_max), f_min)
+            d["freq1"] = P.FloatParam(sg1_freq, f_min, f_max)
+            d["power1"] = P.FloatParam(p_min, p_min, p_max)
+            d["nomw1"] = P.BoolParam(False)
 
         self._get_param_dict_pulse(label, d)
         d["pulse"] = self.generators[label].pulse_params()

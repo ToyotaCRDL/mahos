@@ -498,9 +498,9 @@
              </widget>
             </item>
             <item row="4" column="1">
-             <widget class="QDoubleSpinBox" name="freq2Box">
+             <widget class="QDoubleSpinBox" name="freq1Box">
               <property name="prefix">
-               <string>freq2: </string>
+               <string>freq1: </string>
               </property>
               <property name="suffix">
                <string> MHz</string>
@@ -517,9 +517,9 @@
              </widget>
             </item>
             <item row="4" column="3">
-             <widget class="QDoubleSpinBox" name="power2Box">
+             <widget class="QDoubleSpinBox" name="power1Box">
               <property name="prefix">
-               <string>power2: </string>
+               <string>power1: </string>
               </property>
               <property name="suffix">
                <string> dBm</string>
@@ -530,9 +530,9 @@
              </widget>
             </item>
             <item row="4" column="4">
-             <widget class="QCheckBox" name="nomw2Box">
+             <widget class="QCheckBox" name="nomw1Box">
               <property name="text">
-               <string>Do not turn on MW2</string>
+               <string>Do not turn on MW1</string>
               </property>
              </widget>
             </item>
@@ -1533,9 +1533,9 @@
   <tabstop>freqBox</tabstop>
   <tabstop>powerBox</tabstop>
   <tabstop>nomwBox</tabstop>
-  <tabstop>freq2Box</tabstop>
-  <tabstop>power2Box</tabstop>
-  <tabstop>nomw2Box</tabstop>
+  <tabstop>freq1Box</tabstop>
+  <tabstop>power1Box</tabstop>
+  <tabstop>nomw1Box</tabstop>
   <tabstop>reduceBox</tabstop>
   <tabstop>divideblockBox</tabstop>
   <tabstop>methodBox</tabstop>

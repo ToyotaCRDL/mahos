@@ -768,7 +768,7 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
 
         self._finalizing = False
         self._has_fg = False
-        self._found_sg2 = False
+        self._found_sg1 = False
         self._pg_freq = None
         self._params = None
 
@@ -953,20 +953,20 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             w.setEnabled(not disabled)
         self.fg_phaseBox.setEnabled(self.fg_gateButton.isChecked())
 
-    def _apply_sg2(self, params: dict):
-        """Check existence of SG2 (freq2 in params) and apply bound of SG2."""
+    def _apply_sg1(self, params: dict):
+        """Check existence of SG1 (freq1 in params) and apply bound of SG1."""
 
-        if self._found_sg2:
+        if self._found_sg1:
             return
-        if "freq2" in params:
-            apply_widgets(params, [("freq2", self.freq2Box, 1e-6), ("power2", self.power2Box)])
-            self._found_sg2 = True
+        if "freq1" in params:
+            apply_widgets(params, [("freq1", self.freq1Box, 1e-6), ("power1", self.power1Box)])
+            self._found_sg1 = True
 
     def switch_method(self):
         method = self.methodBox.currentText()
         self._params = self.cli.get_param_dict(method)
         self.update_cond_widgets()
-        self._apply_sg2(self._params)
+        self._apply_sg1(self._params)
         self.paramTable.update_contents(self._params["pulse"])
         self.reset_tau_modes(self._params["plot"]["taumode"].options())
         self.plot.update_label(self.data)
@@ -1128,12 +1128,12 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         self.freqBox.setValue(p.get("freq", 2740e6) * 1e-6)  # Hz to MHz
         self.powerBox.setValue(p.get("power", 0.0))
         self.nomwBox.setChecked(p.get("nomw", False))
-        if "freq2" in p:
-            self.freq2Box.setValue(p["freq2"] * 1e-6)  # Hz to MHz
-        if "power2" in p:
-            self.power2Box.setValue(p["power2"])
-        if "nomw2" in p:
-            self.nomw2Box.setChecked(p["nomw2"])
+        if "freq1" in p:
+            self.freq1Box.setValue(p["freq1"] * 1e-6)  # Hz to MHz
+        if "power1" in p:
+            self.power1Box.setValue(p["power1"])
+        if "nomw1" in p:
+            self.nomw1Box.setChecked(p["nomw1"])
 
         # sequence parameters
         self.startBox.setValue(p.get("start", 0.0) * 1e9)  # sec to ns
@@ -1226,10 +1226,10 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
         params["roi_head"] = self.roiheadBox.value() * 1e-9  # ns to sec
         params["roi_tail"] = self.roitailBox.value() * 1e-9  # ns to sec
 
-        if "freq2" in self._params:
-            params["freq2"] = self.freq2Box.value() * 1e6  # MHz to Hz
-            params["power2"] = self.power2Box.value()
-            params["nomw2"] = self.nomw2Box.isChecked()
+        if "freq1" in self._params:
+            params["freq1"] = self.freq1Box.value() * 1e6  # MHz to Hz
+            params["power1"] = self.power1Box.value()
+            params["nomw1"] = self.nomw1Box.isChecked()
 
         # common_pulses
         params["base_width"] = self.basewidthBox.value() * 1e-9
@@ -1422,9 +1422,9 @@ class PODMRWidget(ClientWidget, Ui_PODMR):
             ("step", self.stepBox),
             ("num", self.numBox),
             ("log", self.logBox),
-            ("freq2", self.freq2Box),
-            ("power2", self.power2Box),
-            ("nomw2", self.nomw2Box),
+            ("freq1", self.freq1Box),
+            ("power1", self.power1Box),
+            ("nomw1", self.nomw1Box),
         ]
         set_enabled(self._params, name_widgets)
 

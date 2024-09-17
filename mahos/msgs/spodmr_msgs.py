@@ -526,6 +526,12 @@ def update_data(data: SPODMRData):
             if k in data.params:
                 data.params["pulse"][k] = data.params[k]
                 del data.params[k]
+
+        ## fixed parameter names (SG2 -> SG1)
+        if "freq2" in data.params:
+            for k in ["freq", "power", "nomw"]:
+                data.params[k + "1"] = data.params[k + "2"]
+                del data.params[k + "2"]
         data.set_version(3)
 
     return data
