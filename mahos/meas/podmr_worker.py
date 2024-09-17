@@ -302,7 +302,7 @@ class Pulser(Worker):
         self.timer = None
         self.length = self.offsets = self.freq = self.laser_timing = None
 
-        mw_modes = self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0))
+        mw_modes = tuple(self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0)))
 
         self.check_required_conf(
             ["block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]

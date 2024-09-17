@@ -150,11 +150,14 @@ def generate_blocks(
 def build_blocks(
     blocks: list[Blocks[Block]],
     common_pulses,
+    params: dict,
     divide=False,
     merge=True,
     invertY=False,
     minimum_block_length: int = 1000,
     block_base: int = 4,
+    mw_modes: tuple[int] = (0,),
+    num_mw: int = 1,
 ) -> tuple[Blocks[Block], list[int]]:
     """Build up the blocks by adding init and final blocks.
 
@@ -193,7 +196,7 @@ def build_blocks(
     blocks.append(Block("FINAL", ptn_final))
     laser_timing = extract_laser_timing(blocks)
 
-    # shaping blocks
+    # block shaping
     if divide:
         blocks = divide_long_operation(blocks, minimum_block_length, block_base)
         blocks = divide_long_laser(blocks, minimum_block_length)
@@ -201,12 +204,12 @@ def build_blocks(
     if merge:
         blocks = merge_short_blocks(blocks, minimum_block_length)
 
-    blocks = blocks.simplify()
+    # phase encoding
     if invertY:
         blocks = invert_y_phase(blocks)
-    blocks = encode_mw_phase(blocks)
+    blocks = encode_mw_phase(blocks, params, mw_modes, num_mw)
 
-    return blocks, laser_timing
+    return blocks.simplify(), laser_timing
 
 
 def print_blocks(blocks: Blocks[Block], print_fn=print):
@@ -215,17 +218,172 @@ def print_blocks(blocks: Blocks[Block], print_fn=print):
         print_fn("|".join(b.pattern_to_strs()))
 
 
-def encode_mw_phase(blocks: Blocks[Block] | BlockSeq) -> Blocks[Block] | BlockSeq:
+def encode_mw_phase(
+    blocks: Blocks[Block] | BlockSeq, params, mw_modes, num_mw
+) -> Blocks[Block] | BlockSeq:
     """encode mw phase from x/y(_inv) to i/q."""
 
-    iq_phase_dict = {
-        "mw_x": ("mw_i", "mw_q"),
-        "mw_y": ("mw_q",),
-        "mw_x_inv": (),
-        "mw_y_inv": ("mw_i",),
-    }
+    if num_mw == 1:
+        return encode_mw_phase_single(blocks, params, mw_modes)
+    elif num_mw == 2:
+        return encode_mw_phase_double(blocks, params, mw_modes)
+    else:
+        raise ValueError(f"Unknown num_mw: {num_mw}")
 
-    return blocks.replace(iq_phase_dict)
+
+def encode_mode1(blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0) -> Blocks[Block] | BlockSeq:
+    f = "" if ch_from == 0 else str(ch_from)
+    t = "" if ch_to == 0 else str(ch_to)
+
+    def encode(ch):
+        if ch is None:
+            return ch
+        new_ch = list(ch)
+        if f"mw{f}" in new_ch:
+            if f"mw{f}_x" in new_ch:
+                new_ch.remove(f"mw{f}")
+                new_ch.remove(f"mw{f}_x")
+                new_ch.append(f"mw{t}_i")
+            elif f"mw{f}_y" in new_ch:
+                new_ch.remove(f"mw{f}")
+                new_ch.remove(f"mw{f}_y")
+                new_ch.append(f"mw{t}_q")
+            else:
+                raise ValueError(f"Unknown MW phase: {new_ch}")
+        # remove only-phase
+        elif f"mw{f}_x" in new_ch:
+            new_ch.remove(f"mw{f}_x")
+        elif f"mw{f}_y" in new_ch:
+            new_ch.remove(f"mw{f}_y")
+
+        return tuple(new_ch)
+
+    return blocks.apply(encode)
+
+
+def encode_mode1_duplex(
+    blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=(0, 1)
+) -> Blocks[Block] | BlockSeq:
+    f = "" if ch_from == 0 else str(ch_from)
+
+    def encode(ch):
+        if ch is None:
+            return ch
+        new_ch = list(ch)
+        if f"mw{f}" in new_ch:
+            if f"mw{f}_x" in new_ch:
+                new_ch.remove(f"mw{f}")
+                new_ch.remove(f"mw{f}_x")
+                for c in ch_to:
+                    t = "" if c == 0 else str(c)
+                    new_ch.append(f"mw{t}_i")
+            elif f"mw{f}_y" in new_ch:
+                new_ch.remove(f"mw{f}")
+                new_ch.remove(f"mw{f}_y")
+                for c in ch_to:
+                    t = "" if c == 0 else str(c)
+                    new_ch.append(f"mw{t}_q")
+            else:
+                raise ValueError(f"Unknown MW phase: {new_ch}")
+        # remove only-phase
+        elif f"mw{f}_x" in new_ch:
+            new_ch.remove(f"mw{f}_x")
+        elif f"mw{f}_y" in new_ch:
+            new_ch.remove(f"mw{f}_y")
+
+        return tuple(new_ch)
+
+    return blocks.apply(encode)
+
+
+def encode_mw_phase_single(
+    blocks: Blocks[Block] | BlockSeq, params, mw_modes: tuple[int]
+) -> Blocks[Block] | BlockSeq:
+    """Encode mw phase from x/y(_inv) to i/q for single channel sequence."""
+
+    # if two mw channels are available, output same timing signal for mw0 and/or mw1
+    # according to nomw parameters.
+    nomw = params.get("nomw", False)
+    nomw1 = "nomw1" not in params or params["nomw1"]
+    if nomw and nomw1:
+        d = {
+            "mw": (),
+            "mw_x": (),
+            "mw_y": (),
+            "mw_x_inv": (),
+            "mw_y_inv": (),
+        }
+        return blocks.replace(d)
+    elif nomw1:  # mw0 only
+        if mw_modes[0] == 0:
+            d = {
+                "mw_x": ("mw_i", "mw_q"),
+                "mw_y": ("mw_q",),
+                "mw_x_inv": (),
+                "mw_y_inv": ("mw_i",),
+            }
+            return blocks.replace(d)
+        else:  # mw_modes[0] == 1
+            return encode_mode1(blocks, ch_from=0, ch_to=0)
+    elif nomw:  # mw1 only
+        if mw_modes[1] == 0:
+            d = {
+                "mw_x": ("mw1_i", "mw1_q"),
+                "mw_y": ("mw1_q",),
+                "mw_x_inv": (),
+                "mw_y_inv": ("mw1_i",),
+            }
+            return blocks.replace(d)
+        else:  # mw_modes[1] == 1
+            return encode_mode1(blocks, ch_from=0, ch_to=1)
+    else:  # both mw0 and mw1
+        if mw_modes == (0, 0):
+            d = {
+                "mw_x": ("mw_i", "mw_q", "mw1_i", "mw1_q"),
+                "mw_y": ("mw_q", "mw1_q"),
+                "mw_x_inv": (),
+                "mw_y_inv": ("mw_i", "mw1_i"),
+            }
+            return blocks.replace(d)
+        elif mw_modes == (1, 1):
+            return encode_mode1_duplex(blocks)
+        else:
+            # TODO: combination modes (0, 1) or (1, 0) is a little complicated.
+            raise ValueError(f"Unsupported mw_modes: {mw_modes} for duplex")
+
+
+def encode_mw_phase_double(
+    blocks: Blocks[Block] | BlockSeq, params, mw_modes: tuple[int]
+) -> Blocks[Block] | BlockSeq:
+    """encode mw phase from x/y(_inv) to i/q for double channel sequence."""
+
+    mode0, mode1 = mw_modes
+
+    # ch0
+    if mode0 == 0:
+        d = {
+            "mw_x": ("mw_i", "mw_q"),
+            "mw_y": ("mw_q",),
+            "mw_x_inv": (),
+            "mw_y_inv": ("mw_i",),
+        }
+        blocks = blocks.replace(d)
+    else:  # mode0 == 1
+        blocks = encode_mode1(blocks, ch_from=0, ch_to=0)
+
+    # ch1
+    if mode1 == 0:
+        d = {
+            "mw1_x": ("mw1_i", "mw1_q"),
+            "mw1_y": ("mw1_q",),
+            "mw1_x_inv": (),
+            "mw1_y_inv": ("mw1_i",),
+        }
+        blocks = blocks.replace(d)
+    else:  # mode1 == 1
+        blocks = encode_mode1(blocks, ch_from=1, ch_to=1)
+
+    return blocks
 
 
 def invert_y_phase(blocks: Blocks[Block] | BlockSeq) -> Blocks[Block] | BlockSeq:

@@ -65,8 +65,8 @@ class = "DTG5274_mock"
 [localhost.server.instrument.pg.conf]
 local_dir = "."
 [localhost.server.instrument.pg.conf.channels]
-mw_i1 = 8  # note that ch8 is out of range for 8ch-PG
-mw_q1 = 7
+mw1_i = 8  # note that ch8 is out of range for 8ch-PG
+mw1_q = 7
 laser = 6
 sync = 5
 gate = 4
@@ -214,9 +214,12 @@ pub_endpoint = "tcp://127.0.0.1:5579"
 [localhost.podmr.target]
 log = "localhost::log"
 tweakers = ["localhost::tweaker", "localhost::tweaker2", "localhost::pos_tweaker"]
+[localhost.podmr.pulser]
+mw_modes = [0, 0]
 [localhost.podmr.target.servers]
 tdc = "localhost::server"
 sg = "localhost::server"
+sg1 = "localhost::server"
 pg = "localhost::server"
 fg = "localhost::server"
 
@@ -227,6 +230,7 @@ log_level = "DEBUG"
 rep_endpoint = "tcp://127.0.0.1:5580"
 pub_endpoint = "tcp://127.0.0.1:5581"
 [localhost.spodmr.pulser]
+mw_modes = [0, 0]
 pd_trigger = "/Dummy"
 [localhost.spodmr.target]
 log = "localhost::log"

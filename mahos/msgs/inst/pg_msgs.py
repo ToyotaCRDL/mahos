@@ -598,7 +598,7 @@ class Blocks(UserList):
     def apply(self, func: T.Callable[Channels, Channels]) -> Blocks[Block]:
         """Return copy of this Blocks applying given function over channels."""
 
-        return Blocks([b.apply() for b in self.data])
+        return Blocks([b.apply(func) for b in self.data])
 
     def simplify(self) -> Blocks[Block]:
         """return simplified copy of this Blocks.
@@ -848,7 +848,7 @@ class BlockSeq(Message):
     def apply(self, func: T.Callable[Channels, Channels]) -> BlockSeq:
         """Return copy of this BlockSeq applying given function over channels."""
 
-        return self._new([b.apply() for b in self.data])
+        return self._new([b.apply(func) for b in self.data])
 
     def simplify(self) -> BlockSeq:
         """return simplified copy of this BlockSeq.

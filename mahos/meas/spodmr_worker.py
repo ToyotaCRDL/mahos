@@ -160,12 +160,14 @@ class BlockSeqBuilder(object):
         nest: bool,
         block_base: int,
         eos_margin: int,
+        mw_modes: tuple[int],
     ):
         self.trigger_width = trigger_width
         self.trigger_channel = trigger_channel
         self.nest = nest
         self.block_base = block_base
         self.eos_margin = eos_margin
+        self.mw_modes = mw_modes
 
     def fix_block_base(self, blk: Block, idx: int = 0) -> Block:
         res = blk.total_length() % self.block_base
@@ -181,37 +183,6 @@ class BlockSeqBuilder(object):
             # for PulseBlaster, this is in order to avoid loop unrolling
             ch = seqs[-1].last_pulse().channels
             seqs.append(Block("eos", [(ch, self.eos_margin)]))
-
-    def _encode_mw_phase(self, bs: BlockSeq, params, num_mw) -> BlockSeq:
-        # if number of MW channels in original sequence is greater than 1,
-        # use original encoding.
-        if num_mw >= 2:
-            return K.encode_mw_phase(bs)
-
-        # Fixed version of K.encode_mw_phase for duplex mw mode.
-        # (i, q), (i2, q2) is same phase now.
-        # Maybe we could change relative readout phase.
-
-        nomw = params.get("nomw", False)
-        nomw1 = "nomw1" not in params or params["nomw1"]
-        if nomw1:
-            return K.encode_mw_phase(bs)
-        elif nomw:  # mw1 only
-            iq_phase_dict = {
-                "mw_x": ("mw_i1", "mw_q1"),
-                "mw_y": ("mw_q1",),
-                "mw_x_inv": (),
-                "mw_y_inv": ("mw_i1",),
-            }
-        else:  # both mw and mw1
-            iq_phase_dict = {
-                "mw_x": ("mw_i", "mw_q", "mw_i1", "mw_q1"),
-                "mw_y": ("mw_q", "mw_q1"),
-                "mw_x_inv": (),
-                "mw_y_inv": ("mw_i", "mw_i1"),
-            }
-
-        return bs.replace(iq_phase_dict)
 
     def build_complementary(
         self,
@@ -501,13 +472,12 @@ class BlockSeqBuilder(object):
 
         laser_duties = np.array(laser_duties, dtype=np.float64)
 
-        # shaping blockseq
-        blockseq = blockseq.simplify()
+        # phase encoding
         if invertY:
             blockseq = K.invert_y_phase(blockseq)
-        blockseq = self._encode_mw_phase(blockseq, params, num_mw)
+        blockseq = K.encode_mw_phase(blockseq, params, self.mw_modes, num_mw)
 
-        return blockseq, laser_duties, markers, oversample
+        return blockseq.simplify(), laser_duties, markers, oversample
 
 
 class Pulser(Worker):
@@ -538,7 +508,7 @@ class Pulser(Worker):
 
         self.length = self.offsets = self.freq = self.oversample = None
 
-        mw_modes = self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0))
+        mw_modes = tuple(self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0)))
 
         self.check_required_conf(
             ["pd_trigger", "block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]
@@ -563,6 +533,7 @@ class Pulser(Worker):
             self.conf.get("nest_blockseq", False),
             self.conf["block_base"],
             self.conf.get("eos_margin", 0),
+            mw_modes,
         )
 
         self.data = SPODMRData()

@@ -62,11 +62,12 @@ class Bounds(object):
 class BlocksBuilder(object):
     """Build the PG Blocks for Qdyne from PODMR's Blocks."""
 
-    def __init__(self, minimum_block_length, block_base):
+    def __init__(self, minimum_block_length, block_base, mw_modes):
         self.minimum_block_length = minimum_block_length
         self.block_base = block_base
+        self.mw_modes = mw_modes
 
-    def build_blocks(self, blocks, common_pulses, params):
+    def build_blocks(self, blocks, common_pulses, params, num_mw):
         divide = params.get("divide_block", False)
         invertY = params.get("invertY", False)
         minimum_block_length = self.minimum_block_length
@@ -101,19 +102,19 @@ class BlocksBuilder(object):
         # only one laser timing at the head
         laser_timing = [0]
 
-        # shaping blocks
+        # block shaping
         if divide:
             blocks = K.divide_long_operation(blocks, minimum_block_length, block_base)
             # divide_long_laser doesn't work due to trigger injection above.
             # blocks = K.divide_long_laser(blocks, minimum_block_length)
         blocks = K.merge_short_blocks(blocks, minimum_block_length)
 
-        blocks = blocks.simplify()
+        # phase encoding
         if invertY:
             blocks = K.invert_y_phase(blocks)
-        blocks = K.encode_mw_phase(blocks)
+        blocks = K.encode_mw_phase(blocks, params, self.mw_modes, num_mw)
 
-        return blocks, laser_timing
+        return blocks.simplify(), laser_timing
 
 
 class QdyneAnalyzer(object):
@@ -229,6 +230,7 @@ class Pulser(Worker):
 
         mbl = self.conf["minimum_block_length"]
         bb = self.conf["block_base"]
+        mw_modes = tuple(self.conf.get("mw_modes", (0,)))
         self.generators = make_generators(
             freq=self.conf["pg_freq"],
             reduce_start_divisor=self.conf["reduce_start_divisor"],
@@ -237,7 +239,7 @@ class Pulser(Worker):
             block_base=bb,
             print_fn=self.logger.info,
         )
-        self.builder = BlocksBuilder(mbl, bb)
+        self.builder = BlocksBuilder(mbl, bb, mw_modes)
 
         self.data = QdyneData()
         self.analyzer = QdyneAnalyzer()
@@ -346,6 +348,7 @@ class Pulser(Worker):
         if data is None:
             data = self.data
         generate = self.generators[data.label].generate_raw_blocks
+        num_mw = self.generators[data.label].num_mw()
 
         # fill unused parameters
         xdata = [data.params["pulse"]["tauconst"]]
@@ -353,7 +356,7 @@ class Pulser(Worker):
         params["init_delay"] = params["final_delay"] = 0.0
 
         blocks, freq, common_pulses = generate(xdata, params)
-        blocks, laser_timing = self.builder.build_blocks(blocks, common_pulses, params)
+        blocks, laser_timing = self.builder.build_blocks(blocks, common_pulses, params, num_mw)
         return blocks, freq, laser_timing
 
     def validate_params(

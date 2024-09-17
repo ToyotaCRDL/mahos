@@ -35,9 +35,10 @@ class PatternGenerator(object):
         self.split_fraction = split_fraction
         self.minimum_block_length = minimum_block_length
         self.block_base = block_base
-        self.mw_modes = mw_modes
+        self.mw_modes = tuple(mw_modes)
         self.print_fn = print_fn
         self.method = method
+        self._params = None
 
     def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
         """Return ParamDict of additional pulse params."""
@@ -49,10 +50,25 @@ class PatternGenerator(object):
 
         return 1
 
-    def mode(self, ch=0) -> int:
-        """Return MW mode at given ch."""
+    def mode(self, ch=None) -> int:
+        """Return MW mode at given ch or currently-active ch."""
 
-        return self.mw_modes[ch]
+        if ch is not None:
+            return self.mw_modes[ch]
+
+        if self.num_mw() == 1:
+            # infer currently-active channel for single channel sequence.
+            # when mw0 is disabled and mw1 is enabled, use mw1.
+            # otherwise, default to mw0.
+            nomw = self._params.get("nomw", False)
+            nomw1 = "nomw1" not in self._params or self._params["nomw1"]
+            if nomw and not nomw1:
+                return self.mw_modes[1]
+            else:
+                return self.mw_modes[0]
+
+        # Won't reach here: ch will be given for multi channel sequence.
+        return self.mw_modes[0]
 
     def get_common_pulses(self, params: dict):
         keys = [
@@ -81,6 +97,7 @@ class PatternGenerator(object):
         else:
             reduce_start_divisor = 0
 
+        self._params = params
         pulse_params = self.get_pulse_params(params)
         blocks, freq, common_pulses = self._generate(
             xdata,
@@ -94,10 +111,13 @@ class PatternGenerator(object):
         blocks, laser_timing = K.build_blocks(
             blocks,
             common_pulses,
+            params,
             divide=params.get("divide_block", False),
             invertY=pulse_params.get("invertY", False),
             minimum_block_length=self.minimum_block_length,
             block_base=self.block_base,
+            mw_modes=self.mw_modes,
+            num_mw=self.num_mw(),
         )
         return blocks, freq, laser_timing
 
@@ -108,6 +128,7 @@ class PatternGenerator(object):
             reduce_start_divisor = self.reduce_start_divisor
         else:
             reduce_start_divisor = 0
+        self._params = params
 
         blocks, freq, common_pulses = self._generate(
             xdata,
@@ -303,6 +324,7 @@ class FIDGenerator(PatternGenerator):
                     (("mw_x",), v),
                     (("mw_x", "mw"), p90),
                 ]
+                # TODO maybe we'd better to add parameter p180
                 if read_phase.endswith("_inv"):
                     # 270 deg pulse
                     p.append((("mw_x", "mw"), p90 * 2))
@@ -423,9 +445,9 @@ class SpinEchoGenerator(PatternGenerator):
                     ((phase, "mw"), p90),
                 ]
                 if read_phase.endswith("_inv"):
-                    p.append(((phase, "mw"), p90 * 2))
+                    p.append(((phase, "mw"), p180))
                 else:
-                    p.append(((phase,), p90 * 2))
+                    p.append(((phase,), p180))
                 return p
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
@@ -538,10 +560,10 @@ class TRSEGenerator(PatternGenerator):
                 ]
                 if read_phase.endswith("_inv"):
                     # 270 deg pulse
-                    p.append((("mw_x", "mw"), p90 * 2))
+                    p.append((("mw_x", "mw"), p180))
                 else:
                     # same delay time to match length of pattern0 and pattern1.
-                    p.append((("mw_x",), p90 * 2))
+                    p.append((("mw_x",), p180))
                 return p
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
@@ -687,9 +709,9 @@ class DDGenerator(PatternGenerator):
                     phase = read_phase
                 read_ptn = [((phase,), tau_l), ((phase, "mw"), p90)]
                 if read_phase.endswith("_inv"):
-                    read_ptn.append(((phase, "mw"), p90 * 2))
+                    read_ptn.append(((phase, "mw"), p180))
                 else:
-                    read_ptn.append(((phase,), p90 * 2))
+                    read_ptn.append(((phase,), p180))
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -847,9 +869,9 @@ class DDGenerator(PatternGenerator):
                     ((phase, "mw"), p90),
                 ]
                 if read_phase.endswith("_inv"):
-                    read_ptn.append(((phase, "mw"), p90 * 2))
+                    read_ptn.append(((phase, "mw"), p180))
                 else:
-                    read_ptn.append(((phase,), p90 * 2))
+                    read_ptn.append(((phase,), p180))
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -979,9 +1001,9 @@ class DDNGenerator(PatternGenerator):
                     phase = read_phase
                 read_ptn = [((phase,), tau_l), ((phase, "mw"), p90)]
                 if read_phase.endswith("_inv"):
-                    read_ptn.append(((phase, "mw"), p90 * 2))
+                    read_ptn.append(((phase, "mw"), p180))
                 else:
-                    read_ptn.append(((phase,), p90 * 2))
+                    read_ptn.append(((phase,), p180))
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -1260,6 +1282,7 @@ class SpinLockGenerator(PatternGenerator):
                     (("mw_x",), iq_delay),
                     (("mw_x", "mw"), p90),
                 ]
+                # TODO maybe we'd better to add parameter p180
                 if read_phase.endswith("_inv"):
                     p.append((("mw_x", "mw"), p90 * 2))
                 else:
@@ -1384,9 +1407,9 @@ class XY8CorrelationGenerator(PatternGenerator):
                     phase = read_phase
                 read_ptn = [((phase,), tau_l), ((phase, "mw"), p90)]
                 if read_phase.endswith("_inv"):
-                    read_ptn.append(((phase, "mw"), p90 * 2))
+                    read_ptn.append(((phase, "mw"), p180))
                 else:
-                    read_ptn.append(((phase,), p90 * 2))
+                    read_ptn.append(((phase,), p180))
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -1543,9 +1566,9 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
                     phase = read_phase
                 read_ptn = [((phase,), tau_l), ((phase, "mw"), p90)]
                 if read_phase.endswith("_inv"):
-                    read_ptn.append(((phase, "mw"), p90 * 2))
+                    read_ptn.append(((phase, "mw"), p180))
                 else:
-                    read_ptn.append(((phase,), p90 * 2))
+                    read_ptn.append(((phase,), p180))
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -1623,6 +1646,7 @@ class DDGateGenerator(PatternGenerator):
         split_fraction: int = 4,
         minimum_block_length: int = 1000,
         block_base: int = 4,
+        mw_modes: tuple[int] = (0,),
         print_fn=print,
         method: str = "",
     ):
@@ -1633,6 +1657,7 @@ class DDGateGenerator(PatternGenerator):
             split_fraction=split_fraction,
             minimum_block_length=minimum_block_length,
             block_base=block_base,
+            mw_modes=mw_modes,
             print_fn=print_fn,
             method=method,
         )
