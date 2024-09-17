@@ -607,6 +607,10 @@ def update_data(data: PODMRData):
 
     if data.version() <= 5:
         # version 5 to 6
+        ## fixed param name
+        if "invertsweep" in data.params:
+            data.params["invert_sweep"] = data.params["invertsweep"]
+            del data.params["invertsweep"]
         ## fixed location of optional pulse params
         ## here's only keys actually used for experiments before patch
         keys = [

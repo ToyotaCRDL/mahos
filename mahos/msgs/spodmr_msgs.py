@@ -509,6 +509,10 @@ def update_data(data: SPODMRData):
 
     if data.version() <= 2:
         # version 2 to 3
+        ## fixed param name
+        if "invertsweep" in data.params:
+            data.params["invert_sweep"] = data.params["invertsweep"]
+            del data.params["invertsweep"]
         ## fixed location of optional pulse params
         ## here's only keys actually used for experiments before patch
         keys = [
