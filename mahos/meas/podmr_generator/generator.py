@@ -2069,6 +2069,7 @@ def make_generators(
         "ddgateN": DDNGateGenerator(*args),
     }
     if len(mw_modes) > 1:
+        # add sequences using multiple mw channels here
         generators["drabi"] = DRabiGenerator(*args)
     if all([m == 1 for m in mw_modes]):
         # these methods requires 4 phases (x, y, x_inv, y_inv) and unavailable in 2-phase mode.

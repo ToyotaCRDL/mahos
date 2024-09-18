@@ -508,7 +508,7 @@ class Pulser(Worker):
 
         self.length = self.offsets = self.freq = self.oversample = None
 
-        mw_modes = tuple(self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0)))
+        self.mw_modes = tuple(self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0)))
 
         self.check_required_conf(
             ["pd_trigger", "block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]
@@ -523,7 +523,7 @@ class Pulser(Worker):
             split_fraction=self.conf.get("split_fraction", 4),
             minimum_block_length=self.conf["minimum_block_length"],
             block_base=self.conf["block_base"],
-            mw_modes=mw_modes,
+            mw_modes=self.mw_modes,
             print_fn=self.logger.info,
         )
 
@@ -533,7 +533,7 @@ class Pulser(Worker):
             self.conf.get("nest_blockseq", False),
             self.conf["block_base"],
             self.conf.get("eos_margin", 0),
-            mw_modes,
+            self.mw_modes,
         )
 
         self.data = SPODMRData()
@@ -577,22 +577,13 @@ class Pulser(Worker):
         loader.load_preset(self.conf, cli.class_name("pg"))
 
     def init_inst(self, params: dict) -> bool:
-        # SG
-        if not self.sg.configure_cw_iq(params["freq"], params["power"]):
+        # Generators
+        if not self.init_sg(params):
             self.logger.error("Error initializing SG.")
             return False
-        if self.sg1 is not None and not self.sg1.configure_cw_iq(
-            params["freq1"], params["power1"]
-        ):
-            self.logger.error("Error initializing SG1.")
-            return False
-
-        # FG
         if not self.init_fg(params):
             self.logger.error("Error initializing FG.")
             return False
-
-        # PG
         if not self.init_pg():
             self.logger.error("Error initializing PG.")
             return False
@@ -645,6 +636,29 @@ class Pulser(Worker):
             self.logger.error("Error starting PDs.")
             return False
 
+        return True
+
+    def init_sg(self, params: dict) -> bool:
+        if self.mw_modes[0] == 0:
+            if not self.sg.configure_cw_iq(params["freq"], params["power"]):
+                self.logger.error("Error initializing SG.")
+                return False
+        else:  # mode 1
+            if not self.sg.configure_cw(params["freq"], params["power"]):
+                self.logger.error("Error initializing SG.")
+                return False
+
+        if self.sg1 is None:
+            return True
+
+        if self.mw_modes[1] == 0:
+            if not self.sg1.configure_cw_iq(params["freq1"], params["power1"]):
+                self.logger.error("Error initializing SG1.")
+                return False
+        else:  # mode 1
+            if not self.sg1.configure_cw(params["freq1"], params["power1"]):
+                self.logger.error("Error initializing SG1.")
+                return False
         return True
 
     def _fg_enabled(self, params: dict) -> bool:

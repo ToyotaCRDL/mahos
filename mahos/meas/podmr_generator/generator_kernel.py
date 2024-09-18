@@ -236,10 +236,8 @@ def encode_mw_phase(
 
     if num_mw == 1:
         return encode_mw_phase_single(blocks, params, mw_modes)
-    elif num_mw == 2:
-        return encode_mw_phase_double(blocks, params, mw_modes)
     else:
-        raise ValueError(f"Unknown num_mw: {num_mw}")
+        return encode_mw_phase_multi(blocks, params, mw_modes)
 
 
 def encode_mode1(blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0) -> Blocks[Block] | BlockSeq:
@@ -261,7 +259,7 @@ def encode_mode1(blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0) -> Blocks
                 new_ch.append(f"mw{t}_q")
             else:
                 raise ValueError(f"Unknown MW phase: {new_ch}")
-        # remove only-phase
+        # remove phase-only parts
         elif f"mw{f}_x" in new_ch:
             new_ch.remove(f"mw{f}_x")
         elif f"mw{f}_y" in new_ch:
@@ -272,7 +270,7 @@ def encode_mode1(blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0) -> Blocks
     return blocks.apply(encode)
 
 
-def encode_mode1_duplex(
+def encode_mode1_multiplex(
     blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=(0, 1)
 ) -> Blocks[Block] | BlockSeq:
     f = "" if ch_from == 0 else str(ch_from)
@@ -296,7 +294,7 @@ def encode_mode1_duplex(
                     new_ch.append(f"mw{t}_q")
             else:
                 raise ValueError(f"Unknown MW phase: {new_ch}")
-        # remove only-phase
+        # remove phase-only parts
         elif f"mw{f}_x" in new_ch:
             new_ch.remove(f"mw{f}_x")
         elif f"mw{f}_y" in new_ch:
@@ -357,42 +355,29 @@ def encode_mw_phase_single(
             }
             return blocks.replace(d)
         elif mw_modes == (1, 1):
-            return encode_mode1_duplex(blocks)
+            return encode_mode1_multiplex(blocks)
         else:
             # TODO: combination modes (0, 1) or (1, 0) is a little complicated.
             raise ValueError(f"Unsupported mw_modes: {mw_modes} for duplex")
 
 
-def encode_mw_phase_double(
+def encode_mw_phase_multi(
     blocks: Blocks[Block] | BlockSeq, params, mw_modes: tuple[int]
 ) -> Blocks[Block] | BlockSeq:
-    """encode mw phase from x/y(_inv) to i/q for double channel sequence."""
+    """encode mw phase from x/y(_inv) to i/q for multi mw channel sequence."""
 
-    mode0, mode1 = mw_modes
-
-    # ch0
-    if mode0 == 0:
-        d = {
-            "mw_x": ("mw_i", "mw_q"),
-            "mw_y": ("mw_q",),
-            "mw_x_inv": (),
-            "mw_y_inv": ("mw_i",),
-        }
-        blocks = blocks.replace(d)
-    else:  # mode0 == 1
-        blocks = encode_mode1(blocks, ch_from=0, ch_to=0)
-
-    # ch1
-    if mode1 == 0:
-        d = {
-            "mw1_x": ("mw1_i", "mw1_q"),
-            "mw1_y": ("mw1_q",),
-            "mw1_x_inv": (),
-            "mw1_y_inv": ("mw1_i",),
-        }
-        blocks = blocks.replace(d)
-    else:  # mode1 == 1
-        blocks = encode_mode1(blocks, ch_from=1, ch_to=1)
+    for ch, mode in enumerate(mw_modes):
+        c = "" if ch == 0 else str(ch)
+        if mode == 0:
+            d = {
+                f"mw{c}_x": (f"mw{c}_i", f"mw{c}_q"),
+                f"mw{c}_y": (f"mw{c}_q",),
+                f"mw{c}_x_inv": (),
+                f"mw{c}_y_inv": (f"mw{c}_i",),
+            }
+            blocks = blocks.replace(d)
+        else:  # mode == 1
+            blocks = encode_mode1(blocks, ch_from=ch, ch_to=ch)
 
     return blocks
 

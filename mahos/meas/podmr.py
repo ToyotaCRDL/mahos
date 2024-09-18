@@ -58,9 +58,16 @@ class PODMR(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         """Pulse ODMR measurement.
 
+        Default Worker (Pulser) implements Pulse ODMR using
+        a PG as timing source, and SGs as MW sources.
+
         :param pulser.quick_resume: default value of quick_resume.
             If True, it skips instrument configurations on resume.
         :type pulser.quick_resume: bool
+        :param pulser.mw_modes: mw phase control modes for each channel.
+            0 is 4-phase control using IQ modulation at SG and a switch.
+            1 is 2-phase control using external 90-deg splitter and two switches.
+        :type pulser.mw_modes: tuple[int]
         :param pulser.split_fraction: (default: 4) fraction factor (F) to split the free period
             for MW phase modulation. the period (T) is split into (T // F, T - T // F) and MW phase
             is switched at T // F. Thus, larger F results in "quicker start" of the phase

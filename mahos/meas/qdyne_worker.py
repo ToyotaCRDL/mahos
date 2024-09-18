@@ -230,7 +230,7 @@ class Pulser(Worker):
 
         mbl = self.conf["minimum_block_length"]
         bb = self.conf["block_base"]
-        mw_modes = tuple(self.conf.get("mw_modes", (0,)))
+        self.mw_modes = tuple(self.conf.get("mw_modes", (0,)))
         self.generators = make_generators(
             freq=self.conf["pg_freq"],
             reduce_start_divisor=self.conf["reduce_start_divisor"],
@@ -239,7 +239,7 @@ class Pulser(Worker):
             block_base=bb,
             print_fn=self.logger.info,
         )
-        self.builder = BlocksBuilder(mbl, bb, mw_modes)
+        self.builder = BlocksBuilder(mbl, bb, self.mw_modes)
 
         self.data = QdyneData()
         self.analyzer = QdyneAnalyzer()
@@ -271,16 +271,13 @@ class Pulser(Worker):
         loader.load_preset(self.conf, cli.class_name("pg"))
 
     def init_inst(self, params: dict) -> bool:
-        # SG
-        if not self.sg.configure_cw_iq(params["freq"], params["power"]):
+        # Generators
+        if not self.init_sg(params):
             self.logger.error("Error initializing SG.")
             return False
-
         if not self.init_fg(params):
             self.logger.error("Error initializing FG.")
             return False
-
-        # PG
         if not self.init_pg(params):
             self.logger.error("Error initializing PG.")
             return False
@@ -303,6 +300,18 @@ class Pulser(Worker):
         self.data.set_marker_indices()
 
         return True
+
+    def init_sg(self, params: dict) -> bool:
+        if self.mw_modes[0] == 0:
+            if not self.sg.configure_cw_iq(params["freq"], params["power"]):
+                self.logger.error("Error initializing SG.")
+                return False
+        else:  # mode 1
+            if not self.sg.configure_cw(params["freq"], params["power"]):
+                self.logger.error("Error initializing SG.")
+                return False
+        return True
+        # multiple SG is TODO
 
     def _fg_enabled(self, params: dict) -> bool:
         return "fg" in params and params["fg"] is not None and params["fg"]["mode"] != "disable"

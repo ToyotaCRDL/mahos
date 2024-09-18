@@ -52,6 +52,8 @@ class Qdyne(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         """Pulse ODMR measurement with Qdyne protocol.
 
+        Default Worker (Pulser) implements Qdyne based on Pulse ODMR using
+        a PG as timing source, and SGs as MW sources.
 
         :param pulser.start_delay: (sec.) delay time before starting PG output. (default: 0.0)
         :type pulser.start_delay: float
@@ -61,6 +63,10 @@ class Qdyne(BasicMeasNode):
         :param pulser.remove_raw_events: (default: True) Remove RawEvents file after loading it.
         :type pulser.remove_raw_events: bool
 
+        :param pulser.mw_modes: mw phase control modes for each channel.
+            0 is 4-phase control using IQ modulation at SG and a switch.
+            1 is 2-phase control using external 90-deg splitter and two switches.
+        :type pulser.mw_modes: tuple[int]
         :param pulser.split_fraction: (default: 4) fraction factor (F) to split the free period
             for MW phase modulation. the period (T) is split into (T // F, T - T // F) and MW phase
             is switched at T // F. Thus, larger F results in "quicker start" of the phase

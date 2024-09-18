@@ -54,9 +54,16 @@ class SPODMR(BasicMeasNode):
     def __init__(self, gconf: dict, name, context=None):
         """Pulse ODMR measurement with Slow detectors.
 
+        Default Worker (Pulser) implements Pulse ODMR using
+        a PG as timing source, and SGs as MW sources.
+
         :param pulser.quick_resume: default value of quick_resume.
             If True, it skips instrument configurations on resume.
         :type pulser.quick_resume: bool
+        :param pulser.mw_modes: mw phase control modes for each channel.
+            0 is 4-phase control using IQ modulation at SG and a switch.
+            1 is 2-phase control using external 90-deg splitter and two switches.
+        :type pulser.mw_modes: tuple[int]
         :param pulser.pd_trigger: DAQ terminal name for PD trigger.
         :type pulser.pd_trigger: str
         :param pulser.trigger_channel: (default: gate) PG channel name for PD trigger.
