@@ -32,13 +32,13 @@ class Keithley_2450(VisaInstrument):
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
         self.volt_min, self.volt_max = self.conf.get("volt_bounds", (-200, 200))
 
-    def configure_DCV_source(self, compliance: float) -> bool:
+    def configure_source_volt(self, compliance: float) -> bool:
         self.inst.write("SOUR:FUNC VOLT")  # source voltage mode
         self.inst.write("SOUR:VOLT 0.0")
         self.inst.write(f"SOUR:VOLT:ILIMIT {compliance}")
         return self.check_error()
 
-    def set_DCV_source(self, volt: float) -> bool:
+    def set_source_volt(self, volt: float) -> bool:
         self.inst.write(f"SOUR:VOLT {volt}")  # set voltage
         return self.check_error()
 
@@ -66,7 +66,7 @@ class Keithley_2450(VisaInstrument):
 
         success = (
             self.rst_cls()
-            and self.configure_DCV_source(compliance)
+            and self.configure_source_volt(compliance)
             and self.configure_measure_current()
             and self.set_current_nplc(nplc)
         )
@@ -79,7 +79,7 @@ class Keithley_2450(VisaInstrument):
             self.logger.info("Failed to configure DC Voltage supply.")
         return success
 
-    def get_data_CURR(self):
+    def get_data_current(self):
         val = self.inst.query("READ?")
 
         try:
@@ -90,7 +90,7 @@ class Keithley_2450(VisaInstrument):
 
     def get_data(self):
         if self._mode == Mode.IV:
-            return self.get_data_CURR()
+            return self.get_data_current()
         else:
             self.logger.error("get_data() is called but not configured.")
             return None
@@ -135,7 +135,7 @@ class Keithley_2450(VisaInstrument):
     def configure(self, params: dict, label: str = "") -> bool:
         label = label.lower()
         if label == "iv_source":
-            return self.set_DCV_source(volt=params.get("volt", 0.0))
+            return self.set_source_volt(volt=params.get("volt", 0.0))
 
         elif label == "iv":
             return self.configure_IV(
@@ -161,7 +161,7 @@ class Keithley_2450(VisaInstrument):
 
 
 class Keithley_6430(VisaInstrument):
-    """6430Sub-Femtoamp Remote SourceMeter module."""
+    """Keithley 6430 Sub-Femtoamp Remote SourceMeter module."""
 
     def __init__(self, name, conf, prefix=None):
         conf["write_termination"] = "\n"
@@ -172,24 +172,24 @@ class Keithley_6430(VisaInstrument):
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
         self.volt_min, self.volt_max = self.conf.get("volt_bounds", (-210.0, 210.0))
 
-    def configure_source_VOLT(self) -> bool:
+    def configure_source_volt(self) -> bool:
         self.inst.write("SOUR:FUNC VOLT")  # source voltage mode
         self.inst.write("SOUR:VOLT:MODE FIX")  # fixed voltage source mode
         self.inst.write("SOUR:VOLT:RANG:AUTO 1")  # auto range enable
         self.inst.write("SOUR:VOLT:LEVEL 0.0")
         return self.check_error()
 
-    def set_source_VOLT(self, n: float) -> bool:
+    def set_source_volt(self, n: float) -> bool:
         self.inst.write(f"SOUR:VOLT:LEVEL {n}")
         return self.check_error()
 
-    def configure_measure_CURR(self, compliance: float) -> bool:
+    def configure_measure_current(self, compliance: float) -> bool:
         self.inst.write("SENS:FUNC 'CURR'")  # measure cuurent mode
         self.inst.write(f"SENS:CURR:PROT {compliance}")  # compliance limit
         self.inst.write("SENS:CURR:RANG:AUTO 1")  # auto range enable
         return self.check_error()
 
-    def set_CURR_nplc(self, n: float) -> bool:
+    def set_current_nplc(self, n: float) -> bool:
         if not (0.01 <= n <= 10):
             return self.fail_with("NPLC must be between 0.01 and 10.")
         else:
@@ -216,9 +216,9 @@ class Keithley_6430(VisaInstrument):
 
         success = (
             self.rst_cls()
-            and self.configure_source_VOLT()
-            and self.configure_measure_CURR(compliance)
-            and self.set_CURR_nplc(nplc)
+            and self.configure_source_volt()
+            and self.configure_measure_current(compliance)
+            and self.set_current_nplc(nplc)
             and self.set_auto_filter(filter)
         )
         if success:
@@ -229,7 +229,7 @@ class Keithley_6430(VisaInstrument):
             self.logger.info("Failed to configure IV measurement.")
         return success
 
-    def get_data_CURR(self):
+    def get_data_current(self):
         val = self.inst.query("READ?")
         val_spl = val.split(",")
         try:
@@ -240,7 +240,7 @@ class Keithley_6430(VisaInstrument):
 
     def get_data(self):
         if self._mode == Mode.IV:
-            return self.get_data_CURR()
+            return self.get_data_current()
         else:
             self.logger.error("get_data() is called but not configured.")
             return None
@@ -286,7 +286,7 @@ class Keithley_6430(VisaInstrument):
     def configure(self, params: dict, label: str = "") -> bool:
         label = label.lower()
         if label == "iv_source":
-            return self.set_source_VOLT(volt=params.get("volt", 0.0))
+            return self.set_source_volt(volt=params.get("volt", 0.0))
 
         elif label == "iv":
             return self.configure_IV(
