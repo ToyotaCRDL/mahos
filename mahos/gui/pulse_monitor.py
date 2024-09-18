@@ -48,6 +48,7 @@ class PulseMonitorWidget(ClientTopWidget):
         self.maxpointsBox.setValue(500)
 
         self.realtimeBox = QtWidgets.QCheckBox("Real time")
+        self.realtimeBox.setChecked(True)
         self.usemarkerBox = QtWidgets.QCheckBox("Use marker")
         self.usemarkerBox.setChecked(True)
         self.regionLabel = QtWidgets.QLabel("Fit region")
