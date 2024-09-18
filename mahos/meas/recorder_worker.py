@@ -45,6 +45,7 @@ class Collector(Worker):
         pd["interval"] = P.FloatParam(
             self.interval_sec, 0.01, 100.0, unit="s", doc="polling interval"
         )
+        pd["lock"] = P.BoolParam(True, doc="acquire the locks of instruments")
         for channel, (inst, inst_label) in self.mode_dicts[label].items():
             d = self.cli.get_param_dict(inst, inst_label)
             if d is None:
@@ -68,9 +69,12 @@ class Collector(Worker):
         self._label = label
         used_insts = set([inst for inst, inst_label in self.mode_dicts[label].values()])
 
-        for inst in used_insts:
-            if not self.cli.lock(inst):
-                return self.fail_with_release(f"Failed to lock instrument {inst}")
+        if params.get("lock", True):
+            for inst in used_insts:
+                if not self.cli.lock(inst):
+                    return self.fail_with_release(f"Failed to lock instrument {inst}")
+        else:
+            self.logger.info("Skipping to acquire locks of instruments")
 
         units = []
         for channel, (inst, inst_label) in self.mode_dicts[label].items():
