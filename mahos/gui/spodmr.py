@@ -616,7 +616,10 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         self._params = self.cli.get_param_dict(method)
         self.update_cond_widgets()
         self._apply_sg1(self._params)
-        self.paramTable.update_contents(self._params["pulse"])
+        pp = P.ParamDict(
+            {k: v for k, v in self._params["pulse"].items() if k not in ("90pulse", "180pulse")}
+        )
+        self.paramTable.update_contents(pp)
         self.reset_tau_modes(self._params["plot"]["taumode"].options())
         self.plot.update_label(self.data)
 
@@ -762,8 +765,15 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         # method
         self.set_method(self.data.label)
 
-        for k, v in p["pulse"].items():
-            self.paramTable.apply_value(k, v)
+        # optional pulse params
+        pp = p["pulse"]
+        for k, v in pp.items():
+            if k not in ("90pulse", "180pulse"):
+                self.paramTable.apply_value(k, v)
+        if "90pulse" in pp:
+            self.t90pulseBox.setValue(pp["90pulse"] * 1e9)  # sec to ns
+        if "180pulse" in pp:
+            self.t180pulseBox.setValue(pp["180pulse"] * 1e9)  # sec to ns
 
         # MW
         self.freqBox.setValue(p.get("freq", 2740e6) * 1e-6)  # Hz to MHz
@@ -888,6 +898,11 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             params["log"] = self.logBox.isChecked()
 
         params["pulse"] = P.unwrap(self.paramTable.params())
+        if "90pulse" in self._params["pulse"]:
+            params["pulse"]["90pulse"] = self.t90pulseBox.value() * 1e-9
+        if "180pulse" in self._params["pulse"]:
+            params["pulse"]["180pulse"] = self.t180pulseBox.value() * 1e-9
+
         params["plot"] = self.get_plot_params()
         params["fg"] = self.get_fg_params()
 
@@ -1009,6 +1024,16 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
         else:
             set_enabled(self._params, name_widgets)
 
+        name_widgets = [
+            ("90pulse", self.t90pulseBox),
+            ("180pulse", self.t180pulseBox),
+        ]
+        if force_disable:
+            for _, w in name_widgets:
+                w.setEnabled(False)
+        else:
+            set_enabled(self._params["pulse"], name_widgets)
+
     def update_state(self, state: BinaryState, last_state: BinaryState):
         for w in (
             self.startButton,
@@ -1074,6 +1099,8 @@ class SPODMRWidget(ClientWidget, Ui_SPODMR):
             self.ldelayBox,
             self.lwidthBox,
             self.mdelayBox,
+            self.t90pulseBox,
+            self.t180pulseBox,
         )
 
     def update_timing_box_step(self):

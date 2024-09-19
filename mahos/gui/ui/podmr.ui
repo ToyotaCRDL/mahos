@@ -883,6 +883,49 @@
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QDoubleSpinBox" name="t90pulseBox">
+                <property name="prefix">
+                 <string>90 pulse: </string>
+                </property>
+                <property name="suffix">
+                 <string> ns</string>
+                </property>
+                <property name="decimals">
+                 <number>1</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="t180pulseBox">
+                <property name="prefix">
+                 <string>180 pulse: </string>
+                </property>
+                <property name="suffix">
+                 <string> ns</string>
+                </property>
+                <property name="decimals">
+                 <number>1</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
              <widget class="ParamTable" name="paramTable"/>
             </item>
            </layout>
@@ -1555,6 +1598,8 @@
   <tabstop>NnumBox</tabstop>
   <tabstop>NstepBox</tabstop>
   <tabstop>invertsweepBox</tabstop>
+  <tabstop>t90pulseBox</tabstop>
+  <tabstop>t180pulseBox</tabstop>
   <tabstop>paramTable</tabstop>
   <tabstop>plotenableBox</tabstop>
   <tabstop>plotmodeBox</tabstop>
