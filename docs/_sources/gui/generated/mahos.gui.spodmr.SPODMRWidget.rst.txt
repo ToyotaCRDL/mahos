@@ -20,13 +20,12 @@
       ~SPODMRWidget.apply_fg_widgets
       ~SPODMRWidget.apply_meas_widgets
       ~SPODMRWidget.apply_plot_widgets
-      ~SPODMRWidget.check_ddphase
+      ~SPODMRWidget.export_alt_data
       ~SPODMRWidget.export_data
       ~SPODMRWidget.finalize
       ~SPODMRWidget.get_fg_mode
       ~SPODMRWidget.get_fg_mode_dict
       ~SPODMRWidget.get_fg_params
-      ~SPODMRWidget.get_method
       ~SPODMRWidget.get_params
       ~SPODMRWidget.get_plot_params
       ~SPODMRWidget.get_plottable_data
@@ -34,13 +33,14 @@
       ~SPODMRWidget.init_connection
       ~SPODMRWidget.init_radiobuttons
       ~SPODMRWidget.init_widgets
+      ~SPODMRWidget.init_widgets_with_params
       ~SPODMRWidget.init_with_status
       ~SPODMRWidget.load_data
       ~SPODMRWidget.refresh_all
       ~SPODMRWidget.request_start
       ~SPODMRWidget.request_stop
       ~SPODMRWidget.reset_tau_modes
-      ~SPODMRWidget.round_box_values
+      ~SPODMRWidget.round_timing_box_values
       ~SPODMRWidget.save_data
       ~SPODMRWidget.set_method
       ~SPODMRWidget.set_plot_mode
@@ -49,15 +49,17 @@
       ~SPODMRWidget.switch_fg
       ~SPODMRWidget.switch_method
       ~SPODMRWidget.switch_partial
+      ~SPODMRWidget.timing_boxes
       ~SPODMRWidget.update_Nstop
       ~SPODMRWidget.update_buffer
+      ~SPODMRWidget.update_cond_widgets
       ~SPODMRWidget.update_data
-      ~SPODMRWidget.update_inst_bounds
       ~SPODMRWidget.update_plot_enable
       ~SPODMRWidget.update_plot_params
       ~SPODMRWidget.update_save_button
       ~SPODMRWidget.update_state
       ~SPODMRWidget.update_stop
+      ~SPODMRWidget.update_timing_box_step
       ~SPODMRWidget.validate_pulse
    
    
@@ -68,6 +70,5 @@
 
    .. autosummary::
    
-      ~SPODMRWidget.METHODS
    
    

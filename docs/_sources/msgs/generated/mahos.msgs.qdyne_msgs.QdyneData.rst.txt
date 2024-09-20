@@ -20,6 +20,7 @@
       ~QdyneData.can_resume
       ~QdyneData.get_bin
       ~QdyneData.get_method
+      ~QdyneData.get_params
       ~QdyneData.get_period
       ~QdyneData.get_period_bins
       ~QdyneData.get_pulse_params

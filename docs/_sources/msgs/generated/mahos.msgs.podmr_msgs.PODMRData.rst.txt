@@ -22,6 +22,7 @@
       ~PODMRData.get_fit_xdata
       ~PODMRData.get_fit_ydata
       ~PODMRData.get_method
+      ~PODMRData.get_params
       ~PODMRData.get_pulse_params
       ~PODMRData.get_range
       ~PODMRData.get_raw_xdata

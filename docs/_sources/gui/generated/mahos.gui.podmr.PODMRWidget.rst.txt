@@ -21,22 +21,19 @@
       ~PODMRWidget.apply_fg_widgets
       ~PODMRWidget.apply_meas_widgets
       ~PODMRWidget.apply_plot_widgets
-      ~PODMRWidget.check_ddphase
       ~PODMRWidget.discard_data
+      ~PODMRWidget.export_alt_data
       ~PODMRWidget.export_data
       ~PODMRWidget.finalize
       ~PODMRWidget.get_fg_mode
       ~PODMRWidget.get_fg_mode_dict
       ~PODMRWidget.get_fg_params
-      ~PODMRWidget.get_method
       ~PODMRWidget.get_params
       ~PODMRWidget.get_plot_params
       ~PODMRWidget.get_plottable_data
       ~PODMRWidget.has_fg
       ~PODMRWidget.init_connection
-      ~PODMRWidget.init_delay
       ~PODMRWidget.init_radiobuttons
-      ~PODMRWidget.init_widgets
       ~PODMRWidget.init_widgets_with_params
       ~PODMRWidget.init_with_status
       ~PODMRWidget.load_data
@@ -57,13 +54,14 @@
       ~PODMRWidget.timing_boxes
       ~PODMRWidget.update_Nstop
       ~PODMRWidget.update_buffer
+      ~PODMRWidget.update_cond_widgets
       ~PODMRWidget.update_data
-      ~PODMRWidget.update_indicator
       ~PODMRWidget.update_plot_enable
       ~PODMRWidget.update_plot_params
       ~PODMRWidget.update_save_button
       ~PODMRWidget.update_state
       ~PODMRWidget.update_stop
+      ~PODMRWidget.update_table
       ~PODMRWidget.update_timing_box_step
       ~PODMRWidget.update_widgets
       ~PODMRWidget.validate_pulse
@@ -76,6 +74,5 @@
 
    .. autosummary::
    
-      ~PODMRWidget.METHODS
    
    

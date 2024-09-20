@@ -59,10 +59,10 @@ For example, if an instrument has a driver only for Windows but we have to use L
 we can run a driver node on the Windows host and access it from the other nodes on the Linux.
 All it takes to move a node from one host to another is to change a few lines in the configuration file.
 
-High accessibility
-^^^^^^^^^^^^^^^^^^
+Runtime accessibility
+^^^^^^^^^^^^^^^^^^^^^
 
-High data and service accessibility are the best benefits brought to MAHOS by adopting
+High runtime data / service accessibility are the best benefits brought to MAHOS by adopting
 the distributed messaging approach.
 Notable examples can be listed below.
 
