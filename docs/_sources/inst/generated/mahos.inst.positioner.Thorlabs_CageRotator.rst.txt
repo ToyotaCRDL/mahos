@@ -1,12 +1,12 @@
-﻿mahos.inst.positioner.Thorlabs\_KCube\_DCServo
-==============================================
+﻿mahos.inst.positioner.Thorlabs\_CageRotator
+===========================================
 
 .. autosummary class template to exclude inherited_members
    The other parts are same as default.
 
 .. currentmodule:: mahos.inst.positioner
 
-.. autoclass:: Thorlabs_KCube_DCServo
+.. autoclass:: Thorlabs_CageRotator
 
    
    .. automethod:: __init__
@@ -16,6 +16,8 @@
 
    .. autosummary::
    
+      ~Thorlabs_CageRotator.get_pos
+      ~Thorlabs_CageRotator.move
    
    
 
