@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import typing as T
 import numpy as np
 from numpy.typing import NDArray
 
@@ -18,10 +17,22 @@ class IVData(BasicMeasData):
 
     """
 
-    def __init__(self, data: T.Optional[NDArray[np.float64]], params: dict, running: bool):
-        self.data = data
-        self.params = params
-        self.running = running
+    def __init__(self, params: dict | None = None):
+        self.set_version(0)
+        self.init_params(params)
+        self.init_attrs()
+        self.data: NDArray[np.float64] | None = None
+
+    def init_axes(self):
+        self.xlabel: str = "Voltage"
+        self.xunit: str = "V"
+        self.ylabel: str = "Current"
+        self.yunit: str = "A"
+        self.xscale: str = "linear"
+        self.yscale: str = "linear"
+
+    def has_data(self) -> bool:
+        return self.data is not None
 
     def sweeps(self) -> int:
         """Get number of sweeps done."""

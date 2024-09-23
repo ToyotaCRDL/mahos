@@ -30,15 +30,14 @@ class IVClient(BasicMeasClient):
 
 
 class Sweeper(Worker):
+    """Worker for IV using a SMU."""
+
     def __init__(self, cli, logger):
         Worker.__init__(self, cli, logger)
         self.smu = SMUInterface(cli, "smu")
         self.add_instruments(self.smu)
 
-        self.data = self.new_data({})
-
-    def new_data(self, params: dict):
-        return IVData(None, params, False)
+        self.data = IVData()
 
     def get_param_dict_labels(self) -> list[str]:
         return ["iv_sweep"]
@@ -95,7 +94,7 @@ class Sweeper(Worker):
         if not self.smu.start():
             return self.fail_with_release("Error starting instruments.")
 
-        self.data = self.new_data(params)
+        self.data = IVData(params)
         self.logger.info("Started sweeper.")
 
         self.data.start()
@@ -123,7 +122,7 @@ class Sweeper(Worker):
         return True
 
     def is_finished(self) -> bool:
-        if self.data.params is None or self.data.data is None:
+        if not self.data.has_params() or not self.data.has_data():
             return False
         if self.data.params.get("sweeps", 0) <= 0:
             return False  # no sweep limit defined.
@@ -136,7 +135,7 @@ class Sweeper(Worker):
 
         success = self.smu.stop() and self.smu.release()
 
-        self.data.running = False
+        self.data.finalize()
         if success:
             self.logger.info("Stopped sweeper.")
         else:
@@ -152,6 +151,12 @@ class IV(BasicMeasNode):
     DATA = IVData
 
     def __init__(self, gconf: dict, name, context=None):
+        """IV sweep measurement for 2-terminal element.
+
+        Note that this class is experimental and not extensively tested.
+
+        """
+
         BasicMeasNode.__init__(self, gconf, name, context=context)
 
         self.sweeper = Sweeper(self.cli, self.logger)

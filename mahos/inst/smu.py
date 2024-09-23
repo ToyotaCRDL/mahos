@@ -41,16 +41,16 @@ class Keithley_2450(VisaInstrument):
         self._sweep_points = 0
         self._mode = Mode.UNCONFIGURED
 
-    def get_VOLT_bounds(self):
+    def get_voltage_bounds(self):
         return self.volt_min, self.volt_max
 
-    def get_CURR_bounds(self):
+    def get_current_bounds(self):
         return self.curr_min, self.curr_max
 
     def get_bounds(self):
         return {
-            "voltage": self.get_VOLT_bounds(),
-            "current": self.get_CURR_bounds(),
+            "voltage": self.get_voltage_bounds(),
+            "current": self.get_current_bounds(),
         }
 
     def configure_source_volt(self, compliance: float) -> bool:
@@ -62,7 +62,7 @@ class Keithley_2450(VisaInstrument):
         self.inst.write(f"SOUR:VOLT {volt}")  # set voltage
         return self.check_error()
 
-    def set_sweep_VOLT(
+    def set_sweep_volt(
         self, start: float, stop: float, point: int, delay: float, log: bool = False
     ) -> bool:
         if log:
@@ -134,7 +134,7 @@ class Keithley_2450(VisaInstrument):
             and self.configure_source_volt(compliance)
             and self.configure_measure_current()
             and self.set_auto_range(auto_range if auto_range is not None else self.auto_range)
-            and self.set_sweep_VOLT(start, stop, point, delay, logx)
+            and self.set_sweep_volt(start, stop, point, delay, logx)
             and self.set_current_nplc(nplc)
         )
         if success:
@@ -276,7 +276,7 @@ class Keithley_2450(VisaInstrument):
 class Keithley_6430(VisaInstrument):
     """Keithley 6430 Sub-Femtoamp Remote SourceMeter module."""
 
-    RANGE_SOURCE = (
+    _RANGE_SOURCE = (
         "BEST",
         "AUTO",
         "FIX",
@@ -296,16 +296,16 @@ class Keithley_6430(VisaInstrument):
         self.range = self.conf.get("range", "BEST")
         self._mode = Mode.UNCONFIGURED
 
-    def get_VOLT_bounds(self):
+    def get_voltage_bounds(self):
         return self.volt_min, self.volt_max
 
-    def get_CURR_bounds(self):
+    def get_current_bounds(self):
         return self.curr_min, self.curr_max
 
     def get_bounds(self):
         return {
-            "voltage": self.get_VOLT_bounds(),
-            "current": self.get_CURR_bounds(),
+            "voltage": self.get_voltage_bounds(),
+            "current": self.get_current_bounds(),
         }
 
     def configure_source_volt(self) -> bool:
@@ -336,7 +336,7 @@ class Keithley_6430(VisaInstrument):
 
     def set_range_source(self, range: str = "BEST") -> bool:
         range = range.upper()
-        if range not in self.RANGE_SOURCE:
+        if range not in self._RANGE_SOURCE:
             self.logger.error("invalid scale source.")
             return False
 
