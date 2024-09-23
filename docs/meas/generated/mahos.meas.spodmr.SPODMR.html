@@ -474,6 +474,7 @@ document.write(`
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../inst/positioner.html">mahos.inst.positioner</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner_interface.SinglePositionerInterface.html">mahos.inst.positioner_interface.SinglePositionerInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner.Thorlabs_KCube_DCServo.html">mahos.inst.positioner.Thorlabs_KCube_DCServo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner.Thorlabs_CageRotator.html">mahos.inst.positioner.Thorlabs_CageRotator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inst/generated/mahos.inst.positioner.Suruga_DS102.html">mahos.inst.positioner.Suruga_DS102</a></li>
 </ul>
 </li>
@@ -646,11 +647,16 @@ document.write(`
 <dt class="sig sig-object py" id="mahos.meas.spodmr.SPODMR.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gconf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.meas.spodmr.SPODMR.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Pulse ODMR measurement with Slow detectors.</p>
+<p>Default Worker (Pulser) implements Pulse ODMR using
+a PG as timing source, and SGs as MW sources.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>pulser.quick_resume</strong> (<em>bool</em>) – default value of quick_resume.
 If True, it skips instrument configurations on resume.</p></li>
+<li><p><strong>pulser.mw_modes</strong> (<em>tuple</em><em>[</em><em>int</em><em>]</em>) – mw phase control modes for each channel.
+0 is 4-phase control using IQ modulation at SG and a switch.
+1 is 2-phase control using external 90-deg splitter and two switches.</p></li>
 <li><p><strong>pulser.pd_trigger</strong> (<em>str</em>) – DAQ terminal name for PD trigger.</p></li>
 <li><p><strong>pulser.trigger_channel</strong> (<em>str</em>) – (default: gate) PG channel name for PD trigger.
 default value may look a bit strange, but considering shared physical line

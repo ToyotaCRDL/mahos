@@ -40,7 +40,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'inst/generated/mahos.inst.positioner.Thorlabs_KCube_DCServo';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="mahos.inst.positioner.Suruga_DS102" href="mahos.inst.positioner.Suruga_DS102.html" />
+    <link rel="next" title="mahos.inst.positioner.Thorlabs_CageRotator" href="mahos.inst.positioner.Thorlabs_CageRotator.html" />
     <link rel="prev" title="mahos.inst.positioner_interface.SinglePositionerInterface" href="mahos.inst.positioner_interface.SinglePositionerInterface.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -474,6 +474,7 @@ document.write(`
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="../positioner.html">mahos.inst.positioner</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.positioner_interface.SinglePositionerInterface.html">mahos.inst.positioner_interface.SinglePositionerInterface</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">mahos.inst.positioner.Thorlabs_KCube_DCServo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.positioner.Thorlabs_CageRotator.html">mahos.inst.positioner.Thorlabs_CageRotator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.positioner.Suruga_DS102.html">mahos.inst.positioner.Suruga_DS102</a></li>
 </ul>
 </li>
@@ -667,69 +668,6 @@ Blank is fine if only one device is connected.</p></li>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mahos.inst.positioner.Thorlabs_KCube_DCServo.__init__" title="mahos.inst.positioner.Thorlabs_KCube_DCServo.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name[, conf, prefix])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">close_resources</span></code>()</p></td>
-<td><p>Close instrument resources.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure</span></code>(params[, label])</p></td>
-<td><p>Configure the instrument settings.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">done_callback</span></code>(task_id)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(key[, args, label])</p></td>
-<td><p>Get an instrument setting or measurement data.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all</span></code>()</p></td>
-<td><p>Get all important info about this device packed in a dict.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict</span></code>([label])</p></td>
-<td><p>Get ParamDict for <cite>label</cite>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict_labels</span></code>()</p></td>
-<td><p>Get list of available ParamDict labels.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pos</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_range</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_status</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_target</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">home</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">home_wait</span></code>([timeout_ms])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_homed</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">move</span></code>(pos)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">move_wait</span></code>(pos[, timeout_ms])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset</span></code>([label])</p></td>
-<td><p>Perform homing of this device.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code>(key[, value, label])</p></td>
-<td><p>Set an instrument setting or commanding value.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>([label])</p></td>
-<td><p>Stop motion of this device.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_wait</span></code>([timeout_ms])</p></td>
-<td><p></p></td>
-</tr>
 </tbody>
 </table>
 </dd></dl>
@@ -757,11 +695,11 @@ Blank is fine if only one device is connected.</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="mahos.inst.positioner.Suruga_DS102.html"
+       href="mahos.inst.positioner.Thorlabs_CageRotator.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">mahos.inst.positioner.Suruga_DS102</p>
+        <p class="prev-next-title">mahos.inst.positioner.Thorlabs_CageRotator</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

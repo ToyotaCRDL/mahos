@@ -24,6 +24,9 @@ from ..node.node import local_conf, join_name
 from .dialog import save_dialog, load_dialog
 
 
+Policy = QtWidgets.QSizePolicy.Policy
+
+
 def set_fontsize(widget, fontsize: int):
     font = QtGui.QFont()
     font.setPointSize(fontsize)
@@ -109,11 +112,12 @@ class PosTweakerWidget(ClientTopWidget):
             pos_label = QtWidgets.QLabel()
             target_box = QtWidgets.QDoubleSpinBox()
             range_min, range_max = state["range"]
-            target_box.setValue(state["target"])
             target_box.setMinimum(range_min)
             target_box.setMaximum(range_max)
+            target_box.setValue(state["target"])
             target_box.setDecimals(3)
             target_box.lineEdit().returnPressed.connect(partial(self.request_set_target, ax))
+            target_box.setSizePolicy(Policy.MinimumExpanding, Policy.Minimum)
             moving_label = QtWidgets.QLabel()
             homed_label = QtWidgets.QLabel()
             set_target_button = QtWidgets.QPushButton("Set")
@@ -152,6 +156,7 @@ class PosTweakerWidget(ClientTopWidget):
             self.gl.addWidget(home_button, i, 7)
 
         self.cli.statusUpdated.connect(self.update)
+        self.adjustSize()
         self.setEnabled(True)
 
     # def sizeHint(self):

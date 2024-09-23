@@ -23,6 +23,7 @@
       ~SPODMRData.get_image
       ~SPODMRData.get_method
       ~SPODMRData.get_num
+      ~SPODMRData.get_params
       ~SPODMRData.get_pulse_params
       ~SPODMRData.get_total_scale
       ~SPODMRData.get_xdata
