@@ -145,6 +145,9 @@ class PosTweaker(Node):
         if not ax_states:
             return Reply(False)
         for ax, positioner in self._axis_positioners.items():
+            if ax not in ax_states:
+                self.logger.warn(f"axis {ax} is not in loaded state.")
+                continue
             states = ax_states[ax]
             if "target" in states:
                 positioner.set_target(states["target"])
