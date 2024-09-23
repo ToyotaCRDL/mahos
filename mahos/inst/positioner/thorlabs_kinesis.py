@@ -15,6 +15,7 @@ import threading
 
 from ..instrument import Instrument
 from ...msgs import param_msgs as P
+from ...util.conv import clip_angle_degrees
 
 
 # imports for Thorlabs
@@ -26,16 +27,23 @@ try:
 
     sys.path.append(r"C:\Program Files\Thorlabs\Kinesis")
     clr.AddReference("Thorlabs.MotionControl.KCube.DCServoCLI")
+    clr.AddReference("Thorlabs.MotionControl.IntegratedStepperMotorsCLI")
     clr.AddReference("Thorlabs.MotionControl.DeviceManagerCLI")
 
     from Thorlabs.MotionControl import DeviceManagerCLI  # noqa: E402
+    from Thorlabs.MotionControl.IntegratedStepperMotorsCLI import CageRotator  # noqa: E402
     from Thorlabs.MotionControl.KCube import DCServoCLI  # noqa: E402
 except ImportError:
     print("mahos.inst.positioner: failed to import pythonnet or Thorlabs Kinesis modules")
 
 
-class Thorlabs_KCube_DCServo(Instrument):
-    """Instrument for Thorlabs KCube DC servo motor controller (KDC101).
+class _Thorlabs_Kinesis(Instrument):
+    """Base class for Thorlabs Kinesis.
+
+    Inherited class must define following methods.
+
+    - _device_prefix
+    - _create_device
 
     You need to install Kinesis software.
 
@@ -48,11 +56,17 @@ class Thorlabs_KCube_DCServo(Instrument):
 
     """
 
+    def _device_prefix(self):
+        raise NotImplementedError("_device_prefix must be implemented.")
+
+    def _create_device(self, serial):
+        raise NotImplementedError("_create_device must be implemented.")
+
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf, prefix=prefix)
         self.manager = DeviceManagerCLI.DeviceManagerCLI()
         self.manager.BuildDeviceList()
-        devices = list(self.manager.GetDeviceList(DCServoCLI.KCubeDCServo.DevicePrefix))
+        devices = list(self.manager.GetDeviceList(self._device_prefix()))
         self.logger.debug("Available Devices: " + ", ".join(devices))
 
         if not devices:
@@ -80,7 +94,7 @@ class Thorlabs_KCube_DCServo(Instrument):
                 raise ValueError(msg)
             self.serial = self.conf["serial"]
 
-        self.device = DCServoCLI.KCubeDCServo.CreateKCubeDCServo(self.serial)
+        self.device = self._create_device(self.serial)
         self.device.Connect(self.serial)
         name = self.device.GetDeviceInfo().Name
         self.logger.info(f"Connected to {name} ({self.serial})")
@@ -282,3 +296,51 @@ class Thorlabs_KCube_DCServo(Instrument):
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
+
+
+class Thorlabs_KCube_DCServo(_Thorlabs_Kinesis):
+    """Instrument for Thorlabs KCube DC servo motor controller (KDC101).
+
+    You need to install Kinesis software.
+
+    :param serial: (default: "") Serial string to discriminate multiple devices.
+        Blank is fine if only one device is connected.
+    :type serial: str
+    :param range: (default: hardware-defined limit) travel range.
+        (lower, upper) bounds of the position.
+    :type range: tuple[float, float]
+
+    """
+
+    def _device_prefix(self):
+        return DCServoCLI.KCubeDCServo.DevicePrefix
+
+    def _create_device(self, serial):
+        return DCServoCLI.KCubeDCServo.CreateKCubeDCServo(serial)
+
+
+class Thorlabs_CageRotator(_Thorlabs_Kinesis):
+    """Instrument for Thorlabs IntegratedStepper-based CageRotator (K10CR1).
+
+    You need to install Kinesis software.
+
+    :param serial: (default: "") Serial string to discriminate multiple devices.
+        Blank is fine if only one device is connected.
+    :type serial: str
+    :param range: (default: hardware-defined limit) travel range.
+        (lower, upper) bounds of the position.
+    :type range: tuple[float, float]
+
+    """
+
+    def _device_prefix(self):
+        return CageRotator.DevicePrefix
+
+    def _create_device(self, serial):
+        return CageRotator.CreateCageRotator(serial)
+
+    def move(self, pos: float) -> bool:
+        return _Thorlabs_Kinesis.move(self, clip_angle_degrees(pos))
+
+    def get_pos(self) -> float:
+        return clip_angle_degrees(Decimal.ToDouble(self.device.Position))

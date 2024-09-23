@@ -85,3 +85,19 @@ def real_fft(xdata, ydata, remove_dc=True):
 def real_fftfreq(xdata):
     N = len(xdata)
     return fft.fftfreq(len(xdata), abs(xdata[1] - xdata[0]))[: N // 2]
+
+
+def _clip_angle(theta, min_, max_, step):
+    while theta < min_:
+        theta += step
+    while theta > max_:
+        theta -= step
+    return theta
+
+
+def clip_angle_degrees(theta: float | np.ndarray, min_=0.0, max_=360.0) -> float | np.ndarray:
+    return _clip_angle(theta, min_, max_, 360.0)
+
+
+def clip_angle_radians(theta: float | np.ndarray, min_=0.0, max_=2 * np.pi) -> float | np.ndarray:
+    return _clip_angle(theta, min_, max_, 2 * np.pi)
