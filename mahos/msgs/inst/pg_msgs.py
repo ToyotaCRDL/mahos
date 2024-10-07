@@ -27,7 +27,46 @@ class TriggerType(enum.Enum):
     HARDWARE_FALLING = 3  # hardware trigger, falling edge
 
 
-Channels = T.NewType("Channels", T.Union[T.Tuple[str, ...], T.Tuple[int, ...]])
+class AnalogChannel(object):
+    """Object to represent instanteneous value of analog channel.
+
+    - Treat as immutable; attributes _name and _value should never be modified.
+    - Take care about object equality when you performed some calculations for value.
+      Float values are compared using equality for comparison of this object.
+      It is recommended to put int value when float is not required.
+
+    """
+
+    def __init__(self, name: str, value: float | int, rtol=1e-05, atol=1e-08):
+        self._name: T.Final[str] = name
+        self._value: T.Final[float | int] = value
+        self._rtol = rtol
+        self._atol = atol
+
+    def __repr__(self) -> str:
+        return f"A({self._name}, {self._value:.2f})"
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, AnalogChannel):
+            return False
+        return self._name == other._name and self._value == other._value
+
+    def __hash__(self) -> int:
+        return hash((self._name, self._value))
+
+    def name(self) -> str:
+        return self._name
+
+    def value(self) -> float | int:
+        return self._value
+
+    def isclose(self, other) -> bool:
+        if self._name != other._name:
+            return False
+        return bool(np.isclose(self._value, other._value, rtol=self._rtol, atol=self._atol))
+
+
+Channels = T.NewType("Channels", T.Tuple[str | int | AnalogChannel, ...])
 
 
 class Pulse(T.NamedTuple):
@@ -38,7 +77,8 @@ class Pulse(T.NamedTuple):
 Pattern = T.NewType("Pattern", T.List[Pulse])
 
 AcceptedChannels = T.NewType(
-    "AcceptedChannels", T.Union[None, str, int, T.Tuple[str, ...], T.Tuple[int, ...]]
+    "AcceptedChannels",
+    T.Union[None, str, int, AnalogChannel, T.Tuple[str | int | AnalogChannel, ...]],
 )
 AcceptedPulse = T.NewType("AcceptedPulse", T.Tuple[AcceptedChannels, int])
 AcceptedPattern = T.NewType("AcceptedPattern", T.List[AcceptedPulse])
@@ -70,7 +110,7 @@ class Block(Message):
     def regularize_channels(self, ch: AcceptedChannels) -> Channels:
         if ch is None:
             return ()
-        if isinstance(ch, (str, int)):
+        if isinstance(ch, (str, int, AnalogChannel)):
             return (ch,)
         elif isinstance(ch, (tuple, list)):
             return tuple(ch)
@@ -179,20 +219,74 @@ class Block(Message):
 
         return len(self.pattern)
 
-    def channels(self) -> set[str | int]:
-        """Get set of channels included in this Block."""
+    def analog_channel(self, channel: str, channels: Channels) -> AnalogChannel | None:
+        """Find AnnalogChannel named channel in channels. Returns None if not found."""
+
+        for c in channels:
+            if isinstance(c, AnalogChannel) and c.name() == channel:
+                return c
+        return None
+
+    def analog_value(self, channel: str, channels: Channels) -> float:
+        """Get analog voltage of channel in channels. Returns 0.0 if not found."""
+
+        for c in channels:
+            if isinstance(c, AnalogChannel) and c.name() == channel:
+                return c.value()
+        return 0.0
+
+    def channels(self) -> tuple[set[str | int]]:
+        """Get set of digital / analog channels included in this Block."""
 
         s = set()
-        for ch, duration in self.pattern:
-            s.update(ch)
+        for channels, duration in self.pattern:
+            for ch in channels:
+                if isinstance(ch, AnalogChannel):
+                    s.add(ch.name())
+                else:
+                    s.add(ch)
         return s
 
-    def decode(self, channel: str | int, max_len: int | None = None) -> list[bool]:
-        """Decode the pulse pattern to bool list."""
+    def digital_channels(self) -> set[str | int]:
+        """Get set of digital channels included in this Block."""
+
+        s = set()
+        for channels, duration in self.pattern:
+            for ch in channels:
+                if not isinstance(ch, AnalogChannel):
+                    s.add(ch)
+        return s
+
+    def analog_channels(self) -> set[str]:
+        """Get set of analog channels included in this Block."""
+
+        s = set()
+        for channels, duration in self.pattern:
+            for ch in channels:
+                if isinstance(ch, AnalogChannel):
+                    s.add(ch.name())
+        return s
+
+    def decode_digital(self, channel: str | int, max_len: int | None = None) -> list[bool]:
+        """Decode digital pulse pattern to bool list."""
 
         ptn = []
         for ch, duration in self.total_pattern():
             elem = [True] if channel in ch else [False]
+            ptn.extend(elem * duration)
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
+    def decode_analog(self, channel: str, max_len: int | None = None) -> list[bool]:
+        """Decode analog pattern to float list."""
+
+        ptn = []
+        for ch, duration in self.total_pattern():
+            elem = [self.analog_value(channel, ch)]
             ptn.extend(elem * duration)
             if max_len is not None and len(ptn) > max_len:
                 break
@@ -216,8 +310,8 @@ class Block(Message):
         else:
             return np.array(x[:max_len])
 
-    def plottable(self, channel: str | int, max_len: int | None = None) -> list[int]:
-        """Decode the pulse pattern to plottable array."""
+    def plottable_digital(self, channel: str | int, max_len: int | None = None) -> list[int]:
+        """Decode digital pulse pattern to plottable list."""
 
         ptn = []
         for ch, duration in self.total_pattern():
@@ -230,27 +324,49 @@ class Block(Message):
         else:
             return ptn[:max_len]
 
-    def decode_all(self, max_len: int | None = None) -> tuple[list[str | int], list[list[bool]]]:
+    def plottable_analog(self, channel: str, max_len: int | None = None) -> list[float]:
+        """Decode analog pulse pattern to plottable list."""
+
+        ptn = []
+        for ch, duration in self.total_pattern():
+            elem = self.analog_value(channel, ch)
+            ptn.extend((elem, elem))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
+    def decode_all(
+        self, max_len: int | None = None
+    ) -> tuple[list[str | int], list[list[bool] | list[float]]]:
         """Decode the patterns for all included channels."""
 
-        channels = self.channels()
+        d_channels = self.digital_channels()
+        a_channels = self.analog_channels()
         try:
-            channels = list(sorted(channels))
+            d_channels = list(sorted(d_channels))
         except TypeError:
-            channels = list(channels)
-        patterns = [self.decode(ch, max_len=max_len) for ch in channels]
-        return channels, patterns
+            d_channels = list(d_channels)
+        a_channels = list(sorted(a_channels))
+        patterns = [self.decode_digital(ch, max_len=max_len) for ch in d_channels]
+        patterns += [self.decode_analog(ch, max_len=max_len) for ch in a_channels]
+        return d_channels + a_channels, patterns
 
     def plottable_all(self, max_len: int | None = None) -> tuple[list[str | int], list[list[int]]]:
         """Decode the patterns for all included channels to plottable array."""
 
-        channels = self.channels()
+        d_channels = self.digital_channels()
+        a_channels = self.analog_channels()
         try:
-            channels = list(sorted(channels))
+            d_channels = list(sorted(d_channels))
         except TypeError:
-            channels = list(channels)
-        patterns = [self.plottable(ch, max_len=max_len) for ch in channels]
-        return channels, patterns
+            d_channels = list(d_channels)
+        a_channels = list(sorted(a_channels))
+        patterns = [self.plottable_digital(ch, max_len=max_len) for ch in d_channels]
+        patterns += [self.plottable_analog(ch, max_len=max_len) for ch in a_channels]
+        return d_channels + a_channels, patterns
 
     def union(self, other: Block) -> Block:
         """Return new united Block of this and `other`.
@@ -300,11 +416,57 @@ class Block(Message):
 
         return self.total_length()
 
+    def channels_close(self, channels0: Channels, channels1: Channels) -> bool:
+        """Check if given two channels are close.
+
+        - AnalogChannels are compared using isclose().
+
+        """
+
+        if len(channels0) != len(channels1):
+            return False
+        for c in channels0:
+            if not isinstance(c, AnalogChannel):
+                if c not in channels1:
+                    return False
+            else:
+                cc = self.analog_channel(c.name(), channels1)
+                if cc is None or not c.isclose(cc):
+                    return False
+        return True
+
+    def channels_equal(self, channels0: Channels, channels1: Channels) -> bool:
+        """Check if given two channels are close.
+
+        - AnalogChannels are compared using equality.
+
+        """
+
+        if len(channels0) != len(channels1):
+            return False
+        for c in channels0:
+            if not isinstance(c, AnalogChannel):
+                if c not in channels1:
+                    return False
+            else:
+                cc = self.analog_channel(c.name(), channels1)
+                if cc is None or c != cc:
+                    return False
+        return True
+
+    def isclose(self, other: Block) -> bool:
+        if len(self.pattern) != len(other.pattern):
+            return False
+        for (ch, duration), (ch_, duration_) in zip(self.pattern, other.pattern):
+            if duration != duration_ or not self.channels_close(ch, ch_):
+                return False
+        return self.name == other.name and self.Nrep == other.Nrep
+
     def __eq__(self, other: Block) -> bool:
         if len(self.pattern) != len(other.pattern):
             return False
         for (ch, duration), (ch_, duration_) in zip(self.pattern, other.pattern):
-            if set(ch) != set(ch_) or duration != duration_:
+            if duration != duration_ or not self.channels_equal(ch, ch_):
                 return False
         return self.name == other.name and self.Nrep == other.Nrep
 
@@ -342,7 +504,7 @@ class Block(Message):
 
     def replace(
         self,
-        replace_dict: dict[str | int, tuple[str, ...] | tuple[int, ...]],
+        replace_dict: dict[str | int | AnalogChannel, tuple[str | int | AnalogChannel, ...]],
     ) -> Block:
         """Return copy of this Block with replaced channels.
 
@@ -364,7 +526,7 @@ class Block(Message):
 
     def remove(
         self,
-        remove_channels: str | int | tuple[str, ...] | tuple[int, ...],
+        remove_channels: str | int | AnalogChannel | tuple[str | int | AnalogChannel, ...],
     ) -> Block:
         """Return copy of this Block with removed channels.
 
@@ -372,7 +534,7 @@ class Block(Message):
 
         """
 
-        if isinstance(remove_channels, (str, int)):
+        if isinstance(remove_channels, (str, int, AnalogChannel)):
             remove_channels = (remove_channels,)
 
         new_pattern = [
@@ -409,7 +571,7 @@ class Block(Message):
 
             _ch, _period = new_pattern[-1]
 
-            if set(_ch) == set(ch):
+            if self.channels_close(_ch, ch):
                 new_pattern[-1] = (_ch, _period + period)
             else:
                 new_pattern.append((ch, period))
@@ -502,8 +664,33 @@ class Blocks(UserList):
         except TypeError:
             return list(channels)
 
-    def decode(self, channel: str | int, max_len: int | None = None) -> NDArray:
-        """Decode the pattern of given channel.
+    def digital_channels(self) -> list[str | int]:
+        """Get list of included digital channels.
+
+        If types of all channels are identical (all str or all int),
+        the result is sorted.
+        Otherwise the order is unpredictable (because mixed strs and ints cannot be sorted).
+
+        """
+
+        channels = set()
+        for block in self.data:
+            channels.update(block.digital_channels())
+        try:
+            return list(sorted(channels))
+        except TypeError:
+            return list(channels)
+
+    def analog_channels(self) -> list[str]:
+        """Get list of included analog channels. The result is sorted."""
+
+        channels = set()
+        for block in self.data:
+            channels.update(block.analog_channels())
+        return list(sorted(channels))
+
+    def decode_digital(self, channel: str | int, max_len: int | None = None) -> NDArray[np.uint8]:
+        """Decode digital pulse pattern of given channel.
 
         If channel is not included, all-zero array will be returned.
 
@@ -511,7 +698,7 @@ class Blocks(UserList):
 
         ptn = []
         for block in self.data:
-            ptn.extend(block.decode(channel, max_len=max_len))
+            ptn.extend(block.decode_digital(channel, max_len=max_len))
             if max_len is not None and len(ptn) > max_len:
                 break
         if max_len is None:
@@ -519,7 +706,24 @@ class Blocks(UserList):
         else:
             return np.array(ptn[:max_len], dtype=np.uint8)
 
-    def plottable_time(self, max_len: int | None = None) -> NDArray:
+    def decode_analog(self, channel: str | int, max_len: int | None = None) -> NDArray[np.float64]:
+        """Decode analog pulse pattern of given channel.
+
+        If channel is not included, all-zero array will be returned.
+
+        """
+
+        ptn = []
+        for block in self.data:
+            ptn.extend(block.decode_analog(channel, max_len=max_len))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return np.array(ptn, dtype=np.float64)
+        else:
+            return np.array(ptn[:max_len], dtype=np.float64)
+
+    def plottable_time(self, max_len: int | None = None) -> NDArray[np.uint64]:
         """Generate timeline (x-axis data) for plottable(), that's common for all channels."""
 
         ptn = np.empty(0, dtype=np.uint64)
@@ -535,12 +739,14 @@ class Blocks(UserList):
         else:
             return ptn[:max_len]
 
-    def plottable(self, channel: str | int, max_len: int | None = None) -> NDArray:
+    def plottable_digital(
+        self, channel: str | int, max_len: int | None = None
+    ) -> NDArray[np.uint8]:
         """Decode the pattern of given channel to plottable array."""
 
         ptn = []
         for block in self.data:
-            ptn.extend(block.plottable(channel, max_len=max_len))
+            ptn.extend(block.plottable_digital(channel, max_len=max_len))
             if max_len is not None and len(ptn) > max_len:
                 break
         if max_len is None:
@@ -548,21 +754,40 @@ class Blocks(UserList):
         else:
             return np.array(ptn[:max_len], dtype=np.uint8)
 
+    def plottable_analog(
+        self, channel: str | int, max_len: int | None = None
+    ) -> NDArray[np.float64]:
+        """Decode the pattern of given channel to plottable array."""
+
+        ptn = []
+        for block in self.data:
+            ptn.extend(block.plottable_analog(channel, max_len=max_len))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return np.array(ptn, dtype=np.float64)
+        else:
+            return np.array(ptn[:max_len], dtype=np.float64)
+
     def decode_all(self, max_len: int | None = None) -> tuple[list[str | int], list[NDArray]]:
         """Decode the patterns for all included channels."""
 
-        channels = self.channels()
-        patterns = [self.decode(ch, max_len=max_len) for ch in channels]
-        return channels, patterns
+        d_channels = self.digital_channels()
+        a_channels = self.analog_channels()
+        patterns = [self.decode_digital(ch, max_len=max_len) for ch in d_channels]
+        patterns += [self.decode_analog(ch, max_len=max_len) for ch in a_channels]
+        return d_channels + a_channels, patterns
 
     def plottable_all(self, max_len: int | None = None) -> tuple[list[str | int], list[NDArray]]:
         """Decode the patterns for all included channels to plottable array."""
 
-        channels = self.channels()
-        patterns = [self.plottable(ch, max_len=max_len) for ch in channels]
-        return channels, patterns
+        d_channels = self.digital_channels()
+        a_channels = self.analog_channels()
+        patterns = [self.plottable_digital(ch, max_len=max_len) for ch in d_channels]
+        patterns += [self.plottable_analog(ch, max_len=max_len) for ch in a_channels]
+        return d_channels + a_channels, patterns
 
-    def equivalent(self, other: Blocks[Block]) -> bool:
+    def equivalent(self, other: Blocks[Block], rtol=1e-05, atol=1e-08) -> bool:
         """Check if this and other blocks are equivalent.
 
         Compare the channels and patterns after decode.
@@ -576,12 +801,15 @@ class Blocks(UserList):
             return False
 
         return channels == other_channels and all(
-            [len(p0) == len(p1) and (p0 == p1).all() for p0, p1 in zip(patterns, other_patterns)]
+            [
+                len(p0) == len(p1) and np.isclose(p0, p1, rtol=rtol, atol=atol).all()
+                for p0, p1 in zip(patterns, other_patterns)
+            ]
         )
 
     def replace(
         self,
-        replace_dict: dict[str | int, tuple[str, ...] | tuple[int, ...]],
+        replace_dict: dict[str | int | AnalogChannel, tuple[str | int | AnalogChannel, ...]],
     ) -> Blocks[Block]:
         """Return copy of the Blocks with replaced channels."""
 
@@ -589,7 +817,7 @@ class Blocks(UserList):
 
     def remove(
         self,
-        remove_channels: str | int | tuple[str, ...] | tuple[int, ...],
+        remove_channels: str | int | AnalogChannel | tuple[str | int | AnalogChannel, ...],
     ) -> Blocks[Block]:
         """Return copy of the Blocks with removed channels."""
 
@@ -740,13 +968,38 @@ class BlockSeq(Message):
         except TypeError:
             return list(channels)
 
-    def _decode(self, channel: str | int, max_len: int | None = None) -> list[bool]:
+    def digital_channels(self) -> list[str | int]:
+        """Get list of included digital channels.
+
+        If types of all channels are identical (all str or all int),
+        the result is sorted.
+        Otherwise the order is unpredictable (because mixed strs and ints cannot be sorted).
+
+        """
+
+        channels = set()
+        for blk_or_seq in self.data:
+            channels.update(blk_or_seq.digital_channels())
+        try:
+            return list(sorted(channels))
+        except TypeError:
+            return list(channels)
+
+    def analog_channels(self) -> list[str]:
+        """Get list of included analog channels. The result is sorted."""
+
+        channels = set()
+        for blk_or_seq in self.data:
+            channels.update(blk_or_seq.analog_channels())
+        return list(sorted(channels))
+
+    def _decode_digital(self, channel: str | int, max_len: int | None = None) -> list[bool]:
         ptn = []
         for blk_or_seq in self.total_sequence():
             if isinstance(blk_or_seq, Block):
-                ptn.extend(blk_or_seq.decode(channel, max_len=max_len))
+                ptn.extend(blk_or_seq.decode_digital(channel, max_len=max_len))
             else:
-                ptn.extend(blk_or_seq._decode(channel, max_len=max_len))
+                ptn.extend(blk_or_seq._decode_digital(channel, max_len=max_len))
             if max_len is not None and len(ptn) > max_len:
                 break
         if max_len is None:
@@ -754,16 +1007,39 @@ class BlockSeq(Message):
         else:
             return ptn[:max_len]
 
-    def decode(self, channel: str | int, max_len: int | None = None) -> NDArray:
-        """Decode the pattern of given channel.
+    def decode_digital(self, channel: str | int, max_len: int | None = None) -> NDArray[np.uint8]:
+        """Decode digital pattern of given channel.
 
         If channel is not included, all-zero array will be returned.
 
         """
 
-        return np.array(self._decode(channel, max_len=max_len), dtype=np.uint8)
+        return np.array(self._decode_digital(channel, max_len=max_len), dtype=np.uint8)
 
-    def plottable_time(self, max_len: int | None = None) -> NDArray:
+    def _decode_analog(self, channel: str | int, max_len: int | None = None) -> list[float]:
+        ptn = []
+        for blk_or_seq in self.total_sequence():
+            if isinstance(blk_or_seq, Block):
+                ptn.extend(blk_or_seq.decode_analog(channel, max_len=max_len))
+            else:
+                ptn.extend(blk_or_seq._decode_analog(channel, max_len=max_len))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
+    def decode_analog(self, channel: str | int, max_len: int | None = None) -> NDArray[np.float64]:
+        """Decode analog pattern of given channel.
+
+        If channel is not included, all-zero array will be returned.
+
+        """
+
+        return np.array(self._decode_analog(channel, max_len=max_len), dtype=np.float64)
+
+    def plottable_time(self, max_len: int | None = None) -> NDArray[np.uint64]:
         """Generate timeline (x-axis data) for plottable(), that's common for all channels."""
 
         ptn = np.empty(0, dtype=np.uint64)
@@ -779,15 +1055,15 @@ class BlockSeq(Message):
         else:
             return ptn[:max_len]
 
-    def _plottable(self, channel: str | int, max_len: int | None = None) -> list[int]:
-        """Decode the pattern of given channel to plottable array."""
+    def _plottable_digital(self, channel: str | int, max_len: int | None = None) -> list[int]:
+        """Decode digital pattern of given channel to plottable list."""
 
         ptn = []
         for blk_or_seq in self.total_sequence():
             if isinstance(blk_or_seq, Block):
-                ptn.extend(blk_or_seq.plottable(channel, max_len=max_len))
+                ptn.extend(blk_or_seq.plottable_digital(channel, max_len=max_len))
             else:
-                ptn.extend(blk_or_seq._plottable(channel, max_len=max_len))
+                ptn.extend(blk_or_seq._plottable_digital(channel, max_len=max_len))
             if max_len is not None and len(ptn) > max_len:
                 break
         if max_len is None:
@@ -795,24 +1071,51 @@ class BlockSeq(Message):
         else:
             return ptn[:max_len]
 
-    def plottable(self, channel: str | int, max_len: int | None = None) -> NDArray:
-        return np.array(self._plottable(channel, max_len=max_len), dtype=np.uint8)
+    def plottable_digital(
+        self, channel: str | int, max_len: int | None = None
+    ) -> NDArray[np.uint8]:
+        return np.array(self._plottable_digital(channel, max_len=max_len), dtype=np.uint8)
+
+    def _plottable_analog(self, channel: str | int, max_len: int | None = None) -> list[float]:
+        """Decode analog pattern of given channel to plottable list."""
+
+        ptn = []
+        for blk_or_seq in self.total_sequence():
+            if isinstance(blk_or_seq, Block):
+                ptn.extend(blk_or_seq.plottable_analog(channel, max_len=max_len))
+            else:
+                ptn.extend(blk_or_seq._plottable_analog(channel, max_len=max_len))
+            if max_len is not None and len(ptn) > max_len:
+                break
+        if max_len is None:
+            return ptn
+        else:
+            return ptn[:max_len]
+
+    def plottable_analog(
+        self, channel: str | int, max_len: int | None = None
+    ) -> NDArray[np.float64]:
+        return np.array(self._plottable_analog(channel, max_len=max_len), dtype=np.float64)
 
     def decode_all(self, max_len: int | None = None) -> tuple[list[str | int], list[NDArray]]:
         """Decode the patterns for all included channels."""
 
-        channels = self.channels()
-        patterns = [self.decode(ch, max_len=max_len) for ch in channels]
-        return channels, patterns
+        d_channels = self.digital_channels()
+        a_channels = self.analog_channels()
+        patterns = [self.decode_digital(ch, max_len=max_len) for ch in d_channels]
+        patterns += [self.decode_analog(ch, max_len=max_len) for ch in a_channels]
+        return d_channels + a_channels, patterns
 
     def plottable_all(self, max_len: int | None = None) -> tuple[list[str | int], list[NDArray]]:
         """Decode the patterns for all included channels to plottable array."""
 
-        channels = self.channels()
-        patterns = [self.plottable(ch, max_len=max_len) for ch in channels]
-        return channels, patterns
+        d_channels = self.digital_channels()
+        a_channels = self.analog_channels()
+        patterns = [self.plottable_digital(ch, max_len=max_len) for ch in d_channels]
+        patterns += [self.plottable_analog(ch, max_len=max_len) for ch in a_channels]
+        return d_channels + a_channels, patterns
 
-    def equivalent(self, other: BlockSeq | Blocks[Block] | Block) -> bool:
+    def equivalent(self, other: BlockSeq | Blocks[Block] | Block, rtol=1e-05, atol=1e-08) -> bool:
         """Check if this and other sequences are equivalent.
 
         Compare the channels and patterns after decode.
@@ -826,12 +1129,15 @@ class BlockSeq(Message):
             return False
 
         return channels == other_channels and all(
-            [len(p0) == len(p1) and (p0 == p1).all() for p0, p1 in zip(patterns, other_patterns)]
+            [
+                len(p0) == len(p1) and np.isclose(p0, p1, rtol=rtol, atol=atol).all()
+                for p0, p1 in zip(patterns, other_patterns)
+            ]
         )
 
     def replace(
         self,
-        replace_dict: dict[str | int, tuple[str, ...] | tuple[int, ...]],
+        replace_dict: dict[str | int | AnalogChannel, tuple[str | int | AnalogChannel, ...]],
     ) -> BlockSeq:
         """Return copy of this BlockSeq with replaced channels."""
 
@@ -839,7 +1145,7 @@ class BlockSeq(Message):
 
     def remove(
         self,
-        remove_channels: str | int | tuple[str, ...] | tuple[int, ...],
+        remove_channels: str | int | AnalogChannel | tuple[str | int | AnalogChannel, ...],
     ) -> BlockSeq:
         """Return copy of this BlockSeq with removed channels."""
 

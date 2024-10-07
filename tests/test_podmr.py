@@ -200,12 +200,6 @@ def test_podmr(server, podmr, server_conf, podmr_conf):
         print(m)
         params = podmr.get_param_dict(m)
         params["num"].set(2)  # small num for quick test
-        if "90pulse" in params:
-            params["pulse"]["90pulse"].set(10e-9)
-        if "180pulse" in params:
-            params["pulse"]["180pulse"].set(
-                20e-9
-            )  # default negative value causes error in se90sweep
         assert podmr.validate(params, m)
         assert podmr.start(params, m)
         assert expect_podmr(podmr, params["num"].value(), poll_timeout_ms)

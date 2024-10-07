@@ -14,7 +14,12 @@ import re
 import numpy as np
 from itertools import chain
 
-from ...msgs.inst.pg_msgs import Block, Blocks, BlockSeq
+from ...msgs.inst.pg_msgs import Block, Blocks, BlockSeq, AnalogChannel
+
+mw_x = AnalogChannel("mw_phase", 0)
+mw_y = AnalogChannel("mw_phase", 90)
+mw_x_inv = AnalogChannel("mw_phase", 180)
+mw_y_inv = AnalogChannel("mw_phase", 270)
 
 
 def round_pulses(
@@ -88,9 +93,9 @@ def generate_blocks(
     gen_single_ptn,
     args0,
     args1,
-    read_phase0: str | tuple[str] = "mw_x",
-    read_phase1: str | tuple[str] = "mw_x_inv",
-    laser_phase: str | tuple[str] = "mw_x",
+    read_phase0: AnalogChannel | tuple[AnalogChannel] = mw_x,
+    read_phase1: AnalogChannel | tuple[AnalogChannel] = mw_x_inv,
+    laser_phase: AnalogChannel | tuple[AnalogChannel] = mw_x,
     partial: int = -1,
     fix_base_width: int | None = None,
 ) -> Blocks[Block]:
@@ -113,17 +118,17 @@ def generate_blocks(
     ptn0 = gen_single_ptn(v, *args0)
     ptn1 = gen_single_ptn(v, *args1)
 
-    if isinstance(laser_phase, str):
+    if isinstance(laser_phase, AnalogChannel):
         ptn_former = [((laser_phase,), mw_delay)]
         ptn_laser = [((laser_phase, "laser", "sync"), laser_width)]
     else:
         ptn_former = [(tuple(laser_phase), mw_delay)]
         ptn_laser = [(tuple(laser_phase) + ("laser", "sync"), laser_width)]
-    if isinstance(read_phase0, str):
+    if isinstance(read_phase0, AnalogChannel):
         ptn_latter0 = [((read_phase0,), laser_delay)]
     else:
         ptn_latter0 = [(tuple(read_phase0), laser_delay)]
-    if isinstance(read_phase1, str):
+    if isinstance(read_phase1, AnalogChannel):
         ptn_latter1 = [((read_phase1,), laser_delay)]
     else:
         ptn_latter1 = [(tuple(read_phase1), laser_delay)]
@@ -192,12 +197,33 @@ def build_blocks(
     final_block_width = max(final_delay, minimum_block_length)
     final_block_width = offset_base_inc(final_block_width, base_width)
 
+    phases = []
+    for ch in range(num_mw):
+        if ch == 0:
+            ch = ""
+        phases.append(AnalogChannel(f"mw{ch}_phase", 0))
+    phases = tuple(phases)
+
     ptn_init = [
-        (("trigger", "sync", "mw_x"), trigger_width),
-        (("sync", "mw_x"), init_delay),
-        (("laser", "sync", "mw_x"), init_block_width - trigger_width - init_delay),
+        (
+            (
+                "trigger",
+                "sync",
+            )
+            + phases,
+            trigger_width,
+        ),
+        (("sync",) + phases, init_delay),
+        (
+            (
+                "laser",
+                "sync",
+            )
+            + phases,
+            init_block_width - trigger_width - init_delay,
+        ),
     ]
-    ptn_final = [(("sync", "mw_x"), final_block_width)]
+    ptn_final = [(("sync",) + phases, final_block_width)]
 
     # flatten list[Blocks[Block]] to Blocks[Block]
     blocks = Blocks(chain.from_iterable(blocks))
@@ -243,27 +269,29 @@ def encode_mw_phase(
 def encode_mode1(blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0) -> Blocks[Block] | BlockSeq:
     f = "" if ch_from == 0 else str(ch_from)
     t = "" if ch_to == 0 else str(ch_to)
+    mw_x = AnalogChannel(f"mw{f}_phase", 0)
+    mw_y = AnalogChannel(f"mw{f}_phase", 90)
 
     def encode(ch):
         if ch is None:
             return ch
         new_ch = list(ch)
         if f"mw{f}" in new_ch:
-            if f"mw{f}_x" in new_ch:
+            if mw_x in new_ch:
                 new_ch.remove(f"mw{f}")
-                new_ch.remove(f"mw{f}_x")
+                new_ch.remove(mw_x)
                 new_ch.append(f"mw{t}_i")
-            elif f"mw{f}_y" in new_ch:
+            elif mw_y in new_ch:
                 new_ch.remove(f"mw{f}")
-                new_ch.remove(f"mw{f}_y")
+                new_ch.remove(mw_y)
                 new_ch.append(f"mw{t}_q")
             else:
                 raise ValueError(f"Unknown MW phase: {new_ch}")
         # remove phase-only parts
-        elif f"mw{f}_x" in new_ch:
-            new_ch.remove(f"mw{f}_x")
-        elif f"mw{f}_y" in new_ch:
-            new_ch.remove(f"mw{f}_y")
+        elif mw_x in new_ch:
+            new_ch.remove(mw_x)
+        elif mw_y in new_ch:
+            new_ch.remove(mw_y)
 
         return tuple(new_ch)
 
@@ -274,31 +302,33 @@ def encode_mode1_multiplex(
     blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=(0, 1)
 ) -> Blocks[Block] | BlockSeq:
     f = "" if ch_from == 0 else str(ch_from)
+    mw_x = AnalogChannel(f"mw{f}_phase", 0)
+    mw_y = AnalogChannel(f"mw{f}_phase", 90)
 
     def encode(ch):
         if ch is None:
             return ch
         new_ch = list(ch)
         if f"mw{f}" in new_ch:
-            if f"mw{f}_x" in new_ch:
+            if mw_x in new_ch:
                 new_ch.remove(f"mw{f}")
-                new_ch.remove(f"mw{f}_x")
+                new_ch.remove(mw_x)
                 for c in ch_to:
                     t = "" if c == 0 else str(c)
                     new_ch.append(f"mw{t}_i")
-            elif f"mw{f}_y" in new_ch:
+            elif mw_y in new_ch:
                 new_ch.remove(f"mw{f}")
-                new_ch.remove(f"mw{f}_y")
+                new_ch.remove(mw_y)
                 for c in ch_to:
                     t = "" if c == 0 else str(c)
                     new_ch.append(f"mw{t}_q")
             else:
                 raise ValueError(f"Unknown MW phase: {new_ch}")
         # remove phase-only parts
-        elif f"mw{f}_x" in new_ch:
-            new_ch.remove(f"mw{f}_x")
-        elif f"mw{f}_y" in new_ch:
-            new_ch.remove(f"mw{f}_y")
+        elif mw_x in new_ch:
+            new_ch.remove(mw_x)
+        elif mw_y in new_ch:
+            new_ch.remove(mw_y)
 
         return tuple(new_ch)
 
@@ -317,19 +347,19 @@ def encode_mw_phase_single(
     if nomw and nomw1:
         d = {
             "mw": (),
-            "mw_x": (),
-            "mw_y": (),
-            "mw_x_inv": (),
-            "mw_y_inv": (),
+            mw_x: (),
+            mw_y: (),
+            mw_x_inv: (),
+            mw_y_inv: (),
         }
         return blocks.replace(d)
     elif nomw1:  # mw0 only
         if mw_modes[0] == 0:
             d = {
-                "mw_x": ("mw_i", "mw_q"),
-                "mw_y": ("mw_q",),
-                "mw_x_inv": (),
-                "mw_y_inv": ("mw_i",),
+                mw_x: ("mw_i", "mw_q"),
+                mw_y: ("mw_q",),
+                mw_x_inv: (),
+                mw_y_inv: ("mw_i",),
             }
             return blocks.replace(d)
         else:  # mw_modes[0] == 1
@@ -337,10 +367,10 @@ def encode_mw_phase_single(
     elif nomw:  # mw1 only
         if mw_modes[1] == 0:
             d = {
-                "mw_x": ("mw1_i", "mw1_q"),
-                "mw_y": ("mw1_q",),
-                "mw_x_inv": (),
-                "mw_y_inv": ("mw1_i",),
+                mw_x: ("mw1_i", "mw1_q"),
+                mw_y: ("mw1_q",),
+                mw_x_inv: (),
+                mw_y_inv: ("mw1_i",),
             }
             return blocks.replace(d)
         else:  # mw_modes[1] == 1
@@ -348,10 +378,10 @@ def encode_mw_phase_single(
     else:  # both mw0 and mw1
         if mw_modes == (0, 0):
             d = {
-                "mw_x": ("mw_i", "mw_q", "mw1_i", "mw1_q"),
-                "mw_y": ("mw_q", "mw1_q"),
-                "mw_x_inv": (),
-                "mw_y_inv": ("mw_i", "mw1_i"),
+                mw_x: ("mw_i", "mw_q", "mw1_i", "mw1_q"),
+                mw_y: ("mw_q", "mw1_q"),
+                mw_x_inv: (),
+                mw_y_inv: ("mw_i", "mw1_i"),
             }
             return blocks.replace(d)
         elif mw_modes == (1, 1):
@@ -369,11 +399,15 @@ def encode_mw_phase_multi(
     for ch, mode in enumerate(mw_modes):
         c = "" if ch == 0 else str(ch)
         if mode == 0:
+            mw_x = AnalogChannel(f"mw{c}_phase", 0)
+            mw_y = AnalogChannel(f"mw{c}_phase", 90)
+            mw_x_inv = AnalogChannel(f"mw{c}_phase", 180)
+            mw_y_inv = AnalogChannel(f"mw{c}_phase", 270)
             d = {
-                f"mw{c}_x": (f"mw{c}_i", f"mw{c}_q"),
-                f"mw{c}_y": (f"mw{c}_q",),
-                f"mw{c}_x_inv": (),
-                f"mw{c}_y_inv": (f"mw{c}_i",),
+                mw_x: (f"mw{c}_i", f"mw{c}_q"),
+                mw_y: (f"mw{c}_q",),
+                mw_x_inv: (),
+                mw_y_inv: (f"mw{c}_i",),
             }
             blocks = blocks.replace(d)
         else:  # mode == 1
@@ -391,12 +425,12 @@ def invert_y_phase(blocks: Blocks[Block] | BlockSeq) -> Blocks[Block] | BlockSeq
 
         new_ch = list(ch)
 
-        if "mw_y" in new_ch:
-            new_ch.remove("mw_y")
-            new_ch.append("mw_y_inv")
-        elif "mw_y_inv" in new_ch:
-            new_ch.remove("mw_y_inv")
-            new_ch.append("mw_y")
+        if mw_y in new_ch:
+            new_ch.remove(mw_y)
+            new_ch.append(mw_y_inv)
+        elif mw_y_inv in new_ch:
+            new_ch.remove(mw_y_inv)
+            new_ch.append(mw_y)
 
         return tuple(new_ch)
 
