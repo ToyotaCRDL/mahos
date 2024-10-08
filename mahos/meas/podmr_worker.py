@@ -314,6 +314,7 @@ class Pulser(Worker):
             minimum_block_length=self.conf["minimum_block_length"],
             block_base=self.conf["block_base"],
             mw_modes=self.mw_modes,
+            iq_amplitude=self.conf.get("iq_amplitude", 0.0),
             print_fn=self.logger.info,
         )
         self.eos_margin = self.conf.get("eos_margin", 1e-6)

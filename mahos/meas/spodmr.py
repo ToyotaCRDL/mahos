@@ -63,7 +63,11 @@ class SPODMR(BasicMeasNode):
         :param pulser.mw_modes: mw phase control modes for each channel.
             0 is 4-phase control using IQ modulation at SG and a switch.
             1 is 2-phase control using external 90-deg splitter and two switches.
+            2 is arbitral phase control using IQ modulation at SG
+            (Analog output (AWG) is required for PG).
         :type pulser.mw_modes: tuple[int]
+        :param pulser.iq_amplitude: (only for mw_mode 2) amplitude of analog IQ signal in V.
+        :type pulser.iq_amplitude: float
         :param pulser.pd_trigger: DAQ terminal name for PD trigger.
         :type pulser.pd_trigger: str
         :param pulser.trigger_channel: (default: gate) PG channel name for PD trigger.

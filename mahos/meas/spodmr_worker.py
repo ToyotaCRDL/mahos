@@ -161,6 +161,7 @@ class BlockSeqBuilder(object):
         block_base: int,
         eos_margin: int,
         mw_modes: tuple[int],
+        iq_amplitude: float,
     ):
         self.trigger_width = trigger_width
         self.trigger_channel = trigger_channel
@@ -168,6 +169,7 @@ class BlockSeqBuilder(object):
         self.block_base = block_base
         self.eos_margin = eos_margin
         self.mw_modes = mw_modes
+        self.iq_amplitude = iq_amplitude
 
     def fix_block_base(self, blk: Block, idx: int = 0) -> Block:
         res = blk.total_length() % self.block_base
@@ -475,7 +477,7 @@ class BlockSeqBuilder(object):
         # phase encoding
         if invertY:
             blockseq = K.invert_y_phase(blockseq)
-        blockseq = K.encode_mw_phase(blockseq, params, self.mw_modes, num_mw)
+        blockseq = K.encode_mw_phase(blockseq, params, self.mw_modes, num_mw, self.iq_amplitude)
 
         return blockseq.simplify(), laser_duties, markers, oversample
 
@@ -516,6 +518,7 @@ class Pulser(Worker):
         self._pd_trigger = self.conf["pd_trigger"]
         self._pd_data_transfer = self.conf.get("pd_data_transfer")
         self._quick_resume = self.conf.get("quick_resume", True)
+        iq_amplitude = self.conf.get("iq_amplitude", 0.0)
 
         self.generators = make_generators(
             freq=self.conf["pg_freq"],
@@ -524,6 +527,7 @@ class Pulser(Worker):
             minimum_block_length=self.conf["minimum_block_length"],
             block_base=self.conf["block_base"],
             mw_modes=self.mw_modes,
+            iq_amplitude=iq_amplitude,
             print_fn=self.logger.info,
         )
 
@@ -534,6 +538,7 @@ class Pulser(Worker):
             self.conf["block_base"],
             self.conf.get("eos_margin", 0),
             self.mw_modes,
+            iq_amplitude,
         )
 
         self.data = SPODMRData()

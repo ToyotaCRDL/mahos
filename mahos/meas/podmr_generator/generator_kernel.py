@@ -174,6 +174,7 @@ def build_blocks(
     block_base: int = 4,
     mw_modes: tuple[int] = (0,),
     num_mw: int = 1,
+    iq_amplitude: float = 0.0,
 ) -> tuple[Blocks[Block], list[int]]:
     """Build up the blocks by adding init and final blocks.
 
@@ -244,7 +245,7 @@ def build_blocks(
     # phase encoding
     if invertY:
         blocks = invert_y_phase(blocks)
-    blocks = encode_mw_phase(blocks, params, mw_modes, num_mw)
+    blocks = encode_mw_phase(blocks, params, mw_modes, num_mw, iq_amplitude)
 
     return blocks.simplify(), laser_timing
 
@@ -256,52 +257,20 @@ def print_blocks(blocks: Blocks[Block], print_fn=print):
 
 
 def encode_mw_phase(
-    blocks: Blocks[Block] | BlockSeq, params, mw_modes, num_mw
+    blocks: Blocks[Block] | BlockSeq, params, mw_modes, num_mw, iq_amplitude
 ) -> Blocks[Block] | BlockSeq:
     """encode mw phase from x/y(_inv) to i/q."""
 
     if num_mw == 1:
-        return encode_mw_phase_single(blocks, params, mw_modes)
+        return encode_mw_phase_single(blocks, params, mw_modes, iq_amplitude)
     else:
-        return encode_mw_phase_multi(blocks, params, mw_modes)
+        return encode_mw_phase_multi(blocks, params, mw_modes, iq_amplitude)
 
 
 def encode_mode1(blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0) -> Blocks[Block] | BlockSeq:
     f = "" if ch_from == 0 else str(ch_from)
-    t = "" if ch_to == 0 else str(ch_to)
-    mw_x = AnalogChannel(f"mw{f}_phase", 0)
-    mw_y = AnalogChannel(f"mw{f}_phase", 90)
-
-    def encode(ch):
-        if ch is None:
-            return ch
-        new_ch = list(ch)
-        if f"mw{f}" in new_ch:
-            if mw_x in new_ch:
-                new_ch.remove(f"mw{f}")
-                new_ch.remove(mw_x)
-                new_ch.append(f"mw{t}_i")
-            elif mw_y in new_ch:
-                new_ch.remove(f"mw{f}")
-                new_ch.remove(mw_y)
-                new_ch.append(f"mw{t}_q")
-            else:
-                raise ValueError(f"Unknown MW phase: {new_ch}")
-        # remove phase-only parts
-        elif mw_x in new_ch:
-            new_ch.remove(mw_x)
-        elif mw_y in new_ch:
-            new_ch.remove(mw_y)
-
-        return tuple(new_ch)
-
-    return blocks.apply(encode)
-
-
-def encode_mode1_multiplex(
-    blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=(0, 1)
-) -> Blocks[Block] | BlockSeq:
-    f = "" if ch_from == 0 else str(ch_from)
+    if isinstance(ch_to, int):
+        ch_to = (ch_to,)
     mw_x = AnalogChannel(f"mw{f}_phase", 0)
     mw_y = AnalogChannel(f"mw{f}_phase", 90)
 
@@ -335,8 +304,34 @@ def encode_mode1_multiplex(
     return blocks.apply(encode)
 
 
+def encode_mode2(
+    blocks: Blocks[Block] | BlockSeq, amplitude: float, ch_from=0, ch_to=0, phase0=45.0
+) -> Blocks[Block] | BlockSeq:
+    f = "" if ch_from == 0 else str(ch_from)
+    if isinstance(ch_to, int):
+        ch_to = (ch_to,)
+
+    def encode(ch):
+        if ch is None:
+            return ch
+        new_ch = list(ch)
+        for c in new_ch:
+            if isinstance(c, AnalogChannel) and c.name() == f"mw{f}_phase":
+                new_ch.remove(c)
+                I = amplitude * np.cos(np.radians(c.value() + phase0))
+                Q = amplitude * np.sin(np.radians(c.value() + phase0))
+                for c in ch_to:
+                    t = "" if c == 0 else str(c)
+                    new_ch.append(AnalogChannel(f"mw{t}_i", I))
+                    new_ch.append(AnalogChannel(f"mw{t}_q", Q))
+                break
+        return tuple(new_ch)
+
+    return blocks.apply(encode)
+
+
 def encode_mw_phase_single(
-    blocks: Blocks[Block] | BlockSeq, params, mw_modes: tuple[int]
+    blocks: Blocks[Block] | BlockSeq, params, mw_modes: tuple[int], iq_amplitude: float
 ) -> Blocks[Block] | BlockSeq:
     """Encode mw phase from x/y(_inv) to i/q for single channel sequence."""
 
@@ -362,8 +357,12 @@ def encode_mw_phase_single(
                 mw_y_inv: ("mw_i",),
             }
             return blocks.replace(d)
-        else:  # mw_modes[0] == 1
+        elif mw_modes[0] == 1:
             return encode_mode1(blocks, ch_from=0, ch_to=0)
+        elif mw_modes[0] == 2:
+            return encode_mode2(blocks, iq_amplitude, ch_from=0, ch_to=0)
+        else:
+            raise ValueError(f"Unknown mw_mode: {mw_modes[0]}")
     elif nomw:  # mw1 only
         if mw_modes[1] == 0:
             d = {
@@ -373,8 +372,12 @@ def encode_mw_phase_single(
                 mw_y_inv: ("mw1_i",),
             }
             return blocks.replace(d)
-        else:  # mw_modes[1] == 1
+        elif mw_modes[1] == 1:
             return encode_mode1(blocks, ch_from=0, ch_to=1)
+        elif mw_modes[1] == 2:
+            return encode_mode2(blocks, iq_amplitude, ch_from=0, ch_to=1)
+        else:
+            raise ValueError(f"Unknown mw_mode: {mw_modes[0]}")
     else:  # both mw0 and mw1
         if mw_modes == (0, 0):
             d = {
@@ -385,14 +388,16 @@ def encode_mw_phase_single(
             }
             return blocks.replace(d)
         elif mw_modes == (1, 1):
-            return encode_mode1_multiplex(blocks)
+            return encode_mode1(blocks, ch_from=0, ch_to=(0, 1))
+        elif mw_modes == (2, 2):
+            return encode_mode2(blocks, iq_amplitude, ch_from=0, ch_to=(0, 1))
         else:
             # TODO: combination modes (0, 1) or (1, 0) is a little complicated.
-            raise ValueError(f"Unsupported mw_modes: {mw_modes} for duplex")
+            raise ValueError(f"Unsupported mw_modes: {mw_modes} for multiplex")
 
 
 def encode_mw_phase_multi(
-    blocks: Blocks[Block] | BlockSeq, params, mw_modes: tuple[int]
+    blocks: Blocks[Block] | BlockSeq, params, mw_modes: tuple[int], iq_amplitude: float
 ) -> Blocks[Block] | BlockSeq:
     """encode mw phase from x/y(_inv) to i/q for multi mw channel sequence."""
 
@@ -410,8 +415,12 @@ def encode_mw_phase_multi(
                 mw_y_inv: (f"mw{c}_i",),
             }
             blocks = blocks.replace(d)
-        else:  # mode == 1
+        elif mode == 1:
             blocks = encode_mode1(blocks, ch_from=ch, ch_to=ch)
+        elif mode == 2:
+            blocks = encode_mode2(blocks, iq_amplitude, ch_from=ch, ch_to=ch)
+        else:
+            raise ValueError(f"Unknown mw_mode: {mode}")
 
     return blocks
 

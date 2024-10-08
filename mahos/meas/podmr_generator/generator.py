@@ -50,6 +50,7 @@ class PatternGenerator(object):
         minimum_block_length: int = 1000,
         block_base: int = 4,
         mw_modes: tuple[int] = (0,),
+        iq_amplitude: float = 0.0,
         print_fn=print,
         method: str = "",
     ):
@@ -59,6 +60,7 @@ class PatternGenerator(object):
         self.minimum_block_length = minimum_block_length
         self.block_base = block_base
         self.mw_modes = tuple(mw_modes)
+        self.iq_amplitude = iq_amplitude
         self.print_fn = print_fn
         self.method = method
         self._params = None
@@ -141,6 +143,7 @@ class PatternGenerator(object):
             block_base=self.block_base,
             mw_modes=self.mw_modes,
             num_mw=self.num_mw(),
+            iq_amplitude=self.iq_amplitude,
         )
         return blocks, freq, laser_timing
 
@@ -1652,6 +1655,7 @@ class DDGateGenerator(PatternGenerator):
         minimum_block_length: int = 1000,
         block_base: int = 4,
         mw_modes: tuple[int] = (0,),
+        iq_amplitude: float = 0.0,
         print_fn=print,
         method: str = "",
     ):
@@ -1663,6 +1667,7 @@ class DDGateGenerator(PatternGenerator):
             minimum_block_length=minimum_block_length,
             block_base=block_base,
             mw_modes=mw_modes,
+            iq_amplitude=iq_amplitude,
             print_fn=print_fn,
             method=method,
         )
@@ -2037,6 +2042,7 @@ def make_generators(
     minimum_block_length: int = 1000,
     block_base: int = 4,
     mw_modes: tuple[int] = (0,),
+    iq_amplitude: float = 0.0,
     print_fn=print,
 ):
     args = (
@@ -2046,6 +2052,7 @@ def make_generators(
         minimum_block_length,
         block_base,
         mw_modes,
+        iq_amplitude,
         print_fn,
     )
     generators = {

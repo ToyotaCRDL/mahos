@@ -13,21 +13,23 @@ from __future__ import annotations
 import pulsestreamer
 
 from ..instrument import Instrument
-from ...msgs.inst.pg_msgs import TriggerType, Block, Blocks, BlockSeq
+from ...msgs.inst.pg_msgs import TriggerType, Block, Blocks, BlockSeq, AnalogChannel
 
 
 class PulseStreamer(Instrument):
-    """Swabian Instrument Pulse Streamer 8/2.
+    """Swabian Instruments Pulse Streamer 8/2.
 
     :param channels: mapping from channel names to indices.
     :type channels: dict[str | bytes, int]
     :param analog.channels: list of channel names to represent analog output
     :type analog.channels: list[str | bytes]
-    :param analog.values: mapping of analog channel patterns to analog output values
+    :param analog.values: mapping from digital patterns to analog output values.
+        If this is defined, digital pattern can be given for analog.channels.
+        In such case, analog.channels outputs analog values after sparse D/A conversion.
         {"00": [0.5, 0.5], "01": [-0.5, 0.0]} reads as follows.
         When analog.channels[0] is L and analog.channels[1] is L, output A0 = 0.5 V, A1 = 0.5 V.
         When analog.channels[0] is L and analog.channels[1] is H, output A0 = -0.5 V, A1 = 0.0 V.
-        It's also possible to use more than two channels.
+        It's also possible to use more than two channels though not very practical.
     :type analog.values: dict[str, tuple[float, float]]
     :param ext_ref_clock: external reference clock source.
         Set 10 for 10 MHz or 125 for 125 MHz.
@@ -50,7 +52,9 @@ class PulseStreamer(Instrument):
             self.CHANNELS.update(conf["channels"])
         if "analog" in conf:
             self.analog_channels = conf["analog"]["channels"]
-            self.analog_values = conf["analog"]["values"]
+            self.analog_values = conf["analog"].get(
+                "values", {"00": [0.0, 0.0], "01": [0.0, 0.0], "10": [0.0, 0.0], "11": [0.0, 0.0]}
+            )
         else:
             self.analog_channels = []
             self.analog_values = {}
@@ -98,7 +102,11 @@ class PulseStreamer(Instrument):
         elif isinstance(channels, (bytes, str, int)):
             return [parse(channels)]
         else:  # container (list or tuple) of (bytes, str, int)
-            return [parse(c) for c in channels if c not in self.analog_channels]
+            return [
+                parse(c)
+                for c in channels
+                if not isinstance(c, AnalogChannel) and c not in self.analog_channels
+            ]
 
     def _included_channels_blocks(self, blocks: Blocks[Block]) -> list[int]:
         """create sorted list of channels in blocks converted to ints."""
@@ -123,6 +131,7 @@ class PulseStreamer(Instrument):
         rle_patterns = [(ch, []) for ch in self._included_channels_blocks(blocks)]
         a0_patterns = []
         a1_patterns = []
+        _analog_given = bool(blocks.analog_channels())
 
         for i, block in enumerate(blocks):
             for channels, length in block.total_pattern():
@@ -130,7 +139,16 @@ class PulseStreamer(Instrument):
                 for ch, pat in rle_patterns:
                     pat.append((length, 1 if ch in high_channels else 0))
 
-                if self.analog_channels:
+                if _analog_given:
+                    # if any AnalogChannel is involved, use these values instead of
+                    # sparse D/A conversion using self.analog_values
+                    a0 = block.analog_value(self.analog_channels[0], channels)
+                    a0_patterns.append((length, a0))
+                    a1 = block.analog_value(self.analog_channels[1], channels)
+                    a1_patterns.append((length, a1))
+                elif self.analog_channels:
+                    # self.analog_channels are included as digital channels in blocks.
+                    # perform sparse D/A conversion using self.analog_values
                     label = "".join(
                         ("1" if ch in channels else "0" for ch in self.analog_channels)
                     )
