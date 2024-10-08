@@ -95,6 +95,10 @@ class PulseMonitorWidget(ClientTopWidget):
         self.plot_sub.setMouseEnabled(True, False)
         self.lines = []
         self.lines_sub = []
+        self._mx = 0.0
+        self._my = 0.0
+        self.cursor0 = None
+        self.cursor1 = None
         self.cmap = pg.colormap.get(self.conf.get("colormap", "viridis"))
 
         self.lr = pg.LinearRegionItem([0, 1])
@@ -102,9 +106,23 @@ class PulseMonitorWidget(ClientTopWidget):
         self.plot.addItem(self.lr)
         self.lr.sigRegionChanged.connect(self.update_plot_sub)
         self.plot_sub.sigXRangeChanged.connect(self.update_lr)
+        self.plot_sub.scene().sigMouseMoved.connect(self.update_pos)
+        self.plot_sub.scene().sigMouseClicked.connect(self.update_cursor)
+
+        hl_bottom = QtWidgets.QHBoxLayout()
+        self.clearButton = QtWidgets.QPushButton("Clear Cursors")
+        self.clearButton.clicked.connect(self.clear_cursors)
+        self.label = QtWidgets.QLabel("Ready")
+        hl_bottom.addWidget(self.clearButton)
+        hl_bottom.addWidget(self.label)
+        spacer = QtWidgets.QSpacerItem(40, 20, Policy.Expanding, Policy.Minimum)
+        hl_bottom.addItem(spacer)
+        hint = QtWidgets.QLabel("Shift+Click to put C0, Ctrl+Click to put C1")
+        hl_bottom.addWidget(hint)
 
         vl.addLayout(hl)
         vl.addWidget(glw)
+        vl.addLayout(hl_bottom)
         self.setLayout(vl)
         self.setWindowTitle(f"MAHOS.PulseMonitor ({join_name(target)})")
 
@@ -115,6 +133,75 @@ class PulseMonitorWidget(ClientTopWidget):
 
     def update_lr(self):
         self.lr.setRegion(self.plot_sub.getViewBox().viewRange()[0])
+
+    def clear_cursors(self):
+        if self.cursor0 is not None:
+            for l in self.cursor0:
+                self.plot_sub.removeItem(l)
+            self.cursor0 = None
+        if self.cursor1 is not None:
+            for l in self.cursor1:
+                self.plot_sub.removeItem(l)
+            self.cursor1 = None
+        self.update_label()
+
+    def update_label(self):
+        scale, prefix = pg.siScale(self._mx)
+        s = f"M({scale*self._mx:7.3f} {prefix}s, {self._my:7.3f})"
+        if self.cursor0 is not None:
+            x0 = self.cursor0[0].value()
+            y0 = self.cursor0[1].value()
+            scale, prefix = pg.siScale(x0)
+            s += f"  C0({scale*x0:7.3f} {prefix}s, {y0:7.3f})"
+        if self.cursor1 is not None:
+            x1 = self.cursor1[0].value()
+            y1 = self.cursor1[1].value()
+            scale, prefix = pg.siScale(x1)
+            s += f"  C1({scale*x1:7.3f} {prefix}s, {y1:7.3f})"
+        if self.cursor0 is not None and self.cursor1 is not None:
+            scale, prefix = pg.siScale(x1 - x0)
+            s += f"  Delta({scale*(x1-x0):7.3f} {prefix}s, {y1-y0:7.3f})"
+        self.label.setText(s)
+
+    def update_pos(self, pos):
+        if not self.plot_sub.sceneBoundingRect().contains(pos):
+            return
+        point = self.plot_sub.getViewBox().mapSceneToView(pos)
+        self._mx = point.x()
+        self._my = point.y()
+        self.update_label()
+
+    def update_cursor(self, ev):
+        pos = ev.scenePos()
+        if not self.plot_sub.sceneBoundingRect().contains(pos):
+            return
+        point = self.plot_sub.getViewBox().mapSceneToView(pos)
+        if ev.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier:
+            if self.cursor0 is None:
+                pen = pg.mkPen("r", style=QtCore.Qt.PenStyle.DashLine)
+                vline = pg.InfiniteLine(pos=point.x(), angle=90, pen=pen)
+                hline = pg.InfiniteLine(pos=point.y(), angle=0, pen=pen)
+                # vline.setZValue(-20)
+                self.plot_sub.addItem(vline)
+                self.plot_sub.addItem(hline)
+                self.cursor0 = (vline, hline)
+            else:
+                self.cursor0[0].setPos(point.x())
+                self.cursor0[1].setPos(point.y())
+            self.update_label()
+        elif ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier:
+            if self.cursor1 is None:
+                pen = pg.mkPen("r")
+                vline = pg.InfiniteLine(pos=point.x(), angle=90, pen=pen)
+                hline = pg.InfiniteLine(pos=point.y(), angle=0, pen=pen)
+                # vline.setZValue(-20)
+                self.plot_sub.addItem(vline)
+                self.plot_sub.addItem(hline)
+                self.cursor1 = (vline, hline)
+            else:
+                self.cursor1[0].setPos(point.x())
+                self.cursor1[1].setPos(point.y())
+            self.update_label()
 
     def sizeHint(self):
         return QtCore.QSize(1400, 900)
@@ -152,18 +239,32 @@ class PulseMonitorWidget(ClientTopWidget):
             self.plot_sub.addItem(ls)
             self.lines_sub.append(ls)
 
+    def plottable_all_d(self, blocks, max_len):
+        channels = blocks.digital_channels()
+        try:
+            channels = list(sorted(channels))
+        except TypeError:
+            channels = list(channels)
+        patterns = [blocks.plottable_digital(ch, max_len=max_len) for ch in channels]
+        return channels, patterns
+
+    def plottable_all_a(self, blocks, max_len):
+        channels = blocks.analog_channels()
+        channels = list(sorted(channels))
+        patterns = [blocks.plottable_analog(ch, max_len=max_len) for ch in channels]
+        return channels, patterns
+
     def update_plot(self):
         if self.pulse is None:
             return
 
         max_len = self.maxpointsBox.value() * 1000
-        channels, patterns = self.pulse.blocks.plottable_all(max_len=max_len)
+        d_channels, d_patterns = self.plottable_all_d(self.pulse.blocks, max_len)
+        a_channels, a_patterns = self.plottable_all_a(self.pulse.blocks, max_len)
 
-        if not channels:
+        if not d_channels and not a_channels:
             print("[ERROR] empty pulse pattern")
             return
-
-        num = len(channels)
 
         self.plot.clearPlots()
         self.plot_sub.clearPlots()
@@ -177,14 +278,23 @@ class PulseMonitorWidget(ClientTopWidget):
             self.plot.setLabel("bottom", "sampling point")
             self.plot_sub.setLabel("bottom", "sampling point")
 
-        for i, (ch, pat) in enumerate(zip(channels, patterns)):
-            offset = (num - 1 - i) * 1.05
-            if num > 1:
-                pen = self.cmap.map(i / (num - 1))
-            else:
-                pen = self.cmap.map(0.5)
-
+        num = len(a_channels) + len(d_channels)
+        for i, (ch, pat) in enumerate(zip(d_channels, d_patterns)):
+            offset = num - 1 - i
+            pen = self.cmap.map(i / (num - 1)) if num > 1 else self.cmap.map(0.5)
+            self.plot.plot(x, pat * 0.8 + offset, name=ch, pen=pen)
+            self.plot_sub.plot(x, pat * 0.8 + offset, name=ch, pen=pen)
+        pen_base = pg.mkPen(0.3)
+        for i, (ch, pat) in enumerate(zip(a_channels, a_patterns)):
+            j = i + len(d_channels)
+            offset = num - 1 - j
+            pen = self.cmap.map(j / (num - 1)) if num > 1 else self.cmap.map(0.5)
+            # draw baseline for analog channels only
+            # plot() baseline instead of InfiniteLine,
+            # which won't be erased by clearPlots().
+            self.plot.plot([x[0], x[-1]], [offset, offset], pen=pen_base)
             self.plot.plot(x, pat + offset, name=ch, pen=pen)
+            self.plot_sub.plot([x[0], x[-1]], [offset, offset], pen=pen_base)
             self.plot_sub.plot(x, pat + offset, name=ch, pen=pen)
         self.update_markers()
 

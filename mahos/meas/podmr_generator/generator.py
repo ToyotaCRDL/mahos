@@ -336,7 +336,7 @@ class FIDGenerator(PatternGenerator):
         p1 = p1 + [mw_x_inv]
 
         def gen(v, p90, read_phase):
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 v_f, v_l = K.split_int(v, self.split_fraction)
                 return [
                     ((mw_x, "mw"), p90),
@@ -361,7 +361,7 @@ class FIDGenerator(PatternGenerator):
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             read_phase1 = mw_x_inv
         elif self.mode() == 1:
             read_phase1 = mw_x
@@ -448,7 +448,7 @@ class SpinEchoGenerator(PatternGenerator):
 
         def gen(v, p90, p180, read_phase):
             v_f, v_l = K.split_int(v, self.split_fraction)
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 return [
                     ((mw_x, "mw"), p90),
                     ((mw_x,), v),
@@ -475,7 +475,7 @@ class SpinEchoGenerator(PatternGenerator):
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             phase0 = read_phase0
             phase1 = read_phase1
         elif self.mode() == 1:
@@ -563,7 +563,7 @@ class TRSEGenerator(PatternGenerator):
         p1 = p1 + [mw_x_inv]
 
         def gen(v, p90, p180, tauconst, read_phase):
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 v_f, v_l = K.split_int(v, self.split_fraction)
                 return [
                     ((mw_x, "mw"), p90),
@@ -591,7 +591,7 @@ class TRSEGenerator(PatternGenerator):
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             read_phase1 = mw_x_inv
         elif self.mode() == 1:
             read_phase1 = mw_x
@@ -723,7 +723,7 @@ class DDGenerator(PatternGenerator):
             tau_f, tau_l = K.split_int(tau, self.split_fraction)
             tau2_f, tau2_l = K.split_int(tau * 2, self.split_fraction)
             init_ptn = [((mw_x, "mw"), p90), ((mw_x,), tau_f)]
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
             elif self.mode() == 1:
                 phase = mw_uninvert(read_phase)
@@ -767,7 +767,7 @@ class DDGenerator(PatternGenerator):
 
             return init_ptn + pattern + read_ptn
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
             read_phase0_ = read_phase0[:4]
@@ -874,7 +874,7 @@ class DDGenerator(PatternGenerator):
                 ((mw_x, "mw"), p90),
                 ((mw_x,), K.split_int(tau_list[0], self.split_fraction)[0]),
             ]
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 read_ptn = [
                     ((read_phase,), K.split_int(tau_list[-1], self.split_fraction)[1]),
                     ((read_phase, "mw"), p90),
@@ -909,7 +909,7 @@ class DDGenerator(PatternGenerator):
 
             return init_ptn + pattern + read_ptn
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
             read_phase0_ = read_phase0[:4]
@@ -1009,7 +1009,7 @@ class DDNGenerator(PatternGenerator):
             tau_f, tau_l = K.split_int(tauconst, self.split_fraction)
             tau2_f, tau2_l = K.split_int(tauconst * 2, self.split_fraction)
             init_ptn = [((mw_x, "mw"), p90), ((mw_x,), tau_f)]
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
             elif self.mode() == 1:
                 phase = mw_uninvert(read_phase)
@@ -1060,7 +1060,7 @@ class DDNGenerator(PatternGenerator):
 
             return init_ptn + pattern + read_ptn
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
             read_phase0_ = read_phase0[:4]
@@ -1279,7 +1279,7 @@ class SpinLockGenerator(PatternGenerator):
         p1 = p1 + [mw_x]
 
         def gen(v, p90, iq_delay, read_phase):
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 p = [
                     ((mw_x, "mw"), p90),
                     ((mw_y,), iq_delay),
@@ -1305,7 +1305,7 @@ class SpinLockGenerator(PatternGenerator):
             else:
                 raise ValueError(f"Unknown MW mode: {self.mode()}")
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             read_phase0 = mw_x_inv
         elif self.mode() == 1:
             read_phase0 = mw_x
@@ -1412,7 +1412,7 @@ class XY8CorrelationGenerator(PatternGenerator):
             init_ptn = [((mw_x, "mw"), p90), ((mw_x,), tau_f)]
             storage_ptn = [((mw_y,), tau_l), ((mw_y, "mw"), p90)]
             reinit_ptn = [((reinit_phase, "mw"), p90), ((reinit_phase,), tau_f)]
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
             elif self.mode() == 1:
                 phase = mw_uninvert(read_phase)
@@ -1454,7 +1454,7 @@ class XY8CorrelationGenerator(PatternGenerator):
 
             return xy8_first + interlude + xy8_second
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
             read_phase0_ = read_phase0[:4]
@@ -1568,7 +1568,7 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
                 ((reinit_phase, "mw"), p90),
                 ((reinit_phase,), tau_f),
             ]
-            if self.mode() == 0:
+            if self.mode() in (0, 2):
                 read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
             elif self.mode() == 1:
                 phase = mw_uninvert(read_phase)
@@ -1599,7 +1599,7 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
 
             return xy8_first + interlude + xy8_second
 
-        if self.mode() == 0:
+        if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
             read_phase0_ = read_phase0[:4]

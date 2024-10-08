@@ -19,7 +19,7 @@ from .pg_dtg_core.dtg_core import DTGCoreMixin
 from ..msgs.confocal_msgs import Axis
 from ..msgs.inst.camera_msgs import FrameResult
 from ..msgs.inst.tdc_msgs import ChannelStatus, RawEvents
-from ..msgs.inst.pg_msgs import Block, Blocks, BlockSeq
+from ..msgs.inst.pg_msgs import TriggerType, Block, Blocks, BlockSeq, AnalogChannel
 from ..msgs.inst.spectrometer_msgs import Temperature
 from ..msgs import param_msgs as P
 
@@ -833,6 +833,270 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
                 self.logger.error(f"Invalid args for get(offsets): {args}")
                 return None
         elif key == "opc":
+            return True
+        elif key == "validate":
+            if "blocks" in args and "freq" in args:
+                return self.validate_blocks(args["blocks"], args["freq"])
+            elif "blockseq" in args and "freq" in args:
+                return self.validate_blockseq(args["blockseq"], args["freq"])
+            else:
+                self.logger.error(f"Invalid args for get(validate): {args}")
+                return None
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+
+class PulseStreamer_mock(Instrument):
+    def __init__(self, name, conf, prefix=None):
+        Instrument.__init__(self, name, conf, prefix=prefix)
+
+        self.check_required_conf(("resource",))
+
+        self.CHANNELS = {"0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7}
+        if "channels" in conf:
+            self.CHANNELS.update(conf["channels"])
+        if "analog" in conf:
+            self.analog_channels = conf["analog"]["channels"]
+            self.analog_values = conf["analog"].get(
+                "values", {"00": [0.0, 0.0], "01": [0.0, 0.0], "10": [0.0, 0.0], "11": [0.0, 0.0]}
+            )
+        else:
+            self.analog_channels = []
+            self.analog_values = {}
+        self._strict = conf.get("strict", True)
+
+        # last total block length and offsets.
+        self.length = 0
+        self.offsets = None
+        self._trigger_type = None
+
+        self.logger.info("Opened PulseStreamer mock at {}.".format(self.conf["resource"]))
+
+    def channels_to_ints(self, channels) -> list[int]:
+        def parse(c):
+            if isinstance(c, (bytes, str)):
+                return self.CHANNELS[c]
+            elif isinstance(c, int):
+                return c
+            else:
+                raise TypeError("Invalid type for channel. Use bytes, str or int.")
+
+        if channels is None:
+            return []
+        elif isinstance(channels, (bytes, str, int)):
+            return [parse(channels)]
+        else:  # container (list or tuple) of (bytes, str, int)
+            return [
+                parse(c)
+                for c in channels
+                if not isinstance(c, AnalogChannel) and c not in self.analog_channels
+            ]
+
+    def _included_channels_blocks(self, blocks: Blocks[Block]) -> list[int]:
+        """create sorted list of channels in blocks converted to ints."""
+
+        # take set() here because channels_to_ints() may contain non-unique integers
+        # (CHANNELS is not always injective), though it's quite rare usecase.
+        return sorted(list(set(self.channels_to_ints(blocks.channels()))))
+
+    def _extract_trigger_blocks(self, blocks: Blocks[Block]) -> bool | None:
+        trigger = False
+        for i, block in enumerate(blocks):
+            if block.trigger:
+                if i:
+                    self.logger.error("Can set trigger for first block only.")
+                    return None
+                trigger = True
+        return trigger
+
+    def _generate_seq_blocks(self, blocks: Blocks[Block]):
+        rle_patterns = [(ch, []) for ch in self._included_channels_blocks(blocks)]
+        a0_patterns = []
+        a1_patterns = []
+        _analog_given = bool(blocks.analog_channels())
+
+        for i, block in enumerate(blocks):
+            for channels, length in block.total_pattern():
+                high_channels = self.channels_to_ints(channels)
+                for ch, pat in rle_patterns:
+                    pat.append((length, 1 if ch in high_channels else 0))
+
+                if _analog_given:
+                    # if any AnalogChannel is involved, use these values instead of
+                    # sparse D/A conversion using self.analog_values
+                    a0 = block.analog_value(self.analog_channels[0], channels)
+                    a0_patterns.append((length, a0))
+                    a1 = block.analog_value(self.analog_channels[1], channels)
+                    a1_patterns.append((length, a1))
+                elif self.analog_channels:
+                    # self.analog_channels are included as digital channels in blocks.
+                    # perform sparse D/A conversion using self.analog_values
+                    label = "".join(
+                        ("1" if ch in channels else "0" for ch in self.analog_channels)
+                    )
+                    a0, a1 = self.analog_values[label]
+                    a0_patterns.append((length, a0))
+                    a1_patterns.append((length, a1))
+        return
+
+    def _scale_blocks(self, blocks: Blocks[Block], freq: float) -> Blocks[Block] | None:
+        """Return scaled blocks according to freq, or None if any failure."""
+
+        freq = round(freq)
+        base_freq = round(1.0e9)
+        if freq > base_freq:
+            self.logger.error("PulseStreamer's max freq is 1 GHz.")
+            return None
+        if base_freq % freq:
+            self.logger.error("freq must be a divisor of 1 GHz.")
+            return None
+        scale = base_freq // freq
+        if scale > 1:
+            self.logger.info(f"Scaling the blocks by {scale}")
+            return blocks.scale(scale)
+        else:
+            return blocks
+
+    def _adjust_blocks(self, blocks: Blocks[Block]) -> list[int] | None:
+        """(mutating) adjust block length so that total_length becomes N * 8 (ns).
+
+        :returns: list of offset values, or None if any failure.
+
+        """
+
+        remainder = blocks.total_length() % 8
+        if self._strict and remainder:
+            self.logger.error("blocks' total_length is not integer multiple of 8.")
+            return None
+        if not remainder:
+            return [0] * len(blocks)
+
+        lb = blocks[-1]
+        if lb.Nrep != 1:
+            msg = "blocks' total_length is not integer multiple of 8 and"
+            msg += f" last block's Nrep is not 1 ({lb.Nrep})."
+            self.logger.error(msg)
+            return None
+        dur = lb.pattern[-1].duration
+        offset = 8 - remainder
+        lb.update_duration(-1, dur + offset)
+        self.logger.warn(f"Adjusted last block by offset {offset}.")
+        return [0] * (len(blocks) - 1) + [offset]
+
+    def validate_blocks(self, blocks: Blocks[Block], freq: float) -> list[int] | None:
+        blocks = self._scale_blocks(blocks, freq)
+        if blocks is None:
+            return None
+        return self._adjust_blocks(blocks)
+
+    def validate_blockseq(self, blockseq: BlockSeq[Block], freq: float) -> list[int] | None:
+        # Since PulseStreamer doesn't have loop control mechanism,
+        # given BlockSeq is equivalent to collapsed one.
+        return self.validate_blocks(Blocks([blockseq.collapse()]), freq)
+
+    def configure_blocks(
+        self,
+        blocks: Blocks[Block],
+        freq: float,
+        trigger_type: TriggerType | None = None,
+        n_runs: int | None = None,
+    ) -> bool:
+        """Make sequence from blocks."""
+
+        blocks = self._scale_blocks(blocks, freq)
+        if blocks is None:
+            return False
+
+        trigger = self._extract_trigger_blocks(blocks)
+        if trigger is None:
+            return False
+
+        self.offsets = self._adjust_blocks(blocks)
+        if self.offsets is None:
+            return False
+        self.length = blocks.total_length()
+
+        try:
+            self._generate_seq_blocks(blocks)
+        except ValueError:
+            self.logger.exception("Failed to generate sequence. Check channel name settings.")
+            return False
+
+        msg = f"Configured sequence. length: {self.length} offset: {self.offsets[-1]}"
+        msg += f" trigger: {trigger}"
+        self.logger.info(msg)
+        return True
+
+    def configure_blockseq(
+        self,
+        blockseq: BlockSeq,
+        freq: float,
+        trigger_type: TriggerType | None = None,
+        n_runs: int | None = None,
+    ) -> bool:
+        """Make sequence from blockseq."""
+
+        # Since PulseStreamer doesn't have loop control mechanism,
+        # given BlockSeq is equivalent to collapsed one.
+        return self.configure_blocks(Blocks([blockseq.collapse()]), freq, trigger_type, n_runs)
+
+    def trigger(self) -> bool:
+        if self._trigger_type in (TriggerType.IMMEDIATE, TriggerType.SOFTWARE):
+            self.logger.info("Issuing dummy software trigger")
+            return True
+        else:
+            msg = "Cannot issue software trigger in hardware trigger mode."
+            msg += "\nConsider using PulseStreamerDAQTrigger instread."
+            self.logger.error(msg)
+            return False
+
+    # Standard API
+
+    def reset(self, label: str = "") -> bool:
+        self.logger.info("Dummy reset.")
+        return True
+
+    def start(self, label: str = "") -> bool:
+        self.logger.info("Start dummy streaming.")
+        return True
+
+    def stop(self, label: str = "") -> bool:
+        self.logger.info("Stop dummy streaming.")
+        return True
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        if "blocks" in params and "freq" in params:
+            return self.configure_blocks(
+                params["blocks"],
+                params["freq"],
+                trigger_type=params.get("trigger_type"),
+                n_runs=params.get("n_runs"),
+            )
+        elif "blockseq" in params and "freq" in params:
+            return self.configure_blockseq(
+                params["blockseq"],
+                params["freq"],
+                trigger_type=params.get("trigger_type"),
+                n_runs=params.get("n_runs"),
+            )
+        else:
+            return self.fail_with("These params must be given: 'blocks' | 'blockseq' and 'freq'")
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        if key == "trigger":
+            return self.trigger()
+        elif key == "clear":  # for API compatibility
+            return True
+        else:
+            return self.fail_with(f"unknown set() key: {key}")
+
+    def get(self, key: str, args=None, label: str = ""):
+        if key == "length":
+            return self.length  # length of last configure
+        elif key == "offsets":
+            return self.offsets  # offsets of last configure
+        elif key == "opc":  # for API compatibility
             return True
         elif key == "validate":
             if "blocks" in args and "freq" in args:
