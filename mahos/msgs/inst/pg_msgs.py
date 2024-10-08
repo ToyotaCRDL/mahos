@@ -37,11 +37,9 @@ class AnalogChannel(object):
 
     """
 
-    def __init__(self, name: str, value: float | int, rtol=1e-05, atol=1e-08):
+    def __init__(self, name: str, value: float | int):
         self._name: T.Final[str] = name
         self._value: T.Final[float | int] = value
-        self._rtol = rtol
-        self._atol = atol
 
     def __repr__(self) -> str:
         return f"A({self._name}, {self._value:.2f})"
@@ -60,10 +58,10 @@ class AnalogChannel(object):
     def value(self) -> float | int:
         return self._value
 
-    def isclose(self, other) -> bool:
+    def isclose(self, other, rtol=1e-05, atol=1e-08) -> bool:
         if self._name != other._name:
             return False
-        return bool(np.isclose(self._value, other._value, rtol=self._rtol, atol=self._atol))
+        return bool(np.isclose(self._value, other._value, rtol=rtol, atol=atol))
 
 
 Channels = T.NewType("Channels", T.Tuple[str | int | AnalogChannel, ...])
@@ -416,7 +414,9 @@ class Block(Message):
 
         return self.total_length()
 
-    def channels_close(self, channels0: Channels, channels1: Channels) -> bool:
+    def channels_close(
+        self, channels0: Channels, channels1: Channels, rtol=1e-05, atol=1e-08
+    ) -> bool:
         """Check if given two channels are close.
 
         - AnalogChannels are compared using isclose().
@@ -431,7 +431,7 @@ class Block(Message):
                     return False
             else:
                 cc = self.analog_channel(c.name(), channels1)
-                if cc is None or not c.isclose(cc):
+                if cc is None or not c.isclose(cc, rtol=rtol, atol=atol):
                     return False
         return True
 
@@ -454,11 +454,11 @@ class Block(Message):
                     return False
         return True
 
-    def isclose(self, other: Block) -> bool:
+    def isclose(self, other: Block, rtol=1e-05, atol=1e-08) -> bool:
         if len(self.pattern) != len(other.pattern):
             return False
         for (ch, duration), (ch_, duration_) in zip(self.pattern, other.pattern):
-            if duration != duration_ or not self.channels_close(ch, ch_):
+            if duration != duration_ or not self.channels_close(ch, ch_, rtol=rtol, atol=atol):
                 return False
         return self.name == other.name and self.Nrep == other.Nrep
 
@@ -551,7 +551,7 @@ class Block(Message):
 
         return Block(self.name, new_pattern, Nrep=self.Nrep, trigger=self.trigger)
 
-    def simplify(self) -> Block:
+    def simplify(self, rtol=1e-05, atol=1e-08) -> Block:
         """return simplified copy of this Block.
 
         simplification is done by:
@@ -571,7 +571,7 @@ class Block(Message):
 
             _ch, _period = new_pattern[-1]
 
-            if self.channels_close(_ch, ch):
+            if self.channels_close(_ch, ch, rtol=rtol, atol=atol):
                 new_pattern[-1] = (_ch, _period + period)
             else:
                 new_pattern.append((ch, period))
