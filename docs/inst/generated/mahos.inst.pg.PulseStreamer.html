@@ -648,17 +648,19 @@ document.write(`
 <dl class="py class">
 <dt class="sig sig-object py" id="mahos.inst.pg.PulseStreamer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.inst.pg.</span></span><span class="sig-name descname"><span class="pre">PulseStreamer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.pg.PulseStreamer" title="Permalink to this definition">#</a></dt>
-<dd><p>Swabian Instrument Pulse Streamer 8/2.</p>
+<dd><p>Swabian Instruments Pulse Streamer 8/2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>channels</strong> (<em>dict</em><em>[</em><em>str</em><em> | </em><em>bytes</em><em>, </em><em>int</em><em>]</em>) – mapping from channel names to indices.</p></li>
 <li><p><strong>analog.channels</strong> (<em>list</em><em>[</em><em>str</em><em> | </em><em>bytes</em><em>]</em>) – list of channel names to represent analog output</p></li>
-<li><p><strong>analog.values</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – mapping of analog channel patterns to analog output values
+<li><p><strong>analog.values</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – mapping from digital patterns to analog output values.
+If this is defined, digital pattern can be given for analog.channels.
+In such case, analog.channels outputs analog values after sparse D/A conversion.
 {“00”: [0.5, 0.5], “01”: [-0.5, 0.0]} reads as follows.
 When analog.channels[0] is L and analog.channels[1] is L, output A0 = 0.5 V, A1 = 0.5 V.
 When analog.channels[0] is L and analog.channels[1] is H, output A0 = -0.5 V, A1 = 0.0 V.
-It’s also possible to use more than two channels.</p></li>
+It’s also possible to use more than two channels though not very practical.</p></li>
 <li><p><strong>ext_ref_clock</strong> (<em>int</em>) – external reference clock source.
 Set 10 for 10 MHz or 125 for 125 MHz.
 All the other values are considered <cite>disable</cite> (internal clock source is used).</p></li>

@@ -10,8 +10,10 @@ Added
 
 - meas: new generic measurement Recorder.
 - meas: new generic measurement PosTweaker.
-- inst: new module dmm (for Digital Multi Meter).
-- inst: new module power_sensor (for RF / MW power sensor).
+- meas.podmr,spodmr: new conf mw_modes to select method for MW phase modulation.
+- inst: new module dmm (for Digital Multi Meters).
+- inst: new module smu (for Source Meter Units).
+- inst: new module power_sensor (for RF / MW power sensors).
 - inst: new module positioner.
 - inst: new module filter_wheel.
 - inst.tdc: new instrument TimeTagger (Swabian Instruments).

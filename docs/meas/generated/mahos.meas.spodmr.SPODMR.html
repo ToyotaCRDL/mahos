@@ -656,7 +656,10 @@ a PG as timing source, and SGs as MW sources.</p>
 If True, it skips instrument configurations on resume.</p></li>
 <li><p><strong>pulser.mw_modes</strong> (<em>tuple</em><em>[</em><em>int</em><em>]</em>) – mw phase control modes for each channel.
 0 is 4-phase control using IQ modulation at SG and a switch.
-1 is 2-phase control using external 90-deg splitter and two switches.</p></li>
+1 is 2-phase control using external 90-deg splitter and two switches.
+2 is arbitral phase control using IQ modulation at SG
+(Analog output (AWG) is required for PG).</p></li>
+<li><p><strong>pulser.iq_amplitude</strong> (<em>float</em>) – (only for mw_mode 2) amplitude of analog IQ signal in V.</p></li>
 <li><p><strong>pulser.pd_trigger</strong> (<em>str</em>) – DAQ terminal name for PD trigger.</p></li>
 <li><p><strong>pulser.trigger_channel</strong> (<em>str</em>) – (default: gate) PG channel name for PD trigger.
 default value may look a bit strange, but considering shared physical line
