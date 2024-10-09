@@ -52,6 +52,10 @@ def is_CPlike(method: str) -> bool:
         "xy16N",
         "ddgate",
         "ddgateN",
+        "rcp",
+        "rxy4",
+        "rxy8",
+        "rxy16",
     )
 
 
