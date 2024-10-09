@@ -757,13 +757,8 @@ class DDGenerator(PatternGenerator):
                 raise ValueError(f"Unknown method {method}")
 
             pattern *= Nconst
-
-            fst = list(pattern[0])
-            fst[1] = tau_l
-            last = list(pattern[-1])
-            last[1] = tau_f
-            pattern[0] = tuple(fst)
-            pattern[-1] = tuple(last)
+            pattern[0] = (pattern[0][0], tau_l)
+            pattern[-1] = (pattern[-1][0], tau_f)
 
             return init_ptn + pattern + read_ptn
 
@@ -935,6 +930,157 @@ class DDGenerator(PatternGenerator):
         return blocks, freq, common_pulses
 
 
+class RDDGenerator(PatternGenerator):
+    """Generate Pulse Pattern for Randomized Dynamical Decoupling measurement.
+
+    :param 90pulse: duration of 90 deg (pi/2) pulse
+    :type 90pulse: float
+    :param 180pulse: duration of 180 deg (pi) pulse
+    :type 180pulse: float
+    :param Nconst: Number of pulse repeats
+    :type Nconst: int
+    :param readY: If True, readout by Y projection.
+    :type readY: bool
+    :param seed: Random seed
+    :type seed: int
+    :param randomize_each: if "tau", generate randomized phases for each tau.
+        if "pattern", generate randomized phases for each pattern.
+    :type randomize_each: str
+
+    pattern0 => invert read (readout |0>)
+    pattern1 => normal read (readout |1>)
+
+    """
+
+    def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
+        pd = P.ParamDict()
+        pd["90pulse"] = P.FloatParam(
+            10e-9,
+            1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="90 deg (pi/2) pulse width.",
+        )
+        pd["180pulse"] = P.FloatParam(
+            -1e-9,
+            -1e-9,
+            1e-6,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
+        )
+        pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
+        pd["readY"] = P.BoolParam(False, doc="readout (apply pi/2 pulse) with phase Y.")
+        pd["invertY"] = P.BoolParam(False, doc="invert Y phase.")
+        pd["seed"] = P.IntParam(0, doc="random seed.")
+        pd["randomize_each"] = P.StrChoiceParam(
+            "no",
+            ["no", "tau", "pattern"],
+            doc="generate randomized phases for each tau or pattern generation.",
+        )
+        return pd
+
+    def _generate(
+        self,
+        xdata,
+        common_pulses: list[float],
+        pulse_params: dict,
+        partial: int,
+        reduce_start_divisor: int,
+        fix_base_width: int | None,
+    ):
+        if self.mode() in (0, 1):
+            raise ValueError("MW mode must be 2.")
+
+        p90, p180, Nconst, readY = [
+            pulse_params[k] for k in ["90pulse", "180pulse", "Nconst", "readY"]
+        ]
+        read_phase0 = mw_y_inv if readY else mw_x_inv
+        read_phase1 = mw_y if readY else mw_x
+        p0 = [p90, p180]
+        p1 = [p90, p180]
+
+        freq, xdata, common_pulses, p0, p1 = K.round_pulses(
+            self.freq, xdata, common_pulses, p0, p1, reduce_start_divisor, self.print_fn
+        )
+        p0 = p0 + [Nconst, read_phase0, self.method]
+        p1 = p1 + [Nconst, read_phase1, self.method]
+        rng = np.random.default_rng(pulse_params["seed"])
+        each = pulse_params["randomize_each"]
+        global_phases = rng.uniform(0.0, 360.0, size=Nconst)
+
+        def rotate(unit_ptn, global_phase):
+            ret = []
+            for channels, duration in unit_ptn:
+                ach = channels[0]
+                rot = AnalogChannel(ach.name(), ach.value() + global_phase)
+                ret.append(((rot,) + channels[1:], duration))
+            return ret
+
+        def gen(tau, p90, p180, Nconst, read_phase, method):
+            tau_f, tau_l = K.split_int(tau, self.split_fraction)
+            tau2_f, tau2_l = K.split_int(tau * 2, self.split_fraction)
+            init_ptn = [((mw_x, "mw"), p90), ((mw_x,), tau_f)]
+            read_ptn = [((read_phase,), tau_l), ((read_phase, "mw"), p90)]
+
+            px = [((mw_x,), tau2_l), ((mw_x, "mw"), p180), ((mw_x,), tau2_f)]
+            py = [((mw_y,), tau2_l), ((mw_y, "mw"), p180), ((mw_y,), tau2_f)]
+            ix = [((mw_x_inv,), tau2_l), ((mw_x_inv, "mw"), p180), ((mw_x_inv,), tau2_f)]
+            iy = [((mw_y_inv,), tau2_l), ((mw_y_inv, "mw"), p180), ((mw_y_inv,), tau2_f)]
+
+            if method == "cp":
+                unit = px
+            # cpmg is equivalent to cp when randomized
+            # elif method == "cpmg":
+            #     pattern = py
+            elif method == "xy4":
+                unit = px + py + px + py
+            elif method == "xy8":
+                unit = px + py + px + py + py + px + py + px
+            elif method == "xy16":
+                unit = (
+                    px + py + px + py + py + px + py + px + ix + iy + ix + iy + iy + ix + iy + ix
+                )
+            else:
+                raise ValueError(f"Unknown method {method}")
+
+            nonlocal global_phases
+            if each == "pattern":
+                global_phases = rng.uniform(0.0, 360.0, size=Nconst)
+            elif each == "tau" and read_phase == read_phase0:
+                # if each == "tau", regenerate at p0 only to make phase patterns of p0 and p1
+                # identical for given tau.
+                global_phases = rng.uniform(0.0, 360.0, size=Nconst)
+            pattern = []
+            for phi in global_phases:
+                pattern.extend(rotate(unit, phi))
+
+            pattern[0] = (pattern[0][0], tau_l)
+            pattern[-1] = (pattern[-1][0], tau_f)
+
+            return init_ptn + pattern + read_ptn
+
+        blocks = [
+            K.generate_blocks(
+                i,
+                v,
+                common_pulses,
+                gen,
+                p0,
+                p1,
+                read_phase0=read_phase0,
+                read_phase1=read_phase1,
+                partial=partial,
+                fix_base_width=fix_base_width,
+            )
+            for i, v in enumerate(xdata)
+        ]
+        return blocks, freq, common_pulses
+
+
 class DDNGenerator(PatternGenerator):
     """Generate Pulse Pattern for Dynamical Decoupling measurement (sweepN).
 
@@ -1051,12 +1197,8 @@ class DDNGenerator(PatternGenerator):
                 raise ValueError(f"Unknown method {method}")
             pattern *= n
 
-            fst = list(pattern[0])
-            fst[1] = tau_l
-            last = list(pattern[-1])
-            last[1] = tau_f
-            pattern[0] = tuple(fst)
-            pattern[-1] = tuple(last)
+            pattern[0] = (pattern[0][0], tau_l)
+            pattern[-1] = (pattern[-1][0], tau_f)
 
             return init_ptn + pattern + read_ptn
 
@@ -1428,12 +1570,8 @@ class XY8CorrelationGenerator(PatternGenerator):
             py = [((mw_y,), tau2_l), ((mw_y, "mw"), p180), ((mw_y,), tau2_f)]
             pattern = px + py + px + py + py + px + py + px
             pattern *= Nconst
-            fst = list(pattern[0])
-            fst[1] = tau_l
-            last = list(pattern[-1])
-            last[1] = tau_f
-            pattern[0] = tuple(fst)
-            pattern[-1] = tuple(last)
+            pattern[0] = (pattern[0][0], tau_l)
+            pattern[-1] = (pattern[-1][0], tau_f)
 
             xy8_first = init_ptn + pattern + storage_ptn
             xy8_second = reinit_ptn + pattern + read_ptn
@@ -1584,12 +1722,8 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
             py = [((mw_y,), tau2_l), ((mw_y, "mw"), p180), ((mw_y,), tau2_f)]
             pattern = px + py + px + py + py + px + py + px
             pattern *= Nconst
-            fst = list(pattern[0])
-            fst[1] = tau_l
-            last = list(pattern[-1])
-            last[1] = tau_f
-            pattern[0] = tuple(fst)
-            pattern[-1] = tuple(last)
+            pattern[0] = (pattern[0][0], tau_l)
+            pattern[-1] = (pattern[-1][0], tau_f)
 
             xy8_first = init_ptn + pattern + storage_ptn
             xy8_second = reinit_ptn + pattern + read_ptn
@@ -2087,4 +2221,10 @@ def make_generators(
         # these methods requires 4 phases (x, y, x_inv, y_inv) and unavailable in 2-phase mode.
         for key in ["xy16", "xy16N", "ddgate", "ddgateN"]:
             del generators[key]
+    if any([m == 2 for m in mw_modes]):
+        # Randomized DD. no rcpmg because it is equivalent to rcp.
+        generators["rcp"] = RDDGenerator(*args, method="cp")
+        generators["rxy4"] = RDDGenerator(*args, method="xy4")
+        generators["rxy8"] = RDDGenerator(*args, method="xy8")
+        generators["rxy16"] = RDDGenerator(*args, method="xy16")
     return generators
