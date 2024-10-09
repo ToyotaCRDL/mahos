@@ -644,7 +644,7 @@ class Pulser(Worker):
         return True
 
     def init_sg(self, params: dict) -> bool:
-        if self.mw_modes[0] == 0:
+        if self.mw_modes[0] in (0, 2):
             if not self.sg.configure_cw_iq(params["freq"], params["power"]):
                 self.logger.error("Error initializing SG.")
                 return False
@@ -656,7 +656,7 @@ class Pulser(Worker):
         if self.sg1 is None:
             return True
 
-        if self.mw_modes[1] == 0:
+        if self.mw_modes[1] in (0, 2):
             if not self.sg1.configure_cw_iq(params["freq1"], params["power1"]):
                 self.logger.error("Error initializing SG1.")
                 return False
