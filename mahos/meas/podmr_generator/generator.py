@@ -770,7 +770,7 @@ class DDGenerator(PatternGenerator):
         if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
-            read_phase0_ = read_phase0[:4]
+            read_phase0_ = mw_uninvert(read_phase0)
         else:
             raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -912,7 +912,7 @@ class DDGenerator(PatternGenerator):
         if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
-            read_phase0_ = read_phase0[:4]
+            read_phase0_ = mw_uninvert(read_phase0)
         else:
             raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -1063,7 +1063,7 @@ class DDNGenerator(PatternGenerator):
         if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
-            read_phase0_ = read_phase0[:4]
+            read_phase0_ = mw_uninvert(read_phase0)
         else:
             raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -1457,7 +1457,7 @@ class XY8CorrelationGenerator(PatternGenerator):
         if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
-            read_phase0_ = read_phase0[:4]
+            read_phase0_ = mw_uninvert(read_phase0)
         else:
             raise ValueError(f"Unknown MW mode: {self.mode()}")
 
@@ -1602,7 +1602,7 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
         if self.mode() in (0, 2):
             read_phase0_ = read_phase0
         elif self.mode() == 1:
-            read_phase0_ = read_phase0[:4]
+            read_phase0_ = mw_uninvert(read_phase0)
         else:
             raise ValueError(f"Unknown MW mode: {self.mode()}")
 
