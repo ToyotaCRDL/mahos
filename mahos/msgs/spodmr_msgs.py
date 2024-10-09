@@ -198,13 +198,13 @@ class SPODMRData(BasicMeasData, ComplexDataMixin):
             a = 2
         elif m == "trse":
             b = pp["tauconst"]
-        elif m in ["cp", "cpmg", "ddgate"]:
+        elif m in ["cp", "cpmg", "ddgate", "rcp"]:
             a = 2 * pp["Nconst"]
-        elif m == "xy4":
+        elif m in ["xy4", "rxy4"]:
             a = 2 * pp["Nconst"] * 4
-        elif m == "xy8":
+        elif m in ["xy8", "rxy8"]:
             a = 2 * pp["Nconst"] * 8
-        elif m == "xy16":
+        elif m in ["xy16", "rxy16"]:
             a = 2 * pp["Nconst"] * 16
 
         elif m in ["cpN", "cpmgN"]:
