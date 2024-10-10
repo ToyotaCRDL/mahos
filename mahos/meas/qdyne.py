@@ -87,6 +87,8 @@ class Qdyne(BasicMeasNode):
         :type pulser.block_base: int
         :param pulser.divide_block: (has preset) Default value of divide_block.
         :type pulser.divide_block: bool
+        :param pulser.channel_remap: mapping to fix default channel names.
+        :type pulser.channel_remap: dict[str | int, str | int]
 
         """
 

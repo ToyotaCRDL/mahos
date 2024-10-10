@@ -504,7 +504,10 @@ class Block(Message):
 
     def replace(
         self,
-        replace_dict: dict[str | int | AnalogChannel, tuple[str | int | AnalogChannel, ...]],
+        replace_dict: dict[
+            str | int | AnalogChannel,
+            str | int | AnalogChannel | tuple[str | int | AnalogChannel, ...],
+        ],
     ) -> Block:
         """Return copy of this Block with replaced channels.
 
@@ -519,7 +522,10 @@ class Block(Message):
             for before, after in replace_dict.items():
                 if before in ch:
                     new_ch.remove(before)
-                    new_ch.extend(after)
+                    if isinstance(after, (str, int, AnalogChannel)):
+                        new_ch.append(after)
+                    else:
+                        new_ch.extend(after)
             new_pattern.append((tuple(new_ch), period))
 
         return Block(self.name, new_pattern, Nrep=self.Nrep, trigger=self.trigger)
@@ -809,7 +815,10 @@ class Blocks(UserList):
 
     def replace(
         self,
-        replace_dict: dict[str | int | AnalogChannel, tuple[str | int | AnalogChannel, ...]],
+        replace_dict: dict[
+            str | int | AnalogChannel,
+            str | int | AnalogChannel | tuple[str | int | AnalogChannel, ...],
+        ],
     ) -> Blocks[Block]:
         """Return copy of the Blocks with replaced channels."""
 
@@ -1137,7 +1146,10 @@ class BlockSeq(Message):
 
     def replace(
         self,
-        replace_dict: dict[str | int | AnalogChannel, tuple[str | int | AnalogChannel, ...]],
+        replace_dict: dict[
+            str | int | AnalogChannel,
+            str | int | AnalogChannel | tuple[str | int | AnalogChannel, ...],
+        ],
     ) -> BlockSeq:
         """Return copy of this BlockSeq with replaced channels."""
 

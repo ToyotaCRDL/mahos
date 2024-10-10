@@ -62,11 +62,12 @@ class Bounds(object):
 class BlocksBuilder(object):
     """Build the PG Blocks for Qdyne from PODMR's Blocks."""
 
-    def __init__(self, minimum_block_length, block_base, mw_modes, iq_amplitude):
+    def __init__(self, minimum_block_length, block_base, mw_modes, iq_amplitude, channel_remap):
         self.minimum_block_length = minimum_block_length
         self.block_base = block_base
         self.mw_modes = mw_modes
         self.iq_amplitude = iq_amplitude
+        self.channel_remap = channel_remap
 
     def build_blocks(self, blocks, common_pulses, params, num_mw):
         divide = params.get("divide_block", False)
@@ -114,6 +115,9 @@ class BlocksBuilder(object):
         if invertY:
             blocks = K.invert_y_phase(blocks)
         blocks = K.encode_mw_phase(blocks, params, self.mw_modes, num_mw, self.iq_amplitude)
+
+        if self.channel_remap is not None:
+            blocks = blocks.replace(self.channel_remap)
 
         return blocks.simplify(), laser_timing
 
@@ -232,7 +236,9 @@ class Pulser(Worker):
         mbl = self.conf["minimum_block_length"]
         bb = self.conf["block_base"]
         iq_amplitude = self.conf.get("iq_amplitude", 0.0)
+        channel_remap = self.conf.get("channel_remap")
         self.mw_modes = tuple(self.conf.get("mw_modes", (0,)))
+
         self.generators = make_generators(
             freq=self.conf["pg_freq"],
             reduce_start_divisor=self.conf["reduce_start_divisor"],
@@ -241,9 +247,10 @@ class Pulser(Worker):
             block_base=bb,
             mw_modes=self.mw_modes,
             iq_amplitude=iq_amplitude,
+            channel_remap=channel_remap,
             print_fn=self.logger.info,
         )
-        self.builder = BlocksBuilder(mbl, bb, self.mw_modes, iq_amplitude)
+        self.builder = BlocksBuilder(mbl, bb, self.mw_modes, iq_amplitude, channel_remap)
 
         self.data = QdyneData()
         self.analyzer = QdyneAnalyzer()

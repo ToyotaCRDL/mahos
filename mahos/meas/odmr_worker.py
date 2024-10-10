@@ -50,7 +50,7 @@ class Sweeper(Worker):
         self._block_base = self.conf["block_base"]
         self._start_delay = self.conf.get("start_delay", 0.0)
         self._sg_first = self.conf.get("sg_first", False)
-        self._trigger_ch = self.conf.get("trigger_channel", "trigger")
+        self._channel_remap = self.conf.get("channel_remap")
         self._continue_mw = False
 
         self.data = ODMRData()
@@ -244,7 +244,7 @@ class Sweeper(Worker):
                     ("laser", gate_delay),
                     (("laser", "gate"), unit),
                     ("laser", window),
-                    (self._trigger_ch, unit),
+                    ("trigger", unit),
                 ],
                 trigger=True,
             )
@@ -258,7 +258,7 @@ class Sweeper(Worker):
                     (None, max(unit, bg_delay)),
                     ("gate", unit),
                     ("laser", window),
-                    (self._trigger_ch, unit),
+                    ("trigger", unit),
                 ],
                 trigger=True,
             )
@@ -270,7 +270,7 @@ class Sweeper(Worker):
                     (("laser", "mw"), gate_delay),
                     (("laser", "mw", "gate"), unit),
                     (("laser", "mw"), window),
-                    (self._trigger_ch, unit),
+                    ("trigger", unit),
                 ],
                 trigger=True,
             )
@@ -281,12 +281,15 @@ class Sweeper(Worker):
                     (None, max(unit, delay)),
                     ("gate", unit),
                     (("laser", "mw"), window),
-                    (self._trigger_ch, unit),
+                    ("trigger", unit),
                 ],
                 trigger=True,
             )
         self._adjust_block(b, 0)
-        blocks = Blocks([b]).simplify()
+        blocks = Blocks([b])
+        if self._channel_remap is not None:
+            blocks = blocks.replace(self._channel_remap)
+        blocks = blocks.simplify()
         return self.pg.configure_blocks(
             blocks, freq, trigger_type=TriggerType.HARDWARE_RISING, n_runs=1
         )
@@ -315,7 +318,7 @@ class Sweeper(Worker):
                     (("laser" "gate"), unit),
                     ("laser", window - unit),
                     (("laser" "gate"), unit),
-                    (self._trigger_ch, unit),
+                    ("trigger", unit),
                 ],
                 trigger=True,
             )
@@ -332,7 +335,7 @@ class Sweeper(Worker):
                     (None, max(unit, bg_delay)),
                     ("gate", unit),
                     ("laser", window),
-                    (("gate", self._trigger_ch), unit),
+                    (("gate", "trigger"), unit),
                 ],
                 trigger=True,
             )
@@ -345,7 +348,7 @@ class Sweeper(Worker):
                     (("laser", "mw", "gate"), unit),
                     (("laser", "mw"), window - unit),
                     (("laser", "mw", "gate"), unit),
-                    (self._trigger_ch, unit),
+                    ("trigger", unit),
                 ],
                 trigger=True,
             )
@@ -356,12 +359,15 @@ class Sweeper(Worker):
                     (None, max(unit, delay)),
                     ("gate", unit),
                     (("laser", "mw"), window),
-                    (("gate", self._trigger_ch), unit),
+                    (("gate", "trigger"), unit),
                 ],
                 trigger=True,
             )
         self._adjust_block(b, 0)
-        blocks = Blocks([b]).simplify()
+        blocks = Blocks([b])
+        if self._channel_remap is not None:
+            blocks = blocks.replace(self._channel_remap)
+        blocks = blocks.simplify()
         return self.pg.configure_blocks(
             blocks, freq, trigger_type=TriggerType.HARDWARE_RISING, n_runs=1
         )
@@ -396,7 +402,7 @@ class Sweeper(Worker):
         final = Block(
             "FINAL",
             [
-                (["gate", self._trigger_ch], trigger_width),
+                (["gate", "trigger"], trigger_width),
                 (None, max(0, min_len - trigger_width)),
             ],
         )
@@ -404,7 +410,10 @@ class Sweeper(Worker):
         for b in (init, final):
             self._adjust_block(b, 0)
         self._adjust_block(main, -1)
-        return Blocks([init, main, final]).simplify()
+        blocks = Blocks([init, main, final])
+        if self._channel_remap is not None:
+            blocks = blocks.replace(self._channel_remap)
+        return blocks.simplify()
 
     def _make_blocks_pulse_apd_bg(
         self,
@@ -473,7 +482,7 @@ class Sweeper(Worker):
         final_bg = Block(
             "FINAL-BG",
             [
-                (["gate", self._trigger_ch], trigger_width),
+                (["gate", "trigger"], trigger_width),
                 (None, max(0, min_len - trigger_width)),
             ],
         )
@@ -482,7 +491,10 @@ class Sweeper(Worker):
             self._adjust_block(b, 0)
         for b in (main, main_bg):
             self._adjust_block(b, -1)
-        return Blocks([init, main, final, init_bg, main_bg, final_bg]).simplify()
+        blocks = Blocks([init, main, final, init_bg, main_bg, final_bg])
+        if self._channel_remap is not None:
+            blocks = blocks.replace(self._channel_remap)
+        return blocks.simplify()
 
     def configure_pg_pulse_apd(self, params: dict) -> bool:
         freq = self.conf["pg_freq_pulse"]

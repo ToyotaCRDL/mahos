@@ -90,6 +90,8 @@ class PODMR(BasicMeasNode):
         :type pulser.divide_block: bool
         :param pulser.sg_freq: default value of sg frequency
         :type pulser.sg_freq: float
+        :param pulser.channel_remap: mapping to fix default channel names.
+        :type pulser.channel_remap: dict[str | int, str | int]
 
         :param fitter.rabi.c: default value of param "c" (base line) in RabiFitter.
             You can set the bounds using "c_min" and "c_max" too.

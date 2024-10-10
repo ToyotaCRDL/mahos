@@ -175,6 +175,7 @@ def build_blocks(
     mw_modes: tuple[int] = (0,),
     num_mw: int = 1,
     iq_amplitude: float = 0.0,
+    channel_remap: dict | None = None,
 ) -> tuple[Blocks[Block], list[int]]:
     """Build up the blocks by adding init and final blocks.
 
@@ -246,6 +247,9 @@ def build_blocks(
     if invertY:
         blocks = invert_y_phase(blocks)
     blocks = encode_mw_phase(blocks, params, mw_modes, num_mw, iq_amplitude)
+
+    if channel_remap is not None:
+        blocks = blocks.replace(channel_remap)
 
     return blocks.simplify(), laser_timing
 

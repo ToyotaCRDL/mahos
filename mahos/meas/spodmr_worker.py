@@ -156,20 +156,20 @@ class BlockSeqBuilder(object):
     def __init__(
         self,
         trigger_width: float,
-        trigger_channel: str,
         nest: bool,
         block_base: int,
         eos_margin: int,
         mw_modes: tuple[int],
         iq_amplitude: float,
+        channel_remap: dict | None,
     ):
         self.trigger_width = trigger_width
-        self.trigger_channel = trigger_channel
         self.nest = nest
         self.block_base = block_base
         self.eos_margin = eos_margin
         self.mw_modes = mw_modes
         self.iq_amplitude = iq_amplitude
+        self.channel_remap = channel_remap
 
     def fix_block_base(self, blk: Block, idx: int = 0) -> Block:
         res = blk.total_length() % self.block_base
@@ -223,7 +223,7 @@ class BlockSeqBuilder(object):
                 Block(
                     "trig",
                     [
-                        (self.trigger_channel, trigger_width),
+                        ("gate", trigger_width),
                         (None, blk0R.total_length() - trigger_width),
                     ],
                 )
@@ -232,7 +232,7 @@ class BlockSeqBuilder(object):
                 Block(
                     "trig",
                     [
-                        (self.trigger_channel, trigger_width),
+                        ("gate", trigger_width),
                         (None, blk1R.total_length() - trigger_width),
                     ],
                 )
@@ -303,7 +303,7 @@ class BlockSeqBuilder(object):
                 Block(
                     "trig",
                     [
-                        (self.trigger_channel, trigger_width),
+                        ("gate", trigger_width),
                         (None, blkR.total_length() - trigger_width),
                     ],
                 )
@@ -368,7 +368,7 @@ class BlockSeqBuilder(object):
                 Block(
                     "trig",
                     [
-                        (self.trigger_channel, trigger_width),
+                        ("gate", trigger_width),
                         (None, blk0R.total_length() - trigger_width),
                     ],
                 )
@@ -479,6 +479,9 @@ class BlockSeqBuilder(object):
             blockseq = K.invert_y_phase(blockseq)
         blockseq = K.encode_mw_phase(blockseq, params, self.mw_modes, num_mw, self.iq_amplitude)
 
+        if self.channel_remap is not None:
+            blockseq = blockseq.replace(self.channel_remap)
+
         return blockseq.simplify(), laser_duties, markers, oversample
 
 
@@ -519,6 +522,7 @@ class Pulser(Worker):
         self._pd_data_transfer = self.conf.get("pd_data_transfer")
         self._quick_resume = self.conf.get("quick_resume", True)
         iq_amplitude = self.conf.get("iq_amplitude", 0.0)
+        channel_remap = self.conf.get("channel_remap")
 
         self.generators = make_generators(
             freq=self.conf["pg_freq"],
@@ -528,17 +532,18 @@ class Pulser(Worker):
             block_base=self.conf["block_base"],
             mw_modes=self.mw_modes,
             iq_amplitude=iq_amplitude,
+            channel_remap=channel_remap,
             print_fn=self.logger.info,
         )
 
         self.builder = BlockSeqBuilder(
             self.conf.get("trigger_width", 1e-6),
-            self.conf.get("trigger_channel", "gate"),
             self.conf.get("nest_blockseq", False),
             self.conf["block_base"],
             self.conf.get("eos_margin", 0),
             self.mw_modes,
             iq_amplitude,
+            channel_remap,
         )
 
         self.data = SPODMRData()

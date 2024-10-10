@@ -47,8 +47,8 @@ class ODMR(BasicMeasNode):
         :type sweeper.pd_names: list[str]
         :param sweeper.pd_analog: (default: False) set True if PD is AnalogIn-based.
         :type sweeper.pd_analog: bool
-        :param sweeper.trigger_channel: (default: trigger) PG channel name for SG trigger.
-        :type sweeper.trigger_channel: str
+        :param sweeper.channel_remap: mapping to fix default channel names.
+        :type sweeper.channel_remap: dict[str | int, str | int]
 
         :param sweeper.start_delay: (default: 0.0) delay time (sec.) before starting SG/PG output.
         :type sweeper.start_delay: float

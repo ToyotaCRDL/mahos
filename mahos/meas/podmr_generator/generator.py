@@ -51,6 +51,7 @@ class PatternGenerator(object):
         block_base: int = 4,
         mw_modes: tuple[int] = (0,),
         iq_amplitude: float = 0.0,
+        channel_remap: dict | None = None,
         print_fn=print,
         method: str = "",
     ):
@@ -61,6 +62,7 @@ class PatternGenerator(object):
         self.block_base = block_base
         self.mw_modes = tuple(mw_modes)
         self.iq_amplitude = iq_amplitude
+        self.channel_remap = channel_remap
         self.print_fn = print_fn
         self.method = method
         self._params = None
@@ -144,6 +146,7 @@ class PatternGenerator(object):
             mw_modes=self.mw_modes,
             num_mw=self.num_mw(),
             iq_amplitude=self.iq_amplitude,
+            channel_remap=self.channel_remap,
         )
         return blocks, freq, laser_timing
 
@@ -1790,6 +1793,7 @@ class DDGateGenerator(PatternGenerator):
         block_base: int = 4,
         mw_modes: tuple[int] = (0,),
         iq_amplitude: float = 0.0,
+        channel_remap: dict | None = None,
         print_fn=print,
         method: str = "",
     ):
@@ -1802,6 +1806,7 @@ class DDGateGenerator(PatternGenerator):
             block_base=block_base,
             mw_modes=mw_modes,
             iq_amplitude=iq_amplitude,
+            channel_remap=channel_remap,
             print_fn=print_fn,
             method=method,
         )
@@ -2177,6 +2182,7 @@ def make_generators(
     block_base: int = 4,
     mw_modes: tuple[int] = (0,),
     iq_amplitude: float = 0.0,
+    channel_remap: dict | None = None,
     print_fn=print,
 ):
     args = (
@@ -2187,6 +2193,7 @@ def make_generators(
         block_base,
         mw_modes,
         iq_amplitude,
+        channel_remap,
         print_fn,
     )
     generators = {

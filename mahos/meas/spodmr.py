@@ -70,10 +70,6 @@ class SPODMR(BasicMeasNode):
         :type pulser.iq_amplitude: float
         :param pulser.pd_trigger: DAQ terminal name for PD trigger.
         :type pulser.pd_trigger: str
-        :param pulser.trigger_channel: (default: gate) PG channel name for PD trigger.
-            default value may look a bit strange, but considering shared physical line
-            with PD gate for ODMR (Analog PD mode).
-        :type pulser.trigger_channel: str
         :param pulser.trigger_width: (default: 1e-6) pulse width for PD trigger
         :type pulser.trigger_width: float
         :param pulser.split_fraction: (default: 4) fraction factor (F) to split the free period
@@ -92,6 +88,8 @@ class SPODMR(BasicMeasNode):
         :type pulser.block_base: int
         :param pulser.nest_blockseq: (has preset, default: False) allow nested BlockSeq.
         :type pulser.nest_blockseq: bool
+        :param pulser.channel_remap: mapping to fix default channel names.
+        :type pulser.channel_remap: dict[str | int, str | int]
 
         :param fitter.rabi.c: default value of param "c" (base line) in RabiFitter.
             You can set the bounds using "c_min" and "c_max" too.
