@@ -117,7 +117,7 @@ class InstrumentInterface(object):
 
         """
 
-        return self.cli.set(self.inst, key, value)
+        return self.cli.set(self.inst, key, value, label)
 
     def get(self, key: str, args=None, label: str = ""):
         """Get an instrument setting or commanding value.
@@ -126,7 +126,7 @@ class InstrumentInterface(object):
 
         """
 
-        return self.cli.get(self.inst, key, args)
+        return self.cli.get(self.inst, key, args, label)
 
     def help(self, func: str | None = None) -> str:
         """Get help of instrument `name`.

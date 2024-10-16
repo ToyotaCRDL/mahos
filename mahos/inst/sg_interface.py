@@ -16,8 +16,8 @@ from .interface import InstrumentInterface
 class SGInterface(InstrumentInterface):
     """Interface for Signal Genetator."""
 
-    def get_bounds(self) -> dict:
-        """Get bounds.
+    def get_bounds(self, ch: int = 1) -> dict:
+        """Get bounds of channel `ch`.
 
         Returns:
             freq (low, high): frequency bounds.
@@ -25,17 +25,19 @@ class SGInterface(InstrumentInterface):
 
         """
 
-        return self.get("bounds")
+        l = "" if ch == 1 else f"{ch}"
+        return self.get("bounds", label=l)
 
     def get_opc(self, delay=None) -> bool:
         """Query OPC (operation complete) status."""
 
         return self.get("opc", delay)
 
-    def set_output(self, on: bool) -> bool:
+    def set_output(self, on: bool, ch: int = 1) -> bool:
         """Set RF output switch."""
 
-        return self.set("output", on)
+        l = "" if ch == 1 else f"{ch}"
+        return self.set("output", on, label=l)
 
     def set_dm_source(self, source: str) -> bool:
         """Set digital (IQ) modulation source."""
@@ -62,7 +64,7 @@ class SGInterface(InstrumentInterface):
 
         return self.set("abort")
 
-    def configure_cw(self, freq: float, power: float) -> bool:
+    def configure_cw(self, freq: float, power: float, ch: int = 1, reset: bool = True) -> bool:
         """Configure Continuous Wave output.
 
         :param freq: (Hz) frequnecy.
@@ -70,9 +72,10 @@ class SGInterface(InstrumentInterface):
 
         """
 
-        return self.configure({"freq": freq, "power": power}, label="cw")
+        l = "cw" if ch == 1 else f"cw{ch}"
+        return self.configure({"freq": freq, "power": power, "reset": reset}, label=l)
 
-    def configure_cw_iq(self, freq: float, power: float) -> bool:
+    def configure_cw_iq(self, freq: float, power: float, ch: int = 1, reset: bool = True) -> bool:
         """Configure Continuous Wave output with external IQ modulation.
 
         :param freq: (Hz) frequnecy.
@@ -80,7 +83,8 @@ class SGInterface(InstrumentInterface):
 
         """
 
-        return self.configure({"freq": freq, "power": power}, label="cw_iq")
+        l = "cw_iq" if ch == 1 else f"cw_iq{ch}"
+        return self.configure({"freq": freq, "power": power, "reset": reset}, label=l)
 
     def configure_point_trig_freq_sweep(
         self, start: float, stop: float, num: int, power: float, params: dict | None = None

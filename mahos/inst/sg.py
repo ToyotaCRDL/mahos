@@ -493,6 +493,9 @@ class N5182B(VisaInstrument):
 class MG3710E(VisaInstrument):
     """Anritsu MG3710E Vector Signal Generator.
 
+    If second SG (SG2) is available, only CW output from SG2 can be used through
+    configure(label="cw2") set(key="output", label="2").
+
     :param power_bounds: Power bounds in dBm (min, max).
     :type power_bounds: tuple[float, float]
     :param freq_bounds: Frequency bounds in Hz (min, max).
@@ -553,6 +556,9 @@ class MG3710E(VisaInstrument):
 
         self.power_min, self.power_max = self.conf.get("power_bounds", (-144.0, 0.0))
         self.freq_min, self.freq_max = self.conf.get("freq_bounds", (9e3, 6e9))
+        self.power_min2, self.power_max2 = self.conf.get("power_bounds2", (-144.0, 0.0))
+        self.freq_min2, self.freq_max2 = self.conf.get("freq_bounds2", (9e3, 6e9))
+
         self._mode = Mode.UNCONFIGURED
         c = self.conf.get("point_trig_freq_sweep", {})
         self.point_trig_freq_sweep_conf = {
@@ -572,6 +578,18 @@ class MG3710E(VisaInstrument):
             "freq": self.get_freq_bounds(),
         }
 
+    def get_power_bounds2(self):
+        return self.power_min2, self.power_max2
+
+    def get_freq_bounds2(self):
+        return self.freq_min2, self.freq_max2
+
+    def get_bounds2(self):
+        return {
+            "power": self.get_power_bounds2(),
+            "freq": self.get_freq_bounds2(),
+        }
+
     def query_power_condition(self):
         ans = int(self.inst.query("STAT:QUES:COND?"))
 
@@ -582,13 +600,13 @@ class MG3710E(VisaInstrument):
 
         return ans
 
-    def set_output(self, on: bool) -> bool:
+    def set_output(self, on: bool, ch: int = 1) -> bool:
         if on:
-            self.inst.write("OUTP:STAT ON")
-            self.logger.info("Output ON")
+            self.inst.write(f"OUTP{ch}:STAT ON")
+            self.logger.info(f"SG{ch} Output ON")
         else:
-            self.inst.write("OUTP:STAT OFF")
-            self.logger.info("Output OFF")
+            self.inst.write(f"OUTP{ch}:STAT OFF")
+            self.logger.info(f"SG{ch} Output OFF")
         return True
 
     def set_init_cont(self, on: bool) -> bool:
@@ -606,7 +624,7 @@ class MG3710E(VisaInstrument):
         self.logger.warning("Abort is not supported for this instrument.")
         return False
 
-    def set_freq_mode(self, mode: str) -> bool:
+    def set_freq_mode(self, mode: str, ch: int = 1) -> bool:
         """Set Frequency mode.
 
         Available values are defined in self.FREQ_MODE.
@@ -617,10 +635,10 @@ class MG3710E(VisaInstrument):
             self.logger.error("invalid frequency mode.")
             return False
 
-        self.inst.write("FREQ:MODE " + mode)
+        self.inst.write(f"SOUR{ch}:FREQ:MODE " + mode)
         return True
 
-    def set_power_mode(self, mode: str) -> bool:
+    def set_power_mode(self, mode: str, ch: int = 1) -> bool:
         """Set Power mode.
 
         Available values are defined in self.POWER_MODE.
@@ -631,7 +649,7 @@ class MG3710E(VisaInstrument):
             self.logger.error("invalid power mode.")
             return False
 
-        self.inst.write("POW:MODE " + mode)
+        self.inst.write(f"SOUR{ch}:POW:MODE " + mode)
         return True
 
     def _fmt_freq(self, freq) -> str | None:
@@ -652,12 +670,12 @@ class MG3710E(VisaInstrument):
             self.logger.error("Invalid type {} of frequency {}".format(type(freq), freq))
             return None
 
-    def set_freq_CW(self, freq) -> bool:
+    def set_freq_CW(self, freq, ch: int = 1) -> bool:
         f = self._fmt_freq(freq)
         if f is None:
             return False
 
-        self.inst.write("FREQ " + f)
+        self.inst.write(f"SOUR{ch}:FREQ " + f)
         return True
 
     def set_freq_range(self, start, stop) -> bool:
@@ -672,12 +690,12 @@ class MG3710E(VisaInstrument):
         self.inst.write(f"SWE:POIN {num:d}")
         return True
 
-    def set_power(self, power_dBm) -> bool:
+    def set_power(self, power_dBm, ch: int = 1) -> bool:
         if power_dBm < self.power_min or power_dBm > self.power_max:
             self.logger.error("Invalid power.")
             return False
 
-        self.inst.write(f"POW {power_dBm:.3f} dBm")
+        self.inst.write(f"SOUR{ch}:POW {power_dBm:.3f} dBm")
         return True
 
     def set_list_type(self, stepped=True) -> bool:
@@ -791,36 +809,36 @@ class MG3710E(VisaInstrument):
             self.logger.info("Digital modulation cannot be turned OFF.")
             return False
 
-    def set_modulation(self, on: bool) -> bool:
+    def set_modulation(self, on: bool, ch: int = 1) -> bool:
         """If on is True turn on modulation."""
 
         if on:
-            self.inst.write(":OUTP:MOD:STAT ON")
-            self.logger.info("Modulation ON.")
+            self.inst.write(f":OUTP{ch}:MOD:STAT ON")
+            self.logger.info(f"SG{ch} Modulation ON.")
         else:
-            self.inst.write(":OUTP:MOD:STAT OFF")
-            self.logger.info("Modulation OFF.")
+            self.inst.write(f":OUTP{ch}:MOD:STAT OFF")
+            self.logger.info(f"SG{ch} Modulation OFF.")
         return True
 
-    def set_arb(self, on: bool) -> bool:
+    def set_arb(self, on: bool, ch: int = 1) -> bool:
         if on:
-            self.inst.write(":RAD:ARB ON")
+            self.inst.write(f"SOUR{ch}:RAD:ARB ON")
         else:
-            self.inst.write(":RAD:ARB OFF")
+            self.inst.write(f"SOUR{ch}:RAD:ARB OFF")
         return True
 
-    def configure_cw(self, freq, power) -> bool:
+    def configure_cw(self, freq, power, ch: int = 1, reset: bool = True) -> bool:
         """Setup Continuous Wave output with fixed freq and power."""
 
         self._mode = Mode.UNCONFIGURED
         success = (
-            self.rst_cls()
-            and self.set_freq_mode("CW")
-            and self.set_power_mode("FIX")
-            and self.set_freq_CW(freq)
-            and self.set_power(power)
-            and self.set_arb(False)
-            and self.set_dm_output(True)
+            (self.rst_cls() if reset else True)
+            and self.set_freq_mode("CW", ch=ch)
+            and self.set_power_mode("FIX", ch=ch)
+            and self.set_freq_CW(freq, ch=ch)
+            and self.set_power(power, ch=ch)
+            and self.set_arb(False, ch=ch)
+            and self.set_modulation(False, ch=ch)
             and self.check_error()
         )
         if success:
@@ -830,12 +848,13 @@ class MG3710E(VisaInstrument):
             self.logger.info("Failed to configure CW output.")
         return success
 
-    def configure_cw_iq(self, freq, power) -> bool:
+    def configure_cw_iq(self, freq, power, reset: bool = True) -> bool:
         """Setup Continuous Wave output with fixed freq and power and external IQ modulation."""
 
         success = (
-            self.configure_cw(freq, power)
-            and self.set_modulation(True)
+            self.configure_cw(freq, power, ch=1, reset=reset)
+            and self.set_modulation(True, ch=1)
+            and self.set_dm_output(True)
             and self.set_dm_source("EXT")
             and self.set_dm(True)
             and self.query_opc()
@@ -849,6 +868,7 @@ class MG3710E(VisaInstrument):
         num,
         power,
         trig="",
+        reset: bool = True,
     ) -> bool:
         """Convenient function to set up triggered frequency sweep.
 
@@ -859,7 +879,7 @@ class MG3710E(VisaInstrument):
 
         self._mode = Mode.UNCONFIGURED
         success = (
-            self.rst_cls()
+            (self.rst_cls() if reset else True)
             and self.set_freq_mode("LIST")
             and self.set_power_mode("FIX")
             and self.set_sweep_trigger(True)
@@ -889,14 +909,20 @@ class MG3710E(VisaInstrument):
         if key == "opc":
             return self.query_opc(delay=args)
         elif key == "bounds":
-            return self.get_bounds()
+            if label.endswith("2"):
+                return self.get_bounds2()
+            else:
+                return self.get_bounds()
         else:
             self.logger.error(f"unknown get() key: {key}")
             return None
 
     def set(self, key: str, value=None, label: str = "") -> bool:
         if key == "output":
-            return self.set_output(value)
+            if label.endswith("2"):
+                return self.set_output(value, ch=2)
+            else:
+                return self.set_output(value, ch=1)
         elif key == "dm_source":
             return self.set_dm_source(value)
         elif key == "dm":
@@ -922,15 +948,25 @@ class MG3710E(VisaInstrument):
                 params["num"],
                 params["power"],
                 trig=params.get("trig", ""),
+                reset=params.get("reset", True),
             )
-        elif label == "cw":
+        elif label.startswith("cw"):
             if not self.check_required_params(params, ("freq", "power")):
                 return False
-            return self.configure_cw(params["freq"], params["power"])
+            if label.endswith("2"):
+                return self.configure_cw(
+                    params["freq"], params["power"], ch=2, reset=params.get("reset", True)
+                )
+            else:
+                return self.configure_cw(
+                    params["freq"], params["power"], ch=1, reset=params.get("reset", True)
+                )
         elif label == "cw_iq":
             if not self.check_required_params(params, ("freq", "power")):
                 return False
-            return self.configure_cw_iq(params["freq"], params["power"])
+            return self.configure_cw_iq(
+                params["freq"], params["power"], reset=params.get("reset", True)
+            )
         else:
             self.logger.error(f"Unknown label {label}")
             return False

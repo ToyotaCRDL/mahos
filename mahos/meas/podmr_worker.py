@@ -243,27 +243,17 @@ class PODMRDataOperator(object):
 
 class Bounds(object):
     def __init__(self):
-        self._sg = None
-        self._sg1 = None
+        self._sgs = {}
         self._fg = None
 
-    def has_sg(self):
-        return self._sg is not None
+    def has_sg(self, i):
+        return i in self._sgs and self._sgs[i] is not None
 
-    def sg(self):
-        return self._sg
+    def sg(self, i):
+        return self._sgs[i]
 
-    def set_sg(self, sg_bounds):
-        self._sg = sg_bounds
-
-    def has_sg1(self):
-        return self._sg1 is not None
-
-    def sg1(self):
-        return self._sg1
-
-    def set_sg1(self, sg1_bounds):
-        self._sg1 = sg1_bounds
+    def set_sg(self, i, sg_bounds):
+        self._sgs[i] = sg_bounds
 
     def has_fg(self):
         return self._fg is not None
@@ -286,23 +276,29 @@ class Pulser(Worker):
         Worker.__init__(self, cli, logger, conf)
         self.load_conf_preset(cli)
 
-        self.sg = SGInterface(cli, "sg")
-        if "sg1" in cli.insts():
-            self.sg1 = SGInterface(cli, "sg1")
-        else:
-            self.sg1 = None
+        self.sgs = {"sg": SGInterface(cli, "sg")}
+        _default_channels = [{"sg": "sg"}]
+        for i in range(1, 10):
+            name = f"sg{i}"
+            if name in cli.insts():
+                self.sgs[name] = SGInterface(cli, name)
+                _default_channels.append({"sg": name})
+            else:
+                break
+
+        self.mw_modes = tuple(self.conf.get("mw_modes", (0,) * len(self.sgs)))
+        self.mw_channels = self.conf.get("mw_channels", _default_channels)
+
         self.pg = PGInterface(cli, "pg")
         self.tdc = TDCInterface(cli, "tdc")
         if "fg" in cli:
             self.fg = FGInterface(cli, "fg")
         else:
             self.fg = None
-        self.add_instruments(self.sg, self.sg1, self.pg, self.tdc, self.fg)
+        self.add_instruments(self.pg, self.tdc, self.fg, *self.sgs.values())
 
         self.timer = None
         self.length = self.offsets = self.freq = self.laser_timing = None
-
-        self.mw_modes = tuple(self.conf.get("mw_modes", (0,) if self.sg1 is None else (0, 0)))
 
         self.check_required_conf(
             ["block_base", "pg_freq", "reduce_start_divisor", "minimum_block_length"]
@@ -392,27 +388,50 @@ class Pulser(Worker):
         return True
 
     def init_sg(self, params: dict) -> bool:
-        if self.mw_modes[0] in (0, 2):
-            if not self.sg.configure_cw_iq(params["freq"], params["power"]):
-                self.logger.error("Error initializing SG.")
-                return False
-        else:  # mode 1
-            if not self.sg.configure_cw(params["freq"], params["power"]):
-                self.logger.error("Error initializing SG.")
-                return False
+        configured = []
+        for i, (channel, mode) in enumerate(zip(self.mw_channels, self.mw_modes)):
+            sg: SGInterface = self.sgs[channel["sg"]]
+            ch = channel.get("ch", 1)
+            reset = channel["sg"] not in configured
+            idx = "" if not i else i
+            freq = params[f"freq{idx}"]
+            power = params[f"power{idx}"]
 
-        if self.sg1 is None:
-            return True
+            if mode in (0, 2):
+                if not sg.configure_cw_iq(freq, power, ch=ch, reset=reset):
+                    self.logger.error(f"Error initializing SG{idx}.")
+                    return False
+            else:  # mode 1
+                if not sg.configure_cw(freq, power, ch=ch, reset=reset):
+                    self.logger.error(f"Error initializing SG{idx}.")
+                    return False
+            configured.append(channel["sg"])
+        return True
 
-        if self.mw_modes[1] in (0, 2):
-            if not self.sg1.configure_cw_iq(params["freq1"], params["power1"]):
-                self.logger.error("Error initializing SG1.")
-                return False
-        else:  # mode 1
-            if not self.sg1.configure_cw(params["freq1"], params["power1"]):
-                self.logger.error("Error initializing SG1.")
+    def start_sg(self, params: dict) -> bool:
+        for i, channel in enumerate(self.mw_channels):
+            sg: SGInterface = self.sgs[channel["sg"]]
+            ch = channel.get("ch", 1)
+            idx = "" if not i else i
+            nomw = params.get(f"nomw{idx}", False)
+            if not sg.set_output(not nomw, ch=ch):
+                self.logger.error(f"Error starting SG{idx}.")
                 return False
         return True
+
+    def stop_sg(self) -> bool:
+        success = True
+        for i, channel in enumerate(self.mw_channels):
+            sg: SGInterface = self.sgs[channel["sg"]]
+            ch = channel.get("ch", 1)
+            success &= sg.set_output(False, ch=ch) and sg.release()
+        return success
+
+    def get_sg_bounds(self, i: int):
+        channel = self.mw_channels[i]
+        sg: SGInterface = self.sgs[channel["sg"]]
+        ch = channel.get("ch", 1)
+        return sg.get_bounds(ch)
 
     def _fg_enabled(self, params: dict) -> bool:
         return "fg" in params and params["fg"] is not None and params["fg"]["mode"] != "disable"
@@ -556,9 +575,7 @@ class Pulser(Worker):
 
         # start instruments
         success = self.tdc.stop() and self.tdc.clear() and self.tdc.start()
-        success &= self.sg.set_output(not self.data.params.get("nomw", False))
-        if self.sg1 is not None:
-            success &= self.sg1.set_output(not self.data.params.get("nomw1", False))
+        success &= self.start_sg(self.data.params)
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(True)
         # time.sleep(1)
@@ -568,9 +585,7 @@ class Pulser(Worker):
             self.pg.stop()
             if self._fg_enabled(self.data.params):
                 self.fg.set_output(False)
-            self.sg.set_output(False)
-            if self.sg1 is not None:
-                self.sg1.set_output(False)
+            self.stop_sg()
             self.tdc.stop()
             return self.fail_with_release("Error starting pulser.")
 
@@ -605,13 +620,11 @@ class Pulser(Worker):
         success = (
             self.pg.stop()
             and self.pg.release()
-            and self.sg.set_output(False)
-            and self.sg.release()
-        )
-        if self.sg1 is not None:
-            success &= self.sg1.set_output(False) and self.sg1.release()
-        success &= (
-            self.tdc.stop() and self.wait_tdc_stop() and self.update() and self.tdc.release()
+            and self.stop_sg()
+            and self.tdc.stop()
+            and self.wait_tdc_stop()
+            and self.update()
+            and self.tdc.release()
         )
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(False)
@@ -696,24 +709,10 @@ class Pulser(Worker):
             self.logger.error(f"Unknown label {label}")
             return None
 
-        if self.bounds.has_sg():
-            sg = self.bounds.sg()
-        else:
-            sg = self.sg.get_bounds()
-            if sg is None:
-                self.logger.error("Failed to get SG bounds.")
-                return None
-            self.bounds.set_sg(sg)
-
-        f_min, f_max = sg["freq"]
-        p_min, p_max = sg["power"]
-        sg_freq = max(min(self.conf.get("sg_freq", 2.8e9), f_max), f_min)
         # fundamentals
         d = P.ParamDict(
             resume=P.BoolParam(False),
             quick_resume=P.BoolParam(False),
-            freq=P.FloatParam(sg_freq, f_min, f_max),
-            power=P.FloatParam(p_min, p_min, p_max),
             timebin=P.FloatParam(3.2e-9, 0.1e-9, 100e-9),
             interval=P.FloatParam(1.0, 0.1, 10.0),
             sweeps=P.IntParam(0, 0, 9999999, doc="limit number of sweeps"),
@@ -735,21 +734,22 @@ class Pulser(Worker):
             ),
         )
 
-        if self.sg1 is not None:
-            if self.bounds.has_sg1():
-                sg1 = self.bounds.sg1()
+        for i in range(len(self.mw_channels)):
+            idx = "" if not i else i
+            if self.bounds.has_sg(i):
+                sg = self.bounds.sg(i)
             else:
-                sg1 = self.sg1.get_bounds()
-                if sg1 is None:
-                    self.logger.error("Failed to get SG1 bounds.")
+                sg = self.get_sg_bounds(i)
+                if sg is None:
+                    self.logger.error(f"Failed to get SG{idx} bounds.")
                     return None
-                self.bounds.set_sg1(sg1)
-            f_min, f_max = sg1["freq"]
-            p_min, p_max = sg1["power"]
-            sg1_freq = max(min(self.conf.get("sg1_freq", 2.8e9), f_max), f_min)
-            d["freq1"] = P.FloatParam(sg1_freq, f_min, f_max)
-            d["power1"] = P.FloatParam(p_min, p_min, p_max)
-            d["nomw1"] = P.BoolParam(False)
+                self.bounds.set_sg(i, sg)
+
+            f_min, f_max = sg["freq"]
+            p_min, p_max = sg["power"]
+            sg_freq = max(min(self.conf.get(f"sg{idx}_freq", 2.8e9), f_max), f_min)
+            d[f"freq{idx}"] = (P.FloatParam(sg_freq, f_min, f_max),)
+            d[f"power{idx}"] = (P.FloatParam(p_min, p_min, p_max),)
 
         self._get_param_dict_pulse(label, d)
         d["pulse"] = self.generators[label].pulse_params()
