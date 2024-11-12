@@ -271,7 +271,9 @@ def encode_mw_phase(
         return encode_mw_phase_multi(blocks, params, mw_modes, iq_amplitude)
 
 
-def encode_mode1(blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0) -> Blocks[Block] | BlockSeq:
+def encode_mode1(
+    blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0, remove_pulse: bool = True
+) -> Blocks[Block] | BlockSeq:
     f = "" if ch_from == 0 else str(ch_from)
     if isinstance(ch_to, int):
         ch_to = (ch_to,)
@@ -284,13 +286,15 @@ def encode_mode1(blocks: Blocks[Block] | BlockSeq, ch_from=0, ch_to=0) -> Blocks
         new_ch = list(ch)
         if f"mw{f}" in new_ch:
             if mw_x in new_ch:
-                new_ch.remove(f"mw{f}")
+                if remove_pulse:
+                    new_ch.remove(f"mw{f}")
                 new_ch.remove(mw_x)
                 for c in ch_to:
                     t = "" if c == 0 else str(c)
                     new_ch.append(f"mw{t}_i")
             elif mw_y in new_ch:
-                new_ch.remove(f"mw{f}")
+                if remove_pulse:
+                    new_ch.remove(f"mw{f}")
                 new_ch.remove(mw_y)
                 for c in ch_to:
                     t = "" if c == 0 else str(c)
@@ -339,10 +343,15 @@ def encode_mw_phase_single(
 ) -> Blocks[Block] | BlockSeq:
     """Encode mw phase from x/y(_inv) to i/q for single channel sequence."""
 
+    for i in range(2, len(mw_modes)):
+        if not params[f"nomw{i}"]:
+            msg = f"mw{i} is enabled but cannot encode MW channel #2 or greater."
+            raise NotImplementedError(msg)
+
     # if two mw channels are available, output same timing signal for mw0 and/or mw1
     # according to nomw parameters.
     nomw = params.get("nomw", False)
-    nomw1 = "nomw1" not in params or params["nomw1"]
+    nomw1 = params.get("nomw1", True)
     if nomw and nomw1:
         d = {
             "mw": (),
@@ -395,9 +404,21 @@ def encode_mw_phase_single(
             return encode_mode1(blocks, ch_from=0, ch_to=(0, 1))
         elif mw_modes == (2, 2):
             return encode_mode2(blocks, iq_amplitude, ch_from=0, ch_to=(0, 1))
+        elif mw_modes == (0, 1):
+            d = {
+                mw_x: (mw_x, "mw_i", "mw_q"),
+                mw_y: (mw_y, "mw_q"),
+            }
+            return encode_mode1(blocks.replace(d), ch_from=0, ch_to=1, remove_pulse=False)
+        elif mw_modes == (1, 0):
+            d = {
+                mw_x: (mw_x, "mw1_i", "mw1_q"),
+                mw_y: (mw_y, "mw1_q"),
+            }
+            return encode_mode1(blocks.replace(d), ch_from=0, ch_to=0, remove_pulse=False)
         else:
-            # TODO: combination modes (0, 1) or (1, 0) is a little complicated.
-            raise ValueError(f"Unsupported mw_modes: {mw_modes} for multiplex")
+            # TODO: the other combination of modes.
+            raise ValueError(f"Unsupported mw_modes: {mw_modes} to multiplex")
 
 
 def encode_mw_phase_multi(

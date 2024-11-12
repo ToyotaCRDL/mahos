@@ -85,13 +85,20 @@ class PatternGenerator(object):
 
         if self.num_mw() == 1:
             # infer currently-active channel for single channel sequence.
-            # when mw0 is disabled and mw1 is enabled, use mw1.
-            # otherwise, default to mw0.
+            # if mw0 is disabled and mw1 is enabled, use mode of mw1.
+            # if any mode1 is included in active channels, use mode1.
+            # otherwise, default to mode of mw0.
             nomw = self._params.get("nomw", False)
-            nomw1 = "nomw1" not in self._params or self._params["nomw1"]
+            nomw1 = self._params.get("nomw1", True)
             if nomw and not nomw1:
                 return self.mw_modes[1]
-            else:
+            elif not nomw and not nomw1:
+                # if any mode 1 is included, use mode 1 for multiplexing.
+                if any([m == 1 for m in self.mw_modes]):
+                    return 1
+                else:
+                    return self.mw_modes[0]
+            else:  # no nomw and nomw1 (mw0 only) || nomw and nomw1 (fall back).
                 return self.mw_modes[0]
 
         # Won't reach here: ch will be given for multi channel sequence.
