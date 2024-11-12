@@ -283,8 +283,6 @@ class Pulser(Worker):
             if name in cli.insts():
                 self.sgs[name] = SGInterface(cli, name)
                 _default_channels.append({"sg": name})
-            else:
-                break
 
         self.mw_modes = tuple(self.conf.get("mw_modes", (0,) * len(self.sgs)))
         self.mw_channels = self.conf.get("mw_channels", _default_channels)
@@ -683,7 +681,6 @@ class Pulser(Worker):
 
         ## common switches
         d["invert_sweep"] = P.BoolParam(False)
-        d["nomw"] = P.BoolParam(False)
         d["enable_reduce"] = P.BoolParam(False)
         d["divide_block"] = P.BoolParam(self.conf.get("divide_block", False))
         d["partial"] = P.IntParam(-1, -1, 1)
@@ -748,8 +745,9 @@ class Pulser(Worker):
             f_min, f_max = sg["freq"]
             p_min, p_max = sg["power"]
             sg_freq = max(min(self.conf.get(f"sg{idx}_freq", 2.8e9), f_max), f_min)
-            d[f"freq{idx}"] = (P.FloatParam(sg_freq, f_min, f_max),)
-            d[f"power{idx}"] = (P.FloatParam(p_min, p_min, p_max),)
+            d[f"freq{idx}"] = P.FloatParam(sg_freq, f_min, f_max)
+            d[f"power{idx}"] = P.FloatParam(p_min, p_min, p_max)
+            d[f"nomw{idx}"] = P.BoolParam(False)
 
         self._get_param_dict_pulse(label, d)
         d["pulse"] = self.generators[label].pulse_params()
