@@ -20,6 +20,7 @@ from ..inst.overlay.iodmr_sweeper_interface import IODMRSweeperInterface
 from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface
 from ..inst.camera_interface import CameraInterface
+from ..util.conf import PresetLoader
 from .common_worker import Worker
 
 
@@ -154,13 +155,44 @@ class ISweeperDirect(ISweeperBase):
 
     def __init__(self, cli, logger):
         Worker.__init__(self, cli, logger)
+        self.load_pg_conf_preset(cli)
+
         self.sg = SGInterface(cli, "sg")
         self.pg = PGInterface(cli, "pg")
         self.camera = CameraInterface(cli, "camera")
         self.add_instruments(self.sg, self.pg, self.camera)
 
+        self.check_required_conf(["block_base", "pg_freq"])
+
         self.data = IODMRData()
         self._frames = []
+
+    def load_pg_conf_preset(self, cli):
+        loader = PresetLoader(self.logger, PresetLoader.Mode.FORWARD)
+        loader.add_preset(
+            "DTG",
+            [
+                ("block_base", 4),
+                ("pg_freq", 1.0e9),
+            ],
+        )
+        loader.add_preset(
+            "PulseStreamer",
+            [
+                ("block_base", 8),
+                ("pg_freq", 1.0e9),
+            ],
+        )
+        loader.load_preset(self.conf, cli.class_name("pg"))
+
+    def _adjust_block(self, block: Block, index: int):
+        """Mutate block so that block's total_length is integer multiple of block base."""
+
+        duration = block.total_length()
+        base = self.conf["block_base"]
+        if M := duration % base:
+            ch, d = block.pattern[index].channels, block.pattern[index].duration
+            block.pattern[index] = (ch, d + base - M)
 
     def get_param_dict(self, label: str) -> dict | None:
         bounds = self.sg.get_bounds()
@@ -178,15 +210,19 @@ class ISweeperDirect(ISweeperBase):
             return False
 
         # PG
-        # TODO: assuming 1 GHz freq (1 ns pattern) here
-        freq = 1.0e9
-        pattern = [
-            ("sg_trig", 1000),
-            (None, int(round(params["exposure_delay"] * 1e9))),
-            ("camera_trig", 5000),
-            (None, 100),
-        ]
-        blocks = Blocks([Block("CW1", pattern, trigger=True)])
+        freq = self.conf["pg_freq"]
+        b = Block(
+            "CW1",
+            [
+                ("sg_trig", int(round(1e-6 * freq))),
+                (None, int(round(params["exposure_delay"] * freq))),
+                ("camera_trig", int(round(5e-6 * freq))),
+                (None, int(round(100e-9 * freq))),
+            ],
+            trigger=True,
+        )
+        self._adjust_block(b, -1)
+        blocks = Blocks([b])
         if not self.pg.configure_blocks(
             blocks, freq, trigger_type=TriggerType.HARDWARE_FALLING, n_runs=1
         ):
