@@ -897,3 +897,78 @@ class AnalogPiezo3Axes(BasePiezo3Axes):
             return self.get_pos_ont()
         else:
             return BasePiezo3Axes.get(self, key, args)
+
+
+class AnalogPiezo3AxesNoMonitor(AnalogPiezo3Axes):
+    """Generic Piezo Driver using DAQ AnalogOut without position monitoring.
+
+    AnalogOut is used to output position command to Piezo Driver (amplifier).
+
+    :param lines: list of strings to designate DAQ AnalogOut physical channels.
+        Order them as [x, y, z].
+    :type lines: list[str]
+
+    :param samples_margin: (has preset, default: 0) margin of samples for AnalogOut.
+    :type samples_margin: int
+    :param write_and_start: (has preset, default: True) if False, DAQ Task is started and then
+        scan data is written in start_scan(). True reverses this order.
+    :type write_and_start: bool
+
+    :param init_pos: (default: [0.0, 0.0, 0.0]) Initial target position.
+    :type init_pos: list[float]
+
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        BasePiezo3Axes.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.check_required_conf(("lines", "scale_volt_per_um", "offset_um"))
+        lines = self.conf["lines"]
+        self._scale_volt_per_um = self.conf["scale_volt_per_um"]
+        self._offset_um = self.conf["offset_um"]
+
+        ao_name = name + "_ao"
+        # bounds in volts converted from command space range
+        bounds = [[self.um_to_volt_raw(v) for v in lim] for lim in self.get_limit()]
+        ao_conf = {
+            "lines": lines,
+            "bounds": bounds,
+        }
+        if "samples_margin" in self.conf:
+            ao_conf["samples_margin"] = self.conf["samples_margin"]
+        self._ao = AnalogOut(ao_name, ao_conf, prefix=prefix)
+        self.load_conf_preset(self._ao.device_type)
+        self._write_and_start = self.conf.get("write_and_start", True)
+
+        self._init_pos = self.conf.get("init_pos", [0.0, 0.0, 0.0])
+
+        self.logger.info(f"Initialized. Init pos: {self._init_pos}")
+        self.init_target_pos()
+
+    def init_target_pos(self):
+        """initialize self.target using current position."""
+
+        pos = self.get_pos()
+        for ax, p in zip(Axis, pos):
+            self.target[ax] = p
+
+    def get_pos(self):
+        """always return self.conf["init_pos"] because position monitoring is unavailable."""
+
+        return self._init_pos
+
+    def get_pos_ont(self):
+        """ont is always all False because position monitoring is unavailable."""
+
+        pos = self.get_pos()
+        ont = [False, False, False]
+        return pos, ont
+
+    # Standard API
+
+    def close_resources(self):
+        if hasattr(self, "_ao"):
+            self._ao.close()
+        if hasattr(self, "_clock"):
+            self._clock.close()
