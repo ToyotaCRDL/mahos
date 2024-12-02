@@ -950,6 +950,12 @@ class MG3710E(VisaInstrument):
                 trig=params.get("trig", ""),
                 reset=params.get("reset", True),
             )
+        elif label == "cw_iq":
+            if not self.check_required_params(params, ("freq", "power")):
+                return False
+            return self.configure_cw_iq(
+                params["freq"], params["power"], reset=params.get("reset", True)
+            )
         elif label.startswith("cw"):
             if not self.check_required_params(params, ("freq", "power")):
                 return False
@@ -961,12 +967,6 @@ class MG3710E(VisaInstrument):
                 return self.configure_cw(
                     params["freq"], params["power"], ch=1, reset=params.get("reset", True)
                 )
-        elif label == "cw_iq":
-            if not self.check_required_params(params, ("freq", "power")):
-                return False
-            return self.configure_cw_iq(
-                params["freq"], params["power"], reset=params.get("reset", True)
-            )
         else:
             self.logger.error(f"Unknown label {label}")
             return False
