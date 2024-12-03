@@ -132,6 +132,18 @@ class SG_mock(Instrument):
         self.logger.info("Mock configuration external IQ modulation.")
         return True
 
+    def configure_fm_ext(self, deviation) -> bool:
+        """Setup external FM mode."""
+
+        self.logger.info(f"Mock configuration external FM. deviation: {deviation:.3E}")
+        return True
+
+    def configure_am_ext(self, depth, log) -> bool:
+        """Setup external AM mode."""
+
+        self.logger.info(f"Mock configuration external AM. depth: {depth:.3f}, log: {log}")
+        return True
+
     def configure_point_trig_freq_sweep(self, start, stop, num, power) -> bool:
         self.logger.info("Mock configuration point trig freq sweep mode.")
         return True
@@ -170,10 +182,14 @@ class SG_mock(Instrument):
             return None
 
     def configure(self, params: dict, label: str = "") -> bool:
-        if label == "cw":
-            return self.configure_cw(params["freq"], params["power"])
-        elif label == "iq_ext":
+        if label == "iq_ext":
             return self.configure_iq_ext()
+        elif label == "fm_ext":
+            return self.configure_fm_ext(params["deviation"])
+        elif label == "am_ext":
+            return self.configure_am_ext(params["depth"], params["log"])
+        elif label == "cw":
+            return self.configure_cw(params["freq"], params["power"])
         elif label == "point_trig_freq_sweep":
             return self.configure_point_trig_freq_sweep(
                 params["start"],

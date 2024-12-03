@@ -464,40 +464,36 @@ class N5182B(VisaInstrument):
             self.logger.error("Failed to configure external IQ modulation.")
         return success
 
-    def configure_fm_ext(self, freq, power, deviation) -> bool:
+    def configure_fm_ext(self, deviation) -> bool:
         """Setup external FM mode."""
 
         success = (
-            self.configure_cw(freq, power)
-            and self.set_modulation(True)
+            self.set_modulation(True)
             and self.set_fm_source(self.fm_ext_source)
             and self.set_fm_deviation(deviation)
             and self.set_fm(True)
             and self.query_opc()
         )
         if success:
-            self._mode = Mode.FM_EXT
-            self.logger.info("Configured for external FM mode.")
+            self.logger.info("Configured external FM.")
         else:
-            self.logger.error("Failed to configure external FM mode.")
+            self.logger.error("Failed to configure external FM.")
         return success
 
-    def configure_am_ext(self, freq, power, depth, log) -> bool:
+    def configure_am_ext(self, depth, log) -> bool:
         """Setup external AM mode."""
 
         success = (
-            self.configure_cw(freq, power)
-            and self.set_modulation(True)
+            self.set_modulation(True)
             and self.set_am_source(self.am_ext_source)
             and self.set_am_depth(depth, log)
             and self.set_am(True)
             and self.query_opc()
         )
         if success:
-            self._mode = Mode.AM_EXT
-            self.logger.info("Configured for external AM mode.")
+            self.logger.info("Configured for external AM.")
         else:
-            self.logger.error("Failed to configure external AM mode.")
+            self.logger.error("Failed to configure external AM.")
         return success
 
     def configure_point_trig_freq_sweep(
@@ -576,6 +572,14 @@ class N5182B(VisaInstrument):
         label = label.lower()
         if label == "iq_ext":
             return self.configure_iq_ext()
+        elif label == "fm_ext":
+            if not self.check_required_params(params, "deviation"):
+                return False
+            return self.configure_fm_ext(params["deviation"])
+        elif label == "am_ext":
+            if not self.check_required_params(params, ("depth", "log")):
+                return False
+            return self.configure_am_ext(params["depth"], params["log"])
         elif label == "point_trig_freq_sweep":
             if not self.check_required_params(params, ("start", "stop", "num", "power")):
                 return False
@@ -593,16 +597,6 @@ class N5182B(VisaInstrument):
             if not self.check_required_params(params, ("freq", "power")):
                 return False
             return self.configure_cw(params["freq"], params["power"], params.get("reset", True))
-        elif label == "fm_ext":
-            if not self.check_required_params(params, ("freq", "power", "deviation")):
-                return False
-            return self.configure_fm_ext(params["freq"], params["power"], params["deviation"])
-        elif label == "am_ext":
-            if not self.check_required_params(params, ("freq", "power", "depth", "log")):
-                return False
-            return self.configure_am_ext(
-                params["freq"], params["power"], params["depth"], params["log"]
-            )
         else:
             self.logger.error(f"Unknown label {label}")
             return False

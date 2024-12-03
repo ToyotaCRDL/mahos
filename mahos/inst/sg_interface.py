@@ -88,44 +88,26 @@ class SGInterface(InstrumentInterface):
 
         return self.configure_cw(freq, power, ch=ch, reset=reset) and self.configure_iq_ext(ch)
 
-    def configure_fm_ext(
-        self, freq: float, power: float, deviation: float, ch: int = 1, reset: bool = True
-    ) -> bool:
+    def configure_fm_ext(self, deviation: float, ch: int = 1) -> bool:
         """Configure external FM mode.
 
-        :param freq: (Hz) frequnecy.
-        :param power: (dBm) RF power.
         :param deviation: (Hz) FM deviation.
 
         """
 
         l = "fm_ext" if ch == 1 else f"fm_ext{ch}"
-        return self.configure(
-            {"freq": freq, "power": power, "deviation": deviation, "reset": reset}, label=l
-        )
+        return self.configure({"deviation": deviation}, label=l)
 
-    def configure_am_ext(
-        self,
-        freq: float,
-        power: float,
-        depth: float,
-        log: bool = False,
-        ch: int = 1,
-        reset: bool = True,
-    ) -> bool:
+    def configure_am_ext(self, depth: float, log: bool, ch: int = 1) -> bool:
         """Configure external AM mode.
 
-        :param freq: (Hz) frequnecy.
-        :param power: (dBm) RF power.
         :param depth: (dB | %) AM depth. If log is True (False), unit is dB (%).
         :param log: Set True (False) to set AM depth mode to log (linear) scale.
 
         """
 
         l = "am_ext" if ch == 1 else f"am_ext{ch}"
-        return self.configure(
-            {"freq": freq, "power": power, "depth": depth, "log": log, "reset": reset}, label=l
-        )
+        return self.configure({"depth": depth, "log": log}, label=l)
 
     def configure_point_trig_freq_sweep(
         self, start: float, stop: float, num: int, power: float, params: dict | None = None
