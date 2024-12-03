@@ -396,7 +396,7 @@ class Pulser(Worker):
             power = params[f"power{idx}"]
 
             if mode in (0, 2):
-                if not sg.configure_iq_ext(freq, power, ch=ch, reset=reset):
+                if not sg.configure_cw_iq_ext(freq, power, ch=ch, reset=reset):
                     self.logger.error(f"Error initializing SG{idx}.")
                     return False
             else:  # mode 1

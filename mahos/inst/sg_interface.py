@@ -39,21 +39,6 @@ class SGInterface(InstrumentInterface):
         l = "" if ch == 1 else f"{ch}"
         return self.set("output", on, label=l)
 
-    def set_dm_source(self, source: str) -> bool:
-        """Set digital (IQ) modulation source."""
-
-        return self.set("dm_source", source)
-
-    def set_dm(self, on: bool) -> bool:
-        """Set digital (IQ) modulation switch."""
-
-        return self.set("dm", on)
-
-    def set_modulation(self, on: bool) -> bool:
-        """Set modulation switch."""
-
-        return self.set("modulation", on)
-
     def set_init_cont(self, on: bool) -> bool:
         """Set continuous sweep initialization."""
 
@@ -63,6 +48,21 @@ class SGInterface(InstrumentInterface):
         """Abort the sweep operation."""
 
         return self.set("abort")
+
+    def set_dm_source(self, source: str) -> bool:
+        """[Deprecated] Use configure_iq_ext() etc. instead."""
+
+        return self.set("dm_source", source)
+
+    def set_dm(self, on: bool) -> bool:
+        """[Deprecated] Use configure_iq_ext() etc. instead."""
+
+        return self.set("dm", on)
+
+    def set_modulation(self, on: bool) -> bool:
+        """[Deprecated] Use configure_iq_ext() etc. instead."""
+
+        return self.set("modulation", on)
 
     def configure_cw(self, freq: float, power: float, ch: int = 1, reset: bool = True) -> bool:
         """Configure Continuous Wave output.
@@ -75,16 +75,18 @@ class SGInterface(InstrumentInterface):
         l = "cw" if ch == 1 else f"cw{ch}"
         return self.configure({"freq": freq, "power": power, "reset": reset}, label=l)
 
-    def configure_iq_ext(self, freq: float, power: float, ch: int = 1, reset: bool = True) -> bool:
-        """Configure external IQ modulation mode.
-
-        :param freq: (Hz) frequnecy.
-        :param power: (dBm) RF power.
-
-        """
+    def configure_iq_ext(self, ch: int = 1) -> bool:
+        """Configure external IQ modulation."""
 
         l = "iq_ext" if ch == 1 else f"iq_ext{ch}"
-        return self.configure({"freq": freq, "power": power, "reset": reset}, label=l)
+        return self.configure({}, label=l)
+
+    def configure_cw_iq_ext(
+        self, freq: float, power: float, ch: int = 1, reset: bool = True
+    ) -> bool:
+        """Configure CW output and external IQ modulation."""
+
+        return self.configure_cw(freq, power, ch=ch, reset=reset) and self.configure_iq_ext(ch)
 
     def configure_fm_ext(
         self, freq: float, power: float, deviation: float, ch: int = 1, reset: bool = True
