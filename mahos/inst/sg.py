@@ -18,6 +18,7 @@ class Mode(enum.Enum):
     UNCONFIGURED = 0
     CW = 1
     POINT_TRIG_FREQ_SWEEP = 2
+    EXT_IQ = 3
 
 
 class N5182B(VisaInstrument):
@@ -357,11 +358,11 @@ class N5182B(VisaInstrument):
             self._mode = Mode.CW
             self.logger.info("Configured for CW output.")
         else:
-            self.logger.info("Failed to configure CW output.")
+            self.logger.error("Failed to configure CW output.")
         return success
 
-    def configure_cw_iq(self, freq, power) -> bool:
-        """Setup Continuous Wave output with fixed freq and power and external IQ modulation."""
+    def configure_ext_iq(self, freq, power) -> bool:
+        """Setup external IQ modulation mode."""
 
         success = (
             self.configure_cw(freq, power)
@@ -370,6 +371,11 @@ class N5182B(VisaInstrument):
             and self.set_dm(True)
             and self.query_opc()
         )
+        if success:
+            self._mode = Mode.EXT_IQ
+            self.logger.info("Configured for external IQ modulation.")
+        else:
+            self.logger.error("Failed to configure external IQ modulation.")
         return success
 
     def configure_point_trig_freq_sweep(
@@ -461,10 +467,10 @@ class N5182B(VisaInstrument):
             if not self.check_required_params(params, ("freq", "power")):
                 return False
             return self.configure_cw(params["freq"], params["power"])
-        elif label == "cw_iq":
+        elif label == "ext_iq":
             if not self.check_required_params(params, ("freq", "power")):
                 return False
-            return self.configure_cw_iq(params["freq"], params["power"])
+            return self.configure_ext_iq(params["freq"], params["power"])
         else:
             self.logger.error(f"Unknown label {label}")
             return False
@@ -848,8 +854,8 @@ class MG3710E(VisaInstrument):
             self.logger.info("Failed to configure CW output.")
         return success
 
-    def configure_cw_iq(self, freq, power, reset: bool = True) -> bool:
-        """Setup Continuous Wave output with fixed freq and power and external IQ modulation."""
+    def configure_ext_iq(self, freq, power, reset: bool = True) -> bool:
+        """Setup external IQ modulation mode."""
 
         success = (
             self.configure_cw(freq, power, ch=1, reset=reset)
@@ -859,6 +865,11 @@ class MG3710E(VisaInstrument):
             and self.set_dm(True)
             and self.query_opc()
         )
+        if success:
+            self._mode = Mode.EXT_IQ
+            self.logger.info("Configured for external IQ modulation.")
+        else:
+            self.logger.error("Failed to configure external IQ modulation.")
         return success
 
     def configure_point_trig_freq_sweep(
@@ -950,10 +961,10 @@ class MG3710E(VisaInstrument):
                 trig=params.get("trig", ""),
                 reset=params.get("reset", True),
             )
-        elif label == "cw_iq":
+        elif label == "ext_iq":
             if not self.check_required_params(params, ("freq", "power")):
                 return False
-            return self.configure_cw_iq(
+            return self.configure_ext_iq(
                 params["freq"], params["power"], reset=params.get("reset", True)
             )
         elif label.startswith("cw"):

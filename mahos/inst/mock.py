@@ -126,10 +126,10 @@ class SG_mock(Instrument):
         self.logger.info("Mock configuration CW mode.")
         return True
 
-    def configure_cw_iq(self, freq, power) -> bool:
-        """Setup Continuous Wave output with fixed freq and power and external IQ modulation."""
+    def configure_ext_iq(self, freq, power) -> bool:
+        """Setup external IQ modulation mode."""
 
-        self.logger.info("Mock configuration CW mode with external IQ modulation.")
+        self.logger.info("Mock configuration for external IQ modulation.")
         return True
 
     def configure_point_trig_freq_sweep(self, start, stop, num, power) -> bool:
@@ -172,8 +172,8 @@ class SG_mock(Instrument):
     def configure(self, params: dict, label: str = "") -> bool:
         if label == "cw":
             return self.configure_cw(params["freq"], params["power"])
-        elif label == "cw_iq":
-            return self.configure_cw_iq(params["freq"], params["power"])
+        elif label == "ext_iq":
+            return self.configure_ext_iq(params["freq"], params["power"])
         elif label == "point_trig_freq_sweep":
             return self.configure_point_trig_freq_sweep(
                 params["start"],

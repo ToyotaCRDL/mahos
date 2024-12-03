@@ -75,15 +75,15 @@ class SGInterface(InstrumentInterface):
         l = "cw" if ch == 1 else f"cw{ch}"
         return self.configure({"freq": freq, "power": power, "reset": reset}, label=l)
 
-    def configure_cw_iq(self, freq: float, power: float, ch: int = 1, reset: bool = True) -> bool:
-        """Configure Continuous Wave output with external IQ modulation.
+    def configure_ext_iq(self, freq: float, power: float, ch: int = 1, reset: bool = True) -> bool:
+        """Configure external IQ modulation output.
 
         :param freq: (Hz) frequnecy.
         :param power: (dBm) RF power.
 
         """
 
-        l = "cw_iq" if ch == 1 else f"cw_iq{ch}"
+        l = "ext_iq" if ch == 1 else f"ext_iq{ch}"
         return self.configure({"freq": freq, "power": power, "reset": reset}, label=l)
 
     def configure_point_trig_freq_sweep(
