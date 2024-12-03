@@ -95,6 +95,9 @@ class N5182B(VisaInstrument):
         }
         self.logger.debug(f"point_trig_freq_sweep conf: {self.point_trig_freq_sweep_conf}")
 
+        self.fm_ext_source = self.conf.get("fm_ext_source", "EXT")
+        self.am_ext_source = self.conf.get("am_ext_source", "EXT")
+
     def get_power_bounds(self):
         return self.power_min, self.power_max
 
@@ -333,6 +336,90 @@ class N5182B(VisaInstrument):
             self.logger.info("Digital modulation OFF.")
         return True
 
+    def set_fm_source(self, source: str) -> bool:
+        """Set FM source.
+
+        By default (on RST*), FUNCtion[1] is selected.
+
+        """
+
+        # TODO: ignoring several valid values (SWEep, DUAL, ...)
+        if source.upper() not in (
+            "EXT",
+            "EXT1",
+            "EXT2",
+            "FUNC",
+            "FUNC1",
+            "FUNCTION1",
+            "FUNC2",
+            "FUNCTION2",
+        ):
+            self.logger.error("invalid FM source")
+            return False
+
+        self.inst.write(":FM:SOUR " + source)
+        return True
+
+    def set_fm_deviation(self, deviation_Hz: float) -> bool:
+        """Set FM deviation in Hz."""
+
+        self.inst.write(f":FM {deviation_Hz:.8E}")
+        return True
+
+    def set_fm(self, on: bool) -> bool:
+        """If on is True turn on FM (Frequency Modulation)."""
+
+        if on:
+            self.inst.write(":FM:STAT ON")
+            self.logger.info("Frequency modulation ON.")
+        else:
+            self.inst.write(":FM:STAT OFF")
+            self.logger.info("Frequency modulation OFF.")
+        return True
+
+    def set_am_source(self, source: str) -> bool:
+        """Set AM source.
+
+        By default (on RST*), FUNCtion[1] is selected.
+
+        """
+
+        # TODO: ignoring several valid values (SWEep, DUAL, ...)
+        if source.upper() not in (
+            "EXT",
+            "EXT1",
+            "EXT2",
+            "FUNC",
+            "FUNC1",
+            "FUNCTION1",
+            "FUNC2",
+            "FUNCTION2",
+        ):
+            self.logger.error("invalid AM source")
+            return False
+
+        self.inst.write(":AM:SOUR " + source)
+        return True
+
+    def set_am_depth(self, depth: float, log: bool) -> bool:
+        """Set AM depth."""
+
+        typ = "LOG" if log else "LIN"
+        self.inst.write(":AM:TYPE " + typ)
+        self.inst.write(f":AM {depth:.8f}")
+        return True
+
+    def set_am(self, on: bool) -> bool:
+        """If on is True turn on AM (Amplitude Modulation)."""
+
+        if on:
+            self.inst.write(":AM:STAT ON")
+            self.logger.info("Amplitude modulation ON.")
+        else:
+            self.inst.write(":AM:STAT OFF")
+            self.logger.info("Amplitude modulation OFF.")
+        return True
+
     def set_modulation(self, on: bool) -> bool:
         """If on is True turn on modulation."""
 
@@ -378,6 +465,42 @@ class N5182B(VisaInstrument):
             self.logger.info("Configured for external IQ modulation.")
         else:
             self.logger.error("Failed to configure external IQ modulation.")
+        return success
+
+    def configure_fm_ext(self, freq, power, deviation) -> bool:
+        """Setup external FM mode."""
+
+        success = (
+            self.configure_cw(freq, power)
+            and self.set_modulation(True)
+            and self.set_fm_source(self.fm_ext_source)
+            and self.set_fm_deviation(deviation)
+            and self.set_fm(True)
+            and self.query_opc()
+        )
+        if success:
+            self._mode = Mode.FM_EXT
+            self.logger.info("Configured for external FM mode.")
+        else:
+            self.logger.error("Failed to configure external FM mode.")
+        return success
+
+    def configure_am_ext(self, freq, power, depth, log) -> bool:
+        """Setup external AM mode."""
+
+        success = (
+            self.configure_cw(freq, power)
+            and self.set_modulation(True)
+            and self.set_am_source(self.am_ext_source)
+            and self.set_am_depth(depth, log)
+            and self.set_am(True)
+            and self.query_opc()
+        )
+        if success:
+            self._mode = Mode.AM_EXT
+            self.logger.info("Configured for external AM mode.")
+        else:
+            self.logger.error("Failed to configure external AM mode.")
         return success
 
     def configure_point_trig_freq_sweep(
@@ -473,6 +596,16 @@ class N5182B(VisaInstrument):
             if not self.check_required_params(params, ("freq", "power")):
                 return False
             return self.configure_iq_ext(params["freq"], params["power"])
+        elif label == "fm_ext":
+            if not self.check_required_params(params, ("freq", "power", "deviation")):
+                return False
+            return self.configure_fm_ext(params["freq"], params["power"], params["deviation"])
+        elif label == "am_ext":
+            if not self.check_required_params(params, ("freq", "power", "depth", "log")):
+                return False
+            return self.configure_am_ext(
+                params["freq"], params["power"], params["depth"], params["log"]
+            )
         else:
             self.logger.error(f"Unknown label {label}")
             return False
