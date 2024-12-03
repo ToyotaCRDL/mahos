@@ -20,7 +20,7 @@ networkx ~= 2.7.1
 pytest ~= 8.2.1
 pytest-timeout ~= 2.1.0
 black ~= 24.3.0
-flake8 ~= 7.0.0
+flake8 ~= 7.1.1
 sphinx ~= 7.0.1
 pydata-sphinx-theme ~= 0.13.3
 # these libraries may not be straightforward to install via pip.
