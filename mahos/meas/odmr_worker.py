@@ -205,11 +205,7 @@ class Sweeper(Worker):
             p["start"], p["stop"], p["num"], p["power"]
         )
         if params.get("sg_modulation", False):
-            success &= (
-                self.sg.set_modulation(True)
-                and self.sg.set_dm_source("EXT")
-                and self.sg.set_dm(True)
-            )
+            success &= self.sg.configure_iq_ext()
         success &= self.sg.get_opc()
         return success
 

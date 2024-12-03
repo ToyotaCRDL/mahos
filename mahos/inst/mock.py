@@ -126,10 +126,10 @@ class SG_mock(Instrument):
         self.logger.info("Mock configuration CW mode.")
         return True
 
-    def configure_iq_ext(self, freq, power) -> bool:
-        """Setup external IQ modulation mode."""
+    def configure_iq_ext(self) -> bool:
+        """Setup external IQ modulation."""
 
-        self.logger.info("Mock configuration for external IQ modulation.")
+        self.logger.info("Mock configuration external IQ modulation.")
         return True
 
     def configure_point_trig_freq_sweep(self, start, stop, num, power) -> bool:
@@ -173,7 +173,7 @@ class SG_mock(Instrument):
         if label == "cw":
             return self.configure_cw(params["freq"], params["power"])
         elif label == "iq_ext":
-            return self.configure_iq_ext(params["freq"], params["power"])
+            return self.configure_iq_ext()
         elif label == "point_trig_freq_sweep":
             return self.configure_point_trig_freq_sweep(
                 params["start"],
