@@ -33,7 +33,7 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
     """Data type for ODMR measurement."""
 
     def __init__(self, params: dict | None = None, label: str = ""):
-        self.set_version(3)
+        self.set_version(4)
         self.init_params(params, label)
         self.init_attrs()
 
@@ -251,5 +251,15 @@ def update_data(data: ODMRData):
             data.fit_label = data.fit_params["method"]
             del data.fit_params["method"]
         data.set_version(3)
+
+    if data.version() <= 3:
+        # version 3 to 4
+        if "sg_modulation" in data.params:
+            # type is changed from bool to str (choice)
+            if data.params["sg_modulation"]:
+                data.params["sg_modulation"] == "iq"
+            else:
+                data.params["sg_modulation"] == "no"
+        data.set_version(4)
 
     return data

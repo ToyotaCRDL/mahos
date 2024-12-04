@@ -573,6 +573,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         ):
             b.valueChanged.connect(self.update_pulse_label)
 
+        self.amlogBox.toggled.connect(self.update_am_depth)
+
     def init_widgets(self):
         self.tabWidget.setCurrentIndex(0)
 
@@ -610,7 +612,6 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 ("stop", self.stopBox, 1e-6),
                 ("delay", self.delayBox, 1e3),
                 ("background_delay", self.bgdelayBox, 1e3),
-                ("sg_modulation", self.sgmodBox),
             ],
         )
         self._analog = "pd_rate" in params
@@ -646,6 +647,19 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         rate = pg.siFormat(1.0 / window, suffix="Hz")
         self.pulseLabel.setText(f"total window: {tot} single window: {single} (rate: {rate})")
 
+    def update_am_depth(self, log: bool):
+        # FIXME: default and bounds are hard-coded here
+        if log:
+            self.amdepBox.setSuffix(" dB")
+            self.amdepBox.setValue(3.0)
+            self.amdepBox.setMinimum(-10.0)
+            self.amdepBox.setMaximum(+10.0)
+        else:
+            self.amdepBox.setSuffix(" %")
+            self.amdepBox.setValue(0.10)
+            self.amdepBox.setMinimum(0.0)
+            self.amdepBox.setMaximum(100.0)
+
     def get_pulse_window(self):
         boxes = (self.laserdelayBox, self.laserwidthBox, self.mwdelayBox, self.mwwidthBox)
         return sum([b.value() for b in boxes]) * 1e-9
@@ -672,7 +686,15 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 self.pd_lbBox.setValue(lb)
                 self.pd_ubBox.setValue(ub)
         if "sg_modulation" in data.params:
-            self.sgmodBox.setChecked(data.params["sg_modulation"])
+            mod = data.params["sg_modulation"]
+            idx = self.sgmodBox.findText(mod)
+            if idx >= 0:
+                self.sgmodBox.setCurrentIndex(idx)
+            if mod == "am":
+                self.amlogBox.setChecked(data.params["am_log"])
+                self.amdepBox.setValue(data.params["am_depth"])
+            elif mod == "fm":
+                self.fmdevBox.setValue(data.params["fm_deviation"] * 1e-3)
         timing = data.params["timing"]
         if data.label == "cw":
             self.cwButton.setChecked(True)
@@ -756,7 +778,14 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params["background"] = self.backgroundBox.isChecked()
         params["delay"] = self.delayBox.value() * 1e-3  # ms to s
         params["background_delay"] = self.bgdelayBox.value() * 1e-3  # ms to s
-        params["sg_modulation"] = self.sgmodBox.isChecked()
+
+        mod = self.sgmodBox.currentText()
+        if mod == "am":
+            params["am_depth"] = self.amdepBox.value()
+            params["am_log"] = self.amlogBox.isChecked()
+        elif mod == "fm":
+            params["fm_deviation"] = self.fmdevBox.value() * 1e3  # kHz to Hz
+        params["sg_modulation"] = mod
 
         if self.cwButton.isChecked():
             label = "cw"
@@ -849,6 +878,11 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
 
         self.windowBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())
         self.gatedelayBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())
+
+        mod = self.sgmodBox.currentText()
+        for w in (self.amdepBox, self.amlogBox):
+            w.setEnabled(state == BinaryState.IDLE and mod == "am")
+        self.fmdevBox.setEnabled(state == BinaryState.IDLE and mod == "fm")
 
         for w in (
             self.laserdelayBox,

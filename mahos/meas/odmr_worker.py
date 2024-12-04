@@ -171,8 +171,17 @@ class Sweeper(Worker):
                 SI_prefix=True,
                 doc="delay between normal and background (reference) measurements",
             ),
-            sg_modulation=P.BoolParam(
-                self.conf.get("sg_modulation", False), doc="enable external IQ modulation for SG"
+            sg_modulation=P.StrChoiceParam(
+                self.conf.get("sg_modulation", "no"),
+                ["no", "iq", "am", "fm"],
+                doc="external modulation of SG",
+            ),
+            am_depth=P.FloatParam(self.conf.get("am_depth", 0.1), doc="depth of AM for SG"),
+            am_log=P.BoolParam(
+                self.conf.get("am_log", False), doc="True indicates log scale AM depth for SG"
+            ),
+            fm_deviation=P.FloatParam(
+                self.conf.get("fm_deviation", 1e3), unit="Hz", doc="deviation of FM for SG"
             ),
             resume=P.BoolParam(False),
             continue_mw=P.BoolParam(False),
@@ -204,8 +213,13 @@ class Sweeper(Worker):
         success = self.sg.configure_point_trig_freq_sweep(
             p["start"], p["stop"], p["num"], p["power"]
         )
-        if params.get("sg_modulation", False):
+        mod = params.get("sg_modulation", "no")
+        if mod == "iq":
             success &= self.sg.configure_iq_ext()
+        elif mod == "fm":
+            success &= self.sg.configure_fm_ext(params["fm_deviation"])
+        elif mod == "am":
+            success &= self.sg.configure_am_ext(params["am_depth"], params["am_log"])
         success &= self.sg.get_opc()
         return success
 

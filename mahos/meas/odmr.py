@@ -77,8 +77,8 @@ class ODMR(BasicMeasNode):
         :type sweeper.time_window: float
         :param sweeper.pd_rate: (default param) analog PD sampling rate.
         :type sweeper.pd_rate: float
-        :param sweeper.sg_modulation: (default param) enable external IQ modulation for SG.
-        :type sweeper.sg_modulation: bool
+        :param sweeper.sg_modulation: (default param) external modulation for SG.
+        :type sweeper.sg_modulation: str
 
         :param fitter.dip: (default: True) True if ODMR shape is dip instead of peak.
         :type fitter.dip: bool
