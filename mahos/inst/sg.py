@@ -86,6 +86,7 @@ class N5182B(VisaInstrument):
         self.power_min, self.power_max = self.conf.get("power_bounds", (-144.0, 0.0))
         self.freq_min, self.freq_max = self.conf.get("freq_bounds", (9e3, 6e9))
         self._mode = Mode.UNCONFIGURED
+
         c = self.conf.get("point_trig_freq_sweep", {})
         self.point_trig_freq_sweep_conf = {
             "trig": c.get("trig", "EXT"),
@@ -94,8 +95,21 @@ class N5182B(VisaInstrument):
         }
         self.logger.debug(f"point_trig_freq_sweep conf: {self.point_trig_freq_sweep_conf}")
 
-        self.fm_ext_source = self.conf.get("fm_ext_source", "EXT")
-        self.am_ext_source = self.conf.get("am_ext_source", "EXT")
+        c = self.conf.get("fm_ext", {})
+        self.fm_ext_conf = {
+            "source": c.get("source", "EXT"),
+            "DC_coupling": c.get("DC_coupling", True),
+            "impedance": c.get("impedance", 50),
+        }
+        self.logger.debug(f"fm_ext conf: {self.fm_ext_conf}")
+
+        c = self.conf.get("am_ext", {})
+        self.am_ext_conf = {
+            "source": c.get("source", "EXT"),
+            "DC_coupling": c.get("DC_coupling", True),
+            "impedance": c.get("impedance", 50),
+        }
+        self.logger.debug(f"am_ext conf: {self.am_ext_conf}")
 
     def get_power_bounds(self):
         return self.power_min, self.power_max
@@ -155,8 +169,7 @@ class N5182B(VisaInstrument):
         """
 
         if mode.upper() not in self.FREQ_MODE:
-            self.logger.error("invalid frequency mode.")
-            return False
+            return self.fail_with("invalid frequency mode.")
 
         self.inst.write("FREQ:MODE " + mode)
         return True
@@ -169,8 +182,7 @@ class N5182B(VisaInstrument):
         """
 
         if mode.upper() not in self.POWER_MODE:
-            self.logger.error("invalid power mode.")
-            return False
+            return self.fail_with("invalid power mode.")
 
         self.inst.write("POW:MODE " + mode)
         return True
@@ -224,8 +236,7 @@ class N5182B(VisaInstrument):
 
     def set_power(self, power_dBm) -> bool:
         if power_dBm < self.power_min or power_dBm > self.power_max:
-            self.logger.error("Invalid power.")
-            return False
+            return self.fail_with("Invalid power.")
 
         self.inst.write(f"POW {power_dBm:.3f} dBm")
         return True
@@ -240,11 +251,9 @@ class N5182B(VisaInstrument):
 
     def set_route_trig_out(self, ch: int, route: str) -> bool:
         if ch not in (1, 2):
-            self.logger.error("invalid output channel")
-            return False
+            return self.fail_with("invalid output channel")
         if route.upper() not in self.TRIG_OUT_ROUTE:
-            self.logger.error("invalid output route")
-            return False
+            return self.fail_with("invalid output route")
 
         self.inst.write(f"ROUT:TRIG{ch:d}:OUTP {route}")
         return True
@@ -254,8 +263,7 @@ class N5182B(VisaInstrument):
 
         source = source.upper()
         if source not in self.TRIG_SOURCE:
-            self.logger.error("invalid trigger source.")
-            return False
+            return self.fail_with("invalid trigger source.")
 
         self.inst.write("TRIG:SOUR " + source)
 
@@ -263,8 +271,7 @@ class N5182B(VisaInstrument):
             return True
 
         if ext.upper() not in self.EXT_TRIG_SOURCE:
-            self.logger.error("invalid external trigger source.")
-            return False
+            return self.fail_with("invalid external trigger source.")
 
         self.inst.write("TRIG:EXT:SOUR " + ext)
         return True
@@ -278,8 +285,7 @@ class N5182B(VisaInstrument):
 
         source = source.upper()
         if source not in self.TRIG_SOURCE:
-            self.logger.error("invalid sweep trigger source.")
-            return False
+            return self.fail_with("invalid sweep trigger source.")
 
         self.inst.write("LIST:TRIG:SOUR " + source)
 
@@ -287,8 +293,7 @@ class N5182B(VisaInstrument):
             return True
 
         if ext.upper() not in self.EXT_TRIG_SOURCE:
-            self.logger.error("invalid external trigger source")
-            return False
+            return self.fail_with("invalid external trigger source")
 
         self.inst.write("LIST:TRIG:EXT:SOUR " + ext)
         return True
@@ -301,8 +306,7 @@ class N5182B(VisaInstrument):
         """
 
         if source.upper() not in ("EXT", "EXTERNAL", "INT", "INTERNAL", "SUM"):
-            self.logger.error("invalid digital modulation source")
-            return False
+            return self.fail_with("invalid digital modulation source")
 
         self.inst.write(":DM:SOUR " + source)
         return True
@@ -335,6 +339,20 @@ class N5182B(VisaInstrument):
             self.logger.info("Digital modulation OFF.")
         return True
 
+    def _set_analog_ext_opts(self, AM_FM: str, DC_coupling: bool, impedance: int) -> bool:
+        cpl = "DC" if DC_coupling else "AC"
+        if impedance not in (50, 600, 1000000):
+            return self.fail_with(f"invalid impedance {impedance}")
+        self.inst.write(f":{AM_FM}:EXT:COUP " + cpl)
+        self.inst.write(f":{AM_FM}:EXT:IMP {impedance:d}")
+        return True
+
+    def set_fm_ext_opts(self, DC_coupling: bool, impedance: int) -> bool:
+        return self._set_analog_ext_opts("FM", DC_coupling, impedance)
+
+    def set_am_ext_opts(self, DC_coupling: bool, impedance: int) -> bool:
+        return self._set_analog_ext_opts("AM", DC_coupling, impedance)
+
     def set_fm_source(self, source: str) -> bool:
         """Set FM source.
 
@@ -353,8 +371,7 @@ class N5182B(VisaInstrument):
             "FUNC2",
             "FUNCTION2",
         ):
-            self.logger.error("invalid FM source")
-            return False
+            return self.fail_with("invalid FM source")
 
         self.inst.write(":FM:SOUR " + source)
         return True
@@ -394,8 +411,7 @@ class N5182B(VisaInstrument):
             "FUNC2",
             "FUNCTION2",
         ):
-            self.logger.error("invalid AM source")
-            return False
+            return self.fail_with("invalid AM source")
 
         self.inst.write(":AM:SOUR " + source)
         return True
@@ -472,7 +488,10 @@ class N5182B(VisaInstrument):
 
         success = (
             self.set_modulation(True)
-            and self.set_fm_source(self.fm_ext_source)
+            and self.set_fm_source(self.fm_ext_conf["source"])
+            and self.set_fm_ext_opts(
+                self.fm_ext_conf["DC_coupling"], self.fm_ext_conf["impedance"]
+            )
             and self.set_fm_deviation(deviation)
             and self.set_fm(True)
             and self.query_opc()
@@ -488,7 +507,10 @@ class N5182B(VisaInstrument):
 
         success = (
             self.set_modulation(True)
-            and self.set_am_source(self.am_ext_source)
+            and self.set_am_source(self.am_ext_conf["source"])
+            and self.set_am_ext_opts(
+                self.am_ext_conf["DC_coupling"], self.am_ext_conf["impedance"]
+            )
             and self.set_am_depth(depth, log)
             and self.set_am(True)
             and self.query_opc()
@@ -693,13 +715,27 @@ class MG3710E(VisaInstrument):
         self.freq_min, self.freq_max = self.conf.get("freq_bounds", (9e3, 6e9))
         self.power_min2, self.power_max2 = self.conf.get("power_bounds2", (-144.0, 0.0))
         self.freq_min2, self.freq_max2 = self.conf.get("freq_bounds2", (9e3, 6e9))
-
         self._mode = Mode.UNCONFIGURED
+
         c = self.conf.get("point_trig_freq_sweep", {})
         self.point_trig_freq_sweep_conf = {
             "trig": c.get("trig", "EXT"),
         }
         self.logger.debug(f"point_trig_freq_sweep conf: {self.point_trig_freq_sweep_conf}")
+
+        c = self.conf.get("fm_ext", {})
+        self.fm_ext_conf = {
+            "DC_coupling": c.get("DC_coupling", True),
+            "impedance": c.get("impedance", 50),
+        }
+        self.logger.debug(f"fm_ext conf: {self.fm_ext_conf}")
+
+        c = self.conf.get("am_ext", {})
+        self.am_ext_conf = {
+            "DC_coupling": c.get("DC_coupling", True),
+            "impedance": c.get("impedance", 50),
+        }
+        self.logger.debug(f"am_ext conf: {self.am_ext_conf}")
 
     def get_power_bounds(self):
         return self.power_min, self.power_max
@@ -767,8 +803,7 @@ class MG3710E(VisaInstrument):
         """
 
         if mode.upper() not in self.FREQ_MODE:
-            self.logger.error("invalid frequency mode.")
-            return False
+            return self.fail_with("invalid frequency mode.")
 
         self.inst.write(f"SOUR{ch}:FREQ:MODE " + mode)
         return True
@@ -781,8 +816,7 @@ class MG3710E(VisaInstrument):
         """
 
         if mode.upper() not in self.POWER_MODE:
-            self.logger.error("invalid power mode.")
-            return False
+            return self.fail_with("invalid power mode.")
 
         self.inst.write(f"SOUR{ch}:POW:MODE " + mode)
         return True
@@ -827,8 +861,7 @@ class MG3710E(VisaInstrument):
 
     def set_power(self, power_dBm, ch: int = 1) -> bool:
         if power_dBm < self.power_min or power_dBm > self.power_max:
-            self.logger.error("Invalid power.")
-            return False
+            return self.fail_with("Invalid power.")
 
         self.inst.write(f"SOUR{ch}:POW {power_dBm:.3f} dBm")
         return True
@@ -843,8 +876,7 @@ class MG3710E(VisaInstrument):
 
     def set_route_marker1(self, route: str) -> bool:
         if route.upper() not in self.MARKER1_ROUTE:
-            self.logger.error("invalid output route")
-            return False
+            return self.fail_with("invalid output route")
 
         self.inst.write(f"ROUT:OUTP:MARKER1 {route}")
         return True
@@ -854,8 +886,7 @@ class MG3710E(VisaInstrument):
 
         source = source.upper()
         if source not in self.TRIG_SOURCE:
-            self.logger.error("invalid trigger source.")
-            return False
+            return self.fail_with("invalid trigger source.")
 
         self.inst.write(":TRIG:SEQ:SOUR " + source)
         return True
@@ -883,8 +914,7 @@ class MG3710E(VisaInstrument):
 
         source = source.upper()
         if source not in self.TRIG_SOURCE:
-            self.logger.error("invalid sweep trigger source.")
-            return False
+            return self.fail_with("invalid sweep trigger source.")
 
         self.inst.write("LIST:TRIG:SOUR " + source)
         return True
@@ -901,8 +931,7 @@ class MG3710E(VisaInstrument):
         """
 
         if source.upper() not in ("AEXT", "AEXTERNAL", "EXT", "EXTERNAL", "INT", "INTERNAL"):
-            self.logger.error("invalid digital modulation source")
-            return False
+            return self.fail_with("invalid digital modulation source")
         if source.startswith("EXT"):
             source = "A" + source
 
@@ -944,12 +973,19 @@ class MG3710E(VisaInstrument):
             self.logger.info("Digital modulation cannot be turned OFF.")
             return False
 
+    def set_ext_mod_opts(self, DC_coupling: bool, impedance: int | str, ch: int = 1) -> bool:
+        cpl = "DC" if DC_coupling else "AC"
+        if impedance not in (50, 600, "HIZ"):
+            return self.fail_with(f"invalid impedance {impedance}")
+        self.inst.write(f"SOUR{ch}:EXTM:COUP " + cpl)
+        self.inst.write(f"SOUR{ch}:EXTM:IMP {impedance:d}")
+        return True
+
     def set_fm_source(self, source: str, ch: int = 1) -> bool:
         """Set FM source."""
 
         if source.upper() not in ("EXT", "INT", "INT1", "INT2"):
-            self.logger.error("invalid FM source")
-            return False
+            return self.fail_with("invalid FM source")
 
         self.inst.write(f"SOUR{ch}:FM:SOUR " + source)
         return True
@@ -975,8 +1011,7 @@ class MG3710E(VisaInstrument):
         """Set AM source."""
 
         if source.upper() not in ("EXT", "INT", "INT1", "INT2"):
-            self.logger.error("invalid AM source")
-            return False
+            return self.fail_with("invalid AM source")
 
         self.inst.write(f"SOUR{ch}:AM:SOUR " + source)
         return True
@@ -1070,6 +1105,9 @@ class MG3710E(VisaInstrument):
         success = (
             self.set_modulation(True, ch=ch)
             and self.set_fm_source("EXT", ch=ch)
+            and self.set_ext_mod_opts(
+                self.fm_ext_conf["DC_coupling"], self.fm_ext_conf["impedance"], ch=ch
+            )
             and self.set_fm_deviation(deviation, ch=ch)
             and self.set_fm(True, ch=ch)
             and self.query_opc()
@@ -1089,6 +1127,9 @@ class MG3710E(VisaInstrument):
         success = (
             self.set_modulation(True, ch=ch)
             and self.set_am_source("EXT", ch=ch)
+            and self.set_ext_mod_opts(
+                self.am_ext_conf["DC_coupling"], self.am_ext_conf["impedance"], ch=ch
+            )
             and self.set_am_depth(depth, log, ch=ch)
             and self.set_am(True, ch=ch)
             and self.query_opc()
@@ -1340,8 +1381,7 @@ class DS_SG(VisaInstrument):
 
     def set_power(self, power_dBm) -> bool:
         if power_dBm < self.power_min or power_dBm > self.power_max:
-            self.logger.error("Invalid power.")
-            return False
+            return self.fail_with("Invalid power.")
 
         self.inst.write(f"POWER {power_dBm:.3f} dBm")
         return True
