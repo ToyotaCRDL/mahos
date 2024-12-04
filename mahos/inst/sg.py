@@ -403,9 +403,12 @@ class N5182B(VisaInstrument):
     def set_am_depth(self, depth: float, log: bool) -> bool:
         """Set AM depth."""
 
-        typ = "LOG" if log else "LIN"
-        self.inst.write(":AM:TYPE " + typ)
-        self.inst.write(f":AM {depth:.8f}")
+        if log:
+            self.inst.write("AM:TYPE LOG")
+            self.inst.write(f"AM:EXP {depth:.8f}")
+        else:
+            self.inst.write("AM:TYPE LIN")
+            self.inst.write(f"AM {depth:.8f}")
         return True
 
     def set_am(self, on: bool) -> bool:
@@ -941,6 +944,65 @@ class MG3710E(VisaInstrument):
             self.logger.info("Digital modulation cannot be turned OFF.")
             return False
 
+    def set_fm_source(self, source: str, ch: int = 1) -> bool:
+        """Set FM source."""
+
+        if source.upper() not in ("EXT", "INT", "INT1", "INT2"):
+            self.logger.error("invalid FM source")
+            return False
+
+        self.inst.write(f"SOUR{ch}:FM:SOUR " + source)
+        return True
+
+    def set_fm_deviation(self, deviation_Hz: float, ch: int = 1) -> bool:
+        """Set FM deviation in Hz."""
+
+        self.inst.write(f"SOUR{ch}:FM {deviation_Hz:.8E}")
+        return True
+
+    def set_fm(self, on: bool, ch: int = 1) -> bool:
+        """If on is True turn on FM (Frequency Modulation)."""
+
+        if on:
+            self.inst.write(f"SOUR{ch}:FM:STAT ON")
+            self.logger.info(f"SG{ch} Frequency modulation ON.")
+        else:
+            self.inst.write(f"SOUR{ch}:FM:STAT OFF")
+            self.logger.info(f"SG{ch} Frequency modulation OFF.")
+        return True
+
+    def set_am_source(self, source: str, ch: int = 1) -> bool:
+        """Set AM source."""
+
+        if source.upper() not in ("EXT", "INT", "INT1", "INT2"):
+            self.logger.error("invalid AM source")
+            return False
+
+        self.inst.write(f"SOUR{ch}:AM:SOUR " + source)
+        return True
+
+    def set_am_depth(self, depth: float, log: bool, ch: int = 1) -> bool:
+        """Set AM depth."""
+
+        if log:
+            self.inst.write(f"SOUR{ch}:AM:TYPE LOG")
+            self.inst.write(f"SOUR{ch}:AM:EXP {depth:.8f}")
+        else:
+            self.inst.write(f"SOUR{ch}:AM:TYPE LIN")
+            self.inst.write(f"SOUR{ch}:AM {depth:.8f}")
+        return True
+
+    def set_am(self, on: bool, ch: int = 1) -> bool:
+        """If on is True turn on AM (Amplitude Modulation)."""
+
+        if on:
+            self.inst.write(f"SOUR{ch}:AM:STAT ON")
+            self.logger.info(f"SG{ch} Amplitude modulation ON.")
+        else:
+            self.inst.write(f"SOUR{ch}:AM:STAT OFF")
+            self.logger.info(f"SG{ch} Amplitude modulation OFF.")
+        return True
+
     def set_modulation(self, on: bool, ch: int = 1) -> bool:
         """If on is True turn on modulation."""
 
@@ -983,6 +1045,9 @@ class MG3710E(VisaInstrument):
     def configure_iq_ext(self) -> bool:
         """Setup external IQ modulation mode."""
 
+        if self._mode != Mode.CW:
+            return self.fail_with("external IQ modulation is only for CW.")
+
         success = (
             self.set_modulation(True, ch=1)
             and self.set_dm_output(True)
@@ -994,6 +1059,44 @@ class MG3710E(VisaInstrument):
             self.logger.info("Configured external IQ modulation.")
         else:
             self.logger.error("Failed to configure external IQ modulation.")
+        return success
+
+    def configure_fm_ext(self, deviation, ch: int = 1) -> bool:
+        """Setup external FM mode."""
+
+        if self._mode != Mode.CW:
+            return self.fail_with("external FM is only for CW.")
+
+        success = (
+            self.set_modulation(True, ch=ch)
+            and self.set_fm_source("EXT", ch=ch)
+            and self.set_fm_deviation(deviation, ch=ch)
+            and self.set_fm(True, ch=ch)
+            and self.query_opc()
+        )
+        if success:
+            self.logger.info("Configured external FM.")
+        else:
+            self.logger.error("Failed to configure external FM.")
+        return success
+
+    def configure_am_ext(self, depth, log, ch: int = 1) -> bool:
+        """Setup external AM mode."""
+
+        if self._mode != Mode.CW:
+            return self.fail_with("external AM is only for CW.")
+
+        success = (
+            self.set_modulation(True, ch=ch)
+            and self.set_am_source("EXT", ch=ch)
+            and self.set_am_depth(depth, log, ch=ch)
+            and self.set_am(True, ch=ch)
+            and self.query_opc()
+        )
+        if success:
+            self.logger.info("Configured external AM.")
+        else:
+            self.logger.error("Failed to configure external AM.")
         return success
 
     def configure_point_trig_freq_sweep(
@@ -1078,6 +1181,16 @@ class MG3710E(VisaInstrument):
             return self.configure_iq_ext()
         elif label == "iq_ext2":
             return self.fail_with("External IQ modulation isn't available for ch2.")
+        elif label.startswith("fm_ext"):
+            if not self.check_required_params(params, "deviation"):
+                return False
+            ch = 2 if label.endswith("2") else 1
+            return self.configure_fm_ext(params["deviation"], ch=ch)
+        elif label.startswith("am_ext"):
+            if not self.check_required_params(params, ("depth", "log")):
+                return False
+            ch = 2 if label.endswith("2") else 1
+            return self.configure_am_ext(params["depth"], params["log"], ch=ch)
         elif label == "point_trig_freq_sweep":
             if not self.check_required_params(params, ("start", "stop", "num", "power")):
                 return False
@@ -1092,14 +1205,10 @@ class MG3710E(VisaInstrument):
         elif label.startswith("cw"):
             if not self.check_required_params(params, ("freq", "power")):
                 return False
-            if label.endswith("2"):
-                return self.configure_cw(
-                    params["freq"], params["power"], ch=2, reset=params.get("reset", True)
-                )
-            else:
-                return self.configure_cw(
-                    params["freq"], params["power"], ch=1, reset=params.get("reset", True)
-                )
+            ch = 2 if label.endswith("2") else 1
+            return self.configure_cw(
+                params["freq"], params["power"], ch=ch, reset=params.get("reset", True)
+            )
         else:
             self.logger.error(f"Unknown label {label}")
             return False
