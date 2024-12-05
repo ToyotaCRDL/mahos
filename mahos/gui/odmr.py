@@ -26,6 +26,7 @@ from .odmr_client import QODMRClient
 from ..msgs.common_msgs import BinaryState, BinaryStatus
 from ..msgs.common_meas_msgs import Buffer
 from ..msgs.odmr_msgs import ODMRData
+from ..msgs import param_msgs as P
 from ..node.global_params import GlobalParamsClient
 from ..meas.confocal import ConfocalIORequester
 from ..util import conv, nv
@@ -528,7 +529,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.peaks = ODMRPeaksWidget(self.plot.plot, parent=self.peaksTab)
         self._peaksTab_layout.addWidget(self.peaks)
 
-        self._analog = False
+        self._cw_time_window = self._cw_gate_delay = True
+        self._pd_params = False
 
         self.setEnabled(False)
 
@@ -595,13 +597,26 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         )
 
         params = self.cli.get_param_dict("cw")
-        apply_widgets(
-            params["timing"],
-            [
-                ("time_window", self.windowBox, 1e3),
-                ("gate_delay", self.gatedelayBox, 1e3),
-            ],
-        )
+        self._cw_time_window = "time_window" in params["timing"]
+        if self._cw_time_window:
+            apply_widgets(
+                params["timing"],
+                [
+                    ("time_window", self.windowBox, 1e3),
+                ],
+            )
+        else:
+            self.windowBox.setEnabled(False)
+        self._cw_gate_delay = "gate_delay" in params["timing"]
+        if self._cw_gate_delay:
+            apply_widgets(
+                params["timing"],
+                [
+                    ("gate_delay", self.gatedelayBox, 1e3),
+                ],
+            )
+        else:
+            self.gatedelayBox.setEnabled(False)
 
         apply_widgets(
             params,
@@ -614,18 +629,9 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 ("background_delay", self.bgdelayBox, 1e3),
             ],
         )
-        self._analog = "pd_rate" in params
-        if self._analog:
-            apply_widgets(
-                params,
-                [
-                    ("pd_rate", self.pdrateBox, 1e-3),  # Hz to kHz
-                    ("pd_bounds", [self.pd_lbBox, self.pd_ubBox]),
-                ],
-            )
-        else:
-            for b in (self.pdrateBox, self.pd_lbBox, self.pd_ubBox):
-                b.setEnabled(False)
+        self._pd_params = "pd" in params
+        if self._pd_params:
+            self.paramTable.update_contents(params["pd"])
 
         self.saveconfocalBox.setEnabled(self.confocal_cli is not None)
         self.saveconfocalBox.setChecked(self.confocal_cli is not None)
@@ -678,13 +684,9 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.delayBox.setValue(data.params["delay"] * 1e3)
         if bg and "background_delay" in data.params:
             self.bgdelayBox.setValue(data.params["background_delay"] * 1e3)
-        if self._analog:
-            if "pd_rate" in data.params:
-                self.pdrateBox.setValue(round(data.params["pd_rate"] * 1e-3))
-            if "pd_bounds" in data.params:
-                lb, ub = data.params["pd_bounds"]
-                self.pd_lbBox.setValue(lb)
-                self.pd_ubBox.setValue(ub)
+        if self._pd_params:
+            for k, v in data.params["pd"].items():
+                self.paramTable.apply_value(k, v)
         if "sg_modulation" in data.params:
             mod = data.params["sg_modulation"]
             idx = self.sgmodBox.findText(mod)
@@ -698,8 +700,10 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         timing = data.params["timing"]
         if data.label == "cw":
             self.cwButton.setChecked(True)
-            self.windowBox.setValue(timing["time_window"] * 1e3)
-            self.gatedelayBox.setValue(timing.get("gate_delay", 0.0) * 1e3)
+            if "time_window" in timing:
+                self.windowBox.setValue(timing["time_window"] * 1e3)
+            if "gate_delay" in timing:
+                self.gatedelayBox.setValue(timing["gate_delay"] * 1e3)
         else:
             self.pulseButton.setChecked(True)
             self.laserdelayBox.setValue(timing["laser_delay"] * 1e9)
@@ -789,10 +793,11 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
 
         if self.cwButton.isChecked():
             label = "cw"
-            t = {
-                "time_window": self.windowBox.value() * 1e-3,  # ms to s
-                "gate_delay": self.gatedelayBox.value() * 1e-3,  # ms to s
-            }
+            t = {}
+            if self._cw_time_window:
+                t["time_window"] = self.windowBox.value() * 1e-3  # ms to s
+            if self._cw_gate_delay:
+                t["gate_delay"] = self.gatedelayBox.value() * 1e-3  # ms to s
         else:
             label = "pulse"
             t = {}
@@ -804,9 +809,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             t["burst_num"] = self.bnumBox.value()
         params["timing"] = t
         params["continue_mw"] = self.mwcontBox.isChecked()
-        if self._analog:
-            params["pd_rate"] = self.pdrateBox.value() * 1e3  # kHz to Hz
-            params["pd_bounds"] = [self.pd_lbBox.value(), self.pd_ubBox.value()]
+        if self._pd_params:
+            params["pd"] = P.unwrap(self.paramTable.params())
 
         return params, label
 
@@ -872,12 +876,15 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         ):
             w.setEnabled(state == BinaryState.IDLE)
 
-        for b in (self.pdrateBox, self.pd_lbBox, self.pd_ubBox):
-            b.setEnabled(state == BinaryState.IDLE and self._analog)
+        self.paramTable.setEnabled(state == BinaryState.IDLE and self._pd_params)
         self.bgdelayBox.setEnabled(state == BinaryState.IDLE and self.backgroundBox.isChecked())
 
-        self.windowBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())
-        self.gatedelayBox.setEnabled(state == BinaryState.IDLE and self.cwButton.isChecked())
+        self.windowBox.setEnabled(
+            state == BinaryState.IDLE and self._cw_time_window and self.cwButton.isChecked()
+        )
+        self.gatedelayBox.setEnabled(
+            state == BinaryState.IDLE and self._cw_gate_delay and self.cwButton.isChecked()
+        )
 
         mod = self.sgmodBox.currentText()
         for w in (self.amdepBox, self.amlogBox):

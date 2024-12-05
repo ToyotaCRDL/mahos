@@ -1161,6 +1161,11 @@ class DMM_mock(Instrument):
             self.logger.error("get_data() is called but not configured.")
             return None
 
+    def get_all_data(self):
+        ch1 = np.random.normal(self._bias, 1.0, size=1)[0]
+        ch2 = np.random.normal(self._bias, 1.0, size=1)[0]
+        return ch1, ch2
+
     def get_unit(self, ch: int = 1) -> str:
         if self._mode[ch] == self.Mode.DCV:
             return "V"

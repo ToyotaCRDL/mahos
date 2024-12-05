@@ -140,15 +140,16 @@ class DummyWorker(Worker):
 class PulseGen_CW(Worker):
     """A worker object to setup a pulse generator ('pg') for CW output mode."""
 
-    def __init__(self, cli, logger):
+    def __init__(self, cli, logger, channels=("laser",)):
         Worker.__init__(self, cli, logger)
         self.pg = PGInterface(cli, "pg")
         self.add_instruments(self.pg)
+        self._channels = channels
         self.running = False
 
     def start(self) -> bool:
         freq = 1.0e6
-        b = Block("LaserOn", [("laser", 1000)])
+        b = Block("CW", [(self._channels, 1000)])
         blocks = Blocks([b])
         success = (
             self.pg.lock()
@@ -163,7 +164,7 @@ class PulseGen_CW(Worker):
             return self.fail_with_release("Error starting pulse generator.")
 
         self.running = True
-        self.logger.info("Started pulse generator for CW laser output.")
+        self.logger.info("Started pulse generator for CW output.")
         return True
 
     def stop(self) -> bool:

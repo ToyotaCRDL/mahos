@@ -17,8 +17,8 @@ from ..msgs import odmr_msgs
 from ..msgs.odmr_msgs import ODMRData, ValidateReq
 from ..util.timer import IntervalTimer
 from .common_meas import BasicMeasClient, BasicMeasNode
-from .common_worker import DummyWorker, Switch
-from .odmr_worker import Sweeper
+from .common_worker import DummyWorker, Switch, PulseGen_CW
+from .odmr_worker import Sweeper, SweeperOverlay
 from .odmr_fitter import ODMRFitter
 from .odmr_io import ODMRIO
 
@@ -96,7 +96,17 @@ class ODMR(BasicMeasNode):
         else:
             self.switch = DummyWorker()
 
-        self.worker = Sweeper(self.cli, self.logger, self.conf.get("sweeper", {}))
+        self._direct = "sweeper" not in self.conf["target"]["servers"]
+        if self._direct:
+            self.worker = Sweeper(self.cli, self.logger, self.conf.get("sweeper", {}))
+            self.pg = DummyWorker()
+        else:
+            self.worker = SweeperOverlay(self.cli, self.logger, self.conf.get("sweeper", {}))
+            # As pg is not currently used in SweeperOverlay, existence of pg implies PulseGen_CW.
+            if "pg" in self.conf["target"]["servers"]:
+                self.pg = PulseGen_CW(self.cli, self.logger, channels=("laser", "mw"))
+            else:
+                self.pg = DummyWorker()
         self.fitter = ODMRFitter(self.logger, silent=False, conf=self.conf.get("fitter"))
         self.io = ODMRIO(self.logger)
         self.buffer = Buffer()
@@ -105,6 +115,8 @@ class ODMR(BasicMeasNode):
     def close_resources(self):
         if hasattr(self, "switch"):
             self.switch.stop()
+        if hasattr(self, "pg"):
+            self.pg.stop()
         if hasattr(self, "worker"):
             self.worker.stop()
 
@@ -113,13 +125,17 @@ class ODMR(BasicMeasNode):
             return Reply(True, "Already in that state")
 
         if msg.state == BinaryState.IDLE:
-            success = self.switch.stop() and self.worker.stop()
+            success = self.switch.stop() and self.pg.stop() and self.worker.stop()
             if not success:
                 return Reply(False, "Failed to stop internal worker.", ret=self.state)
         elif msg.state == BinaryState.ACTIVE:
             if not self.switch.start():
                 return Reply(False, "Failed to start switch.", ret=self.state)
+            if not self.pg.start():
+                self.switch.stop()
+                return Reply(False, "Failed to start pg.", ret=self.state)
             if not self.worker.start(msg.params, msg.label):
+                self.pg.stop()
                 self.switch.stop()
                 return Reply(False, "Failed to start worker.", ret=self.state)
 
@@ -186,8 +202,11 @@ class ODMR(BasicMeasNode):
 
     def wait(self):
         self.logger.info("Waiting for instrument server...")
-        for inst in ["sg", "pg"] + self.worker.pd_names:
-            self.cli.wait(inst)
+        if self._direct:
+            for inst in ["sg", "pg"] + self.worker.pd_names:
+                self.cli.wait(inst)
+        else:
+            self.cli.wait("sweeper")
         self.logger.info("Server is up!")
 
     def main(self):

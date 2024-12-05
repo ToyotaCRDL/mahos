@@ -260,6 +260,15 @@ def update_data(data: ODMRData):
                 data.params["sg_modulation"] == "iq"
             else:
                 data.params["sg_modulation"] == "no"
+        if "pd_rate" in data.params:
+            data.params["pd"] = {
+                "rate": data.params["pd_rate"],
+            }
+            del data.params["pd_rate"]
+            if "pd_bounds" in data.params:
+                data.params["pd"]["bounds"] = data.params["pd_bounds"]
+                del data.params["pd_bounds"]
+
         data.set_version(4)
 
     return data

@@ -16,26 +16,147 @@ from ..lockin import LI5640
 from ..pd import LUCI_OE200, AnalogPD, LockinAnalogPD
 
 
-class LockinAnalogPD_LI5640(InstrumentOverlay):
-    """Generic (fixed gain) Photoreceiver and with LI5640 Lockin & DAQ AnalogIn.
+class AnalogPDMM(InstrumentOverlay):
+    """Generic Photo Detector based on DMM with fixed amplifier gain and unit.
 
-    :param li5640: a LI5640 instance
-    :type li5640: LI5640
-    :param pd: a LockinAnalogPD instance.
-    :type pd: LockinAnalogPD
+    :param unit: (default: V) unit after conversion.
+    :type unit: str
+    :param gain: (default: 1.0) the fixed gain in [unit] / V.
+        Example) when a transimpedance amp with 1000 V / A is used for a photo diode and
+        the unit is 'A', gain should be set 1000.
+    :type gain: float
 
     """
 
     def __init__(self, name, conf, prefix=None):
         InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
 
-        self.li5640: LI5640 = self.conf.get("li5640")
-        self.pd: LockinAnalogPD = self.conf.get("pd")
-        self.add_instruments(self.li5640, self.pd)
+        self.dmm = self.conf["dmm"]
+        self.dmm_label = self.conf.get("dmm_label", "dcv")
 
-        self.init_lockin()
-        self.update_gain()
+        self.gain = self.conf.get("gain", 1.0)
+        self.unit = self.conf.get("unit", "V")
 
+    def get_param_dict_labels(self) -> list[str]:
+        return ["pd"]
+
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        if label == "pd":
+            return self.dmm.get_param_dict(self.dmm_label)
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        p = P.unwrap(params)
+        return self.dmm.configure(p, label=self.dmm_label)
+
+    def get_data(self) -> float:
+        return self.dmm.get_data() / self.gain
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        key = key.lower()
+        if key == "gain":
+            if isinstance(value, (float, int, np.floating, np.integer)):
+                self.gain = float(value)
+                return True
+            else:
+                return self.fail_with("gain must be a number (float or int)")
+        elif key == "unit":
+            self.unit = str(value)
+            return True
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def get(self, key: str, args=None, label: str = ""):
+        if key == "data":
+            return self.get_data()
+        elif key == "unit":
+            return self.unit
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def start(self, label: str = "") -> bool:
+        return self.dmm.start(self.dmm_label)
+
+    def stop(self, label: str = "") -> bool:
+        return self.dmm.stop(self.dmm_label)
+
+
+class LockinAnalogPDMM(InstrumentOverlay):
+    """Generic Photo Detector based on DMM with fixed amplifier gain and unit.
+
+    :param unit: (default: V) unit after conversion.
+    :type unit: str
+    :param gain: (default: 1.0) the fixed gain in [unit] / V.
+        Example) when a transimpedance amp with 1000 V / A is used for a photo diode and
+        the unit is 'A', gain should be set 1000.
+    :type gain: float
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.dmm = self.conf["dmm"]
+        self.dmm_labelX = self.conf.get("dmm_labelX", "ch1_dcv")
+        self.dmm_labelY = self.conf.get("dmm_labelY", "ch2_dcv")
+
+        self.gain = self.conf.get("gain", 1.0)
+        self.unit = self.conf.get("unit", "V")
+
+    def get_param_dict_labels(self) -> list[str]:
+        return ["pd"]
+
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        if label == "pd":
+            return P.ParamDict(
+                X=self.dmm.get_param_dict(self.dmm_labelX),
+                Y=self.dmm.get_param_dict(self.dmm_labelY),
+            )
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        pX = P.unwrap(params["X"])
+        pY = P.unwrap(params["Y"])
+        return self.dmm.configure(pX, label=self.dmm_labelX) and self.dmm.configure_DCV(
+            pY, label=self.dmm_labelY
+        )
+
+    def get_data(self) -> np.cdouble:
+        re, im = self.dmm.get_all_data()
+        return np.cdouble(re + 1.0j * im) / self.gain
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        key = key.lower()
+        if key == "gain":
+            if isinstance(value, (float, int, np.floating, np.integer)):
+                self.gain = float(value)
+                return True
+            else:
+                return self.fail_with("gain must be a number (float or int)")
+        elif key == "unit":
+            self.unit = str(value)
+            return True
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def get(self, key: str, args=None, label: str = ""):
+        if key == "data":
+            return self.get_data()
+        elif key == "unit":
+            return self.unit
+        else:
+            self.logger.error(f"unknown get() key: {key}")
+            return None
+
+    def start(self, label: str = "") -> bool:
+        return self.dmm.start(self.dmm_labelX) and self.dmm.start(self.dmm_labelY)
+
+    def stop(self, label: str = "") -> bool:
+        return self.dmm.stop(self.dmm_labelX) and self.dmm.stop(self.dmm_labelY)
+
+
+class _LI5640Mixin(object):
     def init_lockin(self):
         self.li5640.set_data1(LI5640.Data1.X)
         self.li5640.set_data2(LI5640.Data2.Y)
@@ -64,6 +185,43 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
         tg = self.total_gain
         self.logger.info(f"Current total gain: {tg[0]:.2e}, {tg[1]:.2e} V/{self.pd.unit}")
         return self.gain
+
+    # Standard API
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        # no set() key for pd
+
+        success = self.li5640.set(key, value)
+        #  set() may change the gain.
+        self.update_gain()
+        return success
+
+    def start(self, label: str = "") -> bool:
+        return self.pd.start()
+
+    def stop(self, label: str = "") -> bool:
+        return self.pd.stop()
+
+
+class LockinAnalogPD_LI5640(InstrumentOverlay, _LI5640Mixin):
+    """Generic (fixed gain) Photoreceiver and with LI5640 Lockin & DAQ AnalogIn.
+
+    :param li5640: a LI5640 instance
+    :type li5640: LI5640
+    :param pd: a LockinAnalogPD instance.
+    :type pd: LockinAnalogPD
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.li5640: LI5640 = self.conf.get("li5640")
+        self.pd: LockinAnalogPD = self.conf.get("pd")
+        self.add_instruments(self.li5640, self.pd)
+
+        self.init_lockin()
+        self.update_gain()
 
     # LockinAnalogPD wrappers / compatible interfaces
 
@@ -108,14 +266,6 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
 
     # Standard API
 
-    def set(self, key: str, value=None, label: str = "") -> bool:
-        # no set() key for pd
-
-        success = self.li5640.set(key, value)
-        #  set() may change the gain.
-        self.update_gain()
-        return success
-
     def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self._convert_data(self.pd.get(key, args))
@@ -132,8 +282,6 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
         return ["li5640"]
 
     def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
-        """Get ParamDict for `label` in."""
-
         if label == "li5640":
             return self.li5640.get_param_dict(label)
         else:
@@ -151,11 +299,66 @@ class LockinAnalogPD_LI5640(InstrumentOverlay):
             self.update_gain()
             return self.pd.configure(params, label)
 
-    def start(self, label: str = "") -> bool:
-        return self.pd.start()
 
-    def stop(self, label: str = "") -> bool:
-        return self.pd.stop()
+class LockinAnalogPDMM_LI5640(InstrumentOverlay, _LI5640Mixin):
+    """Generic (fixed gain) Photoreceiver and with LI5640 Lockin & DMM.
+
+    :param li5640: a LI5640 instance
+    :type li5640: LI5640
+    :param pd: a LockinAnalogPDMM instance.
+    :type pd: LockinAnalogPDMM
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        InstrumentOverlay.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.li5640: LI5640 = self.conf.get("li5640")
+        self.pd: LockinAnalogPDMM = self.conf.get("pd")
+        self.add_instruments(self.li5640, self.pd)
+
+        self.init_lockin()
+        self.update_gain()
+
+    def _convert(self, data):
+        gain_r, gain_i = self.gain
+        return np.cdouble(data.real / gain_r, data.imag / gain_i)
+
+    def get_data(self) -> np.cdouble:
+        return self._convert(self.pd.get_data())
+
+    # Standard API
+
+    def get(self, key: str, args=None, label: str = ""):
+        if key == "data":
+            return self._convert_data(self.pd.get(key, args))
+        elif key == "unit":
+            return self.pd.unit
+        elif key == "gain":
+            return self.total_gain
+        else:
+            return self.li5640.get(key, args)
+
+    def get_param_dict_labels(self) -> list[str]:
+        return ["li5640"] + self.pd.get_param_dict_labels()
+
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue] | None:
+        if label == "li5640":
+            return self.li5640.get_param_dict(label)
+        else:
+            return self.pd.get_param_dict(label)
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        if label == "li5640":
+            success = self.li5640.configure(params, label)
+            #  configure() may change the gain.
+            self.update_gain()
+            return success
+        else:
+            #  update the gain with PD configuration so as to secure the correct gain
+            #  before subsequent (clock_mode) measurement.
+            self.update_gain()
+            return self.pd.configure(params, label)
 
 
 class OE200_AI(InstrumentOverlay):

@@ -131,9 +131,22 @@ class ADC_7352E(VisaInstrument):
             return None
 
         val = self.inst.query("INI")
-        val_spl = val.split(",")
+        vals = val.split(",")
         try:
-            return float(val_spl[ch - 1][5:])
+            return float(vals[ch - 1][5:])
+        except Exception:
+            self.logger.error(f"Got invalid read {val}")
+            return None
+
+    def get_all_data(self):
+        if self._mode[0] == Mode.UNCONFIGURED or self._mode[1] == Mode.UNCONFIGURED:
+            self.logger.error("get_all_data() is called but not configured.")
+            return None
+
+        val = self.inst.query("INI")
+        vals = val.split(",")
+        try:
+            return float(vals[0][5:]), float(vals[1][5:])
         except Exception:
             self.logger.error(f"Got invalid read {val}")
             return None
@@ -159,6 +172,8 @@ class ADC_7352E(VisaInstrument):
             return self.query_opc(delay=args)
         elif key == "data":
             return self.get_data(int(label[2]))
+        elif key == "all_data":
+            return self.get_all_data()
         elif key == "unit":
             return self.get_unit(int(label[2]))
         else:

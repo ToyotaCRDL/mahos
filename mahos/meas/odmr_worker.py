@@ -20,12 +20,249 @@ from ..inst.sg_interface import SGInterface
 from ..inst.pg_interface import PGInterface
 from ..inst.pd_interface import PDInterface
 from ..inst.daq_interface import ClockSourceInterface
+from ..inst.overlay.odmr_sweeper_interface import ODMRSweeperInterface
 from ..util.conf import PresetLoader
 from .common_worker import Worker
 
 
-class Sweeper(Worker):
-    """Worker for ODMR Sweep."""
+class SweeperBase(Worker):
+    def data_msg(self) -> ODMRData:
+        return self.data
+
+    def is_finished(self) -> bool:
+        if not self.data.has_params() or not self.data.has_data():
+            return False
+        if self.data.params.get("sweeps", 0) <= 0:
+            return False  # no sweeps limit defined.
+        return self.data.sweeps() >= self.data.params["sweeps"]
+
+    def validate_params(
+        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str
+    ) -> bool:
+        params = P.unwrap(params)
+        if params["start"] >= params["stop"]:
+            self.logger.error("stop must be greater than start")
+            return False
+        return True
+
+    def get_param_dict_labels(self) -> list:
+        return ["cw", "pulse"]
+
+    def _make_param_dict(self, label, bounds) -> P.ParamDict[str, P.PDValue] | None:
+        if label == "cw":
+            timing = P.ParamDict(
+                time_window=P.FloatParam(
+                    self.conf.get("time_window", 10e-3), 0.1e-3, 1.0, unit="s", SI_prefix=True
+                ),
+                gate_delay=P.FloatParam(
+                    self.conf.get("gate_delay", 0.0), 0.0, 1.0, unit="s", SI_prefix=True
+                ),
+            )
+        elif label == "pulse":
+            timing = P.ParamDict(
+                laser_delay=P.FloatParam(
+                    100e-9, 0.0, 1e-3, unit="s", SI_prefix=True, doc="delay before laser"
+                ),
+                laser_width=P.FloatParam(
+                    300e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="width of laser"
+                ),
+                mw_delay=P.FloatParam(
+                    1e-6,
+                    0.0,
+                    1e-3,
+                    unit="s",
+                    SI_prefix=True,
+                    doc="delay for microwave (>= trigger_width)",
+                ),
+                mw_width=P.FloatParam(
+                    1e-6, 0.0, 1e-3, unit="s", SI_prefix=True, doc="width of microwave"
+                ),
+                trigger_width=P.FloatParam(
+                    100e-9,
+                    0.0,
+                    10e-6,
+                    unit="s",
+                    SI_prefix=True,
+                    doc="width of trigger (<= mw_delay)",
+                ),
+                burst_num=P.IntParam(100, 1, 100_000, doc="number of bursts at each freq."),
+            )
+        else:
+            self.logger.error(f"Unknown param dict label: {label}")
+            return None
+
+        if bounds is None:
+            self.logger.error("Could not get SG bounds.")
+            return None
+        f_min, f_max = bounds["freq"]
+        p_min, p_max = bounds["power"]
+        f_start = max(min(self.conf.get("start", 2.74e9), f_max), f_min)
+        f_stop = max(min(self.conf.get("stop", 3.00e9), f_max), f_min)
+        d = P.ParamDict(
+            start=P.FloatParam(f_start, f_min, f_max),
+            stop=P.FloatParam(f_stop, f_min, f_max),
+            num=P.IntParam(self.conf.get("num", 101), 2, 10000),
+            power=P.FloatParam(self.conf.get("power", p_min), p_min, p_max),
+            sweeps=P.IntParam(0, 0, 1_000_000_000),
+            timing=timing,
+            background=P.BoolParam(False, doc="take background data"),
+            delay=P.FloatParam(
+                0.0,
+                0.0,
+                1.0,
+                unit="s",
+                SI_prefix=True,
+                doc="delay after PG trigger before the measurement",
+            ),
+            background_delay=P.FloatParam(
+                0.0,
+                0.0,
+                1.0,
+                unit="s",
+                SI_prefix=True,
+                doc="delay between normal and background (reference) measurements",
+            ),
+            sg_modulation=P.StrChoiceParam(
+                self.conf.get("sg_modulation", "no"),
+                ["no", "iq", "am", "fm"],
+                doc="external modulation of SG",
+            ),
+            am_depth=P.FloatParam(self.conf.get("am_depth", 0.1), doc="depth of AM for SG"),
+            am_log=P.BoolParam(
+                self.conf.get("am_log", False), doc="True indicates log scale AM depth for SG"
+            ),
+            fm_deviation=P.FloatParam(
+                self.conf.get("fm_deviation", 1e3), unit="Hz", doc="deviation of FM for SG"
+            ),
+            resume=P.BoolParam(False),
+            continue_mw=P.BoolParam(False),
+            ident=P.UUIDParam(optional=True, enable=False),
+        )
+
+        return d
+
+
+class SweeperOverlay(SweeperBase):
+    """Sweeper using Overlay."""
+
+    def __init__(self, cli, logger, conf: dict):
+        Worker.__init__(self, cli, logger, conf)
+        self.sweeper = ODMRSweeperInterface(cli, "sweeper")
+        self.add_instruments(self.sweeper)
+
+        self._class_name = cli.class_name("sweeper")
+
+        self.data = ODMRData()
+
+    def get_param_dict_labels(self) -> list[str]:
+        if self._class_name.startswith("ODMRSweeperCommand"):
+            return ["cw"]
+        else:
+            return ["cw", "pulse"]
+
+    def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
+        bounds = self.sweeper.get_bounds()
+        if bounds is None:
+            self.logger.error("Failed to get bounds from sweeper.")
+            return None
+
+        d = self._make_param_dict(label, bounds)
+        d["pd"] = self.sweeper.get_param_dict("pd")
+
+        if self._class_name.endswith("AnalogPD"):
+            d["timing"] = P.ParamDict(
+                time_window=P.FloatParam(
+                    self.conf.get("time_window", 10e-3), 0.1e-3, 1.0, unit="s", SI_prefix=True
+                ),
+            )
+        elif self._class_name.endswith("AnalogPDMM"):
+            d["timing"] = P.ParamDict()
+
+        return d
+
+    def start(
+        self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str = ""
+    ) -> bool:
+        if params is not None:
+            params = P.unwrap(params)
+        success = self.sweeper.lock()
+
+        if params is not None:
+            success &= self.sweeper.configure(params, label)
+        if not success:
+            return self.fail_with_release("Error configuring sweeper.")
+
+        success &= self.sweeper.start()
+        if not success:
+            return self.fail_with_release("Error starting sweeper.")
+
+        if params is not None and not params["resume"]:
+            # new measurement.
+            self.data = ODMRData(params, label)
+            self.data.start()
+            self.data.yunit = self.sweeper.get_unit()
+            self.logger.info("Started sweeper.")
+        else:
+            # resume.
+            self.data.update_params(params)
+            self.data.resume()
+            self.logger.info("Resuming sweeper.")
+
+        return True
+
+    def _append_line_nobg(self, data, line):
+        if data is None:
+            return np.array(line, ndmin=2).T
+        else:
+            return np.append(data, np.array(line, ndmin=2).T, axis=1)
+
+    def _append_line_bg(self, data, bg_data, line):
+        l_data = line[0::2]
+        l_bg = line[1::2]
+        if data is None:
+            return np.array(l_data, ndmin=2).T, np.array(l_bg, ndmin=2).T
+        else:
+            return (
+                np.append(data, np.array(l_data, ndmin=2).T, axis=1),
+                np.append(bg_data, np.array(l_bg, ndmin=2).T, axis=1),
+            )
+
+    def append_line(self, line):
+        if not self.data.measure_background():
+            self.data.data = self._append_line_nobg(self.data.data, line)
+        else:
+            self.data.data, self.data.bg_data = self._append_line_bg(
+                self.data.data, self.data.bg_data, line
+            )
+
+    def work(self):
+        if not self.data.running:
+            return  # or raise Error?
+
+        line = self.sweeper.get_line()
+        if line is None:
+            self.logger.error("Got None from sweeper.get_line()")
+            return
+
+        self.append_line(line)
+
+    def stop(self) -> bool:
+        # avoid double-stop (abort status can be broken)
+        if not self.data.running:
+            return False
+
+        success = self.sweeper.stop() and self.sweeper.release()
+
+        self.data.finalize()
+        if success:
+            self.logger.info("Stopped sweeper.")
+        else:
+            self.logger.error("Error stopping sweeper.")
+        return success
+
+
+class Sweeper(SweeperBase):
+    """Worker for fast ODMR sweep using mutual triggering between SG and PG."""
 
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger, conf)
@@ -93,120 +330,19 @@ class Sweeper(Worker):
         )
         loader.load_preset(self.conf, cli.class_name("sg"))
 
-    def get_param_dict_labels(self) -> list:
-        return ["cw", "pulse"]
-
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
-        if label == "cw":
-            timing = P.ParamDict(
-                time_window=P.FloatParam(
-                    self.conf.get("time_window", 10e-3), 0.1e-3, 1.0, unit="s", SI_prefix=True
-                ),
-                gate_delay=P.FloatParam(
-                    self.conf.get("gate_delay", 0.0), 0.0, 1.0, unit="s", SI_prefix=True
-                ),
-            )
-        elif label == "pulse":
-            timing = P.ParamDict(
-                laser_delay=P.FloatParam(
-                    100e-9, 0.0, 1e-3, unit="s", SI_prefix=True, doc="delay before laser"
-                ),
-                laser_width=P.FloatParam(
-                    300e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, doc="width of laser"
-                ),
-                mw_delay=P.FloatParam(
-                    1e-6,
-                    0.0,
-                    1e-3,
-                    unit="s",
-                    SI_prefix=True,
-                    doc="delay for microwave (>= trigger_width)",
-                ),
-                mw_width=P.FloatParam(
-                    1e-6, 0.0, 1e-3, unit="s", SI_prefix=True, doc="width of microwave"
-                ),
-                trigger_width=P.FloatParam(
-                    100e-9,
-                    0.0,
-                    10e-6,
-                    unit="s",
-                    SI_prefix=True,
-                    doc="width of trigger (<= mw_delay)",
-                ),
-                burst_num=P.IntParam(100, 1, 100_000, doc="number of bursts at each freq."),
-            )
-        else:
-            self.logger.error(f"Unknown param dict label: {label}")
-            return None
-
-        bounds = self.sg.get_bounds()
-        if bounds is None:
-            self.logger.error("Could not get SG bounds.")
-            return None
-        f_min, f_max = bounds["freq"]
-        p_min, p_max = bounds["power"]
-        f_start = max(min(self.conf.get("start", 2.74e9), f_max), f_min)
-        f_stop = max(min(self.conf.get("stop", 3.00e9), f_max), f_min)
-        d = P.ParamDict(
-            start=P.FloatParam(f_start, f_min, f_max),
-            stop=P.FloatParam(f_stop, f_min, f_max),
-            num=P.IntParam(self.conf.get("num", 101), 2, 10000),
-            power=P.FloatParam(self.conf.get("power", p_min), p_min, p_max),
-            sweeps=P.IntParam(0, 0, 1_000_000_000),
-            timing=timing,
-            background=P.BoolParam(False, doc="take background data"),
-            delay=P.FloatParam(
-                0.0,
-                0.0,
-                1.0,
-                unit="s",
-                SI_prefix=True,
-                doc="delay after PG trigger before the measurement",
-            ),
-            background_delay=P.FloatParam(
-                0.0,
-                0.0,
-                1.0,
-                unit="s",
-                SI_prefix=True,
-                doc="delay between normal and background (reference) measurements",
-            ),
-            sg_modulation=P.StrChoiceParam(
-                self.conf.get("sg_modulation", "no"),
-                ["no", "iq", "am", "fm"],
-                doc="external modulation of SG",
-            ),
-            am_depth=P.FloatParam(self.conf.get("am_depth", 0.1), doc="depth of AM for SG"),
-            am_log=P.BoolParam(
-                self.conf.get("am_log", False), doc="True indicates log scale AM depth for SG"
-            ),
-            fm_deviation=P.FloatParam(
-                self.conf.get("fm_deviation", 1e3), unit="Hz", doc="deviation of FM for SG"
-            ),
-            resume=P.BoolParam(False),
-            continue_mw=P.BoolParam(False),
-            ident=P.UUIDParam(optional=True, enable=False),
-        )
-
+        d = self._make_param_dict(label, self.sg.get_bounds())
         if self._pd_analog:
-            d["pd_rate"] = P.FloatParam(
+            d["pd"] = P.ParamDict()
+            d["pd"]["rate"] = P.FloatParam(
                 self.conf.get("pd_rate", 400e3), 1e3, 10000e3, doc="PD sampling rate"
             )
             lb, ub = self.conf.get("pd_bounds", (-10.0, 10.0))
-            d["pd_bounds"] = [
+            d["pd"]["bounds"] = [
                 P.FloatParam(lb, -10.0, 10.0, unit="V"),
                 P.FloatParam(ub, -10.0, 10.0, unit="V"),
             ]
         return d
-
-    def validate_params(
-        self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str
-    ) -> bool:
-        params = P.unwrap(params)
-        if params["start"] >= params["stop"]:
-            self.logger.error("stop must be greater than start")
-            return False
-        return True
 
     def configure_sg(self, params: dict) -> bool:
         p = params
@@ -756,13 +892,6 @@ class Sweeper(Worker):
         line = np.sum(lines, axis=0)
         self.append_line(line)
 
-    def is_finished(self) -> bool:
-        if not self.data.has_params() or not self.data.has_data():
-            return False
-        if self.data.params.get("sweeps", 0) <= 0:
-            return False  # no sweeps limit defined.
-        return self.data.sweeps() >= self.data.params["sweeps"]
-
     def stop(self) -> bool:
         # avoid double-stop (abort status can be broken)
         if not self.data.running:
@@ -788,6 +917,3 @@ class Sweeper(Worker):
         else:
             self.logger.error("Error stopping sweeper.")
         return success
-
-    def data_msg(self) -> ODMRData:
-        return self.data

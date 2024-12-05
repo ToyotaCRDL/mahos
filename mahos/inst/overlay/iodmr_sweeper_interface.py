@@ -8,8 +8,6 @@ Typed Interface for Imaging ODMR Sweeper.
 
 """
 
-from typing import Optional
-
 import numpy as np
 
 from ..interface import InstrumentInterface
@@ -18,7 +16,7 @@ from ..interface import InstrumentInterface
 class IODMRSweeperInterface(InstrumentInterface):
     """Interface for Imaging ODMR Sweeper."""
 
-    def get_frames(self) -> Optional[np.ndarray]:
+    def get_frames(self) -> np.ndarray | None:
         """Get single sweep frames."""
 
         return self.get("frames")
