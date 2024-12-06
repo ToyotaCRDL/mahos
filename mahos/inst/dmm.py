@@ -139,7 +139,7 @@ class ADC_7352E(VisaInstrument):
             return None
 
     def get_all_data(self):
-        if self._mode[0] == Mode.UNCONFIGURED or self._mode[1] == Mode.UNCONFIGURED:
+        if self._mode[1] == Mode.UNCONFIGURED or self._mode[2] == Mode.UNCONFIGURED:
             self.logger.error("get_all_data() is called but not configured.")
             return None
 

@@ -477,7 +477,7 @@ class N5182B(VisaInstrument):
             self.set_modulation(True)
             and self.set_dm_source("EXT")
             and self.set_dm(True)
-            and self.query_opc()
+            and self.check_error()
         )
         if success:
             self.logger.info("Configured external IQ modulation.")
@@ -496,7 +496,7 @@ class N5182B(VisaInstrument):
             )
             and self.set_fm_deviation(deviation)
             and self.set_fm(True)
-            and self.query_opc()
+            and self.check_error()
         )
         if success:
             self.logger.info("Configured external FM.")
@@ -515,7 +515,7 @@ class N5182B(VisaInstrument):
             )
             and self.set_am_depth(depth, log)
             and self.set_am(True)
-            and self.query_opc()
+            and self.check_error()
         )
         if success:
             self.logger.info("Configured for external AM.")
@@ -728,14 +728,14 @@ class MG3710E(VisaInstrument):
         c = self.conf.get("fm_ext", {})
         self.fm_ext_conf = {
             "DC_coupling": c.get("DC_coupling", True),
-            "impedance": c.get("impedance", 50),
+            "impedance": c.get("impedance", 600),
         }
         self.logger.debug(f"fm_ext conf: {self.fm_ext_conf}")
 
         c = self.conf.get("am_ext", {})
         self.am_ext_conf = {
             "DC_coupling": c.get("DC_coupling", True),
-            "impedance": c.get("impedance", 50),
+            "impedance": c.get("impedance", 600),
         }
         self.logger.debug(f"am_ext conf: {self.am_ext_conf}")
 
@@ -1092,7 +1092,7 @@ class MG3710E(VisaInstrument):
             and self.set_dm_output(True)
             and self.set_dm_source("EXT")
             and self.set_dm(True)
-            and self.query_opc()
+            and self.check_error()
         )
         if success:
             self.logger.info("Configured external IQ modulation.")
@@ -1114,7 +1114,7 @@ class MG3710E(VisaInstrument):
             )
             and self.set_fm_deviation(deviation, ch=ch)
             and self.set_fm(True, ch=ch)
-            and self.query_opc()
+            and self.check_error()
         )
         if success:
             self.logger.info("Configured external FM.")
@@ -1136,7 +1136,7 @@ class MG3710E(VisaInstrument):
             )
             and self.set_am_depth(depth, log, ch=ch)
             and self.set_am(True, ch=ch)
-            and self.query_opc()
+            and self.check_error()
         )
         if success:
             self.logger.info("Configured external AM.")

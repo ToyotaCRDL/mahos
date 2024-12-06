@@ -186,22 +186,6 @@ class _LI5640Mixin(object):
         self.logger.info(f"Current total gain: {tg[0]:.2e}, {tg[1]:.2e} V/{self.pd.unit}")
         return self.gain
 
-    # Standard API
-
-    def set(self, key: str, value=None, label: str = "") -> bool:
-        # no set() key for pd
-
-        success = self.li5640.set(key, value)
-        #  set() may change the gain.
-        self.update_gain()
-        return success
-
-    def start(self, label: str = "") -> bool:
-        return self.pd.start()
-
-    def stop(self, label: str = "") -> bool:
-        return self.pd.stop()
-
 
 class LockinAnalogPD_LI5640(InstrumentOverlay, _LI5640Mixin):
     """Generic (fixed gain) Photoreceiver and with LI5640 Lockin & DAQ AnalogIn.
@@ -235,7 +219,7 @@ class LockinAnalogPD_LI5640(InstrumentOverlay, _LI5640Mixin):
 
         if isinstance(data, np.cdouble):
             # read-on-demand
-            return np.cdouble(data.real / gain_r, data.imag / gain_i)
+            return np.cdouble(data.real / gain_r + 1.0j * data.imag / gain_i)
         elif isinstance(data, tuple):
             #  stamped clock-mode
             data[0].real /= gain_r
@@ -265,6 +249,20 @@ class LockinAnalogPD_LI5640(InstrumentOverlay, _LI5640Mixin):
         return self.pd.get_max_rate()
 
     # Standard API
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        # no set() key for pd
+
+        success = self.li5640.set(key, value)
+        #  set() may change the gain.
+        self.update_gain()
+        return success
+
+    def start(self, label: str = "") -> bool:
+        return self.pd.start()
+
+    def stop(self, label: str = "") -> bool:
+        return self.pd.stop()
 
     def get(self, key: str, args=None, label: str = ""):
         if key == "data":
@@ -322,12 +320,26 @@ class LockinAnalogPDMM_LI5640(InstrumentOverlay, _LI5640Mixin):
 
     def _convert(self, data):
         gain_r, gain_i = self.gain
-        return np.cdouble(data.real / gain_r, data.imag / gain_i)
+        return np.cdouble(data.real / gain_r + 1.0j * data.imag / gain_i)
 
     def get_data(self) -> np.cdouble:
         return self._convert(self.pd.get_data())
 
     # Standard API
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        # no set() key for pd
+
+        success = self.li5640.set(key, value)
+        #  set() may change the gain.
+        self.update_gain()
+        return success
+
+    def start(self, label: str = "") -> bool:
+        return self.pd.start()
+
+    def stop(self, label: str = "") -> bool:
+        return self.pd.stop()
 
     def get(self, key: str, args=None, label: str = ""):
         if key == "data":
@@ -514,7 +526,7 @@ class OE200_LI5640_AI(InstrumentOverlay):
 
         if isinstance(data, np.cdouble):
             # read-on-demand
-            return np.cdouble(data.real / gain_r, data.imag / gain_i)
+            return np.cdouble(data.real / gain_r + 1.0j * data.imag / gain_i)
         elif isinstance(data, tuple):
             #  stamped clock-mode
             data[0].real /= gain_r
