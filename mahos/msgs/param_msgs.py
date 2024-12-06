@@ -584,6 +584,30 @@ def unwrap(params: ParamDict[str, PDValue] | dict[str, RawPDValue]) -> dict[str,
     return params
 
 
+def flatten(params: dict[str, RawPDValue]) -> dict[str, RawPDValue]:
+    """Get `flattened view` of the nested-dict / list structure in given RawParamDict.
+
+    Key like 'level0.level1.level2' can be used to express nested dict access.
+    Key like 'key_of_list[2]' can be used to express list indexing.
+
+    """
+
+    def add(d, key, val):
+        if isinstance(val, (dict, ParamDict)):
+            for k, v in val.items():
+                add(d, ".".join((key, k)), v)
+        elif isinstance(val, (list, tuple)):
+            for i, v in enumerate(val):
+                add(d, f"{key}[{i}]", v)
+        else:
+            d[key] = val
+
+    d = {}
+    for key, val in params.items():
+        add(d, key, val)
+    return d
+
+
 def isclose(
     params: ParamDict[str, PDValue] | dict[str, RawPDValue],
     other: ParamDict[str, PDValue] | dict[str, RawPDValue],

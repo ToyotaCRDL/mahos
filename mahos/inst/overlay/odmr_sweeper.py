@@ -45,6 +45,7 @@ class ODMRSweeperCommandBase(InstrumentOverlay):
         self.delay = params["delay"]
         self.background = params.get("background", False)
         self.bg_delay = params.get("background_delay", 0.0)
+        self.continue_mw = params.get("continue_mw", False)
 
     def get_line(self):
         return self._queue.pop_block()
@@ -62,14 +63,14 @@ class ODMRSweeperCommandBase(InstrumentOverlay):
                 line.append(res)
 
                 if self.background:
-                    self.sg.set_output(False)
+                    self.sg.set_output(False, silent=True)
                     time.sleep(self.bg_delay)
                     res = self.get_pd_data()
                     if ev.is_set():
                         self.logger.info("Quitting sweep loop.")
                         return
                     line.append(res)
-                    self.sg.set_output(True)
+                    self.sg.set_output(True, silent=True)
 
             self._queue.append(np.array(line))
 
@@ -144,10 +145,16 @@ class ODMRSweeperCommandBase(InstrumentOverlay):
 
         self._stop_ev.set()
         self._thread.join()
-        success = self.sg.set_output(False) and self.pd.stop()
+
+        if self.continue_mw:
+            self.logger.warn("Skipping to turn off MW output")
+            success = True
+        else:
+            success = self.sg.set_output(False)
+        success &= self.pd.stop()
 
         if not success:
-            return self.fail_with("failed to stop sg or pd.")
+            return self.fail_with("failed to stop SG or PD.")
 
         return True
 
@@ -169,8 +176,8 @@ class ODMRSweeperCommandAnalogPD(ODMRSweeperCommandBase):
     def get_pd_param_dict(self) -> P.ParamDict[str, P.PDValue] | None:
         d = P.ParamDict()
         d["bounds"] = [
-            P.FloatParam(-10.0, -10.0, 10.0, unit="V"),
-            P.FloatParam(10.0, -10.0, 10.0, unit="V"),
+            P.FloatParam(-10.0, -10.0, 10.0, unit="V", doc="lower bound of expected voltage"),
+            P.FloatParam(10.0, -10.0, 10.0, unit="V", doc="upper bound of expected voltage"),
         ]
         return d
 

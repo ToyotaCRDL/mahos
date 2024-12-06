@@ -117,7 +117,7 @@ class LockinAnalogPDMM(InstrumentOverlay):
     def configure(self, params: dict, label: str = "") -> bool:
         pX = P.unwrap(params["X"])
         pY = P.unwrap(params["Y"])
-        return self.dmm.configure(pX, label=self.dmm_labelX) and self.dmm.configure_DCV(
+        return self.dmm.configure(pX, label=self.dmm_labelX) and self.dmm.configure(
             pY, label=self.dmm_labelY
         )
 

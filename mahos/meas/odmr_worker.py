@@ -161,6 +161,9 @@ class SweeperOverlay(SweeperBase):
             return ["cw", "pulse"]
 
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
+        if self._class_name.startswith("ODMRSweeperCommand") and label != "cw":
+            return None
+
         bounds = self.sweeper.get_bounds()
         if bounds is None:
             self.logger.error("Failed to get bounds from sweeper.")
@@ -169,13 +172,13 @@ class SweeperOverlay(SweeperBase):
         d = self._make_param_dict(label, bounds)
         d["pd"] = self.sweeper.get_param_dict("pd")
 
-        if self._class_name.endswith("AnalogPD"):
+        if label == "cw" and self._class_name.endswith("AnalogPD"):
             d["timing"] = P.ParamDict(
                 time_window=P.FloatParam(
                     self.conf.get("time_window", 10e-3), 0.1e-3, 1.0, unit="s", SI_prefix=True
                 ),
             )
-        elif self._class_name.endswith("AnalogPDMM"):
+        elif label == "cw" and self._class_name.endswith("AnalogPDMM"):
             d["timing"] = P.ParamDict()
 
         return d

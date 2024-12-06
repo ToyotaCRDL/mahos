@@ -529,8 +529,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.peaks = ODMRPeaksWidget(self.plot.plot, parent=self.peaksTab)
         self._peaksTab_layout.addWidget(self.peaks)
 
-        self._cw_time_window = self._cw_gate_delay = True
-        self._pd_params = False
+        self._has_time_window = self._has_gate_delay = True
+        self._has_pulse = self._has_pd_params = False
 
         self.setEnabled(False)
 
@@ -583,22 +583,26 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.pulseButton.setChecked(True)  # just to emit toggled signal.
         self.cwButton.setChecked(True)
 
-        params = self.cli.get_param_dict("pulse")
-
-        apply_widgets(
-            params["timing"],
-            [
-                ("laser_delay", self.laserdelayBox, 1e9),  # s to ns
-                ("laser_width", self.laserwidthBox, 1e9),
-                ("mw_delay", self.mwdelayBox, 1e9),
-                ("mw_width", self.mwwidthBox, 1e9),
-                ("trigger_width", self.triggerwidthBox, 1e9),
-            ],
-        )
+        if "pulse" in self.cli.get_param_dict_labels():
+            params = self.cli.get_param_dict("pulse")
+            apply_widgets(
+                params["timing"],
+                [
+                    ("laser_delay", self.laserdelayBox, 1e9),  # s to ns
+                    ("laser_width", self.laserwidthBox, 1e9),
+                    ("mw_delay", self.mwdelayBox, 1e9),
+                    ("mw_width", self.mwwidthBox, 1e9),
+                    ("trigger_width", self.triggerwidthBox, 1e9),
+                ],
+            )
+            self._has_pulse = True
+        else:
+            self.pulseButton.setEnabled(False)
+            self._has_pulse = False
 
         params = self.cli.get_param_dict("cw")
-        self._cw_time_window = "time_window" in params["timing"]
-        if self._cw_time_window:
+        self._has_time_window = "time_window" in params["timing"]
+        if self._has_time_window:
             apply_widgets(
                 params["timing"],
                 [
@@ -607,8 +611,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             )
         else:
             self.windowBox.setEnabled(False)
-        self._cw_gate_delay = "gate_delay" in params["timing"]
-        if self._cw_gate_delay:
+        self._has_gate_delay = "gate_delay" in params["timing"]
+        if self._has_gate_delay:
             apply_widgets(
                 params["timing"],
                 [
@@ -629,8 +633,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 ("background_delay", self.bgdelayBox, 1e3),
             ],
         )
-        self._pd_params = "pd" in params
-        if self._pd_params:
+        self._has_pd_params = "pd" in params
+        if self._has_pd_params:
             self.paramTable.update_contents(params["pd"])
 
         self.saveconfocalBox.setEnabled(self.confocal_cli is not None)
@@ -684,8 +688,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.delayBox.setValue(data.params["delay"] * 1e3)
         if bg and "background_delay" in data.params:
             self.bgdelayBox.setValue(data.params["background_delay"] * 1e3)
-        if self._pd_params:
-            for k, v in data.params["pd"].items():
+        if self._has_pd_params:
+            for k, v in P.flatten(data.params["pd"]).items():
                 self.paramTable.apply_value(k, v)
         if "sg_modulation" in data.params:
             mod = data.params["sg_modulation"]
@@ -704,7 +708,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 self.windowBox.setValue(timing["time_window"] * 1e3)
             if "gate_delay" in timing:
                 self.gatedelayBox.setValue(timing["gate_delay"] * 1e3)
-        else:
+        elif data.label == "pulse" and self._has_pulse:
             self.pulseButton.setChecked(True)
             self.laserdelayBox.setValue(timing["laser_delay"] * 1e9)
             self.laserwidthBox.setValue(timing["laser_width"] * 1e9)
@@ -794,9 +798,9 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         if self.cwButton.isChecked():
             label = "cw"
             t = {}
-            if self._cw_time_window:
+            if self._has_time_window:
                 t["time_window"] = self.windowBox.value() * 1e-3  # ms to s
-            if self._cw_gate_delay:
+            if self._has_gate_delay:
                 t["gate_delay"] = self.gatedelayBox.value() * 1e-3  # ms to s
         else:
             label = "pulse"
@@ -809,7 +813,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             t["burst_num"] = self.bnumBox.value()
         params["timing"] = t
         params["continue_mw"] = self.mwcontBox.isChecked()
-        if self._pd_params:
+        if self._has_pd_params:
             params["pd"] = P.unwrap(self.paramTable.params())
 
         return params, label
@@ -857,6 +861,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self._finalizing = False
 
     def update_state(self, state: BinaryState, last_state: BinaryState):
+        is_IDLE = state == BinaryState.IDLE
         for w in (
             self.startButton,
             self.saveButton,
@@ -868,28 +873,26 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.numBox,
             self.powerBox,
             self.cwButton,
-            self.pulseButton,
             self.sweepsBox,
             self.backgroundBox,
             self.delayBox,
             self.sgmodBox,
         ):
-            w.setEnabled(state == BinaryState.IDLE)
+            w.setEnabled(is_IDLE)
 
-        self.paramTable.setEnabled(state == BinaryState.IDLE and self._pd_params)
-        self.bgdelayBox.setEnabled(state == BinaryState.IDLE and self.backgroundBox.isChecked())
+        self.pulseButton.setEnabled(is_IDLE and self._has_pulse)
+        self.paramTable.setEnabled(is_IDLE and self._has_pd_params)
+        self.bgdelayBox.setEnabled(is_IDLE and self.backgroundBox.isChecked())
 
-        self.windowBox.setEnabled(
-            state == BinaryState.IDLE and self._cw_time_window and self.cwButton.isChecked()
-        )
+        self.windowBox.setEnabled(is_IDLE and self._has_time_window and self.cwButton.isChecked())
         self.gatedelayBox.setEnabled(
-            state == BinaryState.IDLE and self._cw_gate_delay and self.cwButton.isChecked()
+            is_IDLE and self._has_gate_delay and self.cwButton.isChecked()
         )
 
         mod = self.sgmodBox.currentText()
         for w in (self.amdepBox, self.amlogBox):
-            w.setEnabled(state == BinaryState.IDLE and mod == "am")
-        self.fmdevBox.setEnabled(state == BinaryState.IDLE and mod == "fm")
+            w.setEnabled(is_IDLE and mod == "am")
+        self.fmdevBox.setEnabled(is_IDLE and mod == "fm")
 
         for w in (
             self.laserdelayBox,
@@ -899,7 +902,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.triggerwidthBox,
             self.bnumBox,
         ):
-            w.setEnabled(state == BinaryState.IDLE and self.pulseButton.isChecked())
+            w.setEnabled(is_IDLE and self.pulseButton.isChecked())
 
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
 

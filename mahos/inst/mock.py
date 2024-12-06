@@ -61,7 +61,9 @@ class SG_mock(Instrument):
         self.power_min, self.power_max = self.conf.get("power_bounds", (None, None))
         self.freq_min, self.freq_max = self.conf.get("freq_bounds", (None, None))
 
-    def set_output(self, on):
+    def set_output(self, on: bool, silent: bool = False):
+        if silent:
+            return True
         if on:
             self.logger.info("Output ON")
         else:
@@ -1194,6 +1196,10 @@ class DMM_mock(Instrument):
             return P.ParamDict(
                 nplc=P.IntChoiceParam(10, [1, 2, 10, 100]),
                 trigger=P.StrChoiceParam("IMM", ["IMM", "BUS", "EXT"]),
+                bounds=[
+                    P.FloatParam(-10.0, -10.0, 10.0, unit="V", doc="lower bound"),
+                    P.FloatParam(10.0, -10.0, 10.0, unit="V", doc="upper bound"),
+                ],
             )
         else:
             return self.fail_with(f"unknown label {label}")
@@ -1204,6 +1210,7 @@ class DMM_mock(Instrument):
             self.fail_with(f"unknown label: {label}")
         ch = int(label[2])
         meas = label[4:]
+        self.logger.debug(f"ch: {ch}, meas: {meas} params: {params}")
         if meas == "dcv":
             return self.configure_DCV(ch)
         else:  # "dci"

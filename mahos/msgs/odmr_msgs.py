@@ -57,7 +57,7 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
         return self.data is not None
 
     def has_background(self) -> bool:
-        return self.bg_data is not None and (self.bg_data > 0).all()
+        return self.bg_data is not None and (self.bg_data != 0).all()
 
     def is_complex(self) -> bool:
         return self.has_data() and np.issubdtype(self.data.dtype, np.complexfloating)

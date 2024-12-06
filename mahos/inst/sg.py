@@ -133,13 +133,15 @@ class N5182B(VisaInstrument):
 
         return ans
 
-    def set_output(self, on: bool) -> bool:
+    def set_output(self, on: bool, silent: bool = False) -> bool:
         if on:
             self.inst.write("OUTP:STAT ON")
-            self.logger.info("Output ON")
+            if not silent:
+                self.logger.info("Output ON")
         else:
             self.inst.write("OUTP:STAT OFF")
-            self.logger.info("Output OFF")
+            if not silent:
+                self.logger.info("Output OFF")
         return True
 
     def set_init_cont(self, on: bool) -> bool:
@@ -771,13 +773,15 @@ class MG3710E(VisaInstrument):
 
         return ans
 
-    def set_output(self, on: bool, ch: int = 1) -> bool:
+    def set_output(self, on: bool, ch: int = 1, silent: bool = False) -> bool:
         if on:
             self.inst.write(f"OUTP{ch}:STAT ON")
-            self.logger.info(f"SG{ch} Output ON")
+            if not silent:
+                self.logger.info(f"SG{ch} Output ON")
         else:
             self.inst.write(f"OUTP{ch}:STAT OFF")
-            self.logger.info(f"SG{ch} Output OFF")
+            if not silent:
+                self.logger.info(f"SG{ch} Output OFF")
         return True
 
     def set_init_cont(self, on: bool) -> bool:
@@ -1311,13 +1315,15 @@ class DS_SG(VisaInstrument):
             "freq": self.get_freq_bounds(),
         }
 
-    def set_output(self, on: bool) -> bool:
+    def set_output(self, on: bool, silent: bool = False) -> bool:
         if on:
             self.inst.write("OUTP:STAT ON")
-            self.logger.info("Output ON")
+            if not silent:
+                self.logger.info("Output ON")
         else:
             self.inst.write("OUTP:STAT OFF")
-            self.logger.info("Output OFF")
+            if not silent:
+                self.logger.info("Output OFF")
         return True
 
     def set_init_cont(self, on: bool) -> bool:
