@@ -733,12 +733,12 @@ class Sweeper(SweeperBase):
         return success
 
     def start_analog_pd(self, params: dict, label: str) -> bool:
-        rate = params["pd_rate"]
+        rate = params["pd"]["rate"]
         if label == "cw":
-            oversamp = round(params["timing"]["time_window"] * params["pd_rate"])
+            oversamp = round(params["timing"]["time_window"] * rate)
         else:
             # t = params["timing"]
-            # oversamp = round(t["laser_width"] * params["pd_rate"] * t["burst_num"])
+            # oversamp = round(t["laser_width"] * rate * t["burst_num"])
             # won't reach here but just in case
             self.logger.error("Pulse for Analog PD is not implemented yet.")
             return False
@@ -775,7 +775,7 @@ class Sweeper(SweeperBase):
             "drop_first": int(self._sg_first),
             "clock_mode": True,
             "oversample": oversamp,
-            "bounds": params.get("pd_bounds", (-10.0, 10.0)),
+            "bounds": params["pd"].get("bounds", (-10.0, 10.0)),
         }
         if self._pd_data_transfer:
             params_pd["data_transfer"] = self._pd_data_transfer

@@ -49,7 +49,7 @@ class AnalogPDMM(InstrumentOverlay):
         return self.dmm.configure(p, label=self.dmm_label)
 
     def get_data(self) -> float:
-        return self.dmm.get_data() / self.gain
+        return self.dmm.get("data", label=self.dmm_label) / self.gain
 
     def set(self, key: str, value=None, label: str = "") -> bool:
         key = key.lower()

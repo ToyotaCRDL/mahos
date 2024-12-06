@@ -257,9 +257,9 @@ def update_data(data: ODMRData):
         if "sg_modulation" in data.params:
             # type is changed from bool to str (choice)
             if data.params["sg_modulation"]:
-                data.params["sg_modulation"] == "iq"
+                data.params["sg_modulation"] = "iq"
             else:
-                data.params["sg_modulation"] == "no"
+                data.params["sg_modulation"] = "no"
         if "pd_rate" in data.params:
             data.params["pd"] = {
                 "rate": data.params["pd_rate"],
