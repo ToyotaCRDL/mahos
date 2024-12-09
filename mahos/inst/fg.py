@@ -77,6 +77,10 @@ class RIGOL_DG2000(VisaInstrument):
             conf["write_termination"] = "\n"
         if "read_termination" not in conf:
             conf["read_termination"] = "\n"
+        # set default timeout to a bit large value because
+        # some RIGOL models show a little lagged (2, 3 seconds) response to queries.
+        if "timeout" not in conf:
+            conf["timeout"] = 6000
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
 
         self._ampl_bounds = {}
@@ -143,7 +147,7 @@ class RIGOL_DG2000(VisaInstrument):
 
     @ch_getter((1, 2))
     def get_output(self, ch: int = 1) -> bool:
-        return self.inst.query(f":OUTP{ch}:STAT?") == "ON"
+        return self.inst.query(f":OUTP{ch}:STAT?").strip() in ("ON", "1")
 
     @ch_setter((1, 2))
     def set_output_impedance(self, imp_ohm: int | str, ch: int = 1) -> bool:
@@ -376,8 +380,12 @@ class RIGOL_DG2000(VisaInstrument):
             success &= self.set_amplitude(ampl_Vpp, ch=ch)
         success &= self.set_offset(offset, ch=ch)
         success &= self.set_phase(phase_deg, ch=ch)
+        success &= self.check_error()
 
-        self.logger.info("Configured for CW.")
+        if success:
+            self.logger.info(f"Configured ch{ch} for CW.")
+        else:
+            self.logger.error(f"Failed to configure ch{ch} for CW.")
         return success
 
     def configure_gate(
@@ -412,12 +420,16 @@ class RIGOL_DG2000(VisaInstrument):
                 polarity if polarity is not None else self.gate_conf["polarity"], ch=ch
             )
             and self.set_burst_idle_level(idle_level or self.gate_conf["idle_level"], ch=ch)
+            and self.check_error()
         )
 
-        self.logger.info(
-            "Configured for Gated Burst."
-            + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
-        )
+        if success:
+            self.logger.info(
+                f"Configured ch{ch} for Gated Burst."
+                + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
+            )
+        else:
+            self.logger.error(f"Failed to configure ch{ch} for Gated Burst.")
         return success
 
     def configure_burst(
@@ -453,12 +465,16 @@ class RIGOL_DG2000(VisaInstrument):
             and self.set_burst_idle_level(idle_level or self.burst_conf["idle_level"], ch=ch)
             and self.set_burst_cycle(cycle, ch=ch)
             and self.set_burst_delay(delay, ch=ch)
+            and self.check_error()
         )
 
-        self.logger.info(
-            "Configured for Cycle Burst."
-            + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
-        )
+        if success:
+            self.logger.info(
+                f"Configured ch{ch} for Cycle Burst."
+                + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
+            )
+        else:
+            self.logger.error(f"Failed to configure ch{ch} for Gated Burst.")
         return success
 
     def configure_output(self, params: dict):
@@ -470,6 +486,11 @@ class RIGOL_DG2000(VisaInstrument):
         if "align_phase" in params:
             self._align_phase = params["align_phase"]
             self.logger.info(f"Phase alignment: {self._align_phase}")
+        success &= self.check_error()
+        if success:
+            self.logger.info("Configured output.")
+        else:
+            self.logger.error("Error configuring output.")
         return success
 
     # Standard API
@@ -679,6 +700,11 @@ class RIGOL_DG2000(VisaInstrument):
 class RIGOL_DG800Pro(RIGOL_DG2000):
     """RIGOL DG800Pro series Function Generator.
 
+    [WARNING/TODO] The gate and burst modes won't work properly.
+    (Command sent, no error reported, but output is not as expected
+    until we touch "local" key on instrument screen. I don't know how to fix this.)
+    Avoid using this instrument if you need these modes.
+
     :param ext_ref_clock: use external reference clock source.
     :type ext_ref_clock: bool
     :param gate.source: trigger source for gated burst. one of TRIG_SOURCE.
@@ -714,7 +740,7 @@ class RIGOL_DG800Pro(RIGOL_DG2000):
             self.logger.error(f"Invalid Trigger Source: {source}")
             return False
 
-        self.inst.write(f":SOUR{ch}:BURS:TRIG:SOUR {source}")
+        self.inst.write(f":TRIG{ch}:SOUR {source}")
         return True
 
     @ch_setter((1, 2))
@@ -761,6 +787,38 @@ class RIGOL_DG800Pro(RIGOL_DG2000):
         self.logger.info(f"Reference clock: {source}")
         return True
 
+    def configure_gate(
+        self,
+        wave: str,
+        freq: float,
+        ampl_Vpp: float,
+        phase_deg: float,
+        offset: float = 0.0,
+        source: str = "",
+        polarity: bool | None = None,
+        idle_level: str = "",
+        ch: int = 1,
+        reset: bool = True,
+    ) -> bool:
+        """Configure Gated Burst output."""
+
+        msg = "This function won't work properly! Check if expected output is generated!"
+        self.logger.warn(msg)
+
+        return RIGOL_DG2000.configure_gate(
+            self,
+            wave,
+            freq,
+            ampl_Vpp,
+            phase_deg,
+            offset=offset,
+            source=source,
+            polarity=polarity,
+            idle_level=idle_level,
+            ch=ch,
+            reset=reset,
+        )
+
     def configure_burst(
         self,
         wave: str,
@@ -778,29 +836,24 @@ class RIGOL_DG800Pro(RIGOL_DG2000):
     ) -> bool:
         """Configure Cycle Burst output."""
 
-        success = (
-            (self.reset() if reset else True)
-            and self.set_function(wave, ch=ch)
-            and self.set_freq(freq, ch=ch)
-            and self.set_amplitude(ampl_Vpp, ch=ch)
-            and self.set_offset(offset, ch=ch)
-            and self.set_phase(phase_deg, ch=ch)
-            and self.set_burst(True, ch=ch)
-            and self.set_burst_mode("TRIG", ch=ch)
-            and self.set_burst_trig_source(source or self.burst_conf["source"], ch=ch)
-            and self.set_burst_trig_slope(
-                polarity if polarity is not None else self.burst_conf["polarity"], ch=ch
-            )
-            and self.set_burst_idle_level(idle_level or self.burst_conf["idle_level"], ch=ch)
-            and self.set_burst_cycle(cycle, ch=ch)
-            and self.set_burst_delay(delay, ch=ch)
-        )
+        msg = "This function won't work properly! Check if expected output is generated!"
+        self.logger.warn(msg)
 
-        self.logger.info(
-            "Configured for Cycle Burst."
-            + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
+        return RIGOL_DG2000.configure_burst(
+            self,
+            wave,
+            freq,
+            ampl_Vpp,
+            phase_deg,
+            cycle,
+            offset=offset,
+            delay=delay,
+            source=source,
+            polarity=polarity,
+            idle_level=idle_level,
+            ch=ch,
+            reset=reset,
         )
-        return success
 
 
 class SIGLENT_SDG2000X(VisaInstrument):

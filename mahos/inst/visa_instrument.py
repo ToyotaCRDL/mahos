@@ -36,6 +36,7 @@ class VisaInstrument(Instrument):
                 setattr(self.inst, attr, conf[attr])
 
         if self.conf.get("clear", True):
+            self.logger.debug("Clearing Instrument bus.")
             self.inst.clear()
 
         if self.conf.get("query_idn", True):
