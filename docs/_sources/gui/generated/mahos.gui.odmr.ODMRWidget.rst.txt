@@ -32,6 +32,7 @@
       ~ODMRWidget.request_stop
       ~ODMRWidget.save_data
       ~ODMRWidget.start_sweep
+      ~ODMRWidget.update_am_depth
       ~ODMRWidget.update_buffer
       ~ODMRWidget.update_data
       ~ODMRWidget.update_pulse_label

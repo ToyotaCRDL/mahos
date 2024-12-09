@@ -22,6 +22,7 @@
       ~ADC_7352E.configure_DCV
       ~ADC_7352E.configure_TEMP
       ~ADC_7352E.get
+      ~ADC_7352E.get_all_data
       ~ADC_7352E.get_data
       ~ADC_7352E.get_param_dict
       ~ADC_7352E.get_param_dict_labels

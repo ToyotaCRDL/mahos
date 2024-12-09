@@ -19,8 +19,10 @@
       ~N5182B.__init__
       ~N5182B.abort
       ~N5182B.configure
+      ~N5182B.configure_am_ext
       ~N5182B.configure_cw
-      ~N5182B.configure_cw_iq
+      ~N5182B.configure_fm_ext
+      ~N5182B.configure_iq_ext
       ~N5182B.configure_point_trig_freq_sweep
       ~N5182B.get
       ~N5182B.get_bounds
@@ -29,9 +31,17 @@
       ~N5182B.initiate
       ~N5182B.query_power_condition
       ~N5182B.set
+      ~N5182B.set_am
+      ~N5182B.set_am_depth
+      ~N5182B.set_am_ext_opts
+      ~N5182B.set_am_source
       ~N5182B.set_dm
       ~N5182B.set_dm_invert
       ~N5182B.set_dm_source
+      ~N5182B.set_fm
+      ~N5182B.set_fm_deviation
+      ~N5182B.set_fm_ext_opts
+      ~N5182B.set_fm_source
       ~N5182B.set_freq_CW
       ~N5182B.set_freq_list
       ~N5182B.set_freq_mode

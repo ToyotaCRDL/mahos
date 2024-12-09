@@ -677,11 +677,17 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure</span></code>(params[, label])</p></td>
 <td><p>Configure the instrument settings.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw</span></code>(freq, power)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_am_ext</span></code>(depth, log)</p></td>
+<td><p>Setup external AM mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw</span></code>(freq, power[, reset])</p></td>
 <td><p>Setup Continuous Wave output with fixed freq and power.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw_iq</span></code>(freq, power)</p></td>
-<td><p>Setup Continuous Wave output with fixed freq and power and external IQ modulation.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_fm_ext</span></code>(deviation)</p></td>
+<td><p>Setup external FM mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_iq_ext</span></code>()</p></td>
+<td><p>Setup external IQ modulation mode.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_point_trig_freq_sweep</span></code>(start, stop, ...)</p></td>
 <td><p>Convenient function to set up triggered frequency sweep.</p></td>
@@ -707,6 +713,18 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code>(key[, value, label])</p></td>
 <td><p>Set an instrument setting or commanding value.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_am</span></code>(on)</p></td>
+<td><p>If on is True turn on AM (Amplitude Modulation).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_am_depth</span></code>(depth, log)</p></td>
+<td><p>Set AM depth.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_am_ext_opts</span></code>(DC_coupling, impedance)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_am_source</span></code>(source)</p></td>
+<td><p>Set AM source.</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_dm</span></code>(on)</p></td>
 <td><p>If on is True turn on digital modulation.</p></td>
 </tr>
@@ -715,6 +733,18 @@ document.write(`
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_dm_source</span></code>(source)</p></td>
 <td><p>Set digital (IQ) moduration source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fm</span></code>(on)</p></td>
+<td><p>If on is True turn on FM (Frequency Modulation).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fm_deviation</span></code>(deviation_Hz)</p></td>
+<td><p>Set FM deviation in Hz.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fm_ext_opts</span></code>(DC_coupling, impedance)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fm_source</span></code>(source)</p></td>
+<td><p>Set FM source.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_freq_CW</span></code>(freq)</p></td>
 <td><p></p></td>
@@ -737,7 +767,7 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_modulation</span></code>(on)</p></td>
 <td><p>If on is True turn on modulation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_output</span></code>(on)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_output</span></code>(on[, silent])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_point_trig_source</span></code>(source[, ext])</p></td>

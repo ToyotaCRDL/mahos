@@ -657,37 +657,46 @@ document.write(`
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw</span></code>(freq, power)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_am_ext</span></code>(depth, log[, ch])</p></td>
+<td><p>Configure external AM mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw</span></code>(freq, power[, ch, reset])</p></td>
 <td><p>Configure Continuous Wave output.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw_iq</span></code>(freq, power)</p></td>
-<td><p>Configure Continuous Wave output with external IQ modulation.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_cw_iq_ext</span></code>(freq, power[, ch, reset])</p></td>
+<td><p>Configure CW output and external IQ modulation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_point_trig_freq_sweep</span></code>(start, stop, ...)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_fm_ext</span></code>(deviation[, ch])</p></td>
+<td><p>Configure external FM mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_iq_ext</span></code>([ch])</p></td>
+<td><p>Configure external IQ modulation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_point_trig_freq_sweep</span></code>(start, stop, ...)</p></td>
 <td><p>Configure frequency sweep with point trigger.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounds</span></code>()</p></td>
-<td><p>Get bounds.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounds</span></code>([ch])</p></td>
+<td><p>Get bounds of channel <cite>ch</cite>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_opc</span></code>([delay])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_opc</span></code>([delay])</p></td>
 <td><p>Query OPC (operation complete) status.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_abort</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_abort</span></code>()</p></td>
 <td><p>Abort the sweep operation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_dm</span></code>(on)</p></td>
-<td><p>Set digital (IQ) modulation switch.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_dm</span></code>(on)</p></td>
+<td><p>[Deprecated] Use configure_iq_ext() etc.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_dm_source</span></code>(source)</p></td>
-<td><p>Set digital (IQ) modulation source.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_dm_source</span></code>(source)</p></td>
+<td><p>[Deprecated] Use configure_iq_ext() etc.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_init_cont</span></code>(on)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_init_cont</span></code>(on)</p></td>
 <td><p>Set continuous sweep initialization.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_modulation</span></code>(on)</p></td>
-<td><p>Set modulation switch.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_modulation</span></code>(on)</p></td>
+<td><p>[Deprecated] Use configure_iq_ext() etc.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_output</span></code>(on)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_output</span></code>(on[, ch])</p></td>
 <td><p>Set RF output switch.</p></td>
 </tr>
 </tbody>

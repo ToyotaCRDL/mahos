@@ -661,9 +661,6 @@ If True, it skips instrument configurations on resume.</p></li>
 (Analog output (AWG) is required for PG).</p></li>
 <li><p><strong>pulser.iq_amplitude</strong> (<em>float</em>) – (only for mw_mode 2) amplitude of analog IQ signal in V.</p></li>
 <li><p><strong>pulser.pd_trigger</strong> (<em>str</em>) – DAQ terminal name for PD trigger.</p></li>
-<li><p><strong>pulser.trigger_channel</strong> (<em>str</em>) – (default: gate) PG channel name for PD trigger.
-default value may look a bit strange, but considering shared physical line
-with PD gate for ODMR (Analog PD mode).</p></li>
 <li><p><strong>pulser.trigger_width</strong> (<em>float</em>) – (default: 1e-6) pulse width for PD trigger</p></li>
 <li><p><strong>pulser.split_fraction</strong> (<em>int</em>) – (default: 4) fraction factor (F) to split the free period
 for MW phase modulation. the period (T) is split into (T // F, T - T // F) and MW phase
@@ -675,6 +672,7 @@ reduce is done first by this value, and then repeated by 10.</p></li>
 <li><p><strong>pulser.minimum_block_length</strong> (<em>int</em>) – (has preset) minimum block length in generated blocks</p></li>
 <li><p><strong>pulser.block_base</strong> (<em>int</em>) – (has preset) block base granularity of pulse generator.</p></li>
 <li><p><strong>pulser.nest_blockseq</strong> (<em>bool</em>) – (has preset, default: False) allow nested BlockSeq.</p></li>
+<li><p><strong>pulser.channel_remap</strong> (<em>dict</em><em>[</em><em>str</em><em> | </em><em>int</em><em>, </em><em>str</em><em> | </em><em>int</em><em>]</em>) – mapping to fix default channel names.</p></li>
 <li><p><strong>fitter.rabi.c</strong> (<em>float</em>) – default value of param “c” (base line) in RabiFitter.
 You can set the bounds using “c_min” and “c_max” too.</p></li>
 <li><p><strong>fitter.rabi.A</strong> (<em>float</em>) – default value of param “A” (amplitude) in RabiFitter.

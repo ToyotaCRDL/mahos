@@ -19,21 +19,33 @@
       ~MG3710E.__init__
       ~MG3710E.abort
       ~MG3710E.configure
+      ~MG3710E.configure_am_ext
       ~MG3710E.configure_cw
-      ~MG3710E.configure_cw_iq
+      ~MG3710E.configure_fm_ext
+      ~MG3710E.configure_iq_ext
       ~MG3710E.configure_point_trig_freq_sweep
       ~MG3710E.get
       ~MG3710E.get_bounds
+      ~MG3710E.get_bounds2
       ~MG3710E.get_freq_bounds
+      ~MG3710E.get_freq_bounds2
       ~MG3710E.get_power_bounds
+      ~MG3710E.get_power_bounds2
       ~MG3710E.initiate
       ~MG3710E.query_power_condition
       ~MG3710E.set
+      ~MG3710E.set_am
+      ~MG3710E.set_am_depth
+      ~MG3710E.set_am_source
       ~MG3710E.set_arb
       ~MG3710E.set_dm
       ~MG3710E.set_dm_invert
       ~MG3710E.set_dm_output
       ~MG3710E.set_dm_source
+      ~MG3710E.set_ext_mod_opts
+      ~MG3710E.set_fm
+      ~MG3710E.set_fm_deviation
+      ~MG3710E.set_fm_source
       ~MG3710E.set_freq_CW
       ~MG3710E.set_freq_mode
       ~MG3710E.set_freq_range

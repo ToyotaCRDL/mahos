@@ -653,7 +653,7 @@ document.write(`
 <li><p><strong>sweeper.pd_clock</strong> (<em>str</em>) – DAQ terminal name for PD’s clock (gate)</p></li>
 <li><p><strong>sweeper.pd_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – (default: [“pd0”, “pd1”]) PD names in target.servers.</p></li>
 <li><p><strong>sweeper.pd_analog</strong> (<em>bool</em>) – (default: False) set True if PD is AnalogIn-based.</p></li>
-<li><p><strong>sweeper.trigger_channel</strong> (<em>str</em>) – (default: trigger) PG channel name for SG trigger.</p></li>
+<li><p><strong>sweeper.channel_remap</strong> (<em>dict</em><em>[</em><em>str</em><em> | </em><em>int</em><em>, </em><em>str</em><em> | </em><em>int</em><em>]</em>) – mapping to fix default channel names.</p></li>
 <li><p><strong>sweeper.start_delay</strong> (<em>float</em>) – (default: 0.0) delay time (sec.) before starting SG/PG output.</p></li>
 <li><p><strong>sweeper.sg_first</strong> (<em>bool</em>) – (has preset) if True, turn on SG first and PG second.
 This mode is for SGs which won’t start the point sweep by software command.</p></li>
@@ -667,7 +667,7 @@ This mode is for SGs which won’t start the point sweep by software command.</p
 <li><p><strong>sweeper.power</strong> (<em>float</em>) – (default param) SG output power in dBm.</p></li>
 <li><p><strong>sweeper.time_window</strong> (<em>float</em>) – (default param) time window for cw mode.</p></li>
 <li><p><strong>sweeper.pd_rate</strong> (<em>float</em>) – (default param) analog PD sampling rate.</p></li>
-<li><p><strong>sweeper.sg_modulation</strong> (<em>bool</em>) – (default param) enable external IQ modulation for SG.</p></li>
+<li><p><strong>sweeper.sg_modulation</strong> (<em>str</em>) – (default param) external modulation for SG.</p></li>
 <li><p><strong>fitter.dip</strong> (<em>bool</em>) – (default: True) True if ODMR shape is dip instead of peak.</p></li>
 <li><p><strong>fitter.n_guess</strong> (<em>int</em>) – (default: 20) Number of data points in peak center guess.</p></li>
 <li><p><strong>fitter.n_guess_bg</strong> (<em>int</em>) – (default: 40) Number of histogram bins in background guess.</p></li>
