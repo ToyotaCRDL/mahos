@@ -168,7 +168,7 @@ class RIGOL_DG2000(VisaInstrument):
         else:
             return self.fail_with(f"Impedance {imp_ohm} has invalid type {type(imp_ohm)}")
 
-        self.inst.write(f":OUTP{ch}:IMP {imp_ohm}")
+        self.inst.write(f":OUTP{ch}:LOAD {imp_ohm}")
         self.logger.info(f"Output{ch} impedance: {imp_ohm}")
 
         self.update_amplitude_bounds(ch)
@@ -179,7 +179,7 @@ class RIGOL_DG2000(VisaInstrument):
     def get_output_impedance(self, ch: int = 1) -> int:
         """Get output impedance. OUTPUT_HighZ means highest impedance (INF)."""
 
-        res = float(self.inst.query(f":OUTP{ch}:IMP?"))
+        res = float(self.inst.query(f":OUTP{ch}:LOAD?"))
         # result in float repr, but should be treated as int
         if res >= 9e37:
             return self.OUTPUT_HighZ
@@ -347,9 +347,9 @@ class RIGOL_DG2000(VisaInstrument):
         self.logger.info(f"Reference clock: {source}")
         return True
 
-    def align_phase(self) -> bool:
-        self.inst.write(":PHAS:SYNC")
-        self.logger.info("Executed phase alignment")
+    def align_phase(self, ch: int = 1) -> bool:
+        self.inst.write(f":SOUR{ch}:PHAS:SYNC")
+        self.logger.info(f"Executed phase alignment at ch {ch}")
         return True
 
     def configure_cw(
@@ -481,10 +481,12 @@ class RIGOL_DG2000(VisaInstrument):
 
     def start(self, label: str = "") -> bool:
         if label.startswith("ch1"):
-            success = self.set_output(True, 1)
+            ch = 1
+            success = self.set_output(True, ch)
             both_on = self.get_output(2)
         elif label.startswith("ch2"):
-            success = self.set_output(True, 2)
+            ch = 2
+            success = self.set_output(True, ch)
             both_on = self.get_output(1)
         else:
             return self.fail_with(f"Unknown label {label} to start")
@@ -494,7 +496,7 @@ class RIGOL_DG2000(VisaInstrument):
 
         # execute phase alignment if both channel has been turned on.
         if both_on and self._align_phase:
-            return self.align_phase()
+            return self.align_phase(ch=ch)
         else:
             return True
 
@@ -672,6 +674,133 @@ class RIGOL_DG2000(VisaInstrument):
             return self.configure_output(params)
         else:
             return self.fail_with(f"Unknown label: {label}")
+
+
+class RIGOL_DG800Pro(RIGOL_DG2000):
+    """RIGOL DG800Pro series Function Generator.
+
+    :param ext_ref_clock: use external reference clock source.
+    :type ext_ref_clock: bool
+    :param gate.source: trigger source for gated burst. one of TRIG_SOURCE.
+    :type gate.source: str
+    :param gate.polarity: gate polarity. True for positive.
+    :type gate.polarity: bool
+    :param gate.idle_level: idle level. one of IDLE_LEVEL.
+    :type gate.idle_level: str
+    :param burst.source: trigger source for cycle burst. one of TRIG_SOURCE.
+    :type burst.source: str
+    :param burst.polarity: burst trigger polarity. True for positive.
+    :type burst.polarity: bool
+    :param burst.idle_level: idle level. one of IDLE_LEVEL.
+    :type burst.idle_level: str
+
+    """
+
+    TRIG_SOURCE = ("IMM", "EXT", "BUS", "TIM")
+
+    @ch_setter((1, 2))
+    def set_burst_mode(self, mode: str, ch: int = 1) -> bool:
+        # Available modes are different from DG2000's.
+        if mode.upper() not in ("TRIG", "TRIGGERED", "GAT", "GATED"):
+            return False
+
+        self.inst.write(f":SOUR{ch}:BURS:MODE {mode}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_trig_source(self, source: str, ch: int = 1) -> bool:
+        source = source.upper()[:3]
+        if source not in self.TRIG_SOURCE:
+            self.logger.error(f"Invalid Trigger Source: {source}")
+            return False
+
+        self.inst.write(f":SOUR{ch}:BURS:TRIG:SOUR {source}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_trig_source(self, source: str, ch: int = 1) -> bool:
+        # Command is unified to TRIG layer.
+        return self.set_trig_source(source, ch=ch)
+
+    @ch_setter((1, 2))
+    def set_trig_slope(self, positive: bool, ch: int = 1) -> bool:
+        slope = "POS" if positive else "NEG"
+        self.inst.write(f":TRIG{ch}:SLOP {slope}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_trig_slope(self, positive: bool, ch: int = 1) -> bool:
+        # Command is unified to TRIG layer.
+        return self.set_trig_slope(positive, ch=ch)
+
+    @ch_setter((1, 2))
+    def set_burst_idle_level(self, level: str, ch: int = 1) -> bool:
+        level = level.upper()
+        if level not in self.IDLE_LEVEL:
+            self.logger.error(f"Invalid Burst Idle Level: {level}")
+            return False
+
+        # Command is different from DG2000's.
+        self.inst.write(f":OUTP{ch}:IDLE {level}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_trig_delay(self, delay: float, ch: int = 1) -> bool:
+        self.inst.write(f":TRIG{ch}:DEL {delay:.8E}")
+        return True
+
+    @ch_setter((1, 2))
+    def set_burst_delay(self, delay: float, ch: int = 1) -> bool:
+        # Command is unified to TRIG layer.
+        return self.set_trig_delay(delay, ch=ch)
+
+    def set_reference_clock(self, external: bool) -> bool:
+        source = "EXT" if external else "INT"
+        # Command is different from DG2000's.
+        self.inst.write(f":SYST:ROSC:SOUR {source}")
+        self.logger.info(f"Reference clock: {source}")
+        return True
+
+    def configure_burst(
+        self,
+        wave: str,
+        freq: float,
+        ampl_Vpp: float,
+        phase_deg: float,
+        cycle: int,
+        offset: float = 0.0,
+        delay: float = 0.0,
+        source: str = "",
+        polarity: bool | None = None,
+        idle_level: str = "",
+        ch: int = 1,
+        reset: bool = True,
+    ) -> bool:
+        """Configure Cycle Burst output."""
+
+        success = (
+            (self.reset() if reset else True)
+            and self.set_function(wave, ch=ch)
+            and self.set_freq(freq, ch=ch)
+            and self.set_amplitude(ampl_Vpp, ch=ch)
+            and self.set_offset(offset, ch=ch)
+            and self.set_phase(phase_deg, ch=ch)
+            and self.set_burst(True, ch=ch)
+            and self.set_burst_mode("TRIG", ch=ch)
+            and self.set_burst_trig_source(source or self.burst_conf["source"], ch=ch)
+            and self.set_burst_trig_slope(
+                polarity if polarity is not None else self.burst_conf["polarity"], ch=ch
+            )
+            and self.set_burst_idle_level(idle_level or self.burst_conf["idle_level"], ch=ch)
+            and self.set_burst_cycle(cycle, ch=ch)
+            and self.set_burst_delay(delay, ch=ch)
+        )
+
+        self.logger.info(
+            "Configured for Cycle Burst."
+            + f" wave: {wave} ampl: {ampl_Vpp:.3f} Vpp phase: {phase_deg:.1f} deg."
+        )
+        return success
 
 
 class SIGLENT_SDG2000X(VisaInstrument):
