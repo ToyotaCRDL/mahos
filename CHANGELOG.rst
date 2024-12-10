@@ -20,6 +20,7 @@ Added
 - inst.fg: new instrument SIGLENT_SDG2000X.
 - inst.pg: new instrument SpinCore_PulseBlasterESR_PRO.
 - inst.spectrometer: new instrument Andor_Spectrometer.
+- inst.overlay: new module odmr_sweeper (contains ODMR logic with software-sweeping).
 
 Changed
 ^^^^^^^

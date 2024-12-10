@@ -508,7 +508,14 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.confocal_scanner.ConfocalScannerCommand.html">mahos.inst.overlay.confocal_scanner.ConfocalScannerCommand</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../amplified_pd.html">mahos.inst.overlay.amplified_pd</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../odmr_sweeper.html">mahos.inst.overlay.odmr_sweeper</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.odmr_sweeper_interface.ODMRSweeperInterface.html">mahos.inst.overlay.odmr_sweeper_interface.ODMRSweeperInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandBase.html">mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandBase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandAnalogPD.html">mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandAnalogPD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandAnalogPDMM.html">mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandAnalogPDMM</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../amplified_pd.html">mahos.inst.overlay.amplified_pd</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.amplified_pd.OE200_AI.html">mahos.inst.overlay.amplified_pd.OE200_AI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.overlay.amplified_pd.OE200_LI5640_AI.html">mahos.inst.overlay.amplified_pd.OE200_LI5640_AI</a></li>
 </ul>
@@ -517,7 +524,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="mahos.inst.server.InstrumentClient.html">mahos.inst.server.InstrumentClient</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../meas/index.html">mahos.meas</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../meas/index.html">mahos.meas</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-21"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.common_meas.BasicMeasClient.html">mahos.meas.common_meas.BasicMeasClient</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.common_meas.BasicMeasNode.html">mahos.meas.common_meas.BasicMeasNode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../meas/generated/mahos.meas.state_manager.StateManager.html">mahos.meas.state_manager.StateManager</a></li>
@@ -545,7 +552,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../../meas/CameraIO.html">mahos.meas.camera.CameraIO</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../gui/index.html">mahos.gui</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-21"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../gui/index.html">mahos.gui</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-22"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.gui_node.GUINode.html">mahos.gui.gui_node.GUINode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.client.QBasicMeasClient.html">mahos.gui.client.QBasicMeasClient</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gui/generated/mahos.gui.tweaker.TweakerWidget.html">mahos.gui.tweaker.TweakerWidget</a></li>
@@ -656,7 +663,11 @@ document.write(`
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dll_dir</strong> (<em>str</em>) – The directory path containing DLL.</p></li>
-<li><p><strong>index</strong> (<em>int</em>) – (default: 1) Index of LUCI10 device.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – (default: 1) Index of LUCI-10 device.</p></li>
+<li><p><strong>id</strong> (<em>int</em>) – (default: -1) ID of LUCI-10 device.
+If valid value (0 &lt;= id &lt;= 255) is given, access the device via id instead of index.
+Because the id is persistent (it’s written in device’s EEPROM) and index is not,
+it would be better to use id instead of index when you have more than 2 LUCI-10s.</p></li>
 </ul>
 </dd>
 </dl>
@@ -677,22 +688,25 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_devices</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_id</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_id</span></code>(index)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pin</span></code>(pin)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_my_id</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pin</span></code>(pin)</p></td>
 <td><p>Get pin status.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_product_string</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_product_string</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code>(key[, value, label])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set</span></code>(key[, value, label])</p></td>
 <td><p>Set an instrument setting or commanding value.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_led</span></code>(on)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_led</span></code>(on)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_data</span></code>(data)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_data</span></code>(data)</p></td>
 <td><p>write data (output pin values).</p></td>
 </tr>
 </tbody>

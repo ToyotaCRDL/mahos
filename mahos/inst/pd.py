@@ -272,12 +272,12 @@ class LUCI10(Instrument):
 
     :param dll_dir: The directory path containing DLL.
     :type dll_dir: str
-    :param index: (default: 1) Index of LUCI10 device.
+    :param index: (default: 1) Index of LUCI-10 device.
     :type index: int
-    :param id: (default: -1) ID of LUCI10 device.
+    :param id: (default: -1) ID of LUCI-10 device.
         If valid value (0 <= id <= 255) is given, access the device via id instead of index.
-        Because the id is persistent because it's written in device's EEPROM,
-        it would be better to use id instead of index when you have more than 2 LUCI10s.
+        Because the id is persistent (it's written in device's EEPROM) and index is not,
+        it would be better to use id instead of index when you have more than 2 LUCI-10s.
     :type id: int
 
     """
@@ -415,6 +415,11 @@ class LUCI_OE200(LUCI10):
     :type dll_dir: str
     :param index: (default: 1) Index of LUCI-10 device.
     :type index: int
+    :param id: (default: -1) ID of LUCI-10 device.
+        If valid value (0 <= id <= 255) is given, access the device via id instead of index.
+        Because the id is persistent (it's written in device's EEPROM) and index is not,
+        it would be better to use id instead of index when you have more than 2 LUCI-10s.
+    :type id: int
 
     :param DC_coupling: (default: True) Init setting. True (False) for DC (AC) coupling.
     :type DC_coupling: bool

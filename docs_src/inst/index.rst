@@ -38,6 +38,7 @@ InstrumentOverlay modules
 
    InstrumentOverlay
    confocal_scanner
+   odmr_sweeper
    amplified_pd
 
 InstrumentServer

@@ -1,0 +1,36 @@
+﻿mahos.inst.overlay.odmr\_sweeper.ODMRSweeperCommandBase
+=======================================================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.inst.overlay.odmr_sweeper
+
+.. autoclass:: ODMRSweeperCommandBase
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ODMRSweeperCommandBase.__init__
+      ~ODMRSweeperCommandBase.configure
+      ~ODMRSweeperCommandBase.configure_pd
+      ~ODMRSweeperCommandBase.get
+      ~ODMRSweeperCommandBase.get_line
+      ~ODMRSweeperCommandBase.get_param_dict
+      ~ODMRSweeperCommandBase.get_param_dict_labels
+      ~ODMRSweeperCommandBase.get_pd_data
+      ~ODMRSweeperCommandBase.get_pd_param_dict
+      ~ODMRSweeperCommandBase.start
+      ~ODMRSweeperCommandBase.stop
+      ~ODMRSweeperCommandBase.sweep_loop
+   
+   
+
+   
+   
+   

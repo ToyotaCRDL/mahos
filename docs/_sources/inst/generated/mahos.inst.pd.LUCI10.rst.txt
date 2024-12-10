@@ -20,6 +20,7 @@
       ~LUCI10.get
       ~LUCI10.get_devices
       ~LUCI10.get_id
+      ~LUCI10.get_my_id
       ~LUCI10.get_pin
       ~LUCI10.get_product_string
       ~LUCI10.set
