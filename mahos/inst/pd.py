@@ -274,6 +274,11 @@ class LUCI10(Instrument):
     :type dll_dir: str
     :param index: (default: 1) Index of LUCI10 device.
     :type index: int
+    :param id: (default: -1) ID of LUCI10 device.
+        If valid value (0 <= id <= 255) is given, access the device via id instead of index.
+        Because the id is persistent because it's written in device's EEPROM,
+        it would be better to use id instead of index when you have more than 2 LUCI10s.
+    :type id: int
 
     """
 
@@ -285,13 +290,22 @@ class LUCI10(Instrument):
             os.environ["PATH"] += os.pathsep + p
             os.add_dll_directory(p)
 
-        self.index = self.conf.get("index", 1)
+        id_ = self.conf.get("id", -1)
 
         self.dll = ctypes.cdll.LoadLibrary("LUCI_10_x64.dll")
 
         # We must get_devices() here for successful subsequent operation.
         devices = self.get_devices()
-        self.logger.info(f"Opened LUCI10 {self.index} of {devices}")
+
+        if id_ >= 0:
+            id_to_index = {self.get_id(i + 1): i + 1 for i in range(devices)}
+            if id_ not in id_to_index:
+                raise ValueError("Given device id is not found in " + str(id_to_index.keys()))
+            self.index = id_to_index[id_]
+        else:
+            self.index = self.conf.get("index", 1)
+
+        self.logger.info(f"Opened LUCI10 index {self.index} of {devices} (ID {self.get_my_id()})")
 
     def _check_ret_value(self, ret: int) -> bool:
         if ret == 0:
@@ -314,11 +328,14 @@ class LUCI10(Instrument):
 
         return self._check_ret_value(ret)
 
-    def get_id(self) -> int | None:
+    def get_id(self, index: int) -> int | None:
         id_ = ctypes.c_int()
-        ret = self.dll.ReadAdapterID(self.index, ctypes.byref(id_))
+        ret = self.dll.ReadAdapterID(index, ctypes.byref(id_))
         if self._check_ret_value(ret):
             return id_.value
+
+    def get_my_id(self) -> int | None:
+        return self.get_id(self.index)
 
     def get_pin(self, pin: int) -> bool | None:
         """Get pin status. True (False) is TTL High (Low).
@@ -379,7 +396,7 @@ class LUCI10(Instrument):
         if key == "devices":
             return self.get_devices()
         elif key == "id":
-            return self.get_id()
+            return self.get_my_id()
         elif key == "pin":
             return self.get_pin(args)
         elif key == "product":
