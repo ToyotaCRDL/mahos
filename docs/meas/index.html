@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="../" >
 
   <head>
     <meta charset="utf-8" />
@@ -14,29 +14,33 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/documentation_options.js?v=a47416a6"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'meas/index';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -44,6 +48,7 @@
     <link rel="prev" title="mahos.inst.server.InstrumentClient" href="../inst/generated/mahos.inst.server.InstrumentClient.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -51,23 +56,16 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+  <div id="pst-scroll-pixel-helper"></div>
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
   
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -75,7 +73,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search the docs ..."
          aria-label="Search the docs ..."
          autocomplete="off"
@@ -83,21 +80,31 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <label class="sidebar-toggle primary-toggle" for="__primary">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
-  </label>
+  </button>
   
-  <div class="navbar-header-items__start">
+  
+  <div class="col-lg-3 navbar-header-items__start">
     
       <div class="navbar-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="../index.html">
+  
   
   
   
@@ -109,89 +116,85 @@
     
   </div>
   
-  
   <div class="col-lg-9 navbar-header-items">
     
     <div class="me-auto navbar-header-items__center">
       
-        <div class="navbar-item"><nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
+        <div class="navbar-item">
+<nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../overview.html">
-                        Overview
-                      </a>
-                    </li>
-                
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../installation.html">
-                        Installation
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../tutorial.html">
-                        Tutorial
-                      </a>
-                    </li>
-                
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../arch.html">
-                        Architecture
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../conf.html">
-                        Configuration file
-                      </a>
-                    </li>
-                
-            <div class="nav-item dropdown">
-                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tutorial.html">
+    Tutorial
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../arch.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conf.html">
+    Configuration file
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
                     More
                 </button>
-                <div class="dropdown-menu">
+                <ul id="pst-nav-more-links" class="dropdown-menu">
                     
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../cli.html">
-                        Command Line Interface
-                      </a>
-                    </li>
-                
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../cli.html">
+    Command Line Interface
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../contributing.html">
-                        Contributing to MAHOS
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="../api.html">
-                        API Reference
-                      </a>
-                    </li>
-                
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../contributing.html">
+    Contributing to MAHOS
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../glossary.html">
-                        Glossary
-                      </a>
-                    </li>
-                
-                </div>
-            </div>
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../api.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+                </ul>
+            </li>
             
   </ul>
 </nav></div>
@@ -203,26 +206,22 @@
       
         <div class="navbar-item navbar-persistent--container">
           
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
         </div>
       
       
         <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
-</script></div>
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
       
     </div>
     
@@ -230,29 +229,32 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
     </div>
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
       <span class="fa-solid fa-outdent"></span>
-    </label>
+    </button>
   
 </div>
 
-    </nav>
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -261,87 +263,77 @@ document.write(`
     
       <div class="sidebar-header-items__center">
         
-          <div class="navbar-item"><nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
+          
+          
+            <div class="navbar-item">
+<nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../overview.html">
-                        Overview
-                      </a>
-                    </li>
-                
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../overview.html">
+    Overview
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../installation.html">
-                        Installation
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../tutorial.html">
-                        Tutorial
-                      </a>
-                    </li>
-                
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../arch.html">
-                        Architecture
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../conf.html">
-                        Configuration file
-                      </a>
-                    </li>
-                
-            <div class="nav-item dropdown">
-                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    More
-                </button>
-                <div class="dropdown-menu">
-                    
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../cli.html">
-                        Command Line Interface
-                      </a>
-                    </li>
-                
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tutorial.html">
+    Tutorial
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../contributing.html">
-                        Contributing to MAHOS
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="../api.html">
-                        API Reference
-                      </a>
-                    </li>
-                
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../arch.html">
+    Architecture
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../glossary.html">
-                        Glossary
-                      </a>
-                    </li>
-                
-                </div>
-            </div>
-            
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../conf.html">
+    Configuration file
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../cli.html">
+    Command Line Interface
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contributing.html">
+    Contributing to MAHOS
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
   </ul>
 </nav></div>
+          
         
       </div>
     
@@ -350,27 +342,25 @@ document.write(`
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
-</script></div>
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
         
       </div>
     
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../api_top.html">mahos</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../node/index.html">mahos.node</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../node/index.html">mahos.node</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../node/Node.html">mahos.node.node.Node</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../node/NodeClient.html">mahos.node.client.NodeClient</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../node/generated/mahos.node.comm.Context.html">mahos.node.comm.Context</a></li>
@@ -379,8 +369,8 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../node/generated/mahos.node.log_broker.LogBroker.html">mahos.node.log_broker.LogBroker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../node/generated/mahos.node.global_params.GlobalParams.html">mahos.node.global_params.GlobalParams</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../msgs/index.html">mahos.msgs</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../msgs/index.html">mahos.msgs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../msgs/common_msgs.html">mahos.msgs.common_msgs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../msgs/param_msgs.html">mahos.msgs.param_msgs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../msgs/generated/mahos.msgs.data_msgs.Data.html">mahos.msgs.data_msgs.Data</a></li>
@@ -395,17 +385,17 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../msgs/generated/mahos.msgs.spectroscopy_msgs.SpectroscopyData.html">mahos.msgs.spectroscopy_msgs.SpectroscopyData</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../msgs/generated/mahos.msgs.camera_msgs.Image.html">mahos.msgs.camera_msgs.Image</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../inst/index.html">mahos.inst</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../inst/index.html">mahos.inst</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../inst/Instrument.html">mahos.inst.instrument.Instrument</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../inst/InstrumentInterface.html">mahos.inst.interface.InstrumentInterface</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/camera.html">mahos.inst.camera</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/camera.html">mahos.inst.camera</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.camera_interface.CameraInterface.html">mahos.inst.camera_interface.CameraInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.camera.ThorlabsCamera.html">mahos.inst.camera.ThorlabsCamera</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.camera.BaslerPylonCamera.html">mahos.inst.camera.BaslerPylonCamera</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/daq.html">mahos.inst.daq</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/daq.html">mahos.inst.daq</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.daq_interface.ClockSourceInterface.html">mahos.inst.daq_interface.ClockSourceInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.daq_interface.AnalogOutInterface.html">mahos.inst.daq_interface.AnalogOutInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.daq_interface.BufferedReaderInterface.html">mahos.inst.daq_interface.BufferedReaderInterface</a></li>
@@ -421,27 +411,27 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.daq.SingleShotTask.html">mahos.inst.daq.SingleShotTask</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.daq.DigitalOut.html">mahos.inst.daq.DigitalOut</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/dmm.html">mahos.inst.dmm</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/dmm.html">mahos.inst.dmm</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.dmm.ADC_7352E.html">mahos.inst.dmm.ADC_7352E</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.dmm.Keysight_34410A.html">mahos.inst.dmm.Keysight_34410A</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/fg.html">mahos.inst.fg</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/fg.html">mahos.inst.fg</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.fg_interface.FGInterface.html">mahos.inst.fg_interface.FGInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.fg.RIGOL_DG2000.html">mahos.inst.fg.RIGOL_DG2000</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.fg.SIGLENT_SDG2000X.html">mahos.inst.fg.SIGLENT_SDG2000X</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/filter_wheel.html">mahos.inst.filter_wheel</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/filter_wheel.html">mahos.inst.filter_wheel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.filter_wheel.Thorlabs_FW102.html">mahos.inst.filter_wheel.Thorlabs_FW102</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/lockin.html">mahos.inst.lockin</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/lockin.html">mahos.inst.lockin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.lockin.LI5640.html">mahos.inst.lockin.LI5640</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/pd.html">mahos.inst.pd</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/pd.html">mahos.inst.pd</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pd_interface.PDInterface.html">mahos.inst.pd_interface.PDInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pd_interface.APDCounterInterface.html">mahos.inst.pd_interface.APDCounterInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pd.APDCounter.html">mahos.inst.pd.APDCounter</a></li>
@@ -450,8 +440,8 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pd.LUCI10.html">mahos.inst.pd.LUCI10</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pd.LUCI_OE200.html">mahos.inst.pd.LUCI_OE200</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/pg.html">mahos.inst.pg</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/pg.html">mahos.inst.pg</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pg_interface.PGInterface.html">mahos.inst.pg_interface.PGInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pg.PulseStreamer.html">mahos.inst.pg.PulseStreamer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pg.PulseStreamerDAQTrigger.html">mahos.inst.pg.PulseStreamerDAQTrigger</a></li>
@@ -461,8 +451,8 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pg.DTG5274.html">mahos.inst.pg.DTG5274</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.pg.DTG5334.html">mahos.inst.pg.DTG5334</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/piezo.html">mahos.inst.piezo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/piezo.html">mahos.inst.piezo</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.piezo_interface.PiezoInterface.html">mahos.inst.piezo_interface.PiezoInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.piezo_interface.AOPiezoInterface.html">mahos.inst.piezo_interface.AOPiezoInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.piezo.BasePiezo3Axes.html">mahos.inst.piezo.BasePiezo3Axes</a></li>
@@ -470,61 +460,61 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.piezo.E727_3_USB_AO.html">mahos.inst.piezo.E727_3_USB_AO</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.piezo.AnalogPiezo3Axes.html">mahos.inst.piezo.AnalogPiezo3Axes</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/positioner.html">mahos.inst.positioner</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/positioner.html">mahos.inst.positioner</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.positioner_interface.SinglePositionerInterface.html">mahos.inst.positioner_interface.SinglePositionerInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.positioner.Thorlabs_KCube_DCServo.html">mahos.inst.positioner.Thorlabs_KCube_DCServo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.positioner.Thorlabs_CageRotator.html">mahos.inst.positioner.Thorlabs_CageRotator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.positioner.Suruga_DS102.html">mahos.inst.positioner.Suruga_DS102</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/power_sensor.html">mahos.inst.power_sensor</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/power_sensor.html">mahos.inst.power_sensor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.power_sensor.RS_NRPZ.html">mahos.inst.power_sensor.RS_NRPZ</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/sg.html">mahos.inst.sg</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/sg.html">mahos.inst.sg</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.sg_interface.SGInterface.html">mahos.inst.sg_interface.SGInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.sg.N5182B.html">mahos.inst.sg.N5182B</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.sg.MG3710E.html">mahos.inst.sg.MG3710E</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.sg.DS_SG.html">mahos.inst.sg.DS_SG</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/spectrometer.html">mahos.inst.spectrometer</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/spectrometer.html">mahos.inst.spectrometer</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.spectrometer_interface.SpectrometerInterface.html">mahos.inst.spectrometer_interface.SpectrometerInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.spectrometer.Princeton_LightField.html">mahos.inst.spectrometer.Princeton_LightField</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.spectrometer.Andor_Spectrometer.html">mahos.inst.spectrometer.Andor_Spectrometer</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/tdc.html">mahos.inst.tdc</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/tdc.html">mahos.inst.tdc</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.tdc_interface.TDCInterface.html">mahos.inst.tdc_interface.TDCInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.tdc.MCS.html">mahos.inst.tdc.MCS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.tdc.TimeTagger.html">mahos.inst.tdc.TimeTagger</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="../inst/InstrumentOverlay.html">mahos.inst.overlay.overlay.InstrumentOverlay</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/confocal_scanner.html">mahos.inst.overlay.confocal_scanner</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/confocal_scanner.html">mahos.inst.overlay.confocal_scanner</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.confocal_scanner_interface.ConfocalScannerInterface.html">mahos.inst.overlay.confocal_scanner_interface.ConfocalScannerInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.confocal_scanner.ConfocalScannerAnalog.html">mahos.inst.overlay.confocal_scanner.ConfocalScannerAnalog</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.confocal_scanner.ConfocalScannerCommand.html">mahos.inst.overlay.confocal_scanner.ConfocalScannerCommand</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/odmr_sweeper.html">mahos.inst.overlay.odmr_sweeper</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/odmr_sweeper.html">mahos.inst.overlay.odmr_sweeper</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.odmr_sweeper_interface.ODMRSweeperInterface.html">mahos.inst.overlay.odmr_sweeper_interface.ODMRSweeperInterface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandBase.html">mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandBase</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandAnalogPD.html">mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandAnalogPD</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandAnalogPDMM.html">mahos.inst.overlay.odmr_sweeper.ODMRSweeperCommandAnalogPDMM</a></li>
 </ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/amplified_pd.html">mahos.inst.overlay.amplified_pd</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../inst/amplified_pd.html">mahos.inst.overlay.amplified_pd</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.amplified_pd.OE200_AI.html">mahos.inst.overlay.amplified_pd.OE200_AI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../inst/generated/mahos.inst.overlay.amplified_pd.OE200_LI5640_AI.html">mahos.inst.overlay.amplified_pd.OE200_LI5640_AI</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="../inst/generated/mahos.inst.server.InstrumentServer.html">mahos.inst.server.InstrumentServer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../inst/generated/mahos.inst.server.InstrumentClient.html">mahos.inst.server.InstrumentClient</a></li>
 </ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">mahos.meas</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-21"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">mahos.meas</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.common_meas.BasicMeasClient.html">mahos.meas.common_meas.BasicMeasClient</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.common_meas.BasicMeasNode.html">mahos.meas.common_meas.BasicMeasNode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/mahos.meas.state_manager.StateManager.html">mahos.meas.state_manager.StateManager</a></li>
@@ -551,8 +541,8 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="SpectroscopyIO.html">mahos.meas.spectroscopy.SpectroscopyIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CameraIO.html">mahos.meas.camera.CameraIO</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../gui/index.html">mahos.gui</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-22"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../gui/index.html">mahos.gui</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../gui/generated/mahos.gui.gui_node.GUINode.html">mahos.gui.gui_node.GUINode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../gui/generated/mahos.gui.client.QBasicMeasClient.html">mahos.gui.client.QBasicMeasClient</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../gui/generated/mahos.gui.tweaker.TweakerWidget.html">mahos.gui.tweaker.TweakerWidget</a></li>
@@ -584,7 +574,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../gui/generated/mahos.gui.camera.CameraWidget.html">mahos.gui.camera.CameraWidget</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../gui/generated/mahos.gui.camera.CameraGUI.html">mahos.gui.camera.CameraGUI</a></li>
 </ul>
-</li>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -592,30 +582,33 @@ document.write(`
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
         <div class="header-article-item">
 
-
-
-<nav aria-label="Breadcrumbs">
-  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="../index.html" class="nav-link" aria-label="Home">
@@ -625,7 +618,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API Reference</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">mahos.meas</li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mahos.meas</span></li>
   </ul>
 </nav>
 </div>
@@ -640,12 +633,12 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="mahos-meas">
-<span id="id1"></span><h1>mahos.meas<a class="headerlink" href="#mahos-meas" title="Permalink to this heading">#</a></h1>
+<span id="id1"></span><h1>mahos.meas<a class="headerlink" href="#mahos-meas" title="Link to this heading">#</a></h1>
 <p>The mahos.meas package provides high-level measurement logics.</p>
-<table class="autosummary longtable table autosummary">
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/mahos.meas.common_meas.BasicMeasClient.html#mahos.meas.common_meas.BasicMeasClient" title="mahos.meas.common_meas.BasicMeasClient"><code class="xref py py-obj docutils literal notranslate"><span class="pre">common_meas.BasicMeasClient</span></code></a>(gconf, name[, ...])</p></td>
 <td><p>Client for Basic Measurement Nodes (Node with the BinaryState, Data, and Buffer).</p></td>
@@ -697,6 +690,7 @@ document.write(`
 </tr>
 </tbody>
 </table>
+</div>
 <p class="rubric">IO classes</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -718,11 +712,10 @@ document.write(`
               
               
               
-                <footer class="bd-footer-article">
+              
+              
+                <footer class="prev-next-footer d-print-none">
                   
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
        href="../inst/generated/mahos.inst.server.InstrumentClient.html"
@@ -742,25 +735,25 @@ document.write(`
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
-</div></div>
-  
 </div>
-
                 </footer>
               
             </div>
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
-  <div class="tocsection sourcelink">
-    <a href="../_sources/meas/index.rst.txt">
-      <i class="fa-solid fa-file-lines"></i> Show Source
-    </a>
-  </div>
-</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/meas/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
 
 </div></div>
               
@@ -775,8 +768,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -784,6 +777,7 @@ document.write(`
     <div class="footer-items__start">
       
         <div class="footer-item">
+
   <p class="copyright">
     
       © Copyright 2022, Toyota Central R&amp;D Labs., Inc.
@@ -793,8 +787,9 @@ document.write(`
 </div>
       
         <div class="footer-item">
+
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>
@@ -802,10 +797,13 @@ document.write(`
     </div>
   
   
+  
     <div class="footer-items__end">
       
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
 </p></div>
       
     </div>
