@@ -30,12 +30,12 @@ Install
 
 Read the `Installation guide <https://toyotacrdl.github.io/mahos/installation.html>`_.
 
-In short, we recommend editable installation with cloned repository
-because this library is under development:
+In short, we recommend editable installation with cloned repository:
 
 #. Clone this repo somewhere.
 #. Install the ``mahos`` package: ``pip install -e .`` or ``pip install -e .[inst]``
    (the latter installs optional packages for instrument drivers).
+#. Test the installation with ``pytest``.
 
 Run
 ===
@@ -48,16 +48,10 @@ With your config, use the `command line interface <https://toyotacrdl.github.io/
 - There is an `example config <https://github.com/ToyotaCRDL/mahos/blob/main/tests/conf.toml>`_ for the unit test too.
   Here you can observe main built-in measurement logics and GUIs with mock instruments.
 
-Test
-====
-
-``pytest``
-
 Cite
 ====
 
-It would be much appreciated you would cite `this paper <https://doi.org/10.21105/joss.05938>`_ when you publish
-your research works based on MAHOS. The BibTeX snippet can be copied below.
+If you publish a research work based on MAHOS, we would be grateful if you could cite `this paper <https://doi.org/10.21105/joss.05938>`_ . The BibTeX snippet can be copied below.
 
 .. code-block:: bibtex
 
