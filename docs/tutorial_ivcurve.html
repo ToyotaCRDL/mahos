@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -445,7 +445,8 @@ This is our mock for IV curve measurement.</p>
 We have two instruments <cite>source</cite> (Voltage Source) and <cite>meter</cite> (Current meter) to
 measure IV characteristics of DUT (Device Under Test).</p>
 <figure class="align-default" id="id2">
-<a class="reference internal image-reference" href="_images/ivcurve-sch.svg"><img alt="Schematic of IV curve measurement" src="_images/ivcurve-sch.svg" style="width: 50%;" /></a>
+<a class="reference internal image-reference" href="_images/ivcurve-sch.svg"><img alt="Schematic of IV curve measurement" src="_images/ivcurve-sch.svg" style="width: 50%;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Schematic of IV curve measurement</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
 </figcaption>
@@ -456,7 +457,8 @@ measure IV characteristics of DUT (Device Under Test).</p>
 <p>Let’s analyze below what’s happening behind the scenes.
 First, try visualizing our nodes by <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">graph</span></code>, and you will see a graph below.</p>
 <figure class="align-default" id="id3">
-<a class="reference internal image-reference" href="_images/ivcurve-nodes.svg"><img alt="Node graph for IV curve" src="_images/ivcurve-nodes.svg" style="width: 30%;" /></a>
+<a class="reference internal image-reference" href="_images/ivcurve-nodes.svg"><img alt="Node graph for IV curve" src="_images/ivcurve-nodes.svg" style="width: 30%;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Node graph for IV curve</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
 </figcaption>
@@ -517,31 +519,31 @@ an instrument <cite>source</cite> inside the <cite>server</cite>.
 The <cite>VoltageSource_mock</cite> is an example of <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instrument</span></code></a> class here.</p>
 <div class="literal-block-wrapper docutils container" id="id5">
 <div class="code-block-caption"><span class="caption-text">instruments.py</span><a class="headerlink" href="#id5" title="Link to this code">#</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 9</span><span class="k">class</span> <span class="nc">VoltageSource_mock</span><span class="p">(</span><span class="n">Instrument</span><span class="p">):</span>
-<span class="linenos">10</span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 9</span><span class="k">class</span><span class="w"> </span><span class="nc">VoltageSource_mock</span><span class="p">(</span><span class="n">Instrument</span><span class="p">):</span>
+<span class="linenos">10</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="linenos">11</span>        <span class="n">Instrument</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>
 <span class="linenos">12</span>
 <span class="linenos">13</span>        <span class="bp">self</span><span class="o">.</span><span class="n">check_required_conf</span><span class="p">([</span><span class="s2">&quot;resource&quot;</span><span class="p">])</span>
 <span class="linenos">14</span>        <span class="n">resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;resource&quot;</span><span class="p">]</span>
 <span class="linenos">15</span>        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Open VoltageSource at </span><span class="si">{</span><span class="n">resource</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 <span class="linenos">16</span>
-<span class="linenos">17</span>    <span class="k">def</span> <span class="nf">set_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="linenos">17</span>    <span class="k">def</span><span class="w"> </span><span class="nf">set_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="linenos">18</span>        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Set output &quot;</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;on&quot;</span> <span class="k">if</span> <span class="n">on</span> <span class="k">else</span> <span class="s2">&quot;off&quot;</span><span class="p">))</span>
 <span class="linenos">19</span>        <span class="k">return</span> <span class="kc">True</span>
 <span class="linenos">20</span>
-<span class="linenos">21</span>    <span class="k">def</span> <span class="nf">set_voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="linenos">21</span>    <span class="k">def</span><span class="w"> </span><span class="nf">set_voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="linenos">22</span>        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dummy voltage </span><span class="si">{</span><span class="n">volt</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> V&quot;</span><span class="p">)</span>
 <span class="linenos">23</span>        <span class="k">return</span> <span class="kc">True</span>
 <span class="linenos">24</span>
 <span class="linenos">25</span>    <span class="c1"># Standard API</span>
 <span class="linenos">26</span>
-<span class="linenos">27</span>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="linenos">27</span>    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="linenos">28</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_output</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 <span class="linenos">29</span>
-<span class="linenos">30</span>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="linenos">30</span>    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="linenos">31</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_output</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 <span class="linenos">32</span>
-<span class="linenos">33</span>    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="linenos">33</span>    <span class="k">def</span><span class="w"> </span><span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="linenos">34</span>        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;volt&quot;</span><span class="p">:</span>
 <span class="linenos">35</span>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_voltage</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 <span class="linenos">36</span>        <span class="k">else</span><span class="p">:</span>
@@ -569,8 +571,8 @@ This procedure looks like a duplication of effort, but the positive side is that
 we can define an explicit interface (which method is exported and which is not, as in static programming languages).</p>
 <div class="literal-block-wrapper docutils container" id="id6">
 <div class="code-block-caption"><span class="caption-text">instruments.py</span><a class="headerlink" href="#id6" title="Link to this code">#</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">79</span><span class="k">class</span> <span class="nc">VoltageSourceInterface</span><span class="p">(</span><span class="n">InstrumentInterface</span><span class="p">):</span>
-<span class="linenos">80</span>    <span class="k">def</span> <span class="nf">set_voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">79</span><span class="k">class</span><span class="w"> </span><span class="nc">VoltageSourceInterface</span><span class="p">(</span><span class="n">InstrumentInterface</span><span class="p">):</span>
+<span class="linenos">80</span>    <span class="k">def</span><span class="w"> </span><span class="nf">set_voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="linenos">81</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the output voltage.&quot;&quot;&quot;</span>
 <span class="linenos">82</span>
 <span class="linenos">83</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;volt&quot;</span><span class="p">,</span> <span class="n">volt</span><span class="p">)</span>
@@ -587,7 +589,7 @@ And <code class="docutils literal notranslate"><span class="pre">mahos</span> <s
 <span class="n">cli</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="s2">&quot;volt&quot;</span><span class="p">,</span> <span class="mf">12.3</span><span class="p">)</span>
 
 <span class="c1"># Method2: call through interface</span>
-<span class="kn">from</span> <span class="nn">instruments</span> <span class="kn">import</span> <span class="n">VoltageSourceInterface</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">instruments</span><span class="w"> </span><span class="kn">import</span> <span class="n">VoltageSourceInterface</span>
 <span class="n">source</span> <span class="o">=</span> <span class="n">VoltageSouraceInterface</span><span class="p">(</span><span class="n">cli</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">)</span>
 <span class="n">source</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 <span class="n">source</span><span class="o">.</span><span class="n">set_voltage</span><span class="p">(</span><span class="mf">12.3</span><span class="p">)</span>
@@ -644,7 +646,7 @@ which is a convenient Node implementation for simple measurement nodes.
 We explain how this node works by following <code class="docutils literal notranslate"><span class="pre">main()</span></code> method line by line.</p>
 <div class="literal-block-wrapper docutils container" id="id8">
 <div class="code-block-caption"><span class="caption-text">ivcurve.py</span><a class="headerlink" href="#id8" title="Link to this code">#</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">172</span><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">172</span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="linenos">173</span>    <span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span>
 <span class="linenos">174</span>    <span class="n">publish_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_work</span><span class="p">()</span>
 <span class="linenos">175</span>    <span class="bp">self</span><span class="o">.</span><span class="n">_check_finished</span><span class="p">()</span>
