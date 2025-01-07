@@ -25,6 +25,7 @@ import enum
 import uuid
 from collections import UserDict
 import re
+import pprint
 
 import numpy as np
 import h5py
@@ -380,6 +381,9 @@ _key_pattern = re.compile(r"\.?(?P<word>[\w-]+)|\[(?P<num>\d+)\]")
 
 
 class ParamDict(UserDict):
+    def pprint(self):
+        pprint.pp(self.data)
+
     def _split_key(self, k: str) -> list[str | int]:
         keys = []
         for match in re.finditer(_key_pattern, k):
