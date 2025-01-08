@@ -565,6 +565,34 @@ class InstrumentServer(Node):
     Multiple clients can use the resource.
     Each client can lock some instruments for exclusive procedure execution.
 
+    An :class:`Instrument <mahos.inst.instrument.Instrument>` config is defined
+    under ``instrument`` dictionary in this node's conf.
+    The key of that is the instrument name, and value (dict) is instrument configuration.
+    Following three keys are given in value (dict).
+
+    - ``module``: The module name holding the Instrument class.
+      It must be an importable Python module, but leading ``mahos.inst.`` can be omitted
+      if a submodule in ``mahos.inst`` package is used.
+    - ``class``: The Instrument class name. The class must be an attribute of the ``module``.
+    - ``conf``: The configuration dictionary for the Instrument
+      (this is optional, but usually necessary).
+
+    An :class:`InstrumentOverlay <mahos.inst.overlay.overlay.InstrumentOverlay>` config is
+    defined under ``instrument_overlay`` dictionary in the conf.
+    The key of that is the overlay name, and value (dict) is overlay configuration.
+    Following three keys are given in value (dict).
+
+    - ``module``: The module name holding the InstrumentOverlay class.
+      It must be an importable Python module, but leading ``mahos.inst.overlay.`` can be omitted
+      if a submodule in ``mahos.inst.overlay`` package is used.
+    - ``class``: The InstrumentOverlay class name.
+      The class must be an attribute of the ``module``.
+    - ``conf``: The configuration dictionary for the InstrumentOverlay.
+      If a value in this dictionary is a string starting with ``$``,
+      it is considered a reference to Instrument / InstrumentOverlay in this server.
+      The overlay receives resolved value, i.e., an Instrument / InstrumentOverlay instance
+      instead of a string.
+
     """
 
     _noarg_calls = (
