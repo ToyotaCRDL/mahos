@@ -58,8 +58,12 @@ class HBT(BasicMeasNode):
 
         BasicMeasNode.__init__(self, gconf, name, context=context)
 
-        if "switch" in self.conf["target"]["servers"]:
-            self.switch = Switch(self.cli, self.logger, "hbt")
+        _default_sw_names = ["switch"] if "switch" in self.conf["target"]["servers"] else []
+        sw_names = self.conf.get("switch_names", _default_sw_names)
+        if sw_names:
+            self.switch = Switch(
+                self.cli, self.logger, sw_names, self.conf.get("switch_command", "hbt")
+            )
         else:
             self.switch = DummyWorker()
         if "pg" in self.conf["target"]["servers"]:

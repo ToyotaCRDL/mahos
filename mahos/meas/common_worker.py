@@ -184,21 +184,20 @@ class PulseGen_CW(Worker):
 
 
 class Switch(Worker):
-    """A worker object to send command to 'switch' instrument (daq.DigitalOut)."""
+    """A worker object to send commands to 'switch' instruments (daq.DigitalOut)."""
 
-    def __init__(self, cli, logger, command_name):
+    def __init__(self, cli, logger, switch_names: list[str], command_name: str):
         Worker.__init__(self, cli, logger)
-        self.switch = InstrumentInterface(cli, "switch")
-        self.add_instruments(self.switch)
+        self.switches = [InstrumentInterface(cli, n) for n in switch_names]
+        self.add_instruments(*self.switches)
 
         self.command_name = command_name
         self.running = False
 
     def start(self) -> bool:
-        success = self.switch.lock() and self.switch.set("command", self.command_name)
-
-        if not success:
-            return self.fail_with_release("Error starting switch.")
+        for sw in self.switches:
+            if not (sw.lock() and sw.set("command", self.command_name)):
+                return self.fail_with_release(f"Error starting a switch ({sw.inst}).")
 
         self.running = True
         self.logger.info(f"Turned switch for {self.command_name}.")
@@ -209,7 +208,7 @@ class Switch(Worker):
         if not self.running:
             return False
 
-        success = self.switch.release()
+        success = all([sw.release() for sw in self.switches])
 
         if success:
             self.running = False

@@ -289,8 +289,12 @@ class Confocal(Node):
         self.image_pub = self.add_pub(b"image")
         self.trace_pub = self.add_pub(b"trace")
 
-        if "switch" in self.conf["target"]["servers"]:
-            self.switch = Switch(self.cli, self.logger, "confocal")
+        _default_sw_names = ["switch"] if "switch" in self.conf["target"]["servers"] else []
+        sw_names = self.conf.get("switch_names", _default_sw_names)
+        if sw_names:
+            self.switch = Switch(
+                self.cli, self.logger, sw_names, self.conf.get("switch_command", "confocal")
+            )
         else:
             self.switch = DummyWorker()
         if "pg" in self.conf["target"]["servers"]:

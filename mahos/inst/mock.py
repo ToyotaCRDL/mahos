@@ -349,6 +349,78 @@ class Piezo_mock(Instrument):
             return None
 
 
+class DigitalOut_mock(Instrument):
+    def __init__(self, name, conf, prefix=None):
+        Instrument.__init__(self, name, conf=conf, prefix=prefix)
+
+        self.check_required_conf(("lines",))
+        self.lines = self.conf["lines"]
+
+        self._commands = {}
+        if "command" in self.conf:
+            for cmd_name, data in self.conf["command"].items():
+                d = self._convert(data)
+                if d is not None:
+                    self._commands[cmd_name] = d
+
+    def _convert(self, data) -> np.ndarray | None:
+        if isinstance(data, (list, tuple, np.ndarray)):
+            if len(data) != len(self.lines):
+                msg = f"Data length mismatch. Given {len(data)} but needs {len(self.lines)}"
+                self.logger.error(msg)
+                return None
+            return np.array([int(bool(v)) for v in data], dtype=np.uint8)
+        elif data:
+            return self.data_high
+        else:
+            return self.data_low
+
+    def _write_once(self, data) -> bool:
+        self.logger.info(f"Dummy output: {data}")
+        return True
+
+    def set_output(self, data) -> bool:
+        d = self._convert(data)
+        if d is None:
+            return False
+        return self._write_once(d)
+
+    def set_command(self, name: str) -> bool:
+        if name not in self._commands:
+            self.logger.error(f"No such command: {name}.")
+            return False
+        return self._write_once(self._commands[name])
+
+    def set_output_low(self) -> bool:
+        return self._write_once(self.data_low)
+
+    def set_output_high(self) -> bool:
+        return self._write_once(self.data_high)
+
+    def set_output_pulse(self) -> bool:
+        return self.set_output_high() and self.set_output_low()
+
+    def set_output_pulse_neg(self) -> bool:
+        return self.set_output_low() and self.set_output_high()
+
+    # Standard API
+
+    def set(self, key: str, value=None, label: str = "") -> bool:
+        if key.startswith("out"):
+            return self.set_output(value)
+        elif key == "command":
+            return self.set_command(value)
+        elif key == "low":
+            return self.set_output_low()
+        elif key == "high":
+            return self.set_output_high()
+        elif key == "pulse":
+            return self.set_output_pulse()
+        else:
+            self.logger.error(f"unknown set() key: {key}")
+            return False
+
+
 class Counter_mock(Instrument):
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
