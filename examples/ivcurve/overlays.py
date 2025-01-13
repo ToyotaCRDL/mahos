@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import typing as T
 import time
 
 import numpy as np
@@ -21,7 +20,7 @@ class IVSweeper(InstrumentOverlay):
         self._delay_sec = 0.0
         self._running = False
 
-    def sweep_once(self) -> T.Optional[NDArray]:
+    def sweep_once(self) -> NDArray | None:
         if self._voltages is None or not self._running:
             self.logger.error("Sweep has not been configured / started yet.")
             return None
@@ -62,5 +61,5 @@ class IVSweeper(InstrumentOverlay):
 
 
 class IVSweeperInterface(InstrumentInterface):
-    def sweep_once(self) -> T.Optional[NDArray]:
+    def sweep_once(self) -> NDArray | None:
         return self.get("sweep")

@@ -312,15 +312,25 @@ When the first status message arrives, this method is fired and remaining initia
 The widget is enabled finally at Line 105.
 This method is called only once because the signal is disconnect at Line 79.
 
-overlay
--------
+Modified configurations
+-----------------------
 
-TODO: explain overlay case ``conf_overlay.toml``, ``overlay.py``, and ``ivcurve_overlay.py``.
+Threading
+^^^^^^^^^
 
-threading
----------
+There are additional configuration files ``conf_thread.toml`` and ``conf_thread_partial.toml`` in the example directory, which are examples of threaded nodes.
+The threaded nodes can be used to reduce overhead of TCP communication.
+See :ref:`conf threading` section in the configuration file document for details.
 
-TODO: explain threading case ``conf_thread.toml`` and ``conf_thread_partial.toml``.
+Overlay
+^^^^^^^
+
+If you need to reduce overhead of TCP communication between measurement node (IVCurve) and the InstrumentServer, :class:`InstrumentOverlay <mahos.inst.overlay.overlay.InstrumentOverlay>` would also help.
+The IVCurve node was sending the commands to ``source`` and ``meter`` for each data points in a voltage sweep.
+By using the overlay, the sweep operation can be executed at InstrumentServer side.
+The modified example using overlay is defined in ``conf_overlay.toml``,
+and the classes are implemented in ``overlay.py`` and ``ivcurve_overlay.py``.
+You could grab the concept by observing the difference between this and default examples.
 
 .. rubric:: Footnotes
 

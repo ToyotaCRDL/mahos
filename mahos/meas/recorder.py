@@ -33,7 +33,25 @@ class RecorderClient(BasicMeasClient):
 
 
 class Recorder(BasicMeasNode):
-    """Generic data-logging measurement for time-series data."""
+    """Generic data-logging measurement for time-series data.
+
+    The target instruments must implement following APIs: ``get_param_dict_labels()``,
+    ``get_param_dict()``, ``configure()``, ``start()``, ``stop()``, ``get("unit")``,
+    and ``get("data")``.
+
+    :param target.servers: The InstrumentServer targets (instrument name, server full name).
+    :type target.servers: dict[str, str]
+    :param target.tweakers: The Tweaker targets (list of tweaker full name).
+    :type target.tweakers: list[str]
+    :param target.log: The LogBroker target (broker full name).
+    :type target.log: str
+    :param mode: The dictionary to define the measurement modes.
+        First-level key is mode name and second-level key is measurement value name.
+        The tuple[str, str] (instrument name, label name) defines
+        how to get each measurement value.
+    :type mode: dict[str, dict[str, tuple[str, str]]]
+
+    """
 
     CLIENT = RecorderClient
     DATA = RecorderData

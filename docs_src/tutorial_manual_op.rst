@@ -1,10 +1,8 @@
 Tutorial 3: Manual Operation
 ============================
 
-.. note::
-   This tutorial document is incomplete, however, the example code works fine.
-
-In this tutorial chapter, we will learn basic usage and construction of manually-operated instruments.
+In this tutorial chapter, we will learn basic usage and configuration of 
+generic nodes for manually-operated instruments.
 
 Preparation
 -----------
@@ -30,12 +28,44 @@ Another is :class:`Recorder <mahos.meas.recorder.Recorder>` for simple time-seri
 Tweaker
 -------
 
-TODO: explain :class:`Tweaker <mahos.meas.tweaker.Tweaker>`.
+:class:`Tweaker <mahos.meas.tweaker.Tweaker>` is a generic node for manual-tuning of instrument parameters.
 
 To use Tweaker, instrument must provide :ref:`inst-params-interface`,
-which is the counterpart to :ref:`inst-instrument-interface` explaned in :doc:`tutorial_ivcurve`.
+which is the counterpart to :ref:`inst-instrument-interface` explained in :doc:`tutorial_ivcurve`.
+In this example, the ``VoltageSource_mock`` class is implemented to be used via Tweaker.
+The ``get_param_dict()`` method is called when Tweaker starts and when ``Read`` request is issued (``Read`` button is pressed).
+The instrument class can tell the available parameters, current values, bounds, etc. to the Tweaker.
+Then ``Write`` request is issued (``Write`` button is pressed), the ``configure()`` method of the instrument is invoked with the modified parameter.
+The ParamDict labels for these requests are defined inside ``param_dicts`` of Tweaker configuration 
+in the form ``<instrument name>::<ParamDict label name>``.
+The successful write operation is confirmed in the log message (Dummy voltage at chX ...).
+
+In addition to this configuration feature, Tweaker provides interfaces 
+to ``start()``, ``stop()`` and ``reset()`` APIs for each instrument.
+The successful start / stop operations are confirmed in the log message (Set output chX on/off).
+The reset operation fails (but it is not a problem) 
+because ``reset()`` method is not implemented in ``VoltageSource_mock``.
 
 Recorder
 --------
 
-TODO: explain :class:`Recorder <mahos.meas.recorder.Recorder>`.
+:class:`Recorder <mahos.meas.recorder.Recorder>` is a generic node for recording of time-series data from instruments.
+
+To use Recorder, instrument must implement following APIs: ``get_param_dict_labels()``, ``get_param_dict()``, ``configure()``, ``start()``, ``stop()``, ``get("unit")``, and ``get("data")``.
+In this example, the ``Multimeter_mock`` class is implemented to demonstrate Recorder's feature.
+The mock instrument provides two different configurations labeled ``voltage`` and ``current``.
+The ``mode`` block of the Recorder configuration defines which label (mode of instrument) is used, as below.
+
+.. code-block:: toml
+
+   [localhost.recorder.mode.voltage]
+   meter_voltage = ["meter", "voltage"]
+   [localhost.recorder.mode.current]
+   meter_current = ["meter", "current"]
+
+The first two lines define a recorder mode "voltage" with a measurement value named "meter_voltage",
+which corresponds to instrument "meter" and label "voltage".
+The last two lines define the other mode using "current" label instead.
+
+After sending ``Start`` request (pushing ``Start`` button), you can see the measurement values 
+(random values) are collected.

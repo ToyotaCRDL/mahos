@@ -57,9 +57,9 @@ tweakers = ["localhost::tweaker"]
 [localhost.recorder.target.servers]
 meter = "localhost::server"
 [localhost.recorder.mode.voltage]
-meter = "voltage"
+meter_voltage = ["meter", "voltage"]
 [localhost.recorder.mode.current]
-meter = "current"
+meter_current = ["meter", "current"]
 
 [localhost.tweaker_gui]
 module = "mahos.gui.tweaker"

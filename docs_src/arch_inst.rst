@@ -34,19 +34,19 @@ Though this may be overcomed by the documentations, following two methods are pr
 
 .. _inst-instrument-interface:
 
-InstrumentInterface
-^^^^^^^^^^^^^^^^^^^
+Static interface using InstrumentInterface
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A "functional" interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
+A "static" or "functional" interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
 :class:`InstrumentInterface <mahos.inst.interface.InstrumentInterface>`.
 This is useful for interfacing with the codes (measurement logics in :doc:`arch_meas`), and configuration with small number of parameters.
 
 .. _inst-params-interface:
 
-ParamDict-based interface
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Dynamic interface using ParamDict
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Another interface is "object-oriented" one.
+Another interface is "dynamic" or "object-oriented" one.
 Instrument can report available parameters by returning a :class:`ParamDict <mahos.msgs.param_msgs.ParamDict>`
 from :meth:`get_param_dict <mahos.inst.instrument.Instrument.get_param_dict>`.
 The users can modify the parameters in it, and send back with :meth:`configure <mahos.inst.instrument.Instrument.configure>`.

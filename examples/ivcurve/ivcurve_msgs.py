@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import typing as T
 import numpy as np
 from numpy.typing import NDArray
 
@@ -16,7 +15,7 @@ class IVCurveData(BasicMeasData):
 
     """
 
-    def __init__(self, data: T.Optional[NDArray[np.float64]], params: dict, running: bool):
+    def __init__(self, data: NDArray[np.float64] | None, params: dict, running: bool):
         self.data = data
         self.params = params
         self.running = running

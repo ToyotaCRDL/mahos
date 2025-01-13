@@ -24,12 +24,30 @@ This is useful for rather "floating" instruments which is not directly tied to s
 but its state affects the sample / DUT and measurement result.
 Examples: programmable (variable gain) amplifiers for the sensors, thermostats, or power supply for electromagnet.
 The instrument should have :ref:`inst-params-interface` to be managed by the Tweaker.
+Thus, it should implement ``get_param_dict_labels()``, ``get_param_dict()``, and ``configure()``.
+The ``start()``, ``stop()``, and ``reset()`` methods can be also invoked from Tweaker.
+
+Some measurement nodes can take ``tweakers: list[str]`` in the configuration ``target``.
+By doing so, the status of Tweaker(s) can be embedded in the measurement data.
+
+See also :doc:`tutorial_manual_op` for an example with mock instrument.
+
+PosTweaker
+----------
+
+:class:`PosTweaker <mahos.meas.pos_tweaker.PosTweaker>` is a generic node for manual-tuning of positioner instruments.
+The role is similar to :class:`Tweaker <mahos.meas.tweaker.Tweaker>`,
+but PosTweaker has dedicated interface and GUI for positioners.
+
+The PosTweaker can also listed in ``tweakers: list[str]`` in the configuration ``target`` of measurement nodes.
 
 Recorder
 --------
 
 :class:`Recorder <mahos.meas.recorder.Recorder>` is a generic node for recording of time-series data from instruments.
-The instrument should provide several interfaces to be used by the Recorder.
+To use Recorder, instrument must implement following APIs: ``get_param_dict_labels()``, ``get_param_dict()``, ``configure()``, ``start()``, ``stop()``, ``get("unit")``, and ``get("data")``.
+
+See also :doc:`tutorial_manual_op` for an example with mock instrument.
 
 StateManager
 ------------
