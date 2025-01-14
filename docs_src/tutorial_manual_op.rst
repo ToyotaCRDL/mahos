@@ -47,7 +47,7 @@ The reset operation fails (but it is not a problem)
 because ``reset()`` method is not implemented in ``VoltageSource_mock``.
 
 PosTweaker
--------
+----------
 
 :class:`PosTweaker <mahos.meas.pos_tweaker.PosTweaker>` is a generic node for manual-tuning of positioners.
 Its role is similar to :class:`Tweaker <mahos.meas.tweaker.Tweaker>`,
