@@ -36,6 +36,14 @@ class = "Multimeter_mock"
 [localhost.server.instrument.meter.conf]
 resource = "VISA::DUMMY1"
 
+[localhost.server.instrument.pos_x]
+module = "mahos.inst.mock"
+class = "Positioner_mock"
+
+[localhost.server.instrument.pos_y]
+module = "mahos.inst.mock"
+class = "Positioner_mock"
+
 [localhost.tweaker]
 module = "mahos.meas.tweaker"
 class = "Tweaker"
@@ -46,14 +54,24 @@ param_dicts = ["source::ch1", "source::ch2"]
 [localhost.tweaker.target.servers]
 source = "localhost::server"
 
+[localhost.pos_tweaker]
+module = "mahos.meas.pos_tweaker"
+class = "PosTweaker"
+target = { log = "localhost::log" }
+rep_endpoint = "tcp://127.0.0.1:5563"
+pub_endpoint = "tcp://127.0.0.1:5564"
+[localhost.pos_tweaker.target.servers]
+pos_x = "localhost::server"
+pos_y = "localhost::server"
+
 [localhost.recorder]
 module = "mahos.meas.recorder"
 class = "Recorder"
-rep_endpoint = "tcp://127.0.0.1:5563"
-pub_endpoint = "tcp://127.0.0.1:5564"
+rep_endpoint = "tcp://127.0.0.1:5565"
+pub_endpoint = "tcp://127.0.0.1:5566"
 [localhost.recorder.target]
 log = "localhost::log"
-tweakers = ["localhost::tweaker"]
+tweakers = ["localhost::tweaker", "localhost::pos_tweaker"]
 [localhost.recorder.target.servers]
 meter = "localhost::server"
 [localhost.recorder.mode.voltage]
@@ -68,9 +86,25 @@ class = "TweakerGUI"
 tweaker = "localhost::tweaker"
 gparams = "localhost::gparams"
 
+[localhost.pos_tweaker_gui]
+module = "mahos.gui.pos_tweaker"
+class = "PosTweakerGUI"
+[localhost.pos_tweaker_gui.target]
+pos_tweaker = "localhost::pos_tweaker"
+gparams = "localhost::gparams"
+
 [localhost.recorder_gui]
 module = "mahos.gui.recorder"
 class = "RecorderGUI"
 [localhost.recorder_gui.target]
 recorder = "localhost::recorder"
 gparams = "localhost::gparams"
+
+[localhost.main_monitor]
+module = "mahos.gui.main_monitor"
+class = "MainMonitor"
+work_dir = "~"
+[localhost.main_monitor.target]
+log = "localhost::log"
+gparams = "localhost::gparams"
+servers = ["localhost::server"]

@@ -36,7 +36,7 @@ PosTweaker
 ----------
 
 :class:`PosTweaker <mahos.meas.pos_tweaker.PosTweaker>` is a generic node for manual-tuning of positioner instruments.
-The role is similar to :class:`Tweaker <mahos.meas.tweaker.Tweaker>`,
+Its role is similar to :class:`Tweaker <mahos.meas.tweaker.Tweaker>`,
 but PosTweaker has dedicated interface and GUI for positioners.
 
 The PosTweaker can also listed in ``tweakers: list[str]`` in the configuration ``target`` of measurement nodes.

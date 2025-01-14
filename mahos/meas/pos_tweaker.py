@@ -65,7 +65,17 @@ class PosTweakerClient(StatusClient):
 
 
 class PosTweaker(Node):
-    """Specialized tweaker for manually operated positioners."""
+    """Specialized tweaker for manually operated positioners.
+
+    The target instrument must provide
+    :class:`SinglePositionerInterface <mahos.inst.positioner_interface.SinglePositionerInterface>`.
+
+    :param target.servers: The InstrumentServer targets (instrument name, server full name).
+    :type target.servers: dict[str, str]
+    :param target.log: The LogBroker target (broker full name).
+    :type target.log: str
+
+    """
 
     CLIENT = PosTweakerClient
 

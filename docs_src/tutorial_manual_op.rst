@@ -46,6 +46,16 @@ The successful start / stop operations are confirmed in the log message (Set out
 The reset operation fails (but it is not a problem) 
 because ``reset()`` method is not implemented in ``VoltageSource_mock``.
 
+PosTweaker
+-------
+
+:class:`PosTweaker <mahos.meas.pos_tweaker.PosTweaker>` is a generic node for manual-tuning of positioners.
+Its role is similar to :class:`Tweaker <mahos.meas.tweaker.Tweaker>`,
+but PosTweaker has dedicated interface and GUI for positioners.
+
+In this example, two ``Positioner_mock`` instances, ``pos_x`` and ``pos_y``, are configured.
+You can operate PosTweaker GUI and check if it works in the log message (Dummy move / homing etc.).
+
 Recorder
 --------
 
