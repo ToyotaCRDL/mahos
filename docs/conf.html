@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration file &#8212; MAHOS 0.2.3 documentation</title>
+    <title>Configuration file &#8212; MAHOS 0.3.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=a47416a6"></script>
+    <script src="_static/documentation_options.js?v=e259d695"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'conf';</script>
@@ -110,7 +110,7 @@
   
   
   
-    <p class="title logo__title">MAHOS 0.2.3 documentation</p>
+    <p class="title logo__title">MAHOS 0.3.0 documentation</p>
   
 </a></div>
     
@@ -418,7 +418,7 @@
 <h1>Configuration file<a class="headerlink" href="#configuration-file" title="Link to this heading">#</a></h1>
 <p>To use mahos system, you have to prepare a toml configuration file.
 One good way to get used to this concept may be going through the <a class="reference internal" href="tutorial.html"><span class="doc">Tutorial</span></a>.</p>
-<p>Here, we put the configuration file for <a class="reference internal" href="tutorial_ivcurve.html"><span class="doc">Tutorial 2: Basic Measurement</span></a>.</p>
+<p>Here, we put the configuration file for <a class="reference internal" href="tutorial_ivcurve.html"><span class="doc">Tutorial 2: Basic Measurement</span></a> as a reference.</p>
 <div class="literal-block-wrapper docutils container" id="id1">
 <div class="code-block-caption"><span class="caption-text">conf.toml</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="k">[global]</span>
@@ -473,13 +473,148 @@ One good way to get used to this concept may be going through the <a class="refe
 </div>
 <p>This configuration file is visualized as graph below.</p>
 <figure class="align-default" id="id2">
-<a class="reference internal image-reference" href="_images/ivcurve-nodes.svg"><img alt="Node graph for IVCurve" src="_images/ivcurve-nodes.svg" style="width: 30%;" />
-</a>
+<a class="reference internal image-reference" href="_images/ivcurve-nodes.svg"><img alt="Node graph for IVCurve" src="_images/ivcurve-nodes.svg" style="width: 30%;" /></a>
 <figcaption>
 <p><span class="caption-text">Node graph for IVCurve</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
-<p>TODO: explain detailed spec. of the configuration file.</p>
+<section id="node-name">
+<h2>Node name<a class="headerlink" href="#node-name" title="Link to this heading">#</a></h2>
+<p>The configuration of whole system (global conf) is structured as a dictionary with nested string keys.
+TOML can effectively express such data structure.
+The top-level key specifies the hostname, except following two special names:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">global</span></code> block is used to define global configurations (default configurations for all the nodes).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">thread</span></code> block is used to define threaded nodes.</p></li>
+</ul>
+<p>These two names should be considered reserved, and not be used as hostnames.</p>
+<p>The second-level key is the nodename.
+The fully qualified name of a node consists of the hostname and nodename,
+and expressed as <code class="docutils literal notranslate"><span class="pre">&lt;hostname&gt;::&lt;nodename&gt;</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">localhost::server</span></code>).
+The configuration of each node (local config) is written as a dictionary under the nodename
+(under the block <code class="docutils literal notranslate"><span class="pre">[&lt;hostname&gt;::&lt;nodename&gt;]</span></code>),
+and this dictionary is binded as <code class="docutils literal notranslate"><span class="pre">conf</span></code> attribute of the <a class="reference internal" href="node/Node.html#mahos.node.node.Node" title="mahos.node.node.Node"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span> <span class="pre">class</span></code></a>.</p>
+</section>
+<section id="fundamental-keys">
+<h2>Fundamental keys<a class="headerlink" href="#fundamental-keys" title="Link to this heading">#</a></h2>
+<p>Several keys define fundamental properties of node’s function and they are used for virtually all the nodes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">module</span></code>: The module name holding the Node class. It must be an importable Python module.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">class</span></code>: The Node class name. The class must be an attribute of the <code class="docutils literal notranslate"><span class="pre">module</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">poll_timeout_ms</span></code>: timeout for polling of inbound request (<a class="reference internal" href="node/Node.html#mahos.node.node.Node.poll" title="mahos.node.node.Node.poll"><code class="xref py py-meth docutils literal notranslate"><span class="pre">poll</span></code></a>). It roughly defines rate of main loop (without any requests).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">req_timeout_ms</span></code>: timeout for REQ-REP communication. It is referenced if the Node sends requests through <a class="reference internal" href="node/NodeClient.html#mahos.node.client.NodeClient" title="mahos.node.client.NodeClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeClients</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rep_endpoint</span></code>: endpoint for REQ-REP communication. It is necessary if the Node accepts requests.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pub_endpoint</span></code>: endpoint for PUB-SUB communication. It is necessary if the Node publishes data.</p></li>
+</ul>
+</section>
+<section id="target">
+<h2>Target<a class="headerlink" href="#target" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">target</span></code> is an important configuration defining (client-server) relations to other nodes.
+This is also a dictionary with string keys, and values can take following three types.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code> (full name of the node) if the target is only one node (as <code class="docutils literal notranslate"><span class="pre">log</span> <span class="pre">=</span> <span class="pre">&quot;localhost::log&quot;</span></code> in example above).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">list[str]</span></code> (list of full names) if the target can be multiple nodes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">str]</span></code> (instrument name to full name of <a class="reference internal" href="inst/generated/mahos.inst.server.InstrumentServer.html#mahos.inst.server.InstrumentServer" title="mahos.inst.server.InstrumentServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentServer</span></code></a>) this is special case for measurement nodes using InstrumentServers and simultaneously defines the instruments to be used (see line 39-41 in example above).</p></li>
+</ul>
+</section>
+<section id="instrumentserver">
+<h2>InstrumentServer<a class="headerlink" href="#instrumentserver" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="inst/generated/mahos.inst.server.InstrumentServer.html#mahos.inst.server.InstrumentServer" title="mahos.inst.server.InstrumentServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentServer</span></code></a> holds <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument" title="mahos.inst.instrument.Instrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruments</span></code></a> and <a class="reference internal" href="inst/InstrumentOverlay.html#mahos.inst.overlay.overlay.InstrumentOverlay" title="mahos.inst.overlay.overlay.InstrumentOverlay"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentOverlays</span></code></a>.</p>
+<p>An Instrument config is defined under <code class="docutils literal notranslate"><span class="pre">[&lt;hostname&gt;.&lt;nodename&gt;.instrument.&lt;instname&gt;]</span></code> (as in <code class="docutils literal notranslate"><span class="pre">[localhost.server.instrument.source]</span></code> in line 20), where following three keys are given.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">module</span></code>: The module name holding the Instrument class. It must be an importable Python module, but leading <code class="docutils literal notranslate"><span class="pre">mahos.inst.</span></code> can be omitted if a submodule in <code class="docutils literal notranslate"><span class="pre">mahos.inst</span></code> package is used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">class</span></code>: The Instrument class name. The class must be an attribute of the <code class="docutils literal notranslate"><span class="pre">module</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conf</span></code>: The configuration dictionary for the Instrument (this is optional, but usually necessary).</p></li>
+</ul>
+<p>An InstrumentOverlay config is defined under <code class="docutils literal notranslate"><span class="pre">[&lt;hostname&gt;.&lt;nodename&gt;.instrument_overlay.&lt;instname&gt;]</span></code>, where following three keys are given.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">module</span></code>: The module name holding the InstrumentOverlay class. It must be an importable Python module, but leading <code class="docutils literal notranslate"><span class="pre">mahos.inst.overlay.</span></code> can be omitted if a submodule in <code class="docutils literal notranslate"><span class="pre">mahos.inst.overlay</span></code> package is used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">class</span></code>: The InstrumentOverlay class name. The class must be an attribute of the <code class="docutils literal notranslate"><span class="pre">module</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conf</span></code>: The configuration dictionary for the InstrumentOverlay. If a value in this dictionary is a string starting with <code class="docutils literal notranslate"><span class="pre">$</span></code>, it is considered a reference to Instrument / InstrumentOverlay in the same server. The overlay receives resolved value, i.e., an Instrument / InstrumentOverlay instance instead of a string.</p></li>
+</ul>
+</section>
+<section id="threading">
+<span id="conf-threading"></span><h2>Threading<a class="headerlink" href="#threading" title="Link to this heading">#</a></h2>
+<p>By default, each node run as a process, and TCP is used for inter-process communication.
+When you need to reduce overhead of TCP communication,
+the nodes can be run as individual threads inside single process.
+To enable this feature, you need to make slight modifications in the configuration file.
+Here, we put an example of modified configuration file for <a class="reference internal" href="tutorial_ivcurve.html"><span class="doc">Tutorial 2: Basic Measurement</span></a>.</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">conf_thread_partial.toml</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="k">[global]</span>
+<span class="linenos"> 2</span><span class="n">req_timeout_ms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60000</span>
+<span class="linenos"> 3</span><span class="n">poll_timeout_ms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="k">[thread.localhost]</span>
+<span class="linenos"> 6</span><span class="n">server_ivcurve</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;server&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ivcurve&quot;</span><span class="p">]</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="k">[localhost.log]</span>
+<span class="linenos"> 9</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mahos.node.log_broker&quot;</span>
+<span class="linenos">10</span><span class="n">class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;LogBroker&quot;</span>
+<span class="linenos">11</span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">log</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;localhost::log&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="linenos">12</span><span class="n">xpub_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://127.0.0.1:5555&quot;</span>
+<span class="linenos">13</span><span class="n">xsub_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://127.0.0.1:5556&quot;</span>
+<span class="linenos">14</span>
+<span class="linenos">15</span><span class="k">[localhost.server]</span>
+<span class="linenos">16</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mahos.inst.server&quot;</span>
+<span class="linenos">17</span><span class="n">class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;InstrumentServer&quot;</span>
+<span class="linenos">18</span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">log</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;localhost::log&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="linenos">19</span><span class="n">log_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;DEBUG&quot;</span>
+<span class="linenos">20</span><span class="n">rep_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;inproc://server_rep&quot;</span>
+<span class="linenos">21</span><span class="n">pub_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;inproc://server_pub&quot;</span>
+<span class="linenos">22</span>
+<span class="linenos">23</span><span class="k">[localhost.server.instrument.source]</span>
+<span class="linenos">24</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;instruments&quot;</span>
+<span class="linenos">25</span><span class="n">class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;VoltageSource_mock&quot;</span>
+<span class="linenos">26</span><span class="k">[localhost.server.instrument.source.conf]</span>
+<span class="linenos">27</span><span class="n">resource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;VISA::DUMMY0&quot;</span>
+<span class="linenos">28</span>
+<span class="linenos">29</span><span class="k">[localhost.server.instrument.meter]</span>
+<span class="linenos">30</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;instruments&quot;</span>
+<span class="linenos">31</span><span class="n">class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Multimeter_mock&quot;</span>
+<span class="linenos">32</span><span class="k">[localhost.server.instrument.meter.conf]</span>
+<span class="linenos">33</span><span class="n">resource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;VISA::DUMMY1&quot;</span>
+<span class="linenos">34</span>
+<span class="linenos">35</span><span class="k">[localhost.ivcurve]</span>
+<span class="linenos">36</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ivcurve&quot;</span>
+<span class="linenos">37</span><span class="n">class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;IVCurve&quot;</span>
+<span class="linenos">38</span><span class="n">rep_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://127.0.0.1:5561&quot;</span>
+<span class="linenos">39</span><span class="n">pub_endpoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://127.0.0.1:5562&quot;</span>
+<span class="linenos">40</span><span class="k">[localhost.ivcurve.target]</span>
+<span class="linenos">41</span><span class="n">log</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;localhost::log&quot;</span>
+<span class="linenos">42</span><span class="k">[localhost.ivcurve.target.servers]</span>
+<span class="linenos">43</span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;localhost::server&quot;</span>
+<span class="linenos">44</span><span class="n">meter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;localhost::server&quot;</span>
+<span class="linenos">45</span>
+<span class="linenos">46</span><span class="k">[localhost.ivcurve_gui]</span>
+<span class="linenos">47</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ivcurve_gui&quot;</span>
+<span class="linenos">48</span><span class="n">class</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;IVCurveGUI&quot;</span>
+<span class="linenos">49</span><span class="k">[localhost.ivcurve_gui.target]</span>
+<span class="linenos">50</span><span class="n">ivcurve</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;localhost::ivcurve&quot;</span>
+</pre></div>
+</div>
+</div>
+<p>This configuration aims to run the <code class="docutils literal notranslate"><span class="pre">server</span></code> and <code class="docutils literal notranslate"><span class="pre">ivcurve</span></code> nodes as the threads in a process.
+The threaded nodes are defined as <code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">list[str]</span></code> under the <code class="docutils literal notranslate"><span class="pre">[thread.&lt;hostname&gt;]</span></code> block.
+In the example, <code class="docutils literal notranslate"><span class="pre">[thread.localhost]</span></code> block is added at line 5.
+Line 6 defines a set of threaded nodes named <code class="docutils literal notranslate"><span class="pre">server_ivcurve</span></code> which consists of <code class="docutils literal notranslate"><span class="pre">server</span></code> and <code class="docutils literal notranslate"><span class="pre">ivcurve</span></code> nodes.
+The <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">graph</span></code> command can visualize the threaded nodes like below.</p>
+<figure class="align-default" id="id4">
+<a class="reference internal image-reference" href="_images/ivcurve-nodes-threaded.svg"><img alt="Node graph for IVCurve with threaded nodes" src="_images/ivcurve-nodes-threaded.svg" style="width: 40%;" /></a>
+<figcaption>
+<p><span class="caption-text">Node graph for IVCurve with threaded nodes</span><a class="headerlink" href="#id4" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The endpoint must be changed to take advantage of threaded nodes.
+The line 20-21 defines endpoints with inprocess protocols (<code class="docutils literal notranslate"><span class="pre">inproc://</span></code>).
+This protocol is implemented (by ZeroMQ) with shared memory,
+and thus it can boost the transfer rate of the large data.</p>
+<p>To run a set of threaded nodes, execute command like <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">run</span> <span class="pre">-t</span> <span class="pre">server_ivcurve</span></code>
+(<code class="docutils literal notranslate"><span class="pre">-t</span></code> is necessary to tell that you want to run threaded nodes instead of normal node).
+The <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">launch</span></code> command automatically detects threaded nodes and start all of them
+with matching hostname.</p>
+</section>
 </section>
 
 
@@ -520,6 +655,22 @@ One good way to get used to this concept may be going through the <a class="refe
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#node-name">Node name</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fundamental-keys">Fundamental keys</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#target">Target</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentserver">InstrumentServer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#threading">Threading</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">

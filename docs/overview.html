@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Overview &#8212; MAHOS 0.2.3 documentation</title>
+    <title>Overview &#8212; MAHOS 0.3.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=a47416a6"></script>
+    <script src="_static/documentation_options.js?v=e259d695"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'overview';</script>
@@ -110,7 +110,7 @@
   
   
   
-    <p class="title logo__title">MAHOS 0.2.3 documentation</p>
+    <p class="title logo__title">MAHOS 0.3.0 documentation</p>
   
 </a></div>
     
@@ -442,7 +442,7 @@ Nodes internally use the clients to access the others, and custom programs can u
 the layer structure is introduced; the nodes can be categorized into three layers.
 The inst layer is the lowest-lying layer (source of data flow), consisting of low-level drivers for the instruments.
 The meas layer is the middle layer providing the measurement logic.
-The gui layer is apparently the topmost layer for GUI frontends, which are optional but usually important for the users.</p>
+The gui layer is the topmost layer for GUI frontends, which are optional but usually important for the users.</p>
 <p>For a more detailed description of the architecture, see <a class="reference internal" href="arch.html"><span class="doc">Architecture</span></a>.</p>
 </section>
 <section id="system-configuration-file">
@@ -474,7 +474,7 @@ and B) processed and analyzed in an interactive console such as IPython or Jupyt
 <li><p>It is straightforward to conduct an initial measurement using a GUI node,
 and then write an ad-hoc automation script to run many measurements with different parameters
 because the GUI node and the script are seen as equivalent clients from the measurement logic node.
-The GUI will visualize the data even when the measurement is started by the script.</p></li>
+The GUI can visualize the data even when the measurement is started by the script.</p></li>
 <li><p>We can inspect the instrument’s status or perform ad-hoc operations on the instrument at run time
 without shutting down any nodes.
 This is because the operation requests from measurement logic nodes and ad-hoc ones are equivalent

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>inst layer &#8212; MAHOS 0.2.3 documentation</title>
+    <title>inst layer &#8212; MAHOS 0.3.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=a47416a6"></script>
+    <script src="_static/documentation_options.js?v=e259d695"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'arch_inst';</script>
@@ -110,7 +110,7 @@
   
   
   
-    <p class="title logo__title">MAHOS 0.2.3 documentation</p>
+    <p class="title logo__title">MAHOS 0.3.0 documentation</p>
   
 </a></div>
     
@@ -449,22 +449,41 @@ It is also useful to define application-specific parametrization or fundamental 
 <p>The <a class="reference internal" href="inst/Instrument.html#instrument-api"><span class="std std-ref">Standard Instrument APIs</span></a> is a primary interface between Instrument and the user code.
 However, one cannot understand the usage of <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.set" title="mahos.inst.instrument.Instrument.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set</span></code></a>,
 <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.get" title="mahos.inst.instrument.Instrument.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get</span></code></a>, and <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.configure" title="mahos.inst.instrument.Instrument.configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure</span></code></a> from their signatures.
-Though this may be overcomed by the documentations, following two methods are provided for better interfacing.</p>
-<section id="instrumentinterface">
-<span id="inst-instrument-interface"></span><h3>InstrumentInterface<a class="headerlink" href="#instrumentinterface" title="Link to this heading">#</a></h3>
-<p>A “functional” interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
+Though this may be overcome by the documentations, following two methods are provided for better interfacing.</p>
+<section id="static-interface-using-instrumentinterface">
+<span id="inst-instrument-interface"></span><h3>Static interface using InstrumentInterface<a class="headerlink" href="#static-interface-using-instrumentinterface" title="Link to this heading">#</a></h3>
+<p>A “static” or “functional” interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
 <a class="reference internal" href="inst/InstrumentInterface.html#mahos.inst.interface.InstrumentInterface" title="mahos.inst.interface.InstrumentInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentInterface</span></code></a>.
-This is useful for interfacing with the codes (measurement logics in <a class="reference internal" href="arch_meas.html"><span class="doc">meas layer</span></a>), and configuration with small number of parameters.</p>
+The caller can use the InstrumentInterface as a proxy for InstrumentClient.
+This is useful for interfacing with static codes (measurement logics in <a class="reference internal" href="arch_meas.html"><span class="doc">meas layer</span></a>),
+and configuration with small number of parameters.
+It also serves as reference information when implementing new Instrument class.</p>
+<figure class="align-default" id="id1">
+<a class="reference internal image-reference" href="_images/mahos-instrument-interf.svg"><img alt="Concept of static interface with InstrumentInterface" src="_images/mahos-instrument-interf.svg" style="width: 90%;" /></a>
+<figcaption>
+<p><span class="caption-text">Concept of static interface with InstrumentInterface.
+CameraInterface provides custom get_image() API
+which is translated to get(“image”) standard API call.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
 </section>
-<section id="paramdict-based-interface">
-<span id="inst-params-interface"></span><h3>ParamDict-based interface<a class="headerlink" href="#paramdict-based-interface" title="Link to this heading">#</a></h3>
-<p>Another interface is “object-oriented” one.
+<section id="dynamic-interface-using-paramdict">
+<span id="inst-params-interface"></span><h3>Dynamic interface using ParamDict<a class="headerlink" href="#dynamic-interface-using-paramdict" title="Link to this heading">#</a></h3>
+<p>Another interface is “dynamic” or “object-oriented” one.
 Instrument can report available parameters by returning a <a class="reference internal" href="msgs/param_msgs.html#mahos.msgs.param_msgs.ParamDict" title="mahos.msgs.param_msgs.ParamDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParamDict</span></code></a>
-from <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.get_param_dict" title="mahos.inst.instrument.Instrument.get_param_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_param_dict</span></code></a>.
-The users can modify the parameters in it, and send back with <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.configure" title="mahos.inst.instrument.Instrument.configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure</span></code></a>.
+for <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.get_param_dict" title="mahos.inst.instrument.Instrument.get_param_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_param_dict()</span></code></a> call.
+The users can modify the parameters in it, and send it back with <a class="reference internal" href="inst/Instrument.html#mahos.inst.instrument.Instrument.configure" title="mahos.inst.instrument.Instrument.configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure()</span></code></a>.
 This is useful if the number of parameters is large (so that providing as a method signature is cumbersome).
-Another benefit is that instrument can tell the bounds (minimum or maximum) of numeric parameters.
+Another benefit is that instrument can tell additional information such as
+the bounds (minimum or maximum) of numeric parameters.
 <a class="reference internal" href="arch_meas.html#meas-tweaker"><span class="std std-ref">Tweaker</span></a> node assumes this interface.</p>
+<figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="_images/mahos-pd-interf.svg"><img alt="Concept of dynamic interface with ParamDict" src="_images/mahos-pd-interf.svg" style="width: 90%;" /></a>
+<figcaption>
+<p><span class="caption-text">Concept of dynamic interface with ParamDict.
+The caller gets ParamDict (get_param_dict()), edits it, and sends through configure() call.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
 </section>
 </section>
 <section id="lock-mechanism">
@@ -475,11 +494,10 @@ one client can prevent the other clients from operating an instrument by acquiri
 The lock can be used for <a class="reference internal" href="#instrumentoverlay">InstrumentOverlay</a> as well.
 The lock for overlay is nearly equivalent to the locks for all the instruments referred by the overlay.
 An example is shown in the figure below.</p>
-<figure class="align-default" id="id1">
-<a class="reference internal image-reference" href="_images/mahos-instrument-lock.svg"><img alt="Example of lock operations on InstrumentServer" src="_images/mahos-instrument-lock.svg" style="width: 90%;" />
-</a>
+<figure class="align-default" id="id3">
+<a class="reference internal image-reference" href="_images/mahos-instrument-lock.svg"><img alt="Example of lock operations on InstrumentServer" src="_images/mahos-instrument-lock.svg" style="width: 90%;" /></a>
 <figcaption>
-<p><span class="caption-text">Example of lock operations on InstrumentServer</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
+<p><span class="caption-text">Example of lock operations on InstrumentServer</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 <p>As in (a), server1 has inst1, inst2, and inst3.
@@ -547,8 +565,8 @@ The lock states are changed by request as follows.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrument">Instrument</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentoverlay">InstrumentOverlay</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interfacing">Interfacing</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#instrumentinterface">InstrumentInterface</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paramdict-based-interface">ParamDict-based interface</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#static-interface-using-instrumentinterface">Static interface using InstrumentInterface</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-interface-using-paramdict">Dynamic interface using ParamDict</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lock-mechanism">Lock mechanism</a></li>

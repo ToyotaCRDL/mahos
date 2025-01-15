@@ -30,29 +30,48 @@ Interfacing
 The :ref:`instrument-api` is a primary interface between Instrument and the user code.
 However, one cannot understand the usage of :meth:`set <mahos.inst.instrument.Instrument.set>`,
 :meth:`get <mahos.inst.instrument.Instrument.get>`, and :meth:`configure <mahos.inst.instrument.Instrument.configure>` from their signatures.
-Though this may be overcomed by the documentations, following two methods are provided for better interfacing.
+Though this may be overcome by the documentations, following two methods are provided for better interfacing.
 
 .. _inst-instrument-interface:
 
-InstrumentInterface
-^^^^^^^^^^^^^^^^^^^
+Static interface using InstrumentInterface
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A "functional" interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
+A "static" or "functional" interface, i.e., type-annotated signature, can be provided by defining additional methods in a subclass of
 :class:`InstrumentInterface <mahos.inst.interface.InstrumentInterface>`.
-This is useful for interfacing with the codes (measurement logics in :doc:`arch_meas`), and configuration with small number of parameters.
+The caller can use the InstrumentInterface as a proxy for InstrumentClient.
+This is useful for interfacing with static codes (measurement logics in :doc:`arch_meas`),
+and configuration with small number of parameters.
+It also serves as reference information when implementing new Instrument class.
+
+.. figure:: ./img/mahos-instrument-interf.svg
+   :alt: Concept of static interface with InstrumentInterface
+   :width: 90%
+
+   Concept of static interface with InstrumentInterface.
+   CameraInterface provides custom get_image() API
+   which is translated to get("image") standard API call.
 
 .. _inst-params-interface:
 
-ParamDict-based interface
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Dynamic interface using ParamDict
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Another interface is "object-oriented" one.
+Another interface is "dynamic" or "object-oriented" one.
 Instrument can report available parameters by returning a :class:`ParamDict <mahos.msgs.param_msgs.ParamDict>`
-from :meth:`get_param_dict <mahos.inst.instrument.Instrument.get_param_dict>`.
-The users can modify the parameters in it, and send back with :meth:`configure <mahos.inst.instrument.Instrument.configure>`.
+for :meth:`get_param_dict() <mahos.inst.instrument.Instrument.get_param_dict>` call.
+The users can modify the parameters in it, and send it back with :meth:`configure() <mahos.inst.instrument.Instrument.configure>`.
 This is useful if the number of parameters is large (so that providing as a method signature is cumbersome).
-Another benefit is that instrument can tell the bounds (minimum or maximum) of numeric parameters.
+Another benefit is that instrument can tell additional information such as
+the bounds (minimum or maximum) of numeric parameters.
 :ref:`meas-tweaker` node assumes this interface.
+
+.. figure:: ./img/mahos-pd-interf.svg
+   :alt: Concept of dynamic interface with ParamDict
+   :width: 90%
+
+   Concept of dynamic interface with ParamDict.
+   The caller gets ParamDict (get_param_dict()), edits it, and sends through configure() call.
 
 Lock mechanism
 --------------

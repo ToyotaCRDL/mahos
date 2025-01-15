@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>meas layer &#8212; MAHOS 0.2.3 documentation</title>
+    <title>meas layer &#8212; MAHOS 0.3.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=a47416a6"></script>
+    <script src="_static/documentation_options.js?v=e259d695"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'arch_meas';</script>
@@ -110,7 +110,7 @@
   
   
   
-    <p class="title logo__title">MAHOS 0.2.3 documentation</p>
+    <p class="title logo__title">MAHOS 0.3.0 documentation</p>
   
 </a></div>
     
@@ -433,7 +433,8 @@ If the node has <a class="reference internal" href="glossary.html#term-state"><s
 <section id="basicmeasnode">
 <h2>BasicMeasNode<a class="headerlink" href="#basicmeasnode" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="meas/generated/mahos.meas.common_meas.BasicMeasNode.html#mahos.meas.common_meas.BasicMeasNode" title="mahos.meas.common_meas.BasicMeasNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicMeasNode</span></code></a> can be utilized as a base class to implement basic measurment nodes.
-This class assumes <a class="reference internal" href="glossary.html#term-state"><span class="xref std std-term">state</span></a> of type <a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.BinaryState" title="mahos.msgs.common_msgs.BinaryState"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryState</span></code></a> and <a class="reference internal" href="glossary.html#term-status"><span class="xref std std-term">status</span></a> of type <a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.BinaryStatus" title="mahos.msgs.common_msgs.BinaryStatus"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryStatus</span></code></a>.</p>
+This class assumes <a class="reference internal" href="glossary.html#term-state"><span class="xref std std-term">state</span></a> of type <a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.BinaryState" title="mahos.msgs.common_msgs.BinaryState"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryState</span></code></a> and <a class="reference internal" href="glossary.html#term-status"><span class="xref std std-term">status</span></a> of type <a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.BinaryStatus" title="mahos.msgs.common_msgs.BinaryStatus"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinaryStatus</span></code></a>.
+It also provides additional data management features like fitting and data buffering.</p>
 </section>
 <section id="tweaker">
 <span id="meas-tweaker"></span><h2>Tweaker<a class="headerlink" href="#tweaker" title="Link to this heading">#</a></h2>
@@ -441,12 +442,26 @@ This class assumes <a class="reference internal" href="glossary.html#term-state"
 This is useful for rather “floating” instruments which is not directly tied to specific measurement protocol,
 but its state affects the sample / DUT and measurement result.
 Examples: programmable (variable gain) amplifiers for the sensors, thermostats, or power supply for electromagnet.
-The instrument should have <a class="reference internal" href="arch_inst.html#inst-params-interface"><span class="std std-ref">ParamDict-based interface</span></a> to be managed by the Tweaker.</p>
+The instrument should have <a class="reference internal" href="arch_inst.html#inst-params-interface"><span class="std std-ref">Dynamic interface using ParamDict</span></a> to be managed by the Tweaker.
+Thus, it should implement <code class="docutils literal notranslate"><span class="pre">get_param_dict_labels()</span></code>, <code class="docutils literal notranslate"><span class="pre">get_param_dict()</span></code>, and <code class="docutils literal notranslate"><span class="pre">configure()</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">start()</span></code>, <code class="docutils literal notranslate"><span class="pre">stop()</span></code>, and <code class="docutils literal notranslate"><span class="pre">reset()</span></code> methods can be also invoked from Tweaker.</p>
+<p>Some measurement nodes can take <code class="docutils literal notranslate"><span class="pre">tweakers:</span> <span class="pre">list[str]</span></code> in the configuration <code class="docutils literal notranslate"><span class="pre">target</span></code>.
+By doing so, the status of Tweaker(s) can be embedded in the measurement data.</p>
+<p>See also <a class="reference internal" href="tutorial_manual_op.html"><span class="doc">Tutorial 3: Manual Operation</span></a> for an example with mock instrument.</p>
+</section>
+<section id="postweaker">
+<h2>PosTweaker<a class="headerlink" href="#postweaker" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="meas/generated/mahos.meas.pos_tweaker.PosTweaker.html#mahos.meas.pos_tweaker.PosTweaker" title="mahos.meas.pos_tweaker.PosTweaker"><code class="xref py py-class docutils literal notranslate"><span class="pre">PosTweaker</span></code></a> is a generic node for manual-tuning of positioner instruments.
+Its role is similar to <a class="reference internal" href="meas/generated/mahos.meas.tweaker.Tweaker.html#mahos.meas.tweaker.Tweaker" title="mahos.meas.tweaker.Tweaker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tweaker</span></code></a>,
+but PosTweaker has dedicated interface and GUI for positioners.</p>
+<p>The PosTweaker can also listed in <code class="docutils literal notranslate"><span class="pre">tweakers:</span> <span class="pre">list[str]</span></code> in the configuration <code class="docutils literal notranslate"><span class="pre">target</span></code> of measurement nodes.</p>
+<p>See also <a class="reference internal" href="tutorial_manual_op.html"><span class="doc">Tutorial 3: Manual Operation</span></a> for an example with mock instrument.</p>
 </section>
 <section id="recorder">
 <h2>Recorder<a class="headerlink" href="#recorder" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="meas/generated/mahos.meas.recorder.Recorder.html#mahos.meas.recorder.Recorder" title="mahos.meas.recorder.Recorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Recorder</span></code></a> is a generic node for recording of time-series data from instruments.
-The instrument should provide several interfaces to be used by the Recorder.</p>
+To use Recorder, instrument must implement following APIs: <code class="docutils literal notranslate"><span class="pre">get_param_dict_labels()</span></code>, <code class="docutils literal notranslate"><span class="pre">get_param_dict()</span></code>, <code class="docutils literal notranslate"><span class="pre">configure()</span></code>, <code class="docutils literal notranslate"><span class="pre">start()</span></code>, <code class="docutils literal notranslate"><span class="pre">stop()</span></code>, <code class="docutils literal notranslate"><span class="pre">get(&quot;unit&quot;)</span></code>, and <code class="docutils literal notranslate"><span class="pre">get(&quot;data&quot;)</span></code>.</p>
+<p>See also <a class="reference internal" href="tutorial_manual_op.html"><span class="doc">Tutorial 3: Manual Operation</span></a> for an example with mock instrument.</p>
 </section>
 <section id="statemanager">
 <h2>StateManager<a class="headerlink" href="#statemanager" title="Link to this heading">#</a></h2>
@@ -468,8 +483,7 @@ Before a <cite>command</cite> is executed, the nodes state (<cite>last_state</ci
 After a <cite>command</cite>, we can use <cite>restore</cite> request to recover the <cite>last_state</cite>.</p>
 <p>The figure below explans the <cite>command</cite> and <cite>restore</cite> operations.</p>
 <figure class="align-default" id="id1">
-<a class="reference internal image-reference" href="_images/mahos-state-manager.svg"><img alt="Command and Restore operations of StateManager" src="_images/mahos-state-manager.svg" style="width: 90%;" />
-</a>
+<a class="reference internal image-reference" href="_images/mahos-state-manager.svg"><img alt="Command and Restore operations of StateManager" src="_images/mahos-state-manager.svg" style="width: 90%;" /></a>
 <figcaption>
 <p><span class="caption-text">Command and Restore operations of StateManager</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
 </figcaption>
@@ -533,6 +547,7 @@ After a <cite>command</cite>, we can use <cite>restore</cite> request to recover
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basicmeasnode">BasicMeasNode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tweaker">Tweaker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#postweaker">PosTweaker</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recorder">Recorder</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#statemanager">StateManager</a></li>
 </ul>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Node, Client, and Communication &#8212; MAHOS 0.2.3 documentation</title>
+    <title>Node, Client, and Communication &#8212; MAHOS 0.3.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=a47416a6"></script>
+    <script src="_static/documentation_options.js?v=e259d695"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'arch_node';</script>
@@ -110,7 +110,7 @@
   
   
   
-    <p class="title logo__title">MAHOS 0.2.3 documentation</p>
+    <p class="title logo__title">MAHOS 0.3.0 documentation</p>
   
 </a></div>
     
@@ -439,7 +439,8 @@ By choosing TCP, multi-host (multi-computer) configuration is quite straightforw
 However, the transportation overhead can become an issue when one deals with very large data
 such as high-resolution images produced at a high rate.
 In such a case, the overhead can be reduced significantly by running the relevant nodes as threads
-in a single process and using intra-process transportation.</p>
+in a single process and using intra-process transportation.
+See <a class="reference internal" href="conf.html#conf-threading"><span class="std std-ref">Threading</span></a> for how to configure such transportation.</p>
 <p>ZeroMQ doesn’t specify the data serialization format; it provides methods to send/receive byte arrays of arbitrary length.
 By default, we define the message types (classes) in the <a class="reference internal" href="msgs/index.html#mahos-msgs"><span class="std std-ref">mahos.msgs</span></a> package and serialize the instances
 using Python standard pickle.
@@ -483,8 +484,7 @@ and <a class="reference internal" href="node/NodeClient.html#mahos.node.client.N
 The custom programs can utilize them as well.
 This relationships are visualized in the figure below.</p>
 <figure class="align-default" id="id1">
-<a class="reference internal image-reference" href="_images/mahos-node-server-client.svg"><img alt="Connection between Nodes and Clients" src="_images/mahos-node-server-client.svg" style="width: 85%;" />
-</a>
+<a class="reference internal image-reference" href="_images/mahos-node-server-client.svg"><img alt="Connection between Nodes and Clients" src="_images/mahos-node-server-client.svg" style="width: 85%;" /></a>
 <figcaption>
 <p><span class="caption-text">Connection between Nodes and Clients</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
 </figcaption>

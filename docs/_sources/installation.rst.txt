@@ -4,7 +4,7 @@ Installation
 Steps to install mahos:
 
 #. Check the `System requirements`_.
-#. `Create virtualenv`_ (this is optional, but recommended).
+#. `Create virtual environment`_ (this is optional, but recommended).
 #. `Clone the repository`_.
 #. Install `Optional requirements`_.
 #. Install `The mahos package`_ (and requirements).
@@ -25,40 +25,30 @@ The ``gcc`` is installed by default on many distros.
 For the latter, try ``sudo apt install python3-dev`` on Debian-based distros
 or ``sudo yum install python3-devel`` on RHEL-like distros.
 
-Create virtualenv
------------------
+Create virtual environment
+--------------------------
 
-`Virtualenv <https://virtualenv.pypa.io/en/latest/>`_ is the recommended tool for virtual environment management.
+The `venv <https://docs.python.org/3/library/venv.html>`_ is the recommended tool for virtual environment management.
 Skip this section if you prefer one of the following alternatives.
 
 - You could install the requirements and the mahos package with your system Python.
-- You could use ``conda`` or other virtual environment management tools too.
+- You could use ``virtualenv``, ``conda`` or other virtual environment management tools too.
 
-``virtualenv`` is installable via ``pip``. ::
-
-  pip install virtualenv
-
-If ``virtualenv`` command is not found by your shell,
-add the directory containing ``virtualenv`` to environment variable PATH.
-The pip-installed executable is usually placed on the directory below,
-but you should confirm that by pip's warning message on installation.
-
-- ``%USERPROFILE%\AppData\Local\Programs\Python\Python3X\Scripts`` or ``%USERPROFILE%\AppData\Roaming\Python\Python3X\Scripts`` for Windows
-- ``~/.local/bin`` for Linux
+``venv`` comes with Python; you don't have to install additional stuffs.
 
 For some packages which are not quite straightforward to install via pip (OpenCV etc.),
-we recommend to enable system-site-packages.
+we recommend to enable system-site-packages (remove ``--system-site-packages`` if you don't want it).
 
 .. code-block:: bash
 
-  virtualenv mahos -p <python to use> --system-site-packages
+  python -m venv mahos --system-site-packages
 
-Small notes on virtualenv usage:
+Small notes on venv usage:
 
 - activate: ``source <mahos env directory>/bin/activate`` or ``source <mahos env directory>/Scripts/activate``
 - deactivate: ``deactivate``
 
-Following contents assume that the virtualenv has already been activated.
+Following contents assume that the virtual environment has already been activated.
 
 Clone the repository
 --------------------

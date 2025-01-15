@@ -38,4 +38,4 @@ Maintainers
 If you have any questions which you would like to ask in private,
 contact one of the maintainers below.
 
-- Kosuke Tahara <ktaha@mosk.tytlabs.co.jp>
+- Kosuke Tahara <ksk.tahara@gmail.com>

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mahos"
-version = "0.2.3"
+version = "0.3.0"
 description = "Measurement Automation Handling and Orchestration System"
 readme = "README.rst"
 requires-python = ">=3.10, <3.13"

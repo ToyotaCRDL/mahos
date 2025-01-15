@@ -15,6 +15,7 @@
    .. automethod:: Node.add_rep
    .. automethod:: Node.add_pub
    .. automethod:: Node.add_clients
+   .. automethod:: Node.poll
 
    .. rubric:: Other methods
 
@@ -25,7 +26,6 @@
       ~Node.fail_with
       ~Node.main_event
       ~Node.main_interrupt
-      ~Node.poll
       ~Node.set_shutdown
       ~Node.wait
 

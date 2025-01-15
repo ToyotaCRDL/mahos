@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tutorial 2: Basic Measurement &#8212; MAHOS 0.2.3 documentation</title>
+    <title>Tutorial 2: Basic Measurement &#8212; MAHOS 0.3.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=a47416a6"></script>
+    <script src="_static/documentation_options.js?v=e259d695"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial_ivcurve';</script>
@@ -110,7 +110,7 @@
   
   
   
-    <p class="title logo__title">MAHOS 0.2.3 documentation</p>
+    <p class="title logo__title">MAHOS 0.3.0 documentation</p>
   
 </a></div>
     
@@ -445,8 +445,7 @@ This is our mock for IV curve measurement.</p>
 We have two instruments <cite>source</cite> (Voltage Source) and <cite>meter</cite> (Current meter) to
 measure IV characteristics of DUT (Device Under Test).</p>
 <figure class="align-default" id="id2">
-<a class="reference internal image-reference" href="_images/ivcurve-sch.svg"><img alt="Schematic of IV curve measurement" src="_images/ivcurve-sch.svg" style="width: 50%;" />
-</a>
+<a class="reference internal image-reference" href="_images/ivcurve-sch.svg"><img alt="Schematic of IV curve measurement" src="_images/ivcurve-sch.svg" style="width: 50%;" /></a>
 <figcaption>
 <p><span class="caption-text">Schematic of IV curve measurement</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
 </figcaption>
@@ -457,8 +456,7 @@ measure IV characteristics of DUT (Device Under Test).</p>
 <p>Let’s analyze below what’s happening behind the scenes.
 First, try visualizing our nodes by <code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">graph</span></code>, and you will see a graph below.</p>
 <figure class="align-default" id="id3">
-<a class="reference internal image-reference" href="_images/ivcurve-nodes.svg"><img alt="Node graph for IV curve" src="_images/ivcurve-nodes.svg" style="width: 30%;" />
-</a>
+<a class="reference internal image-reference" href="_images/ivcurve-nodes.svg"><img alt="Node graph for IV curve" src="_images/ivcurve-nodes.svg" style="width: 30%;" /></a>
 <figcaption>
 <p><span class="caption-text">Node graph for IV curve</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
 </figcaption>
@@ -694,13 +692,22 @@ When the first status message arrives, this method is fired and remaining initia
 The widget is enabled finally at Line 105.
 This method is called only once because the signal is disconnect at Line 79.</p>
 </section>
-<section id="overlay">
-<h2>overlay<a class="headerlink" href="#overlay" title="Link to this heading">#</a></h2>
-<p>TODO: explain overlay case <code class="docutils literal notranslate"><span class="pre">conf_overlay.toml</span></code>, <code class="docutils literal notranslate"><span class="pre">overlay.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">ivcurve_overlay.py</span></code>.</p>
-</section>
+<section id="modified-configurations">
+<h2>Modified configurations<a class="headerlink" href="#modified-configurations" title="Link to this heading">#</a></h2>
 <section id="threading">
-<h2>threading<a class="headerlink" href="#threading" title="Link to this heading">#</a></h2>
-<p>TODO: explain threading case <code class="docutils literal notranslate"><span class="pre">conf_thread.toml</span></code> and <code class="docutils literal notranslate"><span class="pre">conf_thread_partial.toml</span></code>.</p>
+<h3>Threading<a class="headerlink" href="#threading" title="Link to this heading">#</a></h3>
+<p>There are additional configuration files <code class="docutils literal notranslate"><span class="pre">conf_thread.toml</span></code> and <code class="docutils literal notranslate"><span class="pre">conf_thread_partial.toml</span></code> in the example directory, which are examples of threaded nodes.
+The threaded nodes can be used to reduce overhead of TCP communication.
+See <a class="reference internal" href="conf.html#conf-threading"><span class="std std-ref">Threading</span></a> section in the configuration file document for details.</p>
+</section>
+<section id="overlay">
+<h3>Overlay<a class="headerlink" href="#overlay" title="Link to this heading">#</a></h3>
+<p>If you need to reduce overhead of TCP communication between measurement node (IVCurve) and the InstrumentServer, <a class="reference internal" href="inst/InstrumentOverlay.html#mahos.inst.overlay.overlay.InstrumentOverlay" title="mahos.inst.overlay.overlay.InstrumentOverlay"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentOverlay</span></code></a> would also help.
+The IVCurve node was sending the commands to <code class="docutils literal notranslate"><span class="pre">source</span></code> and <code class="docutils literal notranslate"><span class="pre">meter</span></code> for each data points in a voltage sweep.
+By using the overlay, the sweep operation can be executed at InstrumentServer side.
+The modified example using overlay is defined in <code class="docutils literal notranslate"><span class="pre">conf_overlay.toml</span></code>,
+and the classes are implemented in <code class="docutils literal notranslate"><span class="pre">overlay.py</span></code> and <code class="docutils literal notranslate"><span class="pre">ivcurve_overlay.py</span></code>.
+You could grab the concept by observing the difference between this and default examples.</p>
 <p class="rubric">Footnotes</p>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="f1" role="doc-footnote">
@@ -708,6 +715,7 @@ This method is called only once because the signal is disconnect at Line 79.</p>
 <p>also calls <code class="docutils literal notranslate"><span class="pre">save_data()</span></code> etc. but omitted in this tutorial.</p>
 </aside>
 </aside>
+</section>
 </section>
 </section>
 
@@ -769,8 +777,11 @@ This method is called only once because the signal is disconnect at Line 79.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ivcurve-gui">ivcurve_gui</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overlay">overlay</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#threading">threading</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modified-configurations">Modified configurations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#threading">Threading</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#overlay">Overlay</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

@@ -35,7 +35,7 @@ Because there exists mostly one-way data flow on measurement automation,
 the layer structure is introduced; the nodes can be categorized into three layers.
 The inst layer is the lowest-lying layer (source of data flow), consisting of low-level drivers for the instruments.
 The meas layer is the middle layer providing the measurement logic.
-The gui layer is apparently the topmost layer for GUI frontends, which are optional but usually important for the users.
+The gui layer is the topmost layer for GUI frontends, which are optional but usually important for the users.
 
 For a more detailed description of the architecture, see :doc:`arch`.
 
@@ -71,7 +71,7 @@ Notable examples can be listed below.
 - It is straightforward to conduct an initial measurement using a GUI node,
   and then write an ad-hoc automation script to run many measurements with different parameters
   because the GUI node and the script are seen as equivalent clients from the measurement logic node.
-  The GUI will visualize the data even when the measurement is started by the script.
+  The GUI can visualize the data even when the measurement is started by the script.
 - We can inspect the instrument's status or perform ad-hoc operations on the instrument at run time
   without shutting down any nodes.
   This is because the operation requests from measurement logic nodes and ad-hoc ones are equivalent
