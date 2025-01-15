@@ -13,6 +13,7 @@ BasicMeasNode
 
 :class:`BasicMeasNode <mahos.meas.common_meas.BasicMeasNode>` can be utilized as a base class to implement basic measurment nodes.
 This class assumes :term:`state` of type :class:`BinaryState <mahos.msgs.common_msgs.BinaryState>` and :term:`status` of type :class:`BinaryStatus <mahos.msgs.common_msgs.BinaryStatus>`.
+It also provides additional data management features like fitting and data buffering.
 
 .. _meas-tweaker:
 
@@ -40,6 +41,8 @@ Its role is similar to :class:`Tweaker <mahos.meas.tweaker.Tweaker>`,
 but PosTweaker has dedicated interface and GUI for positioners.
 
 The PosTweaker can also listed in ``tweakers: list[str]`` in the configuration ``target`` of measurement nodes.
+
+See also :doc:`tutorial_manual_op` for an example with mock instrument.
 
 Recorder
 --------

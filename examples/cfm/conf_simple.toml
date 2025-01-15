@@ -199,6 +199,9 @@ class = "PODMR"
 # log_level = "DEBUG"
 rep_endpoint = "tcp://127.0.0.1:5780"
 pub_endpoint = "tcp://127.0.0.1:5781"
+[localhost.podmr.pulser]
+mw_modes = [2]
+iq_amplitude = 0.5
 [localhost.podmr.target]
 log = "localhost::log"
 [localhost.podmr.target.servers]

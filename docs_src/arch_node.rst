@@ -18,6 +18,7 @@ However, the transportation overhead can become an issue when one deals with ver
 such as high-resolution images produced at a high rate.
 In such a case, the overhead can be reduced significantly by running the relevant nodes as threads
 in a single process and using intra-process transportation.
+See :ref:`conf threading` for how to configure such transportation.
 
 ZeroMQ doesn't specify the data serialization format; it provides methods to send/receive byte arrays of arbitrary length.
 By default, we define the message types (classes) in the :ref:`mahos.msgs` package and serialize the instances

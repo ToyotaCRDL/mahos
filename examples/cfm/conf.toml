@@ -173,7 +173,7 @@ pub_endpoint = "tcp://127.0.0.1:5764"
 
 [localhost.server_spec.instrument.spectrometer]
 module = "spectrometer"
-class = "LightField"
+class = "Princeton_LightField"
 
 # Dedicated server: camera sometimes requires fast loop.
 [localhost.server_camera]
@@ -192,6 +192,34 @@ class = "ThorlabsCamera"
 dll_dir = "~/bin/thorlabs"
 frame_rate_control = false
 
+# Dedicated server: positioner is independent.
+[localhost.server_pos]
+module = "mahos.inst.server"
+class = "InstrumentServer"
+target = { log = "localhost::log" }
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5767"
+pub_endpoint = "tcp://127.0.0.1:5768"
+[localhost.server_pos.instrument.half_lambda]
+module = "positioner"
+class = "Thorlabs_CageRotator"
+[localhost.server_pos.instrument.x]
+module = "positioner"
+class = "Thorlabs_KCube_DCServo"
+[localhost.server_pos.instrument.x.conf]
+serial = "2xxxxxxx"
+# range = [0.0, 10.0]
+[localhost.server_pos.instrument.y]
+module = "positioner"
+class = "Thorlabs_KCube_DCServo"
+[localhost.server_pos.instrument.y.conf]
+serial = "2yyyyyyy"
+[localhost.server_pos.instrument.z]
+module = "positioner"
+class = "Thorlabs_KCube_DCServo"
+[localhost.server_pos.instrument.z.conf]
+serial = "2zzzzzzz"
+
 [localhost.confocal]
 module = "mahos.meas.confocal"
 class = "Confocal"
@@ -208,6 +236,7 @@ interval_sec = 0.01 # small enough value to get poll_timeout_ms-limited interval
 interval_sec = 0.2
 [localhost.confocal.target]
 log = "localhost::log"
+tweakers = ["localhost::pos_tweaker"]
 [localhost.confocal.target.servers]
 clock = "localhost::server"
 scanner = "localhost::server"
@@ -236,6 +265,7 @@ pub_endpoint = "tcp://127.0.0.1:5775"
 range_ns = 400
 [localhost.hbt.target]
 log = "localhost::log"
+tweakers = ["localhost::pos_tweaker"]
 [localhost.hbt.target.servers]
 tdc = "localhost::server_tdc"
 switch = "localhost::server"
@@ -247,6 +277,7 @@ rep_endpoint = "tcp://127.0.0.1:5776"
 pub_endpoint = "tcp://127.0.0.1:5777"
 [localhost.spectroscopy.target]
 log = "localhost::log"
+tweakers = ["localhost::pos_tweaker"]
 [localhost.spectroscopy.target.servers]
 spectrometer = "localhost::server_spec"
 switch = "localhost::server"
@@ -261,6 +292,7 @@ pd_clock = "/Dev1/PFI2"
 start_delay = 2.0
 [localhost.odmr.target]
 log = "localhost::log"
+tweakers = ["localhost::pos_tweaker"]
 [localhost.odmr.target.servers]
 switch = "localhost::server"
 sg = "localhost::server"
@@ -274,8 +306,12 @@ class = "PODMR"
 # log_level = "DEBUG"
 rep_endpoint = "tcp://127.0.0.1:5780"
 pub_endpoint = "tcp://127.0.0.1:5781"
+[localhost.podmr.pulser]
+mw_modes = [2]
+iq_amplitude = 0.5
 [localhost.podmr.target]
 log = "localhost::log"
+tweakers = ["localhost::pos_tweaker"]
 [localhost.podmr.target.servers]
 switch = "localhost::server"
 tdc = "localhost::server_tdc"
@@ -293,6 +329,20 @@ pub_endpoint = "tcp://127.0.0.1:5783"
 log = "localhost::log"
 [localhost.camera.target.servers]
 camera = "localhost::server_camera"
+
+[localhost.pos_tweaker]
+module = "mahos.meas.pos_tweaker"
+class = "PosTweaker"
+poll_timeout_ms = 100
+rep_endpoint = "tcp://127.0.0.1:5786"
+pub_endpoint = "tcp://127.0.0.1:5787"
+[localhost.pos_tweaker.target]
+log = "localhost::log"
+[localhost.pos_tweaker.target.servers]
+half_lambda = "localhost::server_pos"
+x = "localhost::server_pos"
+y = "localhost::server_pos"
+z = "localhost::server_pos"
 
 [localhost.manager]
 module = "mahos.meas.state_manager"
@@ -369,6 +419,14 @@ class = "CameraGUI"
 camera = "localhost::camera"
 gparams = "localhost::gparams"
 
+[localhost.pos_tweaker_gui]
+module = "mahos.gui.pos_tweaker"
+class = "PosTweakerGUI"
+[localhost.pos_tweaker_gui.target]
+pos_tweaker = "localhost::pos_tweaker"
+gparams = "localhost::gparams"
+fontsize = 26
+
 [localhost.pulse_monitor]
 module = "mahos.gui.pulse_monitor"
 class = "PulseMonitor"
@@ -382,5 +440,5 @@ work_dir = "~"
 [localhost.main_monitor.target]
 log = "localhost::log"
 gparams = "localhost::gparams"
-servers = ["localhost::server", "localhost::server_tdc", "localhost::server_spec", "localhost::server_camera"]
+servers = ["localhost::server", "localhost::server_tdc", "localhost::server_spec", "localhost::server_camera", "localhost::server_pos"]
 manager = "localhost::manager"
