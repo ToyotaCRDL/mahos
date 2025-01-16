@@ -1,0 +1,271 @@
+[global]
+req_timeout_ms = 60000
+poll_timeout_ms = 100
+
+[localhost.log]
+module = "mahos.node.log_broker"
+class = "LogBroker"
+target = { log = "localhost::log" }
+xpub_endpoint = "tcp://127.0.0.1:5555"
+xsub_endpoint = "tcp://127.0.0.1:5556"
+file = false
+
+[localhost.gparams]
+module = "mahos.node.global_params"
+class = "GlobalParams"
+target = { log = "localhost::log" }
+rep_endpoint = "tcp://127.0.0.1:5557"
+pub_endpoint = "tcp://127.0.0.1:5558"
+
+[localhost.server]
+module = "mahos.inst.server"
+class = "InstrumentServer"
+target = { log = "localhost::log" }
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5559"
+pub_endpoint = "tcp://127.0.0.1:5560"
+
+[localhost.server.instrument.switch]
+module = "mock"
+class = "DigitalOut_mock"
+[localhost.server.instrument.switch.conf]
+lines = ["/Dev1/port0/line0", "/Dev1/port0/line1"]
+[localhost.server.instrument.switch.conf.command]
+confocal = [0, 1]
+hbt = [0, 0]
+odmr = [1, 1]
+podmr = [1, 0]
+qdyne = [1, 0]
+
+[localhost.server.instrument.sg]
+module = "mock"
+class = "SG_mock"
+[localhost.server.instrument.sg.conf]
+resource = "VISA::SG"
+power_bounds = [0.0, 47.0]
+freq_bounds = [9E3, 6E9]
+
+[localhost.server.instrument.sg1]
+module = "mock"
+class = "SG_mock"
+[localhost.server.instrument.sg1.conf]
+resource = "VISA::SG1"
+power_bounds = [1.0, 10.0]
+freq_bounds = [1E6, 6E9]
+
+[localhost.server.instrument.fg]
+module = "mock"
+class = "FG_mock"
+[localhost.server.instrument.fg.conf]
+resource = "VISA::FG"
+
+[localhost.server.instrument.pg]
+module = "mock"
+class = "PulseStreamer_mock"
+[localhost.server.instrument.pg.conf]
+resource = "dummy.ip.addr"
+[localhost.server.instrument.pg.conf.channels]
+mw1 = 9    # note that ch9 is out of range for 8ch-PG
+mw1_i = 8  # note that ch8 is out of range for 8ch-PG
+mw1_q = 7
+laser = 6
+sync = 5
+gate = 4
+trigger = 3
+mw = 2
+mw_i = 1
+mw_q = 0
+
+[localhost.server.instrument.piezo]
+module = "mock"
+class = "Piezo_mock"
+
+[localhost.server.instrument.tdc]
+module = "mock"
+class = "MCS_mock"
+
+[localhost.server.instrument.clock]
+module = "mock"
+class = "Clock_mock"
+conf = { line = "/DummyDev1/Ctr0" }
+
+[localhost.server.instrument.pd0]
+module = "mock"
+class = "Counter_mock"
+conf = { source = "/DummyDev1/Ctr1" }
+
+[localhost.server.instrument.pd1]
+module = "mock"
+class = "Counter_mock"
+conf = { source = "/DummyDev1/Ctr2" }
+
+[localhost.server.instrument_overlay.scanner]
+module = "confocal_scanner_mock"
+class = "ConfocalScanner_mock"
+[localhost.server.instrument_overlay.scanner.conf]
+piezo = "$piezo"
+pd0 = "$pd0"
+pd1 = "$pd1"
+
+[localhost.confocal]
+module = "mahos.meas.confocal"
+class = "Confocal"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5570"
+pub_endpoint = "tcp://127.0.0.1:5571"
+poll_timeout_ms = 80
+[localhost.confocal.tracer]
+size = 1000
+samples = 5
+time_window_sec = 0.01
+interval_sec = 0.01
+[localhost.confocal.piezo]
+interval_sec = 0.2
+[localhost.confocal.target]
+log = "localhost::log"
+[localhost.confocal.target.servers]
+clock = "localhost::server"
+scanner = "localhost::server"
+piezo = "localhost::server"
+pd0 = "localhost::server"
+pd1 = "localhost::server"
+switch = "localhost::server"
+
+[localhost.tracker]
+module = "mahos.meas.confocal_tracker"
+class = "ConfocalTracker"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5572"
+pub_endpoint = "tcp://127.0.0.1:5573"
+[localhost.tracker.target]
+log = "localhost::log"
+confocal = "localhost::confocal"
+manager = "localhost::manager"
+
+[localhost.odmr]
+module = "mahos.meas.odmr"
+class = "ODMR"
+rep_endpoint = "tcp://127.0.0.1:5574"
+pub_endpoint = "tcp://127.0.0.1:5575"
+[localhost.odmr.sweeper]
+pd_clock = "/DummyDev1/PFI2"
+[localhost.odmr.target]
+log = "localhost::log"
+[localhost.odmr.target.servers]
+sg = "localhost::server"
+pg = "localhost::server"
+pd0 = "localhost::server"
+pd1 = "localhost::server"
+switch = "localhost::server"
+
+[localhost.hbt]
+module = "mahos.meas.hbt"
+class = "HBT"
+rep_endpoint = "tcp://127.0.0.1:5576"
+pub_endpoint = "tcp://127.0.0.1:5577"
+[localhost.hbt.target]
+log = "localhost::log"
+[localhost.hbt.target.servers]
+tdc = "localhost::server"
+switch = "localhost::server"
+
+[localhost.podmr]
+module = "mahos.meas.podmr"
+class = "PODMR"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5578"
+pub_endpoint = "tcp://127.0.0.1:5579"
+[localhost.podmr.target]
+log = "localhost::log"
+[localhost.podmr.pulser]
+mw_modes = [0, 0]
+[localhost.podmr.target.servers]
+tdc = "localhost::server"
+sg = "localhost::server"
+sg1 = "localhost::server"
+pg = "localhost::server"
+fg = "localhost::server"
+switch = "localhost::server"
+
+[localhost.qdyne]
+module = "mahos.meas.qdyne"
+class = "Qdyne"
+log_level = "DEBUG"
+rep_endpoint = "tcp://127.0.0.1:5588"
+pub_endpoint = "tcp://127.0.0.1:5589"
+[localhost.qdyne.target]
+log = "localhost::log"
+[localhost.qdyne.target.servers]
+tdc = "localhost::server"
+sg = "localhost::server"
+pg = "localhost::server"
+fg = "localhost::server"
+switch = "localhost::server"
+
+[localhost.manager]
+module = "mahos.meas.state_manager"
+class = "StateManager"
+target = { log = "localhost::log" }
+rep_endpoint = "tcp://127.0.0.1:5590"
+pub_endpoint = "tcp://127.0.0.1:5591"
+
+[localhost.manager.node]
+"localhost::hbt" = ["mahos.msgs.common_msgs", "BinaryState"]
+"localhost::odmr" = ["mahos.msgs.common_msgs", "BinaryState"]
+"localhost::podmr" = ["mahos.msgs.common_msgs", "BinaryState"]
+"localhost::qdyne" = ["mahos.msgs.common_msgs", "BinaryState"]
+"localhost::confocal" = ["mahos.msgs.confocal_msgs", "ConfocalState"]
+"localhost::tracker" = ["mahos.msgs.common_msgs", "BinaryState"]
+
+[localhost.manager.command.prepare_scan]
+"localhost::hbt" = "IDLE"
+"localhost::odmr" = "IDLE"
+"localhost::podmr" = "IDLE"
+"localhost::qdyne" = "IDLE"
+
+[localhost.confocal_gui]
+module = "mahos.gui.confocal"
+class = "ConfocalGUI"
+move_interval_ms = 10
+[localhost.confocal_gui.target]
+confocal = "localhost::confocal"
+tracker = "localhost::tracker"
+gparams = "localhost::gparams"
+
+[localhost.odmr_gui]
+module = "mahos.gui.odmr"
+class = "ODMRGUI"
+[localhost.odmr_gui.target]
+odmr = "localhost::odmr"
+gparams = "localhost::gparams"
+confocal = "localhost::confocal"
+
+[localhost.hbt_gui]
+module = "mahos.gui.hbt"
+class = "HBTGUI"
+[localhost.hbt_gui.target]
+hbt = "localhost::hbt"
+gparams = "localhost::gparams"
+
+[localhost.podmr_gui]
+module = "mahos.gui.podmr"
+class = "PODMRGUI"
+[localhost.podmr_gui.target]
+podmr = "localhost::podmr"
+gparams = "localhost::gparams"
+
+[localhost.pulse_monitor]
+module = "mahos.gui.pulse_monitor"
+class = "PulseMonitor"
+[localhost.pulse_monitor.target]
+pulse = "localhost::podmr"
+
+[localhost.main_monitor]
+module = "mahos.gui.main_monitor"
+class = "MainMonitor"
+work_dir = "~"
+[localhost.main_monitor.target]
+log = "localhost::log"
+gparams = "localhost::gparams"
+servers = ["localhost::server"]
+manager = "localhost::manager"
