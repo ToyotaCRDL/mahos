@@ -93,8 +93,8 @@ class ODMRSweeperCommandBase(InstrumentOverlay):
             return self.get_pd_param_dict()
 
     def configure(self, params: dict, label: str = "") -> bool:
-        if label != "cw":
-            return self.fail_with("Only supports label='cw'.")
+        if label == "pulse":
+            return self.fail_with("label='pulse' is not supported.")
         if not self.check_required_params(params, ("start", "stop", "num", "power", "delay")):
             return False
 
@@ -105,14 +105,20 @@ class ODMRSweeperCommandBase(InstrumentOverlay):
         if not self.configure_pd():
             return self.fail_with("failed to configure PD.")
 
+        mod = params.get("modulation", {})
         success = self.sg.configure_cw(self.start_f, self.power)
-        mod = params.get("sg_modulation", "no")
-        if mod == "iq":
+        if label == "iq_ext":
             success &= self.sg.configure_iq_ext()
-        elif mod == "fm":
-            success &= self.sg.configure_fm_ext(params["fm_deviation"])
-        elif mod == "am":
-            success &= self.sg.configure_am_ext(params["am_depth"], params["am_log"])
+        elif label == "iq_int":
+            success &= self.sg.configure_iq_int()
+        elif label == "fm_ext":
+            success &= self.sg.configure_fm_ext(mod["fm_deviation"])
+        elif label == "fm_int":
+            success &= self.sg.configure_fm_int(mod["fm_deviation"], mod["fm_rate"])
+        elif label == "am_ext":
+            success &= self.sg.configure_am_ext(mod["am_depth"], mod["am_log"])
+        elif label == "am_int":
+            success &= self.sg.configure_am_int(mod["am_depth"], mod["am_log"], mod["am_rate"])
         if not success:
             return self.fail_with("failed to configure SG.")
 

@@ -88,6 +88,13 @@ class SGInterface(InstrumentInterface):
 
         return self.configure_cw(freq, power, ch=ch, reset=reset) and self.configure_iq_ext(ch)
 
+    def configure_iq_int(self, ch: int = 1) -> bool:
+        """Configure internal IQ modulation."""
+
+        l = "iq_int" if ch == 1 else f"iq_int{ch}"
+        # TODO: add more params
+        return self.configure({}, label=l)
+
     def configure_fm_ext(self, deviation: float, ch: int = 1) -> bool:
         """Configure external FM mode.
 
@@ -97,6 +104,17 @@ class SGInterface(InstrumentInterface):
 
         l = "fm_ext" if ch == 1 else f"fm_ext{ch}"
         return self.configure({"deviation": deviation}, label=l)
+
+    def configure_fm_int(self, deviation: float, rate: float, ch: int = 1) -> bool:
+        """Configure internal FM mode.
+
+        :param deviation: (Hz) FM deviation.
+        :param rate: (Hz) FM rate (baseband frequnency).
+
+        """
+
+        l = "fm_int" if ch == 1 else f"fm_int{ch}"
+        return self.configure({"deviation": deviation, "rate": rate}, label=l)
 
     def configure_am_ext(self, depth: float, log: bool, ch: int = 1) -> bool:
         """Configure external AM mode.
@@ -108,6 +126,18 @@ class SGInterface(InstrumentInterface):
 
         l = "am_ext" if ch == 1 else f"am_ext{ch}"
         return self.configure({"depth": depth, "log": log}, label=l)
+
+    def configure_am_int(self, depth: float, log: bool, rate: float, ch: int = 1) -> bool:
+        """Configure internal AM mode.
+
+        :param depth: (dB | %) AM depth. If log is True (False), unit is dB (%).
+        :param log: Set True (False) to set AM depth mode to log (linear) scale.
+        :param rate: (Hz) AM rate (baseband frequnency).
+
+        """
+
+        l = "am_int" if ch == 1 else f"am_int{ch}"
+        return self.configure({"depth": depth, "log": log, "rate": rate}, label=l)
 
     def configure_point_trig_freq_sweep(
         self, start: float, stop: float, num: int, power: float, params: dict | None = None

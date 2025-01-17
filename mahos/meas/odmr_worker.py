@@ -25,6 +25,9 @@ from ..util.conf import PresetLoader
 from .common_worker import Worker
 
 
+_MOD_LABELS = ["iq_ext", "am_ext", "fm_ext", "iq_int", "am_int", "fm_int"]
+
+
 class SweeperBase(Worker):
     def data_msg(self) -> ODMRData:
         return self.data
@@ -46,10 +49,10 @@ class SweeperBase(Worker):
         return True
 
     def get_param_dict_labels(self) -> list:
-        return ["cw", "pulse"]
+        return ["cw", "pulse"] + _MOD_LABELS
 
     def _make_param_dict(self, label, bounds) -> P.ParamDict[str, P.PDValue] | None:
-        if label == "cw":
+        if label in ["cw"] + _MOD_LABELS:
             timing = P.ParamDict(
                 time_window=P.FloatParam(
                     self.conf.get("time_window", 10e-3), 0.1e-3, 1.0, unit="s", SI_prefix=True
@@ -122,22 +125,35 @@ class SweeperBase(Worker):
                 SI_prefix=True,
                 doc="delay between normal and background (reference) measurements",
             ),
-            sg_modulation=P.StrChoiceParam(
-                self.conf.get("sg_modulation", "no"),
-                ["no", "iq", "am", "fm"],
-                doc="external modulation of SG",
-            ),
-            am_depth=P.FloatParam(self.conf.get("am_depth", 0.1), doc="depth of AM for SG"),
-            am_log=P.BoolParam(
-                self.conf.get("am_log", False), doc="True indicates log scale AM depth for SG"
-            ),
-            fm_deviation=P.FloatParam(
-                self.conf.get("fm_deviation", 1e3), unit="Hz", doc="deviation of FM for SG"
-            ),
             resume=P.BoolParam(False),
             continue_mw=P.BoolParam(False),
             ident=P.UUIDParam(optional=True, enable=False),
         )
+
+        mod = P.ParamDict()
+        if label in ("am_ext", "am_int"):
+            mod["am_depth"] = P.FloatParam(self.conf.get("am_depth", 0.1), doc="depth of AM")
+            mod["am_log"] = P.BoolParam(
+                self.conf.get("am_log", False), doc="True indicates log scale AM depth"
+            )
+            if label == "am_int":
+                mod["am_rate"] = P.FloatParam(
+                    self.conf.get("am_rate", 400.0),
+                    unit="Hz",
+                    doc="rate (baseband frequency) of AM",
+                )
+        elif label in ("fm_ext", "fm_int"):
+            mod["fm_deviation"] = P.FloatParam(
+                self.conf.get("fm_deviation", 1e3), unit="Hz", doc="deviation of FM"
+            )
+            if label == "fm_int":
+                mod["fm_rate"] = P.FloatParam(
+                    self.conf.get("fm_rate", 400.0),
+                    unit="Hz",
+                    doc="rate (baseband frequency) of FM",
+                )
+        # TODO: more additional params for iq_int, am_int, and fm_int?
+        d["modulation"] = mod
 
         return d
 
@@ -156,9 +172,9 @@ class SweeperOverlay(SweeperBase):
 
     def get_param_dict_labels(self) -> list[str]:
         if self._class_name.startswith("ODMRSweeperCommand"):
-            return ["cw"]
+            return ["cw"] + _MOD_LABELS
         else:
-            return ["cw", "pulse"]
+            return ["cw", "pulse"] + _MOD_LABELS
 
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         if self._class_name.startswith("ODMRSweeperCommand") and label != "cw":
@@ -172,13 +188,13 @@ class SweeperOverlay(SweeperBase):
         d = self._make_param_dict(label, bounds)
         d["pd"] = self.sweeper.get_param_dict("pd")
 
-        if label == "cw" and self._class_name.endswith("AnalogPD"):
+        if label != "pulse" and self._class_name.endswith("AnalogPD"):
             d["timing"] = P.ParamDict(
                 time_window=P.FloatParam(
                     self.conf.get("time_window", 10e-3), 0.1e-3, 1.0, unit="s", SI_prefix=True
                 ),
             )
-        elif label == "cw" and self._class_name.endswith("AnalogPDMM"):
+        elif label != "pulse" and self._class_name.endswith("AnalogPDMM"):
             d["timing"] = P.ParamDict()
 
         return d
@@ -347,18 +363,24 @@ class Sweeper(SweeperBase):
             ]
         return d
 
-    def configure_sg(self, params: dict) -> bool:
+    def configure_sg(self, params: dict, label: str) -> bool:
         p = params
         success = self.sg.configure_point_trig_freq_sweep(
             p["start"], p["stop"], p["num"], p["power"]
         )
-        mod = params.get("sg_modulation", "no")
-        if mod == "iq":
+        mod = params.get("modulation", {})
+        if label == "iq_ext":
             success &= self.sg.configure_iq_ext()
-        elif mod == "fm":
-            success &= self.sg.configure_fm_ext(params["fm_deviation"])
-        elif mod == "am":
-            success &= self.sg.configure_am_ext(params["am_depth"], params["am_log"])
+        elif label == "iq_int":
+            success &= self.sg.configure_iq_int()
+        elif label == "fm_ext":
+            success &= self.sg.configure_fm_ext(mod["fm_deviation"])
+        elif label == "fm_int":
+            success &= self.sg.configure_fm_int(mod["fm_deviation"], mod["fm_rate"])
+        elif label == "am_ext":
+            success &= self.sg.configure_am_ext(mod["am_depth"], mod["am_log"])
+        elif label == "am_int":
+            success &= self.sg.configure_am_int(mod["am_depth"], mod["am_log"], mod["am_rate"])
         success &= self.sg.get_opc()
         return success
 
@@ -683,19 +705,19 @@ class Sweeper(SweeperBase):
         if not (self.pg.stop() and self.pg.clear()):
             return False
         if self._pd_analog:
-            if label == "cw":
+            if label != "pulse":
                 return self.configure_pg_CW_analog(params)
             else:
                 self.logger.error("Pulse for Analog PD is not implemented yet.")
                 return False
         else:
-            if label == "cw":
+            if label != "pulse":
                 return self.configure_pg_CW_apd(params)
             else:
                 return self.configure_pg_pulse_apd(params)
 
     def start_apd(self, params: dict, label: str) -> bool:
-        if label == "cw":
+        if label != "pulse":
             time_window = params["timing"]["time_window"]
         else:
             # time_window is used to compute APD's count rate.
@@ -734,7 +756,7 @@ class Sweeper(SweeperBase):
 
     def start_analog_pd(self, params: dict, label: str) -> bool:
         rate = params["pd"]["rate"]
-        if label == "cw":
+        if label != "pulse":
             oversamp = round(params["timing"]["time_window"] * rate)
         else:
             # t = params["timing"]
@@ -805,7 +827,7 @@ class Sweeper(SweeperBase):
             self.data.update_params(params)
         self.data.yunit = self.pds[0].get_unit()
 
-        if not self.configure_sg(self.data.params):
+        if not self.configure_sg(self.data.params, self.data.label):
             return self.fail_with_release("Failed to configure SG.")
         if not self.configure_pg(self.data.params, self.data.label):
             return self.fail_with_release("Failed to configure PG.")
