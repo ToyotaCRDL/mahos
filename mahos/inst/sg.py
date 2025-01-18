@@ -15,7 +15,7 @@ from .visa_instrument import VisaInstrument
 
 
 class Mode(enum.Enum):
-    """This is for baseband frequency mode (CW or sweep) and won't indicate modulation."""
+    """This is for carrier frequency mode (CW or sweep) and won't indicate modulation."""
 
     UNCONFIGURED = 0
     CW = 1
