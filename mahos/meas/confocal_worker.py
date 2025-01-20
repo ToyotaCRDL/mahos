@@ -32,6 +32,7 @@ class Piezo(Worker):
         self.add_instruments(self.piezo)
 
         self.interval_sec = conf.get("interval_sec", 0.5)
+        self._range_trials = conf.get("range_trials", 5)
 
         self.pos = PiezoPos()
 
@@ -48,7 +49,9 @@ class Piezo(Worker):
             self.pos.x_range, self.pos.y_range, self.pos.z_range = ret
             return True
         else:
-            self.logger.error("Couldn't get piezo range")
+            if self._range_trials >= 0:
+                self._range_trials -= 1
+                self.logger.error("Couldn't get piezo range")
             return False
 
     def get_pos(self) -> PiezoPos:
