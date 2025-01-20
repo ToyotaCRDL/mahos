@@ -422,7 +422,7 @@ class N5182B(VisaInstrument):
         """Set AM depth."""
 
         if log:
-            self.inst.write("AM:TYPE LOG")
+            self.inst.write("AM:TYPE EXP")
             self.inst.write(f"AM:EXP {depth:.8f}")
         else:
             self.inst.write("AM:TYPE LIN")
@@ -1024,11 +1024,24 @@ class MG3710E(VisaInstrument):
         """Set AM depth."""
 
         if log:
-            self.inst.write(f"SOUR{ch}:AM:TYPE LOG")
+            self.inst.write(f"SOUR{ch}:AM:TYPE EXP")
             self.inst.write(f"SOUR{ch}:AM:EXP {depth:.8f}")
         else:
             self.inst.write(f"SOUR{ch}:AM:TYPE LIN")
             self.inst.write(f"SOUR{ch}:AM {depth:.8f}")
+        return True
+
+    def set_am_depth_ext(self, depth: float, log: bool, ch: int = 1) -> bool:
+        """Set AM depth for external AM mode.
+
+        This function is defined to avoid setting conflict error
+        when commanding AM:TYPE.
+
+        """
+
+        if log:
+            return self.fail_with("Cannot use log scale for external AM.")
+        self.inst.write(f"SOUR{ch}:AM {depth:.8f}")
         return True
 
     def set_am(self, on: bool, ch: int = 1) -> bool:
@@ -1134,7 +1147,7 @@ class MG3710E(VisaInstrument):
             and self.set_ext_mod_opts(
                 self.am_ext_conf["DC_coupling"], self.am_ext_conf["impedance"], ch=ch
             )
-            and self.set_am_depth(depth, log, ch=ch)
+            and self.set_am_depth_ext(depth, log, ch=ch)
             and self.set_am(True, ch=ch)
             and self.check_error()
         )

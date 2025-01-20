@@ -182,7 +182,7 @@ class SweeperOverlay(SweeperBase):
             return ["cw", "pulse"] + _MOD_LABELS
 
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
-        if self._class_name.startswith("ODMRSweeperCommand") and label != "cw":
+        if self._class_name.startswith("ODMRSweeperCommand") and label == "pulse":
             return None
 
         bounds = self.sweeper.get_bounds()
