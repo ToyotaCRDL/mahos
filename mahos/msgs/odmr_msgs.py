@@ -254,9 +254,9 @@ def update_data(data: ODMRData):
 
     if data.version() <= 3:
         # version 3 to 4
-        if data.params.get("sg_modulation", False):
-            # moved from bool param to label
-            data.label = "iq_ext"
+        if "sg_modulation" in data.params:
+            # moved from param to label (manually fixed all relevant data).
+            del data.params["sg_modulation"]
         if "pd_rate" in data.params:
             data.params["pd"] = {
                 "rate": data.params["pd_rate"],

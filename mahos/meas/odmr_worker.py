@@ -140,20 +140,25 @@ class SweeperBase(Worker):
                 mod["am_rate"] = P.FloatParam(
                     self.conf.get("am_rate", 400.0),
                     unit="Hz",
+                    SI_prefix=True,
                     doc="rate (baseband frequency) of AM",
                 )
         elif label in ("fm_ext", "fm_int"):
             mod["fm_deviation"] = P.FloatParam(
-                self.conf.get("fm_deviation", 1e3), unit="Hz", doc="deviation of FM"
+                self.conf.get("fm_deviation", 1e3),
+                unit="Hz",
+                SI_prefix=True,
+                doc="deviation of FM",
             )
             if label == "fm_int":
                 mod["fm_rate"] = P.FloatParam(
                     self.conf.get("fm_rate", 400.0),
                     unit="Hz",
+                    SI_prefix=True,
                     doc="rate (baseband frequency) of FM",
                 )
         # TODO: more additional params for iq_int, am_int, and fm_int?
-        d["modulation"] = mod
+        d["mod"] = mod
 
         return d
 
@@ -368,7 +373,7 @@ class Sweeper(SweeperBase):
         success = self.sg.configure_point_trig_freq_sweep(
             p["start"], p["stop"], p["num"], p["power"]
         )
-        mod = params.get("modulation", {})
+        mod = params.get("mod", {})
         if label == "iq_ext":
             success &= self.sg.configure_iq_ext()
         elif label == "iq_int":

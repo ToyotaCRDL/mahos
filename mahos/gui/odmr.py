@@ -650,8 +650,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         ps = P.ParamDict()
         if params.get("pd"):
             ps["pd"] = params["pd"]
-        if params.get("modulation"):
-            ps["modulation"] = params["modulation"]
+        if params.get("mod"):
+            ps["mod"] = params["mod"]
         self.paramTable.update_contents(ps)
 
     def update_step_label(self):
@@ -696,8 +696,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         ps = {}
         if data.params.get("pd"):
             ps["pd"] = data.params["pd"]
-        if data.params.get("modulation"):
-            ps["modulation"] = data.params["modulation"]
+        if data.params.get("mod"):
+            ps["mod"] = data.params["mod"]
         for k, v in P.flatten(ps).items():
             self.paramTable.apply_value(k, v)
 

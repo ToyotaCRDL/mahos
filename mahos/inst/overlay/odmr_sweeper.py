@@ -105,7 +105,7 @@ class ODMRSweeperCommandBase(InstrumentOverlay):
         if not self.configure_pd():
             return self.fail_with("failed to configure PD.")
 
-        mod = params.get("modulation", {})
+        mod = params.get("mod", {})
         success = self.sg.configure_cw(self.start_f, self.power)
         if label == "iq_ext":
             success &= self.sg.configure_iq_ext()
