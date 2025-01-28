@@ -14,6 +14,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from ..util.comp import dict_isclose
+from ..util.conv import real_fft
 from .common_msgs import Request
 from .common_meas_msgs import BasicMeasData
 from .podmr_msgs import TDCStatus
@@ -160,6 +161,22 @@ class QdyneData(BasicMeasData):
         except (KeyError, TypeError):
             return None
 
+    def remove_fft_data(self):
+        self.fft_xdata = self.fft_data = None
+
+    def fft(self) -> bool:
+        if not self.has_data():
+            return False
+        x = self.get_xdata() * self.get_bin()
+        y = self.get_ydata()
+        self.fft_xdata, self.fft_data = real_fft(x, y)
+        return True
+
+    def get_fft_xdata(self):
+        if self.fft_xdata is None:
+            self.fft()
+        return self.fft_xdata
+
     def get_xdata(self, fft: bool = False) -> NDArray | None:
         """get analyzed xdata.
 
@@ -170,7 +187,12 @@ class QdyneData(BasicMeasData):
 
         """
 
-        return self.fft_xdata if fft else self.xdata
+        return self.get_fft_xdata() if fft else self.xdata
+
+    def get_fft_ydata(self):
+        if self.fft_data is None:
+            self.fft()
+        return self.fft_data
 
     def get_ydata(self, fft: bool = False) -> NDArray | None:
         """get analyzed ydata.
@@ -182,7 +204,7 @@ class QdyneData(BasicMeasData):
 
         """
 
-        return self.fft_data if fft else self.data
+        return self.get_fft_ydata() if fft else self.data
 
     def get_params(self) -> dict:
         if not self.has_params():

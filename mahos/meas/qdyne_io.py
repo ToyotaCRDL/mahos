@@ -33,6 +33,8 @@ class QdyneIO(object):
         if params is None:
             params = {}
 
+        if params.get("remove_fft_data", True):
+            data.remove_fft_data()
         data.set_saved()
 
         return save_pickle_or_h5(

@@ -17,7 +17,6 @@ import numpy as np
 
 from ..util.timer import IntervalTimer, StopWatch
 from ..util.io import load_h5
-from ..util.conv import real_fft
 from ..msgs import param_msgs as P
 from ..msgs.pulse_msgs import PulsePattern
 from ..msgs.inst.pg_msgs import Block, Blocks
@@ -192,14 +191,6 @@ class QdyneAnalyzer(object):
         data.xdata = np.arange(0, N * T, T, dtype=np.uint64)
         data.data = np.zeros(N, dtype=np.uint64)
         C.analyze(data.raw_data, data.xdata, data.data, signal_head, signal_tail)
-        return True
-
-    def fft(self, data: QdyneData) -> bool:
-        if not data.has_data():
-            return False
-        x = data.get_xdata() * data.get_bin()
-        y = data.get_ydata()
-        data.fft_xdata, data.fft_data = real_fft(x, y)
         return True
 
 
@@ -424,7 +415,6 @@ class Pulser(Worker):
 
         self.logger.info("Analyzing fetched raw data.")
         self.analyzer.analyze(self.data)
-        self.analyzer.fft(self.data)
         self.logger.info("Finished analyzing raw data.")
 
         if self.data.params.get("remove_raw_data", True):
