@@ -48,58 +48,68 @@ class SPODMRClient(BasicMeasClient):
 
 
 class SPODMR(BasicMeasNode):
+    """Pulse ODMR measurement with Slow detectors.
+
+    Default Worker (Pulser) implements Pulse ODMR using
+    a PG as timing source, and SGs as MW sources.
+
+    :param target.servers: The InstrumentServer targets (instrument name, server full name).
+        Targets 'sg', 'pg', and <pulser.pd_names> are required. 'fg' is optional.
+    :type target.servers: dict[str, str]
+    :param target.tweakers: The Tweaker targets (list of tweaker full name).
+    :type target.tweakers: list[str]
+    :param target.log: The LogBroker target (broker full name).
+    :type target.log: str
+
+    :param pulser.pd_names: (default: ["pd0"]) PD names in target.servers.
+    :type pulser.pd_names: list[str]
+    :param pulser.quick_resume: default value of quick_resume.
+        If True, it skips instrument configurations on resume.
+    :type pulser.quick_resume: bool
+    :param pulser.mw_modes: mw phase control modes for each channel.
+        0 is 4-phase control using IQ modulation at SG and a switch.
+        1 is 2-phase control using external 90-deg splitter and two switches.
+        2 is arbitral phase control using IQ modulation at SG
+        (Analog output (AWG) is required for PG).
+    :type pulser.mw_modes: tuple[int]
+    :param pulser.iq_amplitude: (only for mw_mode 2) amplitude of analog IQ signal in V.
+    :type pulser.iq_amplitude: float
+    :param pulser.pd_trigger: DAQ terminal name for PD trigger.
+    :type pulser.pd_trigger: str
+    :param pulser.trigger_width: (default: 1e-6) pulse width for PD trigger
+    :type pulser.trigger_width: float
+    :param pulser.split_fraction: (default: 4) fraction factor (F) to split the free period
+        for MW phase modulation. the period (T) is split into (T // F, T - T // F) and MW phase
+        is switched at T // F. Thus, larger F results in "quicker start" of the phase
+        modulation (depending on hardware, but its response may be a bit slow).
+    :type pulser.split_fraction: int
+    :param pulser.pg_freq: pulse generator frequency (has preset)
+    :type pulser.pg_freq: float
+    :param pulser.reduce_start_divisor: (has preset) the divisor on start of reducing frequency
+        reduce is done first by this value, and then repeated by 10.
+    :type pulser.reduce_start_divisor: int
+    :param pulser.minimum_block_length: (has preset) minimum block length in generated blocks
+    :type pulser.minimum_block_length: int
+    :param pulser.block_base: (has preset) block base granularity of pulse generator.
+    :type pulser.block_base: int
+    :param pulser.nest_blockseq: (has preset, default: False) allow nested BlockSeq.
+    :type pulser.nest_blockseq: bool
+    :param pulser.channel_remap: mapping to fix default channel names.
+    :type pulser.channel_remap: dict[str | int, str | int]
+
+    :param fitter.rabi.c: default value of param "c" (base line) in RabiFitter.
+        You can set the bounds using "c_min" and "c_max" too.
+    :type fitter.rabi.c: float
+    :param fitter.rabi.A: default value of param "A" (amplitude) in RabiFitter.
+        You can set the bounds using "A_min" and "A_max" too.
+    :type fitter.rabi.A: float
+
+    """
+
     CLIENT = SPODMRClient
     DATA = SPODMRData
 
     def __init__(self, gconf: dict, name, context=None):
-        """Pulse ODMR measurement with Slow detectors.
-
-        Default Worker (Pulser) implements Pulse ODMR using
-        a PG as timing source, and SGs as MW sources.
-
-        :param pulser.quick_resume: default value of quick_resume.
-            If True, it skips instrument configurations on resume.
-        :type pulser.quick_resume: bool
-        :param pulser.mw_modes: mw phase control modes for each channel.
-            0 is 4-phase control using IQ modulation at SG and a switch.
-            1 is 2-phase control using external 90-deg splitter and two switches.
-            2 is arbitral phase control using IQ modulation at SG
-            (Analog output (AWG) is required for PG).
-        :type pulser.mw_modes: tuple[int]
-        :param pulser.iq_amplitude: (only for mw_mode 2) amplitude of analog IQ signal in V.
-        :type pulser.iq_amplitude: float
-        :param pulser.pd_trigger: DAQ terminal name for PD trigger.
-        :type pulser.pd_trigger: str
-        :param pulser.trigger_width: (default: 1e-6) pulse width for PD trigger
-        :type pulser.trigger_width: float
-        :param pulser.split_fraction: (default: 4) fraction factor (F) to split the free period
-            for MW phase modulation. the period (T) is split into (T // F, T - T // F) and MW phase
-            is switched at T // F. Thus, larger F results in "quicker start" of the phase
-            modulation (depending on hardware, but its response may be a bit slow).
-        :type pulser.split_fraction: int
-        :param pulser.pg_freq: pulse generator frequency (has preset)
-        :type pulser.pg_freq: float
-        :param pulser.reduce_start_divisor: (has preset) the divisor on start of reducing frequency
-            reduce is done first by this value, and then repeated by 10.
-        :type pulser.reduce_start_divisor: int
-        :param pulser.minimum_block_length: (has preset) minimum block length in generated blocks
-        :type pulser.minimum_block_length: int
-        :param pulser.block_base: (has preset) block base granularity of pulse generator.
-        :type pulser.block_base: int
-        :param pulser.nest_blockseq: (has preset, default: False) allow nested BlockSeq.
-        :type pulser.nest_blockseq: bool
-        :param pulser.channel_remap: mapping to fix default channel names.
-        :type pulser.channel_remap: dict[str | int, str | int]
-
-        :param fitter.rabi.c: default value of param "c" (base line) in RabiFitter.
-            You can set the bounds using "c_min" and "c_max" too.
-        :type fitter.rabi.c: float
-        :param fitter.rabi.A: default value of param "A" (amplitude) in RabiFitter.
-            You can set the bounds using "A_min" and "A_max" too.
-        :type fitter.rabi.A: float
-
-        """
-
         BasicMeasNode.__init__(self, gconf, name, context=context)
 
         self.pulse_pub = self.add_pub(b"pulse")

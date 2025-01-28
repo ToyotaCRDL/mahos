@@ -35,58 +35,35 @@ class ODMRClient(BasicMeasClient):
 
 
 class ODMR(BasicMeasNode):
+    """ODMR (frequency sweep) measurement.
+
+    There are two options for the sweeper (measurement logic).
+    See below for docs of sweeper parameters.
+    - :class:`Sweeper <mahos.meas.odmr_worker.Sweeper>` : fast logic based on hardware triggering.
+    - :class:`SweeperOverlay <mahos.meas.odmr_worker.SweeperOverlay>` : interface to overlay.
+
+    :param target.servers: The InstrumentServer targets (instrument name, server full name).
+        If target 'sweeper' is given, use of SweeperOverlay is implied.
+        Otherwise (when Sweeper is used), targets 'sg', 'pg', and <sweeper.pd_names> are required.
+    :type target.servers: dict[str, str]
+    :param target.tweakers: The Tweaker targets (list of tweaker full name).
+    :type target.tweakers: list[str]
+    :param target.log: The LogBroker target (broker full name).
+    :type target.log: str
+
+    :param fitter.dip: (default: True) True if ODMR shape is dip instead of peak.
+    :type fitter.dip: bool
+    :param fitter.n_guess: (default: 20) Number of data points in peak center guess.
+    :type fitter.n_guess: int
+    :param fitter.n_guess_bg: (default: 40) Number of histogram bins in background guess.
+    :type fitter.n_guess_bg: int
+
+    """
+
     CLIENT = ODMRClient
     DATA = ODMRData
 
     def __init__(self, gconf: dict, name, context=None):
-        """ODMR Sweep measurement.
-
-        :param sweeper.pd_clock: DAQ terminal name for PD's clock (gate)
-        :type sweeper.pd_clock: str
-        :param sweeper.pd_names: (default: ["pd0", "pd1"]) PD names in target.servers.
-        :type sweeper.pd_names: list[str]
-        :param sweeper.pd_analog: (default: False) set True if PD is AnalogIn-based.
-        :type sweeper.pd_analog: bool
-        :param sweeper.channel_remap: mapping to fix default channel names.
-        :type sweeper.channel_remap: dict[str | int, str | int]
-
-        :param sweeper.start_delay: (default: 0.0) delay time (sec.) before starting SG/PG output.
-        :type sweeper.start_delay: float
-        :param sweeper.sg_first: (has preset) if True, turn on SG first and PG second.
-            This mode is for SGs which won't start the point sweep by software command.
-        :type sweeper.sg_first: bool
-
-        :param pulser.pg_freq_cw: (has preset) PG frequency for CW mode.
-        :type pulser.pg_freq_cw: float
-        :param pulser.pg_freq_pulse: (has preset) PG frequency for Pulse mode.
-        :type pulser.pg_freq_pulse: float
-        :param pulser.minimum_block_length: (has preset) minimum block length in generated blocks
-        :type pulser.minimum_block_length: int
-        :param sweeper.block_base: (has preset) block base granularity of pulse generator.
-        :type sweeper.block_base: int
-
-        :param sweeper.start: (default param) start frequency in Hz.
-        :type sweeper.start: float
-        :param sweeper.stop: (default param) stop frequency in Hz.
-        :type sweeper.stop: float
-        :param sweeper.num: (default param) number of frequency points.
-        :type sweeper.num: int
-        :param sweeper.power: (default param) SG output power in dBm.
-        :type sweeper.power: float
-        :param sweeper.time_window: (default param) time window for cw mode.
-        :type sweeper.time_window: float
-        :param sweeper.pd_rate: (default param) analog PD sampling rate.
-        :type sweeper.pd_rate: float
-
-        :param fitter.dip: (default: True) True if ODMR shape is dip instead of peak.
-        :type fitter.dip: bool
-        :param fitter.n_guess: (default: 20) Number of data points in peak center guess.
-        :type fitter.n_guess: int
-        :param fitter.n_guess_bg: (default: 40) Number of histogram bins in background guess.
-        :type fitter.n_guess_bg: int
-
-        """
-
         BasicMeasNode.__init__(self, gconf, name, context=context)
 
         _default_sw_names = ["switch"] if "switch" in self.conf["target"]["servers"] else []

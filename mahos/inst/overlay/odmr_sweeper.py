@@ -24,6 +24,11 @@ class ODMRSweeperCommandBase(InstrumentOverlay):
     This class performs the sweep by issuing SG / PD commands every step.
     Thus, sweep speed will not be very good.
 
+    :param sg: The reference to SG Instrument.
+    :param pd: The reference to PD Instrument.
+    :param queue_size: (default: 8) Size of queue of scanned line data.
+    :type queue_size: int
+
     """
 
     def __init__(self, name, conf, prefix=None):

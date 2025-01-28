@@ -164,7 +164,11 @@ class SweeperBase(Worker):
 
 
 class SweeperOverlay(SweeperBase):
-    """Sweeper using Overlay."""
+    """Sweeper using Overlay.
+
+    Refer to :mod:`mahos.inst.overlay.odmr_sweeper` for docs of target overlay.
+
+    """
 
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger, conf)
@@ -286,7 +290,46 @@ class SweeperOverlay(SweeperBase):
 
 
 class Sweeper(SweeperBase):
-    """Worker for fast ODMR sweep using mutual triggering between SG and PG."""
+    """Worker for fast ODMR sweep using mutual triggering between SG and PG.
+
+    :param sweeper.pd_clock: DAQ terminal name for PD's clock (gate)
+    :type sweeper.pd_clock: str
+    :param sweeper.pd_names: (default: ["pd0", "pd1"]) PD names in target.servers.
+    :type sweeper.pd_names: list[str]
+    :param sweeper.pd_analog: (default: False) set True if PD is AnalogIn-based.
+    :type sweeper.pd_analog: bool
+    :param sweeper.channel_remap: mapping to fix default channel names.
+    :type sweeper.channel_remap: dict[str | int, str | int]
+
+    :param sweeper.start_delay: (default: 0.0) delay time (sec.) before starting SG/PG output.
+    :type sweeper.start_delay: float
+    :param sweeper.sg_first: (has preset) if True, turn on SG first and PG second.
+        This mode is for SGs which won't start the point sweep by software command.
+    :type sweeper.sg_first: bool
+
+    :param sweeper.pg_freq_cw: (has preset) PG frequency for CW mode.
+    :type sweeper.pg_freq_cw: float
+    :param sweeper.pg_freq_pulse: (has preset) PG frequency for Pulse mode.
+    :type sweeper.pg_freq_pulse: float
+    :param sweeper.minimum_block_length: (has preset) minimum block length in generated blocks
+    :type sweeper.minimum_block_length: int
+    :param sweeper.block_base: (has preset) block base granularity of pulse generator.
+    :type sweeper.block_base: int
+
+    :param sweeper.start: (default param) start frequency in Hz.
+    :type sweeper.start: float
+    :param sweeper.stop: (default param) stop frequency in Hz.
+    :type sweeper.stop: float
+    :param sweeper.num: (default param) number of frequency points.
+    :type sweeper.num: int
+    :param sweeper.power: (default param) SG output power in dBm.
+    :type sweeper.power: float
+    :param sweeper.time_window: (default param) time window for cw mode.
+    :type sweeper.time_window: float
+    :param sweeper.pd_rate: (default param) analog PD sampling rate.
+    :type sweeper.pd_rate: float
+
+    """
 
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger, conf)

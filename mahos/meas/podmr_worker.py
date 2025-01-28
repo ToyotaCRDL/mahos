@@ -266,13 +266,13 @@ class Bounds(object):
 
 
 class Pulser(Worker):
+    """Worker for Pulse ODMR.
+
+    Function generator is an option (fg may be None).
+
+    """
+
     def __init__(self, cli, logger, conf: dict):
-        """Worker for Pulse ODMR.
-
-        Function generator is an option (fg may be None).
-
-        """
-
         Worker.__init__(self, cli, logger, conf)
         self.load_conf_preset(cli)
 
