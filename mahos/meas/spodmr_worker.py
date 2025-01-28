@@ -788,7 +788,7 @@ class Pulser(Worker):
         if not self.data.has_params():
             return False
         if self.op.update_plot_params(self.data, params):
-            self.data.clear_fit_data()
+            self.data.remove_fit_data()
         return True
 
     def start(

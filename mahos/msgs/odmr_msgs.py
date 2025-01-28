@@ -227,7 +227,7 @@ def update_data(data: ODMRData):
     if data.version() <= 0:
         # version 0 to 1
         ## add missing attributes
-        data.clear_fit_data()
+        data.remove_fit_data()
         data.init_axes()
         data._saved = True
         ## param change

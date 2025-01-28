@@ -278,7 +278,7 @@ class BasicMeasNode(Node):
         if not isinstance(data, self.DATA):
             return Reply(False, message="Data is invalid")
 
-        data.clear_fit_data()
+        data.remove_fit_data()
         return Reply(True)
 
     def _handle_req(self, msg: Request) -> Reply:

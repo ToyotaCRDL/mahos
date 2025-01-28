@@ -115,7 +115,7 @@ class HBT(BasicMeasNode):
         success = self.worker.update_plot_params(msg.params)
         for data in self.buffer.data_list():
             data.update_plot_params(msg.params)
-            data.clear_fit_data()
+            data.remove_fit_data()
         return Reply(success)
 
     def get_param_dict_labels(self, msg: GetParamDictLabelsReq) -> Reply:

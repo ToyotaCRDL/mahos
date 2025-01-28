@@ -522,7 +522,7 @@ class Pulser(Worker):
         if self.data.params is None:
             return False
         if self.op.update_plot_params(self.data, params):
-            self.data.clear_fit_data()
+            self.data.remove_fit_data()
         if not self.data.running:
             # when measument is running, re-analysis is done on next data update.
             # re-analyze here when measurement isn't running (viewing finished / loaded data).

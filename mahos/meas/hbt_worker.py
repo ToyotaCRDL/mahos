@@ -60,7 +60,7 @@ class Listener(Worker):
         if not self.data.has_params():
             return False
         self.data.update_plot_params(params)
-        self.data.clear_fit_data()
+        self.data.remove_fit_data()
         return True
 
     def get_param_dict(self) -> P.ParamDict[str, P.PDValue]:

@@ -162,7 +162,7 @@ def update_data(data: HBTData):
         x = data.data[:, 0]
         data.data = data.data[:, 1]
         ## add missing attributes
-        data.clear_fit_data()
+        data.remove_fit_data()
         data.init_axes()
         data.set_bin(x[1])
         data.update_plot_params(

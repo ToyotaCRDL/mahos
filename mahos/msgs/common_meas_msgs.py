@@ -41,7 +41,7 @@ class BasicMeasData(Data, FormatTimeMixin):
         self.paused_periods: np.ndarray | None = None
         self._saved: bool = False
 
-        self.clear_fit_data()
+        self.remove_fit_data()
         self.init_axes()
 
     def finalize(self) -> float:
@@ -118,7 +118,7 @@ class BasicMeasData(Data, FormatTimeMixin):
         self.fit_label = label
         self.fit_result = result
 
-    def clear_fit_data(self):
+    def remove_fit_data(self):
         self.fit_xdata = self.fit_data = self.fit_params = self.fit_label = self.fit_result = None
 
     def init_axes(self):

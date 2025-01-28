@@ -117,7 +117,7 @@ def update_data(data: SpectroscopyData):
     if data.version() == 0:
         # version 0 to 1
         ## add missing attributes
-        data.clear_fit_data()
+        data.remove_fit_data()
         data.init_axes()
         data._saved = True
         data.set_version(1)
