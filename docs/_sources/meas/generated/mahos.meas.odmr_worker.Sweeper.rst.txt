@@ -1,0 +1,39 @@
+﻿mahos.meas.odmr\_worker.Sweeper
+===============================
+
+.. autosummary class template to exclude inherited_members
+   The other parts are same as default.
+
+.. currentmodule:: mahos.meas.odmr_worker
+
+.. autoclass:: Sweeper
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Sweeper.__init__
+      ~Sweeper.append_line
+      ~Sweeper.configure_pg
+      ~Sweeper.configure_pg_CW_analog
+      ~Sweeper.configure_pg_CW_apd
+      ~Sweeper.configure_pg_pulse_apd
+      ~Sweeper.configure_sg
+      ~Sweeper.get_param_dict
+      ~Sweeper.load_pg_conf_preset
+      ~Sweeper.load_sg_conf_preset
+      ~Sweeper.start
+      ~Sweeper.start_analog_pd
+      ~Sweeper.start_apd
+      ~Sweeper.stop
+      ~Sweeper.work
+   
+   
+
+   
+   
+   

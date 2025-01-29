@@ -18,7 +18,10 @@
    
       ~QdyneData.__init__
       ~QdyneData.can_resume
+      ~QdyneData.fft
       ~QdyneData.get_bin
+      ~QdyneData.get_fft_xdata
+      ~QdyneData.get_fft_ydata
       ~QdyneData.get_method
       ~QdyneData.get_params
       ~QdyneData.get_period
@@ -29,6 +32,7 @@
       ~QdyneData.has_data
       ~QdyneData.has_raw_data
       ~QdyneData.is_partial
+      ~QdyneData.remove_fft_data
       ~QdyneData.remove_raw_data
       ~QdyneData.set_instrument_params
       ~QdyneData.set_laser_timing

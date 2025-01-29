@@ -17,10 +17,13 @@
    .. autosummary::
    
       ~SGInterface.configure_am_ext
+      ~SGInterface.configure_am_int
       ~SGInterface.configure_cw
       ~SGInterface.configure_cw_iq_ext
       ~SGInterface.configure_fm_ext
+      ~SGInterface.configure_fm_int
       ~SGInterface.configure_iq_ext
+      ~SGInterface.configure_iq_int
       ~SGInterface.configure_point_trig_freq_sweep
       ~SGInterface.get_bounds
       ~SGInterface.get_opc

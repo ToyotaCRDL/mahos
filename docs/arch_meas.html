@@ -425,7 +425,7 @@
                   
   <section id="meas-layer">
 <h1>meas layer<a class="headerlink" href="#meas-layer" title="Link to this heading">#</a></h1>
-<p>The meas layer is implementated as <a class="reference internal" href="meas/index.html#mahos-meas"><span class="std std-ref">mahos.meas</span></a> package.
+<p>The meas layer is implemented as <a class="reference internal" href="meas/index.html#mahos-meas"><span class="std std-ref">mahos.meas</span></a> package.
 The nodes in the meas layer provides the core functionalities of the measurement automation.
 To keep flexibility, there is almost no restriction on node implementation.</p>
 <p>However, meas nodes are advised to have explicit <a class="reference internal" href="glossary.html#term-state"><span class="xref std std-term">state</span></a>, i.e., to publish topic <a class="reference internal" href="glossary.html#term-status"><span class="xref std std-term">status</span></a> (<a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.Status" title="mahos.msgs.common_msgs.Status"><code class="xref py py-class docutils literal notranslate"><span class="pre">Status</span></code></a> type) having <a class="reference internal" href="glossary.html#term-state"><span class="xref std std-term">state</span></a> attribute (<a class="reference internal" href="msgs/common_msgs.html#mahos.msgs.common_msgs.State" title="mahos.msgs.common_msgs.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> type).
@@ -483,7 +483,8 @@ Before a <cite>command</cite> is executed, the nodes state (<cite>last_state</ci
 After a <cite>command</cite>, we can use <cite>restore</cite> request to recover the <cite>last_state</cite>.</p>
 <p>The figure below explans the <cite>command</cite> and <cite>restore</cite> operations.</p>
 <figure class="align-default" id="id1">
-<a class="reference internal image-reference" href="_images/mahos-state-manager.svg"><img alt="Command and Restore operations of StateManager" src="_images/mahos-state-manager.svg" style="width: 90%;" /></a>
+<a class="reference internal image-reference" href="_images/mahos-state-manager.svg"><img alt="Command and Restore operations of StateManager" src="_images/mahos-state-manager.svg" style="width: 90%;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Command and Restore operations of StateManager</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
 </figcaption>

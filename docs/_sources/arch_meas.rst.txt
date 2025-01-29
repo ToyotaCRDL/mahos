@@ -1,7 +1,7 @@
 meas layer
 ==========
 
-The meas layer is implementated as :ref:`mahos.meas` package.
+The meas layer is implemented as :ref:`mahos.meas` package.
 The nodes in the meas layer provides the core functionalities of the measurement automation.
 To keep flexibility, there is almost no restriction on node implementation.
 

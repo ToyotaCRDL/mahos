@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mahos.msgs.camera_msgs.Image &#8212; MAHOS 0.3.0 documentation</title>
+    <title>mahos.meas.odmr_worker.Sweeper &#8212; MAHOS 0.3.0 documentation</title>
   
   
   
@@ -41,11 +41,11 @@
     <script src="../../_static/documentation_options.js?v=e259d695"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'msgs/generated/mahos.msgs.camera_msgs.Image';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'meas/generated/mahos.meas.odmr_worker.Sweeper';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="mahos.inst" href="../../inst/index.html" />
-    <link rel="prev" title="mahos.msgs.spectroscopy_msgs.SpectroscopyData" href="mahos.msgs.spectroscopy_msgs.SpectroscopyData.html" />
+    <link rel="next" title="mahos.meas.odmr_worker.SweeperOverlay" href="mahos.meas.odmr_worker.SweeperOverlay.html" />
+    <link rel="prev" title="mahos.meas.odmr.ODMR" href="mahos.meas.odmr.ODMR.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -361,24 +361,38 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../api_top.html">mahos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../node/index.html">mahos.node</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">mahos.msgs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../common_msgs.html">mahos.msgs.common_msgs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../param_msgs.html">mahos.msgs.param_msgs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.data_msgs.Data.html">mahos.msgs.data_msgs.Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.confocal_msgs.Image.html">mahos.msgs.confocal_msgs.Image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.confocal_msgs.Trace.html">mahos.msgs.confocal_msgs.Trace</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.odmr_msgs.ODMRData.html">mahos.msgs.odmr_msgs.ODMRData</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.podmr_msgs.PODMRData.html">mahos.msgs.podmr_msgs.PODMRData</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.spodmr_msgs.SPODMRData.html">mahos.msgs.spodmr_msgs.SPODMRData</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.qdyne_msgs.QdyneData.html">mahos.msgs.qdyne_msgs.QdyneData</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.iodmr_msgs.IODMRData.html">mahos.msgs.iodmr_msgs.IODMRData</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.hbt_msgs.HBTData.html">mahos.msgs.hbt_msgs.HBTData</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mahos.msgs.spectroscopy_msgs.SpectroscopyData.html">mahos.msgs.spectroscopy_msgs.SpectroscopyData</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">mahos.msgs.camera_msgs.Image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../msgs/index.html">mahos.msgs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../inst/index.html">mahos.inst</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">mahos.meas</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.common_meas.BasicMeasClient.html">mahos.meas.common_meas.BasicMeasClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.common_meas.BasicMeasNode.html">mahos.meas.common_meas.BasicMeasNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.state_manager.StateManager.html">mahos.meas.state_manager.StateManager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.tweaker.Tweaker.html">mahos.meas.tweaker.Tweaker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.pos_tweaker.PosTweaker.html">mahos.meas.pos_tweaker.PosTweaker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.recorder.Recorder.html">mahos.meas.recorder.Recorder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.confocal.Confocal.html">mahos.meas.confocal.Confocal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.confocal_tracker.ConfocalTracker.html">mahos.meas.confocal_tracker.ConfocalTracker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.odmr.ODMR.html">mahos.meas.odmr.ODMR</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">mahos.meas.odmr_worker.Sweeper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.odmr_worker.SweeperOverlay.html">mahos.meas.odmr_worker.SweeperOverlay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.podmr.PODMR.html">mahos.meas.podmr.PODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.spodmr.SPODMR.html">mahos.meas.spodmr.SPODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.qdyne.Qdyne.html">mahos.meas.qdyne.Qdyne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.iodmr.IODMR.html">mahos.meas.iodmr.IODMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.hbt.HBT.html">mahos.meas.hbt.HBT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.spectroscopy.Spectroscopy.html">mahos.meas.spectroscopy.Spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mahos.meas.camera.Camera.html">mahos.meas.camera.Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ConfocalIO.html">mahos.meas.confocal.ConfocalIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ODMRIO.html">mahos.meas.odmr.ODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PODMRIO.html">mahos.meas.podmr.PODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SPODMRIO.html">mahos.meas.podmr.SPODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QdyneIO.html">mahos.meas.podmr.QdyneIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../IODMRIO.html">mahos.meas.podmr.IODMRIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HBTIO.html">mahos.meas.hbt.HBTIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SpectroscopyIO.html">mahos.meas.spectroscopy.SpectroscopyIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CameraIO.html">mahos.meas.camera.CameraIO</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="../../inst/index.html">mahos.inst</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../meas/index.html">mahos.meas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../gui/index.html">mahos.gui</a></li>
 </ul>
 </div>
@@ -424,9 +438,9 @@
     <li class="breadcrumb-item"><a href="../../api.html" class="nav-link">API Reference</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">mahos.msgs</a></li>
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">mahos.meas</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mahos.msgs.camera_msgs.Image</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mahos.meas.odmr_worker.Sweeper</span></li>
   </ul>
 </nav>
 </div>
@@ -443,23 +457,89 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="mahos-msgs-camera-msgs-image">
-<h1>mahos.msgs.camera_msgs.Image<a class="headerlink" href="#mahos-msgs-camera-msgs-image" title="Link to this heading">#</a></h1>
+  <section id="mahos-meas-odmr-worker-sweeper">
+<h1>mahos.meas.odmr_worker.Sweeper<a class="headerlink" href="#mahos-meas-odmr-worker-sweeper" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="mahos.msgs.camera_msgs.Image">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.msgs.camera_msgs.</span></span><span class="sig-name descname"><span class="pre">Image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.msgs.camera_msgs.Image" title="Link to this definition">#</a></dt>
-<dd><dl class="py method">
-<dt class="sig sig-object py" id="mahos.msgs.camera_msgs.Image.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.msgs.camera_msgs.Image.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="mahos.meas.odmr_worker.Sweeper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.meas.odmr_worker.</span></span><span class="sig-name descname"><span class="pre">Sweeper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cli</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.meas.odmr_worker.Sweeper" title="Link to this definition">#</a></dt>
+<dd><p>Worker for fast ODMR sweep using mutual triggering between SG and PG.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sweeper.pd_clock</strong> (<em>str</em>) – DAQ terminal name for PD’s clock (gate)</p></li>
+<li><p><strong>sweeper.pd_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – (default: [“pd0”, “pd1”]) PD names in target.servers.</p></li>
+<li><p><strong>sweeper.pd_analog</strong> (<em>bool</em>) – (default: False) set True if PD is AnalogIn-based.</p></li>
+<li><p><strong>sweeper.channel_remap</strong> (<em>dict</em><em>[</em><em>str</em><em> | </em><em>int</em><em>, </em><em>str</em><em> | </em><em>int</em><em>]</em>) – mapping to fix default channel names.</p></li>
+<li><p><strong>sweeper.start_delay</strong> (<em>float</em>) – (default: 0.0) delay time (sec.) before starting SG/PG output.</p></li>
+<li><p><strong>sweeper.sg_first</strong> (<em>bool</em>) – (has preset) if True, turn on SG first and PG second.
+This mode is for SGs which won’t start the point sweep by software command.</p></li>
+<li><p><strong>sweeper.pg_freq_cw</strong> (<em>float</em>) – (has preset) PG frequency for CW mode.</p></li>
+<li><p><strong>sweeper.pg_freq_pulse</strong> (<em>float</em>) – (has preset) PG frequency for Pulse mode.</p></li>
+<li><p><strong>sweeper.minimum_block_length</strong> (<em>int</em>) – (has preset) minimum block length in generated blocks</p></li>
+<li><p><strong>sweeper.block_base</strong> (<em>int</em>) – (has preset) block base granularity of pulse generator.</p></li>
+<li><p><strong>sweeper.start</strong> (<em>float</em>) – (default param) start frequency in Hz.</p></li>
+<li><p><strong>sweeper.stop</strong> (<em>float</em>) – (default param) stop frequency in Hz.</p></li>
+<li><p><strong>sweeper.num</strong> (<em>int</em>) – (default param) number of frequency points.</p></li>
+<li><p><strong>sweeper.power</strong> (<em>float</em>) – (default param) SG output power in dBm.</p></li>
+<li><p><strong>sweeper.time_window</strong> (<em>float</em>) – (default param) time window for cw mode.</p></li>
+<li><p><strong>sweeper.pd_rate</strong> (<em>float</em>) – (default param) analog PD sampling rate.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mahos.meas.odmr_worker.Sweeper.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cli</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.meas.odmr_worker.Sweeper.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Init client (cli), logger, conf, and internal instrument list (_instruments).</p>
+<p>InstrumentInterfaces should be added on initialization by add_instruments()
+in inherited class.</p>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#mahos.msgs.camera_msgs.Image.__init__" title="mahos.msgs.camera_msgs.Image.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([params])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mahos.meas.odmr_worker.Sweeper.__init__" title="mahos.meas.odmr_worker.Sweeper.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(cli, logger, conf)</p></td>
+<td><p>Init client (cli), logger, conf, and internal instrument list (_instruments).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_line</span></code>(line)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(result)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_pg</span></code>(params, label)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_pg_CW_analog</span></code>(params)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_pg_CW_apd</span></code>(params)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_pg_pulse_apd</span></code>(params)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_sg</span></code>(params, label)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict</span></code>(label)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_pg_conf_preset</span></code>(cli)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_sg_conf_preset</span></code>(cli)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>(params[, label])</p></td>
+<td><p>Start the worker.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_analog_pd</span></code>(params, label)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_apd</span></code>(params, label)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
+<td><p>Stop the worker.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">work</span></code>()</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -480,20 +560,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mahos.msgs.spectroscopy_msgs.SpectroscopyData.html"
+       href="mahos.meas.odmr.ODMR.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">mahos.msgs.spectroscopy_msgs.SpectroscopyData</p>
+        <p class="prev-next-title">mahos.meas.odmr.ODMR</p>
       </div>
     </a>
     <a class="right-next"
-       href="../../inst/index.html"
+       href="mahos.meas.odmr_worker.SweeperOverlay.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">mahos.inst</p>
+        <p class="prev-next-title">mahos.meas.odmr_worker.SweeperOverlay</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -516,8 +596,8 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.camera_msgs.Image"><code class="docutils literal notranslate"><span class="pre">Image</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.msgs.camera_msgs.Image.__init__"><code class="docutils literal notranslate"><span class="pre">Image.__init__()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.meas.odmr_worker.Sweeper"><code class="docutils literal notranslate"><span class="pre">Sweeper</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mahos.meas.odmr_worker.Sweeper.__init__"><code class="docutils literal notranslate"><span class="pre">Sweeper.__init__()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -527,7 +607,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/msgs/generated/mahos.msgs.camera_msgs.Image.rst.txt"
+      <li><a href="../../_sources/meas/generated/mahos.meas.odmr_worker.Sweeper.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

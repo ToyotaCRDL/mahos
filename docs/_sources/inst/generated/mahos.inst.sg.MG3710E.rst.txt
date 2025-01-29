@@ -36,6 +36,7 @@
       ~MG3710E.set
       ~MG3710E.set_am
       ~MG3710E.set_am_depth
+      ~MG3710E.set_am_depth_ext
       ~MG3710E.set_am_source
       ~MG3710E.set_arb
       ~MG3710E.set_dm
