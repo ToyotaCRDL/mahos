@@ -549,22 +549,6 @@ class Pulser(Worker):
 
         return d
 
-    def _get_param_dict_pulse_opt(self, label: str, d: dict):
-        pulse_params = self.generators[label].pulse_params()
-
-        d["Nconst"] = P.IntParam(1, 1, 10000)
-
-        if "90pulse" in pulse_params:
-            d["90pulse"] = P.FloatParam(10e-9, 1e-9, 1000e-9, unit="s", SI_prefix=True)
-        if "180pulse" in pulse_params:
-            d["180pulse"] = P.FloatParam(-1.0e-9, -1.0e-9, 1000e-9, unit="s", SI_prefix=True)
-
-        if "readY" in pulse_params:
-            d["readY"] = P.BoolParam(True)
-            d["invertY"] = P.BoolParam(False)
-
-        return d
-
     def get_param_dict_labels(self) -> list:
         return ["cp", "cpmg", "xy4", "xy8", "xy16"]
 
