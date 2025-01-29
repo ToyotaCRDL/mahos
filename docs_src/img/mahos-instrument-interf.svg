@@ -493,12 +493,12 @@
          y="49.495899"
          x="81.020584"
          sodipodi:role="line"
-         id="tspan504913-8-2">get_image()</tspan><tspan
+         id="tspan504913-8-2">get_frame()</tspan><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:monospace;-inkscape-font-specification:monospace;stroke-width:0.264583"
          y="56.263336"
          x="81.020584"
          sodipodi:role="line"
-         id="tspan45248">-&gt;Image</tspan></text>
+         id="tspan45248">-&gt;Frame</tspan></text>
     <text
        id="text819-3-4-7-7-1-0-4-9-3-7"
        y="53.153675"
@@ -509,7 +509,7 @@
          y="53.153675"
          x="162.19261"
          sodipodi:role="line"
-         id="tspan45248-0">get(&quot;image&quot;)</tspan></text>
+         id="tspan45248-0">get(&quot;frame&quot;)</tspan></text>
     <text
        id="text819-3-4-7-7-1-0-4-9-3-0"
        y="69.413872"
@@ -520,7 +520,7 @@
          y="69.413872"
          x="87.242165"
          sodipodi:role="line"
-         id="tspan45248-2">Image</tspan></text>
+         id="tspan45248-2">Frame</tspan></text>
     <text
        id="text819-3-4-7-7-1-0-4-9-3-0-4"
        y="69.413872"
@@ -531,6 +531,6 @@
          y="69.413872"
          x="169.99228"
          sodipodi:role="line"
-         id="tspan45248-2-9">Image</tspan></text>
+         id="tspan45248-2-9">Frame</tspan></text>
   </g>
 </svg>

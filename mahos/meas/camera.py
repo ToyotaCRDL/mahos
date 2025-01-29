@@ -26,6 +26,8 @@ class CameraClient(BasicMeasClient):
 
 
 class Camera(BasicMeasNode):
+    """Measurement for continuous camera frame capturing."""
+
     CLIENT = CameraClient
 
     def __init__(self, gconf: dict, name, context=None):

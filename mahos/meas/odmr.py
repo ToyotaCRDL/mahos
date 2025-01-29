@@ -37,8 +37,9 @@ class ODMRClient(BasicMeasClient):
 class ODMR(BasicMeasNode):
     """ODMR (frequency sweep) measurement.
 
-    There are two options for the sweeper (measurement logic).
-    See below for docs of sweeper parameters.
+    There are two options for the worker (sweeper, measurement logic).
+    See docs of sweeper below for sweeper parameters.
+
     - :class:`Sweeper <mahos.meas.odmr_worker.Sweeper>` : fast logic based on hardware triggering.
     - :class:`SweeperOverlay <mahos.meas.odmr_worker.SweeperOverlay>` : interface to overlay.
 

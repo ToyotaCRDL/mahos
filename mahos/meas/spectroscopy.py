@@ -31,6 +31,8 @@ class SpectroscopyClient(BasicMeasClient):
 
 
 class Spectroscopy(BasicMeasNode):
+    """Spectroscopy measurement."""
+
     CLIENT = SpectroscopyClient
     DATA = SpectroscopyData
 

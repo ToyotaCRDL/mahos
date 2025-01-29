@@ -35,27 +35,27 @@ class HBTClient(BasicMeasClient):
 
 
 class HBT(BasicMeasNode):
+    """HBT measurement.
+
+    :param listener.interval_sec: polling interval.
+    :type listener.interval_sec: float
+    :param listener.tdc_correlation: (has preset) enable correlation measurement mode at TDC.
+    :type listener.tdc_correlation: bool
+    :param listener.tdc_normalize: (has preset) enable normalization at TDC.
+    :type listener.tdc_normalize: bool
+    :param listener.tdc_channel: (default: 1) channel index for getting data from TDC.
+    :type listener.tdc_channel: int
+    :param listener.t0_ns: default value of t0 (time delay).
+    :type listener.t0_ns: float
+    :param listener.range_ns: default value of measurement range (time window).
+    :type listener.range_ns: float
+
+    """
+
     CLIENT = HBTClient
     DATA = HBTData
 
     def __init__(self, gconf: dict, name, context=None):
-        """HBT measurement.
-
-        :param listener.interval_sec: polling interval.
-        :type listener.interval_sec: float
-        :param listener.tdc_correlation: (has preset) enable correlation measurement mode at TDC.
-        :type listener.tdc_correlation: bool
-        :param listener.tdc_normalize: (has preset) enable normalization at TDC.
-        :type listener.tdc_normalize: bool
-        :param listener.tdc_channel: (default: 1) channel index for getting data from TDC.
-        :type listener.tdc_channel: int
-        :param listener.t0_ns: default value of t0 (time delay).
-        :type listener.t0_ns: float
-        :param listener.range_ns: default value of measurement range (time window).
-        :type listener.range_ns: float
-
-        """
-
         BasicMeasNode.__init__(self, gconf, name, context=context)
 
         _default_sw_names = ["switch"] if "switch" in self.conf["target"]["servers"] else []

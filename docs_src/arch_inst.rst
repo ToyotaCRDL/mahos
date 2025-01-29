@@ -1,7 +1,7 @@
 inst layer
 ==========
 
-The inst layer is lowest-lying layer providing instrument drivers, implementated in :ref:`mahos.inst` package.
+The inst layer is lowest-lying layer providing instrument drivers, implemented in :ref:`mahos.inst` package.
 
 InstrumentServer
 ----------------
@@ -60,7 +60,7 @@ Dynamic interface using ParamDict
 Another interface is "dynamic" or "object-oriented" one.
 Instrument can report available parameters by returning a :class:`ParamDict <mahos.msgs.param_msgs.ParamDict>`
 for :meth:`get_param_dict() <mahos.inst.instrument.Instrument.get_param_dict>` call.
-The users can modify the parameters in it, and send it back with :meth:`configure() <mahos.inst.instrument.Instrument.configure>`.
+The users can modify the parameters in it, and send it back through :meth:`configure() <mahos.inst.instrument.Instrument.configure>`.
 This is useful if the number of parameters is large (so that providing as a method signature is cumbersome).
 Another benefit is that instrument can tell additional information such as
 the bounds (minimum or maximum) of numeric parameters.

@@ -26,6 +26,12 @@ class IODMRClient(BasicMeasClient):
 
 
 class IODMR(BasicMeasNode):
+    """Imaging ODMR measurement.
+
+    NOTE that this measurement logic is under development and rather immature.
+
+    """
+
     CLIENT = IODMRClient
 
     def __init__(self, gconf: dict, name, context=None):
