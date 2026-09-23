@@ -220,6 +220,11 @@ class Kikusui_PAN_E(VisaInstrument):
     def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
         if label == "electromag":
             d = P.ParamDict(
+                output_state=P.StrParam(
+                    "ON" if self.get_output_state() else "OFF",
+                    read_only=True,
+                    doc="Current Output State",
+                ),
                 current=P.FloatParam(
                     self.target_current, # Set target_current value via GUI (The actual set_point will be determined by the rampimg logic.)
                     minimum=self.curr_min,
