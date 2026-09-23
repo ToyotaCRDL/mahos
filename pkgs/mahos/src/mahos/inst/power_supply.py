@@ -271,3 +271,18 @@ class Kikusui_PAN_E(VisaInstrument):
             return success
         else:
             return self.fail_with(f"unknown label: {label}")
+        
+    def get(self, key: str, args=None, label: str = "") -> float | str | dict | None:
+        if label == "electromag":
+            if key in ("data", "current", "actual_current"):
+                return self.get_actual_current()
+            elif key in ("voltage", "actual_voltage"):
+                return self.get_actual_voltage()
+            elif key == "unit":
+                return "A"  # default unit
+            else:
+                self.logger.error(f"Unknown key: {key}")
+                return None
+        else:
+            self.logger.error(f"Unknown label: {label}")
+            return None
