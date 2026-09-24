@@ -31,13 +31,16 @@ class Kikusui_PAN_E(VisaInstrument):
 
         VisaInstrument.__init__(self, name, conf, prefix=prefix)
 
+        self._lock = threading.Lock()
+
         # Send SYST:REM to switch to remote control mode via LAN
-        self.inst.write("SYST:REM")
-        # Disable external analog control to enforce SCPI command control
-        self.inst.write("CURR:EXT:SOUR NONE")
-        self.inst.write("VOLT:EXT:SOUR NONE")
-        self.inst.write("OUTP:EXT OFF")
-        self.check_error()
+        with self._lock:
+            self.inst.write("SYST:REM")
+            # Disable external analog control to enforce SCPI command control
+            self.inst.write("CURR:EXT:SOUR NONE")
+            self.inst.write("VOLT:EXT:SOUR NONE")
+            self.inst.write("OUTP:EXT OFF")
+            self.check_error()
         
         # Use bounds from conf if specified, otherwise default to PAN16-30E and PAN16-30E parallel ratings (0-16V, 0-60A)
         self.volt_min, self.volt_max = self.conf.get("volt_bounds", (0.0, 16.0))
@@ -70,9 +73,10 @@ class Kikusui_PAN_E(VisaInstrument):
 
     def set_current_direct(self, current: float) -> bool:
         """Set current directly to hardware without ramping."""
-        current = max(self.curr_min, min(self.curr_max, current))
-        self.inst.write(f"SOUR:CURR {current:.3f}")
-        return self.check_error()
+        with self._lock:
+            current = max(self.curr_min, min(self.curr_max, current))
+            self.inst.write(f"SOUR:CURR {current:.3f}")
+            return self.check_error()
 
     def _start_ramp_thread(self, target_current: float):
         """Start or restart the background ramping thread."""
@@ -131,9 +135,10 @@ class Kikusui_PAN_E(VisaInstrument):
 
     def set_voltage(self, voltage: float) -> bool:
         """Set voltage limit in Volts (Direct, no ramping)."""
-        voltage = max(self.volt_min, min(self.volt_max, voltage))
-        self.inst.write(f"SOUR:VOLT {voltage:.3f}")
-        return self.check_error()
+        with self._lock:
+            voltage = max(self.volt_min, min(self.volt_max, voltage))
+            self.inst.write(f"SOUR:VOLT {voltage:.3f}")
+            return self.check_error()
     
     def set_output(self, on: bool) -> bool:
         """Turn output ON or OFF with automatic ramping."""
@@ -166,43 +171,48 @@ class Kikusui_PAN_E(VisaInstrument):
     
     def get_current(self) -> float:
         """Get setpoint current in Amperes."""
-        ans = self.inst.query("SOUR:CURR?")
-        try:
-            return float(ans)
-        except ValueError:
-            self.logger.exception(f"Unexpected reply: {ans}")
-            return 0.0
+        with self._lock:
+            ans = self.inst.query("SOUR:CURR?")
+            try:
+                return float(ans)
+            except ValueError:
+                self.logger.exception(f"Unexpected reply: {ans}")
+                return 0.0
 
     def get_actual_current(self) -> float:
         """Measure actual output current in Amperes (MEASure:CURRent)."""
-        ans = self.inst.query("MEAS:CURR?")
-        try:
-            return float(ans)
-        except ValueError:
-            self.logger.exception(f"Unexpected reply: {ans}")
-            return 0.0
+        with self._lock:
+            ans = self.inst.query("MEAS:CURR?")
+            try:
+                return float(ans)
+            except ValueError:
+                self.logger.exception(f"Unexpected reply: {ans}")
+                return 0.0
 
     def get_voltage(self) -> float:
         """Get setpoint voltage in Volts."""
-        ans = self.inst.query("SOUR:VOLT?")
-        try:
-            return float(ans)
-        except ValueError:
-            self.logger.exception(f"Unexpected reply: {ans}")
-            return 0.0
+        with self._lock:
+            ans = self.inst.query("SOUR:VOLT?")
+            try:
+                return float(ans)
+            except ValueError:
+                self.logger.exception(f"Unexpected reply: {ans}")
+                return 0.0
 
     def get_actual_voltage(self) -> float:
         """Measure actual output voltage in Volts (MEASure:VOLTage)."""
-        ans = self.inst.query("MEAS:VOLT?")
-        try:
-            return float(ans)
-        except ValueError:
-            self.logger.exception(f"Unexpected reply: {ans}")
-            return 0.0
+        with self._lock:
+            ans = self.inst.query("MEAS:VOLT?")
+            try:
+                return float(ans)
+            except ValueError:
+                self.logger.exception(f"Unexpected reply: {ans}")
+                return 0.0
 
     def get_output_state(self) -> bool:
         """Get output state (True: ON, False: OFF)."""
-        return self.inst.query("OUTP?").strip() == "1"
+        with self._lock:
+            return self.inst.query("OUTP?").strip() == "1"
 
     # -------------------------------------------------------------------------
     # Standard API for Tweaker
