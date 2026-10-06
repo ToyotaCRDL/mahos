@@ -219,10 +219,12 @@ class Kikusui_PAN_E(VisaInstrument):
     # -------------------------------------------------------------------------
 
     def start(self, label: str = "") -> bool:
-        return self.set_output(True)
+        """Dummy start for Recorder/Tweaker Start button."""
+        return True
 
     def stop(self, label: str = "") -> bool:
-        return self.set_output(False)
+        """Dummy stop for Recorder/Tweaker Stop button."""
+        return True
 
     def get_param_dict_labels(self) -> list[str]:
         return ["electromag"]
@@ -230,10 +232,9 @@ class Kikusui_PAN_E(VisaInstrument):
     def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
         if label == "electromag":
             d = P.ParamDict(
-                output_state=P.StrParam(
-                    "ON" if self.get_output_state() else "OFF",
-                    read_only=True,
-                    doc="Current Output State",
+                output_state=P.BoolParam(
+                    self.get_output_state(),
+                    doc="Current Output State (Checked: ON, Unchecked: OFF)",
                 ),
                 current=P.FloatParam(
                     self.target_current, # Set target_current value via GUI (The actual set_point will be determined by the rampimg logic.)
@@ -274,6 +275,10 @@ class Kikusui_PAN_E(VisaInstrument):
         if label == "electromag":
             ps = P.unwrap(params)
             success = True
+            if "output_state" in ps:
+                target_on = bool(ps["output_state"])
+                if target_on != self.get_output_state():
+                    success &= self.set_output(target_on)
             if "current" in ps:
                 success &= self.set_current(ps["current"])
             if "voltage" in ps:
