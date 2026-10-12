@@ -17,6 +17,7 @@ Instrument modules
    InstrumentInterface
    camera
    daq
+   digitizer
    dmm
    fg
    filter_wheel

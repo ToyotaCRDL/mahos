@@ -54,7 +54,7 @@ class QdyneIO(object):
         if d is not None:
             return update_data(d)
 
-    def export_data(self, file_name: str, data: QdyneData, params: dict | None = None):
+    def export_data(self, file_name: str, data: QdyneData, params: dict | None = None) -> bool:
         """
 
         :param file_name: supported extensions: .png, .pdf, and .eps.
@@ -76,7 +76,9 @@ class QdyneIO(object):
             self.logger.error(f"Unknown extension to export data: {file_name}")
             return False
 
-    def _export_data_image(self, file_name: str, data: QdyneData, params: dict | None = None):
+    def _export_data_image(
+        self, file_name: str, data: QdyneData, params: dict | None = None
+    ) -> bool:
         head, ext = path.splitext(file_name)
 
         plt.plot(data.get_xdata(True), data.get_ydata(True))
@@ -100,7 +102,7 @@ class QdyneIO(object):
         if params.get("pulse", False):
             if not data.has_raw_data():
                 self.logger.error("params.pulse is True but no raw_data.")
-                return
+                return False
 
             T = data.get_period_bins()
             tbin = data.get_bin()
@@ -115,3 +117,4 @@ class QdyneIO(object):
             plt.tight_layout()
             plt.savefig(head + "_pulse" + ext)
             plt.close()
+        return True

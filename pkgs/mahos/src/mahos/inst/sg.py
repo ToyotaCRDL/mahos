@@ -1793,8 +1793,7 @@ class DS_SG(VisaInstrument):
         self._mode = Mode.UNCONFIGURED
         success = (
             # self.rst() and
-            self.set_freq_CW(freq)
-            and self.set_power(power)
+            self.set_freq_CW(freq) and self.set_power(power)
         )
         if success:
             self._mode = Mode.CW
@@ -1983,7 +1982,7 @@ class Windfreak_SynthHD(VisaInstrument):
 
         if freq < self.freq_min or freq > self.freq_max:
             raise ValueError("Invalid frequency.")
-        return f"{freq*1e-6:.7f}"
+        return f"{freq * 1e-6:.7f}"
 
     def set_freq_CW(self, freq, ch: int = 0) -> bool:
         if not self.set_channel(ch):

@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import msgpack
 
-from mahos.msgs.common_msgs import Message, Request, State, Status, BinaryState
+from mahos.msgs.common_msgs import FileArtifact, Message, Request, State, Status, BinaryState
 from mahos.msgs.data_msgs import Data, ComplexDataMixin, FormatTimeMixin
 
 from mahos.msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
@@ -539,6 +539,97 @@ class LoadTraceReq(LoadDataReq):
     """
 
     pass
+
+
+class SaveImageArtifactReq(Request):
+    """Request creation of a saved confocal-image artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+    :ivar direction: Optional buffered scan direction; ``None`` uses the current image.
+    :ivar note: Optional note stored with the image.
+
+    """
+
+    def __init__(self, file_name: str, direction: ScanDirection | None = None, note: str = ""):
+        self.file_name = file_name
+        self.direction = direction
+        self.note = note
+
+
+class ExportImageArtifactReq(Request):
+    """Request creation of an exported confocal-image artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+    :ivar direction: Optional buffered scan direction; ``None`` uses the current image.
+    :ivar params: Export parameter dictionary.
+
+    """
+
+    def __init__(self, file_name: str, direction: ScanDirection | None = None, params=None):
+        self.file_name = file_name
+        self.direction = direction
+        self.params = params
+
+
+class ExportViewArtifactReq(Request):
+    """Request creation of an exported combined-view artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+    :ivar params: Export parameter dictionary.
+
+    """
+
+    def __init__(self, file_name: str, params=None):
+        self.file_name = file_name
+        self.params = params
+
+
+class LoadImageArtifactReq(Request):
+    """Request loading a confocal image from a shared artifact.
+
+    :ivar artifact: Metadata identifying the staged image file.
+
+    """
+
+    def __init__(self, artifact: FileArtifact):
+        self.artifact = artifact
+
+
+class SaveTraceArtifactReq(Request):
+    """Request creation of a saved trace artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+    :ivar note: Optional note stored with the trace.
+
+    """
+
+    def __init__(self, file_name: str, note: str = ""):
+        self.file_name = file_name
+        self.note = note
+
+
+class ExportTraceArtifactReq(Request):
+    """Request creation of an exported trace artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+    :ivar params: Export parameter dictionary.
+
+    """
+
+    def __init__(self, file_name: str, params=None):
+        self.file_name = file_name
+        self.params = params
+
+
+class LoadTraceArtifactReq(Request):
+    """Request loading a trace from a shared artifact.
+
+    :ivar artifact: Metadata identifying the staged trace file.
+
+    """
+
+    def __init__(self, artifact: FileArtifact):
+        self.artifact = artifact
 
 
 class CommandTraceReq(Request):

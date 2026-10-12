@@ -13,7 +13,7 @@ from __future__ import annotations
 import numpy as np
 
 from mahos_dq.msgs.spodmr_msgs import SPODMRData, MWMode, is_sweepN, is_CPlike, is_correlation
-from mahos.msgs.pulse_msgs import PulsePattern
+from mahos.msgs.inst.pg_msgs import PulsePattern
 from mahos.msgs import param_msgs as P
 from mahos.inst.sg_interface import SGInterface
 from mahos.inst.pg_interface import PGInterface, Block, Blocks, BlockSeq
@@ -25,6 +25,7 @@ from mahos.meas.common_worker import Worker
 
 from mahos_dq.meas.podmr_generator.generator import make_generators
 from mahos_dq.meas.podmr_generator import generator_kernel as K
+from mahos_dq.util.segments import round_duration_for_segment_samples
 
 
 class SPODMRDataOperator(object):
@@ -153,6 +154,9 @@ class BlockSeqBuilder(object):
         mw_modes: tuple[MWMode],
         iq_amplitude: float,
         channel_remap: dict | None,
+        pd_spectrum: bool = False,
+        pd_segment_granularity: int = 16,
+        pd_segment_offset: int = 0,
     ):
         self.trigger_width = trigger_width
         self.nest = nest
@@ -161,6 +165,9 @@ class BlockSeqBuilder(object):
         self.mw_modes = mw_modes
         self.iq_amplitude = iq_amplitude
         self.channel_remap = channel_remap
+        self.pd_spectrum = pd_spectrum
+        self.pd_segment_granularity = pd_segment_granularity
+        self.pd_segment_offset = pd_segment_offset
 
     def fix_block_base(self, blk: Block, idx: int = 0) -> Block:
         res = blk.total_length() % self.block_base
@@ -183,6 +190,20 @@ class BlockSeqBuilder(object):
         if not offset_ticks:
             return blk
         return K.apply_mw_offset(Blocks([blk]), offset_ticks)[0]
+
+    def _adjust_accum_window(
+        self, accum_window: int, sample_factor: int, pd_period: int
+    ) -> tuple[int, int]:
+        if self.pd_spectrum:
+            aw, samples = round_duration_for_segment_samples(
+                accum_window,
+                self.block_base,
+                sample_factor,
+                pd_period,
+                granularity=self.pd_segment_granularity,
+            )
+            return aw, samples - self.pd_segment_offset
+        return accum_window, accum_window * sample_factor // pd_period
 
     def build_complementary(
         self,
@@ -454,6 +475,9 @@ class BlockSeqBuilder(object):
 
         partial = params["partial"]
         if partial == -1:
+            accum_window, oversample = self._adjust_accum_window(
+                accum_window, accum_rep, pd_period
+            )
             blockseq, laser_duties, markers = self.build_complementary(
                 blocks,
                 accum_window,
@@ -464,8 +488,10 @@ class BlockSeqBuilder(object):
                 sync_mode,
                 mw_offset_ticks,
             )
-            oversample = (accum_window * accum_rep) // pd_period
         elif partial in (0, 1):
+            accum_window, oversample = self._adjust_accum_window(
+                accum_window, accum_rep, pd_period
+            )
             blockseq, laser_duties, markers = self.build_partial(
                 blocks,
                 accum_window,
@@ -476,9 +502,11 @@ class BlockSeqBuilder(object):
                 sync_mode,
                 mw_offset_ticks,
             )
-            oversample = (accum_window * accum_rep) // pd_period
         elif partial == 2:
             lockin_rep = params["lockin_rep"]
+            accum_window, oversample = self._adjust_accum_window(
+                accum_window, 2 * accum_rep * lockin_rep, pd_period
+            )
             blockseq, laser_duties, markers = self.build_lockin(
                 blocks,
                 accum_window,
@@ -490,7 +518,6 @@ class BlockSeqBuilder(object):
                 sync_mode,
                 mw_offset_ticks,
             )
-            oversample = (2 * accum_window * accum_rep * lockin_rep) // pd_period
         else:
             raise ValueError(f"Invalid partial {partial}")
 
@@ -534,7 +561,11 @@ class Pulser(Worker):
         self.pg = PGInterface(cli, "pg")
         self.pd_names = self.conf.get("pd_names", ["pd0"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
-        self.clock = ClockSourceInterface(cli, self.conf.get("clock_name", "clock"))
+        self._pd_spectrum = self.conf.get("pd_spectrum", False)
+        if self._pd_spectrum:
+            self.clock = None
+        else:
+            self.clock = ClockSourceInterface(cli, self.conf.get("clock_name", "clock"))
         if "fg" in cli:
             self.fg = FGInterface(cli, "fg")
         else:
@@ -574,6 +605,9 @@ class Pulser(Worker):
             self.mw_modes,
             iq_amplitude,
             channel_remap,
+            pd_spectrum=self._pd_spectrum,
+            pd_segment_granularity=self.conf.get("pd_segment_granularity", 16),
+            pd_segment_offset=self.conf.get("pd_segment_offset", 0),
         )
 
         self.data = SPODMRData()
@@ -646,33 +680,37 @@ class Pulser(Worker):
             "trigger_dir": True,
             "retriggerable": True,
         }
-        if not self.clock.configure(params_clock):
-            self.logger.error("failed to configure clock.")
-            return False
-        clock_pd = self.clock.get_internal_output()
+        if self.clock is None:
+            clock_pd = self._pd_trigger
+        else:
+            if not self.clock.configure(params_clock):
+                self.logger.error("failed to configure clock.")
+                return False
+            clock_pd = self.clock.get_internal_output()
 
         num = self.data.get_num()
         if params["partial"] == -1:
             num *= 2
         buffer_size = num * self.conf.get("buffer_size_coeff", 20)
-        params_pd = {
-            "clock": clock_pd,
-            "cb_samples": num,
-            "samples": buffer_size,
-            "buffer_size": buffer_size,
-            "rate": rate,
-            "finite": False,
-            "every": self.conf.get("every", False),
-            "clock_mode": True,
-            "oversample": self.oversample,
-            "bounds": params["pd"].get("bounds", (-10.0, 10.0)),
-        }
-        if self._pd_data_transfer:
-            params_pd["data_transfer"] = self._pd_data_transfer
-
         if not (
-            all([pd.configure(params_pd) for pd in self.pds])
-            and self.clock.start()
+            all(
+                [
+                    pd.configure_triggered(
+                        clock_pd,
+                        num,
+                        buffer_size,
+                        rate,
+                        buffer_size=buffer_size,
+                        finite=False,
+                        every=self.conf.get("every", False),
+                        oversample=self.oversample,
+                        bounds=params["pd"].get("bounds", (-10.0, 10.0)),
+                        data_transfer=self._pd_data_transfer,
+                    )
+                    for pd in self.pds
+                ]
+            )
+            and (self.clock is None or self.clock.start())
             and all([pd.start() for pd in self.pds])
         ):
             self.logger.error("Error starting PDs.")
@@ -879,7 +917,8 @@ class Pulser(Worker):
             self.stop_sg()
             for pd in self.pds:
                 pd.stop()
-            self.clock.stop()
+            if self.clock is not None:
+                self.clock.stop()
             return self.fail_with_release("Error starting pulser.")
 
         if resume:
@@ -904,7 +943,8 @@ class Pulser(Worker):
 
         success = self.pg.stop() and self.pg.release() and self.stop_sg()
         success &= all([pd.stop() for pd in self.pds]) and all([pd.release() for pd in self.pds])
-        success &= self.clock.stop() and self.clock.release()
+        if self.clock is not None:
+            success &= self.clock.stop() and self.clock.release()
         if self._fg_enabled(self.data.params):
             success &= self.fg.set_output(False)
         if self.fg is not None:
@@ -920,13 +960,13 @@ class Pulser(Worker):
 
     def _get_param_dict_pulse(self, label: str, d: dict):
         ## common_pulses
-        d["laser_delay"] = P.FloatParam(45e-9, 0.0, 1e-4)
-        d["laser_width"] = P.FloatParam(3e-6, 1e-9, 1e-4)
-        d["mw_delay"] = P.FloatParam(1e-6, 0.0, 1e-4)
+        d["laser_delay"] = P.FloatParam(0.0, 0.0, 1e-3)
+        d["laser_width"] = P.FloatParam(3e-6, 1e-9, 1e-3)
+        d["mw_delay"] = P.FloatParam(1e-6, 0.0, 1e-3)
         # local offset applied within each unit PODMR pulse sequence (not whole SPODMR sequence)
         d["mw_offset"] = P.FloatParam(0.0, -1e-4, 1e-4)
         # below are unused
-        # d["base_width"] = P.FloatParam(320e-9, 1e-9, 1e-4)
+        # d["base_width"] = P.FloatParam(8e-9, 1e-9, 1e-4)
         # d["trigger_width"] = P.FloatParam(20e-9, 1e-9, 1e-6)
         # d["init_delay"] = P.FloatParam(0.0, 0.0, 1e-6)
         # d["final_delay"] = P.FloatParam(5e-6, 0.0, 1e-4)

@@ -186,7 +186,7 @@ class AnalogPD(AnalogIn):
             return self.fail_with(f"unknown set() key: {key}")
 
     def get(self, key: str, args=None, label: str = ""):
-        if key in ("data", "all_data"):
+        if key in ("data", "data_with_status", "all_data"):
             return AnalogIn.get(self, key, args)
         elif key == "unit":
             return self.unit
@@ -259,7 +259,7 @@ class LockinAnalogPD(AnalogIn):
             return self.fail_with(f"unknown set() key: {key}")
 
     def get(self, key: str, args=None, label: str = ""):
-        if key in ("data", "all_data"):
+        if key in ("data", "data_with_status", "all_data"):
             return AnalogIn.get(self, key, args)
         elif key == "unit":
             return self.unit

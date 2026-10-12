@@ -5,3 +5,4 @@ pythonnet ~= 3.0.1; sys_platform == "win32"
 pypylon ~= 4.1.0
 pulsestreamer ~= 1.6.0
 pipython ~= 2.10.0.2
+spcm ~= 1.13.3

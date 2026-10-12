@@ -479,6 +479,12 @@ class PD_mock(Instrument):
     def __init__(self, name, conf=None, prefix=None):
         Instrument.__init__(self, name, conf=conf, prefix=prefix)
         self.source = self.conf.get("source")
+        if isinstance(self.source, int):
+            self.channels = self.source
+        elif isinstance(self.source, (list, tuple)):
+            self.channels = len(self.source)
+        else:
+            self.channels = 1
         self.block_reduce_factor = 1
         self.block_reduce_op = "mean"
         self.reduce_factor = 1
@@ -492,20 +498,29 @@ class PD_mock(Instrument):
             scale *= self.reduce_factor
         return scale
 
-    def get_data(self):
-        scale = self._scale()
-        if self.stamp:
-            return np.random.normal(size=self.samples, loc=100.0) * scale, time.time_ns()
+    def _make_dummy_data(self, scale):
+        if self.channels > 1:
+            return [
+                np.random.normal(size=self.samples, loc=100.0) * scale
+                for _ in range(self.channels)
+            ]
         else:
             return np.random.normal(size=self.samples, loc=100.0) * scale
 
+    def get_data(self):
+        data = self._make_dummy_data(self._scale())
+        if self.stamp:
+            return data, time.time_ns()
+        else:
+            return data
+
     def pop_block(self):
         time.sleep(self.period)
-        scale = self._scale()
+        data = self._make_dummy_data(self._scale())
         if self.stamp:
-            return np.random.normal(size=self.samples, loc=100.0) * scale, time.time_ns()
+            return data, time.time_ns()
         else:
-            return np.random.normal(size=self.samples, loc=100.0) * scale
+            return data
 
     # Standard API
 
@@ -523,7 +538,7 @@ class PD_mock(Instrument):
             * self.reduce_factor
             / params.get("rate", 1.0)
         )
-        self.logger.info(f"Period: {self.period*1e3:.1f} ms")
+        self.logger.info(f"Period: {self.period * 1e3:.1f} ms")
         return True
 
     def start(self, label: str = "") -> bool:
@@ -537,6 +552,8 @@ class PD_mock(Instrument):
     def get(self, key: str, args=None, label: str = ""):
         if key == "data":
             return self.get_data()
+        elif key == "data_with_status":
+            return self.get_data(), False
         elif key == "all_data":
             return [self.get_data()]
         elif key == "unit":
@@ -1000,6 +1017,10 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
         )
         return tree is not None
 
+    def get_finished(self) -> bool:
+        time.sleep(0.01)
+        return True
+
     # Standard API
 
     def start(self, label: str = "") -> bool:
@@ -1051,6 +1072,8 @@ class DTG5274_mock(Instrument, DTGCoreMixin):
                 return None
         elif key == "opc":
             return True
+        elif key == "finished":
+            return self.get_finished()
         elif key == "validate":
             if "blocks" in args and "freq" in args:
                 return self.validate_blocks(args["blocks"], args["freq"])
@@ -1287,6 +1310,10 @@ class PulseStreamer_mock(Instrument):
             self.logger.error(msg)
             return False
 
+    def get_finished(self) -> bool:
+        time.sleep(0.01)
+        return True
+
     def clear(self) -> bool:
         # For API compatibility
         return True
@@ -1338,6 +1365,8 @@ class PulseStreamer_mock(Instrument):
             return self.offsets  # offsets of last configure
         elif key == "opc":  # for API compatibility
             return True
+        elif key == "finished":
+            return self.get_finished()
         elif key == "validate":
             if "blocks" in args and "freq" in args:
                 return self.validate_blocks(args["blocks"], args["freq"])

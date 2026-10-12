@@ -397,6 +397,7 @@
 <li class="toctree-l3"><a class="reference internal" href="mahos.inst.daq.DigitalOut.html">mahos.inst.daq.DigitalOut</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2"><a class="reference internal" href="../digitizer.html">mahos.inst.digitizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../dmm.html">mahos.inst.dmm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../fg.html">mahos.inst.fg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../filter_wheel.html">mahos.inst.filter_wheel</a></li>
@@ -519,10 +520,10 @@ automatic buffer allocation.</p></li>
 <li><p><strong>drop_first</strong> (<em>int</em>) – (default: 0) drop the data on first N callbacks.</p></li>
 <li><p><strong>oversample</strong> (<em>int</em>) – (default: 1) cb_samples, samples, and buffer_size are multiplied by
 <cite>oversample</cite>, and everyN_handler is passed mean of <cite>oversample</cite> readings.</p></li>
+<li><p><strong>block_samples</strong> (<em>int</em>) – (default: 1) number of samples in one logical block after oversample
+averaging. Used when <code class="docutils literal notranslate"><span class="pre">block_reduce_factor</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
 <li><p><strong>block_reduce_factor</strong> (<em>int</em>) – (default: 1) additional reduction stage before <code class="docutils literal notranslate"><span class="pre">reduce_factor</span></code>.
 cb_samples, samples, and buffer_size are multiplied by <code class="docutils literal notranslate"><span class="pre">block_reduce_factor</span></code>.</p></li>
-<li><p><strong>block_reduce_samples</strong> (<em>int</em>) – (default: 0) block size (after oversample averaging) for
-<code class="docutils literal notranslate"><span class="pre">block_reduce_factor</span></code> reduction stage. required when <code class="docutils literal notranslate"><span class="pre">block_reduce_factor</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
 <li><p><strong>block_reduce_op</strong> (<em>str</em>) – (default: mean) reduction operation for blockwise reduction.
 one of <code class="docutils literal notranslate"><span class="pre">sum</span></code> or <code class="docutils literal notranslate"><span class="pre">mean</span></code>.</p></li>
 <li><p><strong>reduce_factor</strong> (<em>int</em>) – (default: 1) cb_samples, samples, and buffer_size are multiplied by
@@ -591,16 +592,19 @@ In this mode every1_handler is never called.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_block</span></code>()</p></td>
 <td><p>Get data from buffer.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_opt</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_block_with_status</span></code>()</p></td>
+<td><p>Get data and whether the software queue has discarded data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_opt</span></code>()</p></td>
 <td><p>Get data from buffer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_on_demand</span></code>([oversample])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_on_demand</span></code>([oversample])</p></td>
 <td><p>Read out analog voltages on demand.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_buffer_size</span></code>(size)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_buffer_size</span></code>(size)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_data_transfer</span></code>(channel, mode)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_data_transfer</span></code>(channel, mode)</p></td>
 <td><p>Set current transfer mechanism of <cite>channel</cite>.</p></td>
 </tr>
 </tbody>

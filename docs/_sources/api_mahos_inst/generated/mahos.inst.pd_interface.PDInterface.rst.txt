@@ -16,10 +16,8 @@
 
    .. autosummary::
    
-      ~PDInterface.pop_all_block
-      ~PDInterface.pop_all_opt
-      ~PDInterface.pop_block
-      ~PDInterface.pop_opt
+      ~PDInterface.configure_stream
+      ~PDInterface.configure_triggered
    
    
 

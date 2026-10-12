@@ -12,7 +12,7 @@ gcc:
 	g++ $(FLAGS) $(INCLUDES) $(NAME).cc -o $(NAME)$(EXT)
 
 clang:
-	clang++ -stdlib=libc++ $(FLAGS) $(INCLUDES) $(NAME).cc -o $(NAME)$(EXT)
+	clang++ $(FLAGS) $(INCLUDES) $(NAME).cc -o $(NAME)$(EXT)
 
 clean:
 	$(RM) $(NAME)$(EXT)

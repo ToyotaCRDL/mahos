@@ -238,10 +238,13 @@ class QBasicMeasClient(QStateReqClient, BasicMeasReqMixin, ParamDictReqMixin):
         context: Context | None = None,
         parent: QtCore.QObject = None,
         rep_endpoint="rep_endpoint",
+        file_transport_dir: str | None = None,
     ):
         QStateReqClient.__init__(
             self, gconf, name, context=context, parent=parent, rep_endpoint=rep_endpoint
         )
+
+        self.init_file_transport(file_transport_dir)
 
         self._state = self._data = self._buffer = None
 

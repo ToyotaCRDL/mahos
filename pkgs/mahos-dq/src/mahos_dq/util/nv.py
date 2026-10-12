@@ -13,6 +13,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 from scipy.linalg import eigh
+from scipy.optimize import least_squares
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -167,6 +168,99 @@ def peaks_of_B(
         w = eigh(H, eigvals_only=True, lower=True)
         peaks.extend([w[1] - w[0], w[2] - w[0]])
     return peaks
+
+
+def _Bxyz_to_spherical(Bx, By, Bz, degrees):
+    B = np.linalg.norm([Bx, By, Bz])
+    theta = np.arccos(Bz / B)
+    phi = np.arctan2(By, Bx)
+    if degrees:
+        theta = np.degrees(theta)
+        phi = np.degrees(phi)
+
+    return B, theta, phi
+
+
+def optimize_BD_of_peaks(
+    peaks_obs,
+    B0,
+    theta=None,
+    phi=None,
+    Dgs: float = Dgs_MHz,
+    weights=None,
+    out_spherical: bool = True,
+    degrees: bool = True,
+    verbose: bool = True,
+):
+    peaks_obs = np.asarray(peaks_obs)
+    if weights is None:
+        weights = np.ones_like(peaks_obs)
+    else:
+        weights = np.asarray(weights)
+
+    def residual(B_D):
+        B, D = B_D[:3], B_D[3]
+        peaks = peaks_of_B(B, D=D)
+        return weights * (np.asarray(peaks) - peaks_obs)
+
+    if theta is not None and phi is not None:
+        if degrees:
+            theta = np.radians(theta)
+            phi = np.radians(phi)
+        B0 = B0 * np.array(
+            [np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)]
+        )
+    x0 = np.append(np.asarray(B0), Dgs)
+
+    res = least_squares(residual, x0=x0)
+    if verbose:
+        print(res.message)
+    Bx, By, Bz, D = res.x
+
+    if not out_spherical:
+        return Bx, By, Bz, D
+    B, theta, phi = _Bxyz_to_spherical(Bx, By, Bz, degrees)
+    return B, theta, phi, D
+
+
+def optimize_B_of_peaks(
+    peaks_obs,
+    B0,
+    theta=None,
+    phi=None,
+    Dgs: float = Dgs_MHz,
+    weights=None,
+    out_spherical: bool = True,
+    degrees: bool = True,
+    verbose: bool = True,
+):
+    peaks_obs = np.asarray(peaks_obs)
+    if weights is None:
+        weights = np.ones_like(peaks_obs)
+    else:
+        weights = np.asarray(weights)
+
+    def residual(B):
+        peaks = peaks_of_B(B, D=Dgs)
+        return weights * (np.asarray(peaks) - peaks_obs)
+
+    if theta is not None and phi is not None:
+        if degrees:
+            theta = np.radians(theta)
+            phi = np.radians(phi)
+        B0 = B0 * np.array(
+            [np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)]
+        )
+
+    res = least_squares(residual, x0=B0)
+    if verbose:
+        print(res.message)
+    Bx, By, Bz = res.x
+
+    if not out_spherical:
+        return Bx, By, Bz
+    B, theta, phi = _Bxyz_to_spherical(Bx, By, Bz, degrees)
+    return B, theta, phi
 
 
 def peaks_of_B_es(

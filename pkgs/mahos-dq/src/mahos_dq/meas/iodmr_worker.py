@@ -222,7 +222,7 @@ class ISweeperDirect(ISweeperBase):
             trigger=True,
         )
         self._adjust_block(b, -1)
-        blocks = Blocks([b])
+        blocks = Blocks([b]).simplify()
         if not self.pg.configure_blocks(
             blocks, freq, trigger_type=TriggerType.HARDWARE_FALLING, n_runs=1
         ):

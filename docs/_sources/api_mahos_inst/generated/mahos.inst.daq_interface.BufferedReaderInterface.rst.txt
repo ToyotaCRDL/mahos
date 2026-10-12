@@ -20,6 +20,7 @@
       ~BufferedReaderInterface.pop_all_block
       ~BufferedReaderInterface.pop_all_opt
       ~BufferedReaderInterface.pop_block
+      ~BufferedReaderInterface.pop_block_with_status
       ~BufferedReaderInterface.pop_opt
    
    

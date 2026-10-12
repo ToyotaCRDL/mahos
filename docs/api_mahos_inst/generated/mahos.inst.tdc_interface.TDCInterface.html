@@ -381,6 +381,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../InstrumentInterface.html">mahos.inst.interface.InstrumentInterface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../camera.html">mahos.inst.camera</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../daq.html">mahos.inst.daq</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../digitizer.html">mahos.inst.digitizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../dmm.html">mahos.inst.dmm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../fg.html">mahos.inst.fg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../filter_wheel.html">mahos.inst.filter_wheel</a></li>
@@ -500,37 +501,40 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_histogram</span></code>(base_config, trange, tbin)</p></td>
 <td><p>Configure for histogram measurement.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_raw_events</span></code>(base_config, save_file)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_multi_histogram</span></code>(base_config, ...)</p></td>
+<td><p>Configure for multi histogram measurement.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_raw_events</span></code>(base_config, save_file)</p></td>
 <td><p>Configure for raw_events measurement.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data</span></code>(ch)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data</span></code>(ch)</p></td>
 <td><p>Get data of channel <cite>ch</cite>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_normalized</span></code>(ch)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_normalized</span></code>(ch)</p></td>
 <td><p>Get normalized data of channel <cite>ch</cite>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_roi</span></code>(ch, roi)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_roi</span></code>(ch, roi)</p></td>
 <td><p>Get data of channel <cite>ch</cite> using ROI.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_range_bin</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_range_bin</span></code>()</p></td>
 <td><p>Get range and bin in sec.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_raw_events</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_raw_events</span></code>()</p></td>
 <td><p>Get raw events of last measurement.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_status</span></code>(ch)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_status</span></code>(ch)</p></td>
 <td><p>Get status of channel <cite>ch</cite>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_timebin</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_timebin</span></code>()</p></td>
 <td><p>Get time bin in sec.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_duration</span></code>(duration)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_duration</span></code>(duration)</p></td>
 <td><p>set limit of measurement duration.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_save_file_name</span></code>(name)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_save_file_name</span></code>(name)</p></td>
 <td><p>set save file name.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_sweeps</span></code>(sweeps)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_sweeps</span></code>(sweeps)</p></td>
 <td><p>set limit of sweeps.</p></td>
 </tr>
 </tbody>

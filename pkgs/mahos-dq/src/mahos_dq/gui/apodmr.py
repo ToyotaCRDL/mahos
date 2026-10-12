@@ -17,8 +17,9 @@ from mahos.gui.Qt import QtCore, QtGui, QtWidgets
 from mahos.gui.param import apply_widgets
 from mahos.msgs.common_msgs import BinaryState
 from mahos.node.node import local_conf, join_name
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.dialog import load_dialog
+import mahos.util.validation as V
 
 from mahos_dq.gui.ui.apodmr import Ui_APODMR
 from mahos_dq.gui.apodmr_client import QAPODMRClient
@@ -47,8 +48,9 @@ class APODMRAutoSaveWidget(PODMRAutoSaveWidget):
 class APODMRRawPlotWidget(QtWidgets.QWidget):
     """Raw-trace plot widget for APODMR aggregated AnalogPD traces."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, logger=None):
         QtWidgets.QWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         self.init_widgets()
         self.update_font_size()
@@ -181,24 +183,24 @@ class APODMRRawPlotWidget(QtWidgets.QWidget):
             if not data.has_raw_data_sum() or data.records < 1:
                 self._show_empty()
                 return
-            plot_traces = data.raw_data_sum / data.records
+            plot_traces = data.raw_data_sum[tstart:tstop] / data.records
         else:
             record = max(min(self.recordBox.value(), retained_records - 1), -retained_records)
-            plot_traces = traces[record]
+            plot_traces = traces[record, tstart:tstop]
 
         tnum = tstop - tstart
-        for i, trace_idx in enumerate(range(tstart, tstop)):
-            y = plot_traces[trace_idx]
+        for i in range(tnum):
+            y = plot_traces[i]
             pen = self.cmap.map(i / (tnum - 1)) if tnum > 1 else self.cmap.map(0.5)
-            self._trace_items.append(self.raw_plot.plot(x, y, pen=pen, name=f"t{trace_idx:d}"))
+            self._trace_items.append(self.raw_plot.plot(x, y, pen=pen, name=f"t{tstart + i:d}"))
 
         self._update_marker_lines(data.marker_indices, x)
 
     def refresh(self, data: APODMRData):
         try:
             self.plot_raw(data)
-        except TypeError as e:
-            print("Error in plot_raw " + repr(e))
+        except TypeError:
+            self.logger.exception("Failed to plot raw data.")
 
     def update_font_size(self):
         font = QtGui.QFont()
@@ -248,10 +250,13 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
             [
                 ("power", self.powerBox),
                 ("freq", self.freqBox, 1e-6),
+                ("nomw", self.nomwBox),
                 ("sweeps_per_record", self.sweepsPerRecordBox),
-                ("shots_per_point", self.shotsPerPointBox),
+                ("burst_num", self.burstNumBox),
                 ("max_records", self.maxRecordsBox),
                 ("sweeps", self.sweepsBox),
+                ("save_history", self.saveHistoryBox),
+                ("hardware_sweep_limit", self.hardwareSweepLimitBox),
                 ("duration", self.durationBox),
                 ("roi_head", self.roiheadBox, 1e9),
                 ("roi_tail", self.roitailBox, 1e9),
@@ -262,6 +267,7 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
                 ("mw_delay", self.mdelayBox, 1e9),
                 ("trigger_width", self.trigwidthBox, 1e9),
                 ("init_delay", self.initdelayBox, 1e9),
+                ("point_init_delay", self.pointinitdelayBox, 1e9),
                 ("final_delay", self.finaldelayBox, 1e9),
                 ("mw_offset", self.moffsetBox, 1e9),
             ],
@@ -277,6 +283,7 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
                 [
                     ("power1", self.power1Box),
                     ("freq1", self.freq1Box, 1e-6),
+                    ("nomw1", self.nomw1Box),
                 ],
             )
         apply_widgets(
@@ -293,9 +300,11 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
         p = self.data.params
 
         self.sweepsBox.setValue(p.get("sweeps", 0))
+        self.saveHistoryBox.setChecked(p.get("save_history", True))
+        self.hardwareSweepLimitBox.setChecked(p.get("hardware_sweep_limit", False))
         self.sweepsPerRecordBox.setValue(p.get("sweeps_per_record", 1))
-        self.shotsPerPointBox.setValue(p.get("shots_per_point", 1))
-        self.maxRecordsBox.setValue(p.get("max_records", 0))
+        self.burstNumBox.setValue(p.get("burst_num", 1))
+        self.maxRecordsBox.setValue(p.get("max_records", 1))
         self.durationBox.setValue(p.get("duration", 0.0))
         self.roiheadBox.setValue(p.get("roi_head", 0.0) * 1e9)
         self.roitailBox.setValue(p.get("roi_tail", 0.0) * 1e9)
@@ -337,6 +346,7 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
         self.mdelayBox.setValue(p.get("mw_delay", 0.0) * 1e9)
         self.trigwidthBox.setValue(p.get("trigger_width", 0.0) * 1e9)
         self.initdelayBox.setValue(p.get("init_delay", 0.0) * 1e9)
+        self.pointinitdelayBox.setValue(p.get("point_init_delay", 0.0) * 1e9)
         self.finaldelayBox.setValue(p.get("final_delay", 0.0) * 1e9)
         self.moffsetBox.setValue(p.get("mw_offset", 0.0) * 1e9)
 
@@ -347,8 +357,10 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
         params["freq"] = self.freqBox.value() * 1e6
         params["power"] = self.powerBox.value()
         params["sweeps"] = self.sweepsBox.value()
+        params["save_history"] = self.saveHistoryBox.isChecked()
+        params["hardware_sweep_limit"] = self.hardwareSweepLimitBox.isChecked()
         params["sweeps_per_record"] = self.sweepsPerRecordBox.value()
-        params["shots_per_point"] = self.shotsPerPointBox.value()
+        params["burst_num"] = self.burstNumBox.value()
         params["max_records"] = self.maxRecordsBox.value()
         params["duration"] = self.durationBox.value()
         params["roi_head"] = self.roiheadBox.value() * 1e-9
@@ -365,6 +377,7 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
         params["mw_delay"] = self.mdelayBox.value() * 1e-9
         params["trigger_width"] = self.trigwidthBox.value() * 1e-9
         params["init_delay"] = self.initdelayBox.value() * 1e-9
+        params["point_init_delay"] = self.pointinitdelayBox.value() * 1e-9
         params["final_delay"] = self.finaldelayBox.value() * 1e-9
         params["mw_offset"] = self.moffsetBox.value() * 1e-9
 
@@ -407,10 +420,12 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
     def update_state(self, state: BinaryState, last_state: BinaryState):
         for w in (
             self.startButton,
+            self.validateButton,
             self.saveButton,
             self.exportButton,
             self.exportaltButton,
             self.loadButton,
+            self.enableresumeBox,
             self.quickresumeBox,
             self.freqBox,
             self.powerBox,
@@ -418,8 +433,10 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
             self.methodBox,
             self.partialBox,
             self.sweepsBox,
+            self.saveHistoryBox,
+            self.hardwareSweepLimitBox,
             self.sweepsPerRecordBox,
-            self.shotsPerPointBox,
+            self.burstNumBox,
             self.maxRecordsBox,
             self.durationBox,
             self.roiheadBox,
@@ -433,8 +450,10 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
             self.mdelayBox,
             self.trigwidthBox,
             self.initdelayBox,
+            self.pointinitdelayBox,
             self.finaldelayBox,
             self.moffsetBox,
+            self.roundTimingBox,
             self.paramTable,
         ):
             w.setEnabled(state == BinaryState.IDLE)
@@ -445,24 +464,29 @@ class APODMRWidget(PODMRWidgetBase, Ui_APODMR):
 class APODMRMainWindow(QtWidgets.QMainWindow):
     """MainWindow with APODMRWidget and plot docks."""
 
-    def __init__(self, gconf: dict, name, context, parent=None):
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         lconf = local_conf(gconf, name)
         target = lconf["target"]
+        enable_resume = V.check_bool(lconf.get("enable_resume", True), "enable_resume")
 
-        self.plot = PlotWidget(parent=self)
-        self.alt_plot = AltPlotWidget(parent=self)
-        self.raw_plot = APODMRRawPlotWidget(parent=self)
+        self.plot = PlotWidget(parent=self, logger=self.logger)
+        self.alt_plot = AltPlotWidget(parent=self, logger=self.logger)
+        self.raw_plot = APODMRRawPlotWidget(parent=self, logger=self.logger)
         self.apodmr = APODMRWidget(
             gconf,
             target["apodmr"],
             target["gparams"],
+            enable_resume,
             self.plot,
             self.alt_plot,
             self.raw_plot,
             context,
             parent=self,
+            logger=self.logger,
+            file_transport_dir=lconf.get("file_transport_dir"),
         )
 
         self.setWindowTitle(f"MAHOS.APODMRGUI ({join_name(target['apodmr'])})")
@@ -498,12 +522,20 @@ class APODMRMainWindow(QtWidgets.QMainWindow):
 class APODMRGUI(GUINode):
     """GUINode for Analog-PD Pulse ODMR using APODMRWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.apodmr: Target APODMR node full name.
     :type target.apodmr: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
+    :param enable_resume: (default: True) Initial state of "Enable resume" CheckBox.
+    :type enable_resume: bool
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return APODMRMainWindow(gconf, name, context)
+        return APODMRMainWindow(gconf, name, context, logger=self.logger)

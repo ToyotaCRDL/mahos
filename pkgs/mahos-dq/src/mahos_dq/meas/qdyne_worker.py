@@ -19,16 +19,14 @@ import numpy as np
 from mahos.util.timer import IntervalTimer, StopWatch
 from mahos.util.io import load_h5
 from mahos.msgs import param_msgs as P
-from mahos.msgs.pulse_msgs import PulsePattern
-from mahos.msgs.inst.pg_msgs import Block, Blocks
+from mahos.msgs.inst.pg_msgs import Block, Blocks, PulsePattern
 from mahos.msgs.inst.tdc_msgs import RawEvents, ChannelStatus
 from mahos_dq.msgs.qdyne_msgs import QdyneData, MWMode, TDCStatus
 from mahos.inst.sg_interface import SGInterface
 from mahos.inst.pg_interface import PGInterface
 from mahos.inst.tdc_interface import TDCInterface
 from mahos.inst.fg_interface import FGInterface
-from mahos.util.conf import PresetLoader
-from mahos.util.typing import ConfTypeCheckMixin
+from mahos.util.conf import ConfAccessorMixin, PresetLoader
 from mahos.meas.common_worker import Worker
 
 from mahos_dq.meas.podmr_generator import generator_kernel as K
@@ -191,7 +189,7 @@ class QdyneAnalyzer(object):
             idx += head_idx + tail_idx
 
             if not (i % each):
-                print(f"[{i}/{len(data.xdata)}] {i/len(data.xdata):.1%} {w.elapsed_str()}")
+                print(f"[{i}/{len(data.xdata)}] {i / len(data.xdata):.1%} {w.elapsed_str()}")
         return True
 
     def _analyze_ext(self, data: QdyneData) -> bool:
@@ -228,7 +226,7 @@ class QdyneAnalyzer(object):
             return self._analyze_ext(data)
 
 
-class Pulser(Worker, ConfTypeCheckMixin):
+class Pulser(Worker, ConfAccessorMixin):
     def __init__(self, cli, logger, conf: dict):
         """Worker for Qdyne.
 
@@ -590,10 +588,10 @@ class Pulser(Worker, ConfTypeCheckMixin):
 
     def _get_param_dict_pulse(self, label: str, d: dict):
         ## common_pulses
-        d["base_width"] = P.FloatParam(320e-9, 0.5e-9, 1e-4, unit="s", SI_prefix=True)
-        d["laser_delay"] = P.FloatParam(45e-9, 0.0, 1e-4, unit="s", SI_prefix=True)
-        d["laser_width"] = P.FloatParam(3e-6, 1e-9, 1e-4, unit="s", SI_prefix=True)
-        d["mw_delay"] = P.FloatParam(1e-6, 0.0, 1e-4, unit="s", SI_prefix=True)
+        d["base_width"] = P.FloatParam(8e-9, 0.5e-9, 1e-4, unit="s", SI_prefix=True)
+        d["laser_delay"] = P.FloatParam(0.0, 0.0, 1e-3, unit="s", SI_prefix=True)
+        d["laser_width"] = P.FloatParam(3e-6, 1e-9, 1e-3, unit="s", SI_prefix=True)
+        d["mw_delay"] = P.FloatParam(1e-6, 0.0, 1e-3, unit="s", SI_prefix=True)
         d["trigger_width"] = P.FloatParam(20e-9, 1e-9, 1e-6, unit="s", SI_prefix=True)
         ### global mw offset
         d["mw_offset"] = P.FloatParam(0.0, -1e-4, 1e-4, unit="s", SI_prefix=True)

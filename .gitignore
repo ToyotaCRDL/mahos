@@ -25,6 +25,9 @@ docs-src/*/generated
 docs/.doctrees
 !docs/_images/*.svg
 
+# instrument related log files
+spcmdrv_debug.txt
+
 ## Below is copied from github/gitignore/Python.gitignore
 
 # Byte-compiled / optimized / DLL files

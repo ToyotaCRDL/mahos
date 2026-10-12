@@ -32,7 +32,10 @@ def test_req_reconnect(gconf, server_restart, server_conf):
 
     # server is down here and thus failure
     server.stop()
+    old_socket = client.req._socket
     assert not client.lock("sg")
+    assert old_socket.closed
+    assert client.req._socket is not old_socket
 
     # restart the server and retry from client
     server.start()

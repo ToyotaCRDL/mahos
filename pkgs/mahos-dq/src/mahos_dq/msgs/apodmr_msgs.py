@@ -12,34 +12,15 @@ from __future__ import annotations
 
 import numpy as np
 
-from mahos.msgs.common_msgs import BinaryState, Status
-
-# just for re-export: MWMode, ValidateReq, and UpdatePlotParamsReq
+# classes other than PODMRData are just for re-export
 from mahos_dq.msgs.podmr_msgs import (  # noqa: F401
     PODMRData,
     MWMode,
     ValidateReq,
+    GetTimingInfoReq,
+    TimingInfo,
     UpdatePlotParamsReq,
 )
-
-
-class APODMRStatus(Status):
-    """Status message for APODMR measurements.
-
-    :ivar state: Measurement state (IDLE/ACTIVE).
-    :ivar pg_freq: Pulse generator frequency used by the current sequence.
-
-    """
-
-    def __init__(self, state: BinaryState, pg_freq: float):
-        self.state = state
-        self.pg_freq = pg_freq
-
-    def __repr__(self):
-        return f"APODMRStatus({self.state}, {self.pg_freq*1e-9:.2f} GHz)"
-
-    def __str__(self):
-        return f"APODMR({self.state.name}, {self.pg_freq*1e-9:.2f} GHz)"
 
 
 class APODMRData(PODMRData):
@@ -49,6 +30,11 @@ class APODMRData(PODMRData):
     :ivar raw_data_sum: Sum of all captured raw trace records with shape ``(trace, sample)``.
     :ivar raw_xdata: Trace-local time axis for a single aggregated trace.
     :ivar records: Number of raw trace records captured so far.
+    :ivar signal_history: Individual signal window means as a float64 array with shape
+        ``(record, trace)``, or ``None`` when empty.
+    :ivar reference_history: Individual reference window means with the same shape and type.
+    :ivar history_start_record: Zero-based absolute record index of the first history row.
+        For empty history, this equals ``records``.
     :ivar trace_laser_timing: Laser-start timing in trace-local time, measured from trigger.
     :ivar marker_indices: Marker indices with shape ``(4,)`` as
         ``(sig_head, sig_tail, ref_head, ref_tail)`` shared by all traces.
@@ -56,22 +42,46 @@ class APODMRData(PODMRData):
     :ivar laser_timing: Laser-start timings in sequence time (same semantics as
         :class:`mahos_dq.msgs.podmr_msgs.PODMRData`), kept for compatibility;
         APODMR analysis uses ``trace_laser_timing`` instead. When
-        ``shots_per_point > 1``, each entry marks only the first shot of a repeated point.
+        ``burst_num > 1``, each entry marks only the first shot of a repeated point.
 
     ``data0`` .. ``data3`` and ``data0ref`` .. ``data3ref`` retain the same
     analyzed-data semantics as :class:`mahos_dq.msgs.podmr_msgs.PODMRData`.
+
+    History preserves raw trace ordering and is enabled by ``save_history`` (default: True).
 
     """
 
     def __init__(self, params: dict | None = None, label: str = ""):
         super().__init__(params, label)
-        self.set_version(0)
+        self.set_version(2)
 
         self.tdc_status = None
         self.raw_data_sum = None
         self.records = 0
+        self.signal_history = None
+        self.reference_history = None
+        self.history_start_record = 0
         self.trace_laser_timing = None
         self.trigger_timing = None
+
+    def clear_history(self):
+        """Clear analyzed history and advance its start to the current record count."""
+
+        self.signal_history = None
+        self.reference_history = None
+        self.history_start_record = self.records
+
+    def can_resume(self, params: dict | None, label: str) -> bool:
+        """Check resume compatibility while allowing history collection to be toggled."""
+
+        if params is None:
+            return False
+        params = params.copy()
+        if self.has_params() and "save_history" in self.params:
+            params["save_history"] = self.params["save_history"]
+        else:
+            params.pop("save_history", None)
+        return super().can_resume(params, label)
 
     def _h5_attr_writers(self) -> dict:
         d = super()._h5_attr_writers()
@@ -131,7 +141,16 @@ class APODMRData(PODMRData):
     def sweeps(self) -> int:
         return self.records * self.get_sweeps_per_record()
 
-    def measurement_time(self) -> float:
+    def get_sampling_interval(self) -> float:
+        """Get the nominal analyzed-record sampling interval in seconds.
+
+        Computed as ``sweeps_per_record * instrument.length / instrument.pg_freq``.
+        Assumes uninterrupted acquisition without dropped records; resume gaps are not
+        represented. Use ``sweeps_per_record=1`` for sweep resolution.
+        Returns 0.0 when timing metadata is unavailable or the frequency is nonpositive.
+
+        """
+
         if not self.has_params():
             return 0.0
         try:
@@ -141,7 +160,10 @@ class APODMRData(PODMRData):
             return 0.0
         if freq <= 0.0:
             return 0.0
-        return self.sweeps() * length / freq
+        return self.get_sweeps_per_record() * length / freq
+
+    def measurement_time(self) -> float:
+        return self.records * self.get_sampling_interval()
 
     def has_raw_data(self) -> bool:
         return self.raw_data is not None and np.size(self.raw_data) > 0
@@ -155,5 +177,15 @@ class APODMRData(PODMRData):
 
 def update_data(data: APODMRData):
     """Update APODMR data to the latest schema."""
+
+    if data.version() <= 0:
+        # version 0 to 1
+        if data.has_params() and "shots_per_point" in data.params:
+            data.params["burst_num"] = data.params.pop("shots_per_point")
+        data.set_version(1)
+
+    if data.version() <= 1:
+        data.clear_history()
+        data.set_version(2)
 
     return data

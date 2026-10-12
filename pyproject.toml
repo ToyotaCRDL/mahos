@@ -1,4 +1,27 @@
-[tool.black]
+[tool.ruff]
 line-length = 99
-# gui/ui/*.py is auto-generated. podmr_patterns.py is too large.
-extend-exclude = "(pkgs/mahos/src/mahos/gui/ui|pkgs/mahos-dq/src/mahos_dq/gui/ui|tests/mahos-dq/podmr_patterns.py)"
+target-version = "py311"
+# gui/ui/*.py is auto-generated.
+extend-exclude = [
+    "build",
+    "pkgs/mahos/src/mahos/gui/ui",
+    "pkgs/mahos-dq/src/mahos_dq/gui/ui",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E203", "E266", "E741"]
+exclude = ["tests/**"]
+
+[tool.ruff.format]
+# podmr_patterns.py is too large.
+exclude = ["tests/mahos-dq/podmr_patterns.py"]
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
+
+reportMissingParameterType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportUnknownMemberType = false

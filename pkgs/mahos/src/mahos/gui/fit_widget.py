@@ -17,6 +17,7 @@ from mahos.gui.Qt import QtCore, QtWidgets, QtGui
 import matplotlib as mpl
 
 from mahos.gui.ui.fitWidget import Ui_FitWidget
+from mahos.gui.param import ParamDictComboBoxHandler
 
 from mahos.msgs.common_meas_msgs import BasicMeasData, Buffer
 from mahos.msgs.param_msgs import filter_label_prefix, join_labels
@@ -59,6 +60,7 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
 
         labels = filter_label_prefix("fit", self.cli.get_param_dict_labels())
         self.labelBox.addItems(labels)
+        self._param_dict_handler = ParamDictComboBoxHandler(self.labelBox)
         self.labelBox.currentIndexChanged.connect(self.update_param_table)
         if labels:
             self.update_param_table()
@@ -140,8 +142,11 @@ class FitWidget(QtWidgets.QWidget, Ui_FitWidget):
                 item.setBackground(QtGui.QColor(color))
 
     def update_param_table(self):
-        label = self.labelBox.currentText()
-        d = self.cli.get_param_dict(join_labels("fit", label))
+        d = self._param_dict_handler.get(
+            lambda label: self.cli.get_param_dict(join_labels("fit", label))
+        )
+        if d is None:
+            return
         self.paramTable.update_contents(d)
 
     def update_index(self, row: int, col: int):

@@ -11,10 +11,40 @@ Common widgets/utilities for GUI to deal with Generic Parameters (mahos.msgs.par
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 
 from mahos.msgs import param_msgs as P
 from mahos.gui.Qt import QtWidgets, QtCore
 from mahos.gui.common_widget import SpinBox
+
+
+class ParamDictComboBoxHandler:
+    """Fetch a selected ParamDict and roll back the combo box when fetching fails."""
+
+    def __init__(self, combo_box: QtWidgets.QComboBox):
+        self._combo_box = combo_box
+        self._accepted_index = -1
+
+    def get(
+        self, fetch: Callable[[str], P.ParamDict[str, P.PDValue] | None]
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        """Fetch parameters for the current item and accept or roll back the selection."""
+
+        index = self._combo_box.currentIndex()
+        if index < 0:
+            return None
+
+        params = fetch(self._combo_box.itemText(index))
+        if params is not None:
+            self._accepted_index = index
+            return params
+
+        was_blocked = self._combo_box.blockSignals(True)
+        try:
+            self._combo_box.setCurrentIndex(self._accepted_index)
+        finally:
+            self._combo_box.blockSignals(was_blocked)
+        return None
 
 
 def _is_positive_finite(value) -> bool:
@@ -75,29 +105,34 @@ def _infer_adaptive_min_step(param: P.NumberParam) -> float | int | None:
     return min_step
 
 
+def _apply_bounds(p: P.NumberParam, widget: QtWidgets.QWidget, coeff: float):
+    mn = p.minimum() * coeff if p.minimum() is not None else None
+    mx = p.maximum() * coeff if p.maximum() is not None else None
+    if isinstance(widget, QtWidgets.QSpinBox) and isinstance(p, P.FloatParam):
+        mn = round(mn) if mn is not None else None
+        mx = round(mx) if mx is not None else None
+    if mn is not None:
+        widget.setMinimum(mn)
+    elif isinstance(widget, QtWidgets.QSpinBox):
+        # unbounded (C++ INT_MIN is the smallest lower bound)
+        widget.setMinimum(-2_147_483_648)
+    elif isinstance(widget, QtWidgets.QDoubleSpinBox):
+        widget.setMinimum(-math.inf)
+    if mx is not None:
+        widget.setMaximum(mx)
+    elif isinstance(widget, QtWidgets.QSpinBox):
+        # unbounded (C++ INT_MAX is the largest upper bound)
+        widget.setMaximum(2_147_483_647)
+    elif isinstance(widget, QtWidgets.QDoubleSpinBox):
+        widget.setMaximum(math.inf)
+
+
 def _apply(p: P.Param, widget: QtWidgets.QWidget, coeff: float):
     if isinstance(p, P.NumberParam):
-        mn = p.minimum() * coeff if p.minimum() is not None else None
-        mx = p.maximum() * coeff if p.maximum() is not None else None
+        _apply_bounds(p, widget, coeff)
         v = p.some_value() * coeff
         if isinstance(widget, QtWidgets.QSpinBox) and isinstance(p, P.FloatParam):
-            mn = round(mn) if mn is not None else None
-            mx = round(mx) if mx is not None else None
             v = round(v)
-        if mn is not None:
-            widget.setMinimum(mn)
-        elif isinstance(widget, QtWidgets.QSpinBox):
-            # unbounded (C++ INT_MIN is the smallest lower bound)
-            widget.setMinimum(-2_147_483_648)
-        elif isinstance(widget, QtWidgets.QDoubleSpinBox):
-            widget.setMinimum(-math.inf)
-        if mx is not None:
-            widget.setMaximum(mx)
-        elif isinstance(widget, QtWidgets.QSpinBox):
-            # unbounded (C++ INT_MAX is the largest upper bound)
-            widget.setMaximum(2_147_483_647)
-        elif isinstance(widget, QtWidgets.QDoubleSpinBox):
-            widget.setMaximum(math.inf)
         widget.setValue(v)
         if isinstance(widget, SpinBox):
             opts = dict(
@@ -136,6 +171,30 @@ def apply_widgets(
             _apply(params[name], widget, coeff)
 
 
+def apply_widget_bounds(
+    params: P.ParamDict[str, P.PDValue],
+    name_widgets: list[tuple[str, QtWidgets.QWidget | list[QtWidgets.QWidget], float | None]],
+):
+    """Apply numeric parameter bounds to widgets without changing their values."""
+
+    for nwc in name_widgets:
+        if len(nwc) == 3:
+            name, widget, coeff = nwc
+            if coeff is None:
+                coeff = 1
+        elif len(nwc) == 2:
+            name, widget = nwc
+            coeff = 1
+        if name not in params:
+            continue
+        if isinstance(params[name], (list, tuple)):
+            for p, w in zip(params[name], widget):
+                if isinstance(p, P.NumberParam):
+                    _apply_bounds(p, w, coeff)
+        elif isinstance(params[name], P.NumberParam):
+            _apply_bounds(params[name], widget, coeff)
+
+
 def set_enabled(params: dict, name_widgets: list[tuple[str, QtWidgets.QWidget]]):
     for name, widget in name_widgets:
         widget.setEnabled(name in params)
@@ -143,6 +202,8 @@ def set_enabled(params: dict, name_widgets: list[tuple[str, QtWidgets.QWidget]])
 
 class ParamTable(QtWidgets.QTableWidget):
     """QTableWidget for input of ParamDict."""
+
+    paramsChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         QtWidgets.QTableWidget.__init__(self, parent=parent)
@@ -184,7 +245,12 @@ class ParamTable(QtWidgets.QTableWidget):
             if min_step is not None:
                 opts["minStep"] = min_step
             widget = SpinBox(**opts)
-        widget.valueChanged.connect(param.set)
+
+        def set_(value):
+            param.set(value)
+            self.paramsChanged.emit()
+
+        widget.valueChanged.connect(set_)
 
         def restore():
             widget.setValue(param.default())
@@ -196,10 +262,12 @@ class ParamTable(QtWidgets.QTableWidget):
 
         def set_():
             param.set(widget.text())
+            self.paramsChanged.emit()
 
         def restore():
             param.restore_default()
             widget.setText(param.default())
+            self.paramsChanged.emit()
 
         widget.editingFinished.connect(set_)
         return widget, restore
@@ -217,15 +285,17 @@ class ParamTable(QtWidgets.QTableWidget):
     def _add_widget_bool(self, param: P.BoolParam):
         widget = QtWidgets.QCheckBox("True", parent=self)
 
-        def set_(value):
+        def set_(value, emit=True):
             param.set(value)
             widget.setChecked(value)
             widget.setText("True" if value else "False")
+            if emit:
+                self.paramsChanged.emit()
 
         def restore():
             widget.setChecked(param.default())
 
-        set_(param.some_value())
+        set_(param.some_value(), emit=False)
         widget.toggled.connect(set_)
         return widget, restore
 
@@ -234,10 +304,11 @@ class ParamTable(QtWidgets.QTableWidget):
         default_i = param.options().index(param.default())
 
         for o in param.options():
-            widget.addItem(str(o))
+            widget.addItem(f"{o:_d}" if isinstance(param, P.IntChoiceParam) else str(o))
 
         def set_(i):
             param.set(param.options()[i])
+            self.paramsChanged.emit()
 
         def restore():
             widget.setCurrentIndex(default_i)
@@ -251,16 +322,18 @@ class ParamTable(QtWidgets.QTableWidget):
     ):
         checkbox = QtWidgets.QCheckBox("Enabled", parent=self)
 
-        def toggle(checked):
+        def toggle(checked, emit=True):
             param.set_enable(checked)
             checkbox.setText("Enabled" if checked else "Disabled")
             widget.setEnabled(checked)
             button.setEnabled(checked)
+            if emit:
+                self.paramsChanged.emit()
 
-        checkbox.toggled.connect(toggle)
         enabled = param.enabled()
-        checkbox.setChecked(True)
         checkbox.setChecked(enabled)
+        toggle(enabled, emit=False)
+        checkbox.toggled.connect(toggle)
         return checkbox
 
     def update_contents(self, params: P.ParamDict):
@@ -355,7 +428,7 @@ class ParamTable(QtWidgets.QTableWidget):
             w.setChecked(val)
         elif isinstance(param, (P.EnumParam, P.StrChoiceParam, P.IntChoiceParam)):
             w: QtWidgets.QComboBox
-            i = w.findText(str(val))
+            i = w.findText(f"{val:_d}" if isinstance(param, P.IntChoiceParam) else str(val))
             if i >= 0:
                 w.setCurrentIndex(i)
         else:

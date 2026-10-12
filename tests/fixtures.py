@@ -65,8 +65,13 @@ dummy_interval_sec = 0.01
 
 def stop_proc(proc, shutdown_ev):
     shutdown_ev.set()
-    proc.join(2.0)
-    proc.terminate()
+    proc.join(5.0)
+    if proc.is_alive():
+        proc.terminate()
+        proc.join(2.0)
+    if proc.is_alive():
+        proc.kill()
+        proc.join()
 
 
 class DummyLoggingNode(Node):

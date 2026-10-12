@@ -13,12 +13,12 @@ import pyqtgraph as pg
 
 from mahos.gui.Qt import QtCore, QtWidgets
 
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientTopWidget
 from mahos.gui.pulse_monitor_client import QPulseClient
 
 from mahos.node.node import local_conf, split_name, NAME_DELIM
-from mahos.msgs.pulse_msgs import PulsePattern
+from mahos.msgs.inst.pg_msgs import PulsePattern
 
 
 Policy = QtWidgets.QSizePolicy.Policy
@@ -27,8 +27,9 @@ Policy = QtWidgets.QSizePolicy.Policy
 class PulseMonitorWidget(ClientTopWidget):
     """Top widget for PulseMonitor"""
 
-    def __init__(self, gconf: dict, name, context):
-        ClientTopWidget.__init__(self)
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
+        ClientTopWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         self.conf = local_conf(gconf, name)
         targets = self.conf["target"]["pulse"]
@@ -163,20 +164,20 @@ class PulseMonitorWidget(ClientTopWidget):
 
     def update_label(self):
         scale, prefix = pg.siScale(self._mx)
-        s = f"M({scale*self._mx:7.3f} {prefix}s, {self._my:7.3f})"
+        s = f"M({scale * self._mx:7.3f} {prefix}s, {self._my:7.3f})"
         if self.cursor0 is not None:
             x0 = self.cursor0[0].value()
             y0 = self.cursor0[1].value()
             scale, prefix = pg.siScale(x0)
-            s += f"  C0({scale*x0:7.3f} {prefix}s, {y0:7.3f})"
+            s += f"  C0({scale * x0:7.3f} {prefix}s, {y0:7.3f})"
         if self.cursor1 is not None:
             x1 = self.cursor1[0].value()
             y1 = self.cursor1[1].value()
             scale, prefix = pg.siScale(x1)
-            s += f"  C1({scale*x1:7.3f} {prefix}s, {y1:7.3f})"
+            s += f"  C1({scale * x1:7.3f} {prefix}s, {y1:7.3f})"
         if self.cursor0 is not None and self.cursor1 is not None:
             scale, prefix = pg.siScale(x1 - x0)
-            s += f"  Delta({scale*(x1-x0):7.3f} {prefix}s, {y1-y0:7.3f})"
+            s += f"  Delta({scale * (x1 - x0):7.3f} {prefix}s, {y1 - y0:7.3f})"
         self.label.setText(s)
 
     def update_pos(self, pos):
@@ -279,7 +280,7 @@ class PulseMonitorWidget(ClientTopWidget):
         a_channels, a_patterns = self.plottable_all_a(self.pulse.blocks, max_len)
 
         if not d_channels and not a_channels:
-            print("[ERROR] empty pulse pattern")
+            self.logger.error("Empty pulse pattern.")
             return
 
         self.plot.clearPlots()
@@ -334,6 +335,10 @@ class PulseMonitor(GUINode):
     The node instantiates :class:`PulseMonitorWidget`, subscribes to pulse updates,
     and renders digital/analog channels with optional marker-based regions.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.pulse: Target pulse publisher node name(s).
     :type target.pulse: str | tuple[str, str] | list[str]
     :param colormap: PyQtGraph colormap name used for channel traces.
@@ -342,4 +347,4 @@ class PulseMonitor(GUINode):
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return PulseMonitorWidget(gconf, name, context)
+        return PulseMonitorWidget(gconf, name, context, logger=self.logger)

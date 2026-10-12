@@ -36,6 +36,17 @@ extensions = [
     "sphinx.ext.githubpages",
 ]
 
+# Optional instrument libraries imported while generating API documentation.
+autodoc_mock_imports = [
+    "PyDAQmx",
+    "pyvisa",
+    "clr",
+    "pypylon",
+    "pulsestreamer",
+    "pipython",
+    "spcm",
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 

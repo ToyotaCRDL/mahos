@@ -495,6 +495,9 @@ this command automatically starts the node.</p>
 <section id="mahos-echo">
 <h3>mahos echo<a class="headerlink" href="#mahos-echo" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">mahos</span> <span class="pre">echo</span> <span class="pre">-t</span> <span class="pre">[topicname]</span> <span class="pre">[nodename]</span></code> subscribes to a topic and prints published messages.</p>
+<p>Add <code class="docutils literal notranslate"><span class="pre">--rate</span> <span class="pre">(-r)</span></code> to print message rate statistics, or <code class="docutils literal notranslate"><span class="pre">--size</span> <span class="pre">(-s)</span></code> to print the serialized
+payload size without deserializing the message.  Combine them as <code class="docutils literal notranslate"><span class="pre">--rate</span> <span class="pre">--size</span> <span class="pre">(-rs)</span></code> to print
+message rate, latest and average payload size, and throughput.</p>
 </section>
 <section id="mahos-shell">
 <h3>mahos shell<a class="headerlink" href="#mahos-shell" title="Link to this heading">#</a></h3>

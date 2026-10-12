@@ -527,7 +527,7 @@ Runtime requirements in <code class="docutils literal notranslate"><span class="
 This includes <code class="docutils literal notranslate"><span class="pre">argcomplete</span></code>, which is used for <a class="reference internal" href="cli.html#mahos-shell-completion"><span class="std std-ref">bash/zsh CLI completion</span></a>.</p>
 <section id="dev-requirements">
 <h4>Dev requirements<a class="headerlink" href="#dev-requirements" title="Link to this heading">#</a></h4>
-<p>Development tools (pytest, black, flake8, sphinx, etc.) are in
+<p>Development tools (pytest, Ruff, Sphinx, etc.) are in
 <code class="docutils literal notranslate"><span class="pre">dev-requirements.txt</span></code>.</p>
 <ul class="simple">
 <li><p>You can install all of them by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">'./pkgs/mahos[dev]'</span></code> or
@@ -582,6 +582,21 @@ pip<span class="w"> </span>uninstall<span class="w"> </span>PyQt6<span class="w"
 pip<span class="w"> </span>install<span class="w"> </span>PyQt6
 </pre></div>
 </div>
+</section>
+<section id="qt-on-wsl">
+<h3>Qt on WSL<a class="headerlink" href="#qt-on-wsl" title="Link to this heading">#</a></h3>
+<p>Under WSL, Qt may select the Wayland platform plugin automatically.
+If a mahos GUI intermittently crashes during interaction,
+try using the XCB platform plugin instead.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">QT_QPA_PLATFORM</span><span class="o">=</span><span class="n">xcb</span> <span class="n">mahos</span> <span class="n">launch</span>
+</pre></div>
+</div>
+<p>This selects WSLg’s XWayland path, which seems more stable with mahos.
+To enable it for every mahos session, the environment variable can be exported
+when activating the mahos virtual environment.</p>
+<p>If Qt reports that the XCB platform plugin cannot be initialized,
+additional system XCB libraries may be required.
+On Ubuntu, install <code class="docutils literal notranslate"><span class="pre">libxcb-cursor0</span></code> first.</p>
 </section>
 <section id="qt-tools-on-ubuntu">
 <h3>Qt tools on Ubuntu<a class="headerlink" href="#qt-tools-on-ubuntu" title="Link to this heading">#</a></h3>
@@ -673,6 +688,7 @@ pip<span class="w"> </span>install<span class="w"> </span>PyQt6
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test">Test</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pyqt6">PyQt6</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qt-on-wsl">Qt on WSL</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qt-tools-on-ubuntu">Qt tools on Ubuntu</a></li>
 </ul>
 </li>

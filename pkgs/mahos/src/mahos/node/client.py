@@ -364,20 +364,82 @@ class EchoSubscriber(NodeClient):
         topic=b"status",
         type_=None,
         rate=False,
+        size=False,
     ):
         NodeClient.__init__(self, gconf, name, context=context, prefix=prefix)
 
         self.msg_count = -1
-        self.add_sub([(topic, self.print_rate if rate else lambda msg: print(msg), type_)])
+        self.byte_count = 0
+        if rate or size:
+            if rate and size:
+                handler = self.print_rate_size
+            elif rate:
+                handler = self.print_rate
+            else:
+                handler = self.print_size
+            subw = SubWorker(self.ctx)
+            subw.add_sub(self.conf["pub_endpoint"], topic, handler, deserial=False)
+            self.start_subworker(subw)
+        else:
+            self.add_sub([(topic, lambda msg: print(msg), type_)])
 
-    def print_rate(self, msg):
+    @staticmethod
+    def _payload_size(frames) -> int | None:
+        if len(frames) != 2:
+            print(f"[ERROR] {len(frames)} parts received instead of 2.")
+            return None
+        return len(frames[1])
+
+    @staticmethod
+    def _format_size(size: float, suffix: str = "") -> str:
+        value = float(size)
+        unit = "B"
+        for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
+            if value < 1024.0 or unit == "TiB":
+                break
+            value /= 1024.0
+        return f"{value:.2f} {unit}{suffix}"
+
+    def print_size(self, frames):
+        size = self._payload_size(frames)
+        if size is None:
+            return
+        print(f"{size} bytes ({self._format_size(size)})")
+
+    def _update_rate(self, size: int) -> float | None:
         self.msg_count += 1
         if self.msg_count == 0:
             self.start_time = time.perf_counter()
+            return None
+        self.byte_count += size
+        return time.perf_counter() - self.start_time
+
+    def print_rate(self, frames):
+        size = self._payload_size(frames)
+        if size is None:
             return
-        elapsed = time.perf_counter() - self.start_time
+        elapsed = self._update_rate(size)
+        if elapsed is None:
+            return
         rate = self.msg_count / elapsed
         print(f"{self.msg_count} msgs in {elapsed:.1f} sec.: {rate:.2f} Hz")
+
+    def print_rate_size(self, frames):
+        size = self._payload_size(frames)
+        if size is None:
+            return
+        elapsed = self._update_rate(size)
+        if elapsed is None:
+            return
+        rate = self.msg_count / elapsed
+        average = self.byte_count / self.msg_count
+        throughput = self.byte_count / elapsed
+        print(
+            f"{self.msg_count} msgs in {elapsed:.1f} sec.: {rate:.2f} Hz, "
+            f"latest: {size} bytes ({self._format_size(size)}), "
+            f"average: {average:.0f} bytes ({self._format_size(average, '/msg')}), "
+            f"throughput: {self._format_size(throughput, '/s')}"
+        )
 
 
 def get_client(

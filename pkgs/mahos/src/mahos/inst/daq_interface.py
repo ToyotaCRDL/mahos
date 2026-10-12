@@ -62,6 +62,18 @@ class AnalogOutInterface(InstrumentInterface):
 class BufferedReaderInterface(InstrumentInterface):
     """Common interface for AnalogIn and BufferedEdgeCounter."""
 
+    def pop_block_with_status(
+        self,
+    ) -> tuple[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float], bool]:
+        """Get data and whether the software queue has discarded data.
+
+        If the buffer is empty, this function blocks until data is ready. The status is
+        ``True`` when at least one item was discarded since the previous status pop.
+
+        """
+
+        return self.get("data_with_status")
+
     def pop_block(
         self,
     ) -> np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]:
@@ -177,6 +189,11 @@ class BufferedEdgeCounterInterface(BufferedReaderInterface):
         """Get data from buffer. If buffer is empty, this function blocks until data is ready."""
 
         return self.get("data", True)
+
+    def pop_block_with_status(self) -> tuple[np.ndarray, bool]:
+        """Get data and whether the software queue has discarded data."""
+
+        return self.get("data_with_status")
 
     def pop_all_block(self) -> list[np.ndarray]:
         """Get all data from buffer as list.

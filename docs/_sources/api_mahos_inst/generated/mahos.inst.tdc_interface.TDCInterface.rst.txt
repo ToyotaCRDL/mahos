@@ -19,6 +19,7 @@
       ~TDCInterface.clear
       ~TDCInterface.configure_correlation
       ~TDCInterface.configure_histogram
+      ~TDCInterface.configure_multi_histogram
       ~TDCInterface.configure_raw_events
       ~TDCInterface.get_data
       ~TDCInterface.get_data_normalized

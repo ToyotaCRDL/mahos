@@ -77,6 +77,11 @@ class PGInterface(InstrumentInterface):
 
         return self.set("trigger")
 
+    def get_finished(self) -> bool:
+        """Get if PG has finished sequence and ready for next trigger."""
+
+        return self.get("finished")
+
     def get_opc(self, delay=None) -> bool:
         """Get OPC (operation complete) status."""
 

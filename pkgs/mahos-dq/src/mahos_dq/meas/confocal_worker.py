@@ -144,21 +144,40 @@ class Tracer(Worker):
 
     def __init__(self, cli, logger, conf: dict):
         Worker.__init__(self, cli, logger, conf)
-        self.clock = ClockSourceInterface(cli, "clock")
+        self._pd_spectrum = self.conf.get("pd_spectrum", False)
+        self.clock = None if self._pd_spectrum else ClockSourceInterface(cli, "clock")
         self.pd_names = conf.get("pd_names", ["pd0", "pd1"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
+        self.pd_channels = conf.get("pd_channels", [1] * len(self.pds))
+        if isinstance(self.pd_channels, int):
+            if len(self.pds) != 1:
+                raise ValueError("pd_channels as int is only valid when len(pd_names) == 1.")
+            self.pd_channels = [self.pd_channels]
+        if len(self.pd_channels) != len(self.pds):
+            raise ValueError("len(pd_channels) must match len(pd_names).")
+        if any(ch < 1 for ch in self.pd_channels):
+            raise ValueError("all pd_channels values must be positive.")
         self.add_instruments(self.clock, *self.pds)
 
         self.interval_sec = self.conf.get("interval_sec", 0.5)
         self.size = self.conf.get("size", DEFAULT_TRACER_SIZE)
         self.cb_samples = self.conf.get("samples", 5)
-        self.oversample = self.conf.get("oversample", 1)
         self.time_window_sec = self.conf.get("time_window_sec", 0.01)
         self.pd_bounds = self.conf.get("pd_bounds", (-10.0, 10.0))
         self._pd_data_transfer = self.conf.get("pd_data_transfer")
 
+        if "pd_rate" in self.conf:
+            self.pd_rate = self.conf["pd_rate"]
+            if "oversample" in self.conf:
+                msg = "pd_rate and oversample are both defined in conf. oversample is disregarded."
+                self.logger.warn(msg)
+            self.oversample = None
+        else:
+            self.pd_rate = None
+            self.oversample = self.conf.get("oversample", 1)
+
         self.trace = Trace(
-            size=self.size, channels=len(self.pds), _complex=conf.get("complex", False)
+            size=self.size, channels=sum(self.pd_channels), _complex=conf.get("complex", False)
         )
         self.paused_trace: Trace | None = None
 
@@ -171,34 +190,46 @@ class Tracer(Worker):
 
         self.trace.yunit = self.pds[0].get_unit()
 
-        freq = 1.0 / self.time_window_sec * self.oversample
+        if self.pd_rate is not None:
+            freq = self.pd_rate
+            oversample = int(round(freq * self.time_window_sec))
+        else:
+            freq = 1.0 / self.time_window_sec * self.oversample
+            oversample = self.oversample
         buffer_size = self.cb_samples * self.conf.get("buffer_size_coeff", 200)
         params_clock = {"freq": freq, "samples": buffer_size, "finite": False}
-        params_pd = {
-            "cb_samples": self.cb_samples,
-            "samples": buffer_size,
-            "buffer_size": buffer_size,
-            "rate": freq,
-            "finite": False,
-            "every": False,
-            "stamp": True,
-            "clock": self.clock.get_internal_output(),
-            "time_window": self.time_window_sec,  # only for SinglePhotonCounter
-            "clock_mode": True,  # only for AnalogIn
-            "oversample": self.oversample,  # only for AnalogIn
-            "bounds": self.pd_bounds,  # only for AnalogIn
-        }
-        if self._pd_data_transfer:
-            params_pd["data_transfer"] = self._pd_data_transfer
-        success = (
-            self.clock.configure(params_clock)
-            and all([pd.configure(params_pd) for pd in self.pds])
-            and all([pd.start() for pd in self.pds])
-            and self.clock.start()
-        )
-
-        if not success:
-            return self.fail_with_release("Error starting tracer.")
+        if self.clock is not None:
+            if not self.clock.configure(params_clock):
+                return self.fail_with_release("Failed to configure clock.")
+            clock_pd = self.clock.get_internal_output()
+        else:
+            clock_pd = ""
+        if not all(
+            [
+                pd.configure_stream(
+                    self.cb_samples,
+                    buffer_size,
+                    freq,
+                    self.time_window_sec,
+                    bounds=self.pd_bounds,
+                    oversample=oversample,
+                    clock=clock_pd,
+                    stamp=True,
+                    data_transfer=self._pd_data_transfer,
+                )
+                for pd in self.pds
+            ]
+        ):
+            return self.fail_with_release("Failed to configure PDs.")
+        if not all([pd.start() for pd in self.pds]):
+            for pd in self.pds:
+                pd.stop()
+            return self.fail_with_release("Failed to start PDs.")
+        if self.clock is not None and not self.clock.start():
+            self.clock.stop()
+            for pd in self.pds:
+                pd.stop()
+            return self.fail_with_release("Failed to start clock.")
 
         self.running = True
         self.timer = IntervalTimer(self.interval_sec)
@@ -212,12 +243,9 @@ class Tracer(Worker):
         if not self.running:
             return False
 
-        success = (
-            self.clock.stop()
-            and all([pd.stop() for pd in self.pds])
-            and self.clock.release()
-            and all([pd.release() for pd in self.pds])
-        )
+        success = all([pd.stop() for pd in self.pds]) and all([pd.release() for pd in self.pds])
+        if self.clock is not None:
+            success &= self.clock.stop() and self.clock.release()
         if success:
             self.timer = None
             self.running = False
@@ -246,33 +274,66 @@ class Tracer(Worker):
             self.get_data()
 
     def _interp_stamps(self, stamps: tuple[int], last_stamp: int):
+        """Interpolate block timestamps using integer nanoseconds."""
+
         if not last_stamp:
             last_stamp = stamps[0] - self.cb_samples * round(self.time_window_sec * 1e9)
-        return np.hstack(
-            [
-                np.linspace(t1, t0, num=self.cb_samples, endpoint=False, dtype="datetime64[ns]")[
-                    ::-1
-                ]
+        # Exclude the previous block's endpoint and include the current one.
+        # Python integers avoid both float precision loss and intermediate int64 overflow.
+        return np.fromiter(
+            (
+                int(t0) + (int(t1) - int(t0)) * i // self.cb_samples
                 for t0, t1 in zip((last_stamp,) + stamps[:-1], stamps)
-            ]
-        )
+                for i in range(1, self.cb_samples + 1)
+            ),
+            dtype=np.int64,
+            count=len(stamps) * self.cb_samples,
+        ).view("datetime64[ns]")
+
+    def _split_pd_data(self, data) -> list[np.ndarray]:
+        """Split one PD queue item payload into trace-channel arrays."""
+
+        if isinstance(data, list):
+            return data
+        else:
+            return [data]
+
+    def _append_trace_data(self, ch: int, new_data: np.ndarray, new_stamps: np.ndarray):
+        if len(new_data) > self.size:
+            new_data = new_data[: self.size]
+            new_stamps = new_stamps[: self.size]
+        # shift data. see pyqtgraph/examples/scrollingPlots.py
+        s = len(new_data)
+        self.trace.traces[ch][:-s] = self.trace.traces[ch][s:]
+        self.trace.traces[ch][-s:] = new_data
+        self.trace.stamps[ch][:-s] = self.trace.stamps[ch][s:]
+        self.trace.stamps[ch][-s:] = new_stamps
 
     def get_data(self):
+        trace_ch = 0
         for i, pd in enumerate(self.pds):
             data = pd.pop_all_opt()
             if data is not None:
-                d, t = zip(*data)
-                new_data = np.hstack(d)
-                new_stamps = self._interp_stamps(t, self.trace.stamps[i][-1].view(np.int64))
-                if len(new_data) > self.size:
-                    new_data = new_data[: self.size]
-                    new_stamps = new_stamps[: self.size]
-                # shift data. see pyqtgraph/examples/scrollingPlots.py
-                s = len(new_data)
-                self.trace.traces[i][:-s] = self.trace.traces[i][s:]
-                self.trace.traces[i][-s:] = new_data
-                self.trace.stamps[i][:-s] = self.trace.stamps[i][s:]
-                self.trace.stamps[i][-s:] = new_stamps
+                chunks, stamps = zip(*data)
+                split_chunks = [self._split_pd_data(chunk) for chunk in chunks]
+                channels = len(split_chunks[0])
+                if channels != self.pd_channels[i]:
+                    self.logger.error(
+                        f"PD {self.pd_names[i]} returned {channels} channels, "
+                        f"expected {self.pd_channels[i]}."
+                    )
+                    trace_ch += self.pd_channels[i]
+                    continue
+                if any(len(chunk) != channels for chunk in split_chunks):
+                    self.logger.error(f"PD {self.pd_names[i]} returned inconsistent channels.")
+                    trace_ch += self.pd_channels[i]
+                    continue
+                for j in range(channels):
+                    new_data = np.hstack([chunk[j] for chunk in split_chunks])
+                    last_stamp = self.trace.stamps[trace_ch + j][-1].view(np.int64)
+                    new_stamps = self._interp_stamps(stamps, last_stamp)
+                    self._append_trace_data(trace_ch + j, new_data, new_stamps)
+            trace_ch += self.pd_channels[i]
 
     def is_paused(self):
         return self.paused_trace is not None

@@ -9,11 +9,13 @@ GUI frontend of Pulse ODMR.
 """
 
 from __future__ import annotations
+import math
 import typing as T
 import os
 import time
 from datetime import datetime
 import uuid
+from functools import partial
 
 import numpy as np
 import pyqtgraph as pg
@@ -26,24 +28,39 @@ from mahos_dq.gui.ui.podmr_nmr_table import Ui_NMRTable
 from mahos_dq.gui.ui.podmr_autosave import Ui_PODMRAutoSave
 from mahos_dq.gui.podmr_client import QPODMRClient
 
-from mahos.msgs.common_msgs import BinaryState
+from mahos.msgs.common_msgs import BinaryStatus, BinaryState
 from mahos.msgs.common_meas_msgs import Buffer
 from mahos.msgs import param_msgs as P
-from mahos_dq.msgs.podmr_msgs import PODMRStatus, PODMRData
+import mahos.util.validation as V
+from mahos_dq.msgs.podmr_msgs import PODMRData, TimingInfo
 from mahos.node.global_params import GlobalParamsClient
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientWidget
 from mahos.gui.fit_widget import FitWidget
-from mahos.gui.param import set_enabled, apply_widgets
+from mahos.gui.param import (
+    ParamDictComboBoxHandler,
+    set_enabled,
+    apply_widgets,
+    apply_widget_bounds,
+)
 from mahos.gui.dialog import save_dialog, load_dialog, export_dialog
 from mahos.node.node import local_conf, join_name
 from mahos.util.plot import colors_tab20_pair
 from mahos.util.timer import seconds_to_hms
-from mahos.util.math_phys import round_halfint, round_evenint
 from mahos.util.conv import real_fft
+from mahos.util.unit import SI_format, dBm_to_Vpeak
 
 
 Policy = QtWidgets.QSizePolicy.Policy
+
+
+def decimals_for_period(period_ns: float, minimum: int = 1, maximum: int = 6) -> int:
+    """Return display precision sufficient for a clock period in nanoseconds."""
+
+    for decimals in range(minimum, maximum + 1):
+        if math.isclose(round(period_ns, decimals), period_ns, rel_tol=1e-6, abs_tol=1e-9):
+            return decimals
+    return maximum
 
 
 class QNumTableWidgetItem(QtWidgets.QTableWidgetItem):
@@ -81,8 +98,9 @@ class PODMRFitWidget(FitWidget):
 
 
 class PlotWidget(QtWidgets.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, logger=None):
         QtWidgets.QWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
         self._auto_range = True
 
         self.init_ui()
@@ -135,8 +153,8 @@ class PlotWidget(QtWidgets.QWidget):
             try:
                 x = data.get_xdata()
                 xfit = data.get_fit_xdata()
-            except ValueError as e:
-                print("Error getting xdata: " + repr(e))
+            except ValueError:
+                self.logger.exception("Failed to get x data for analyzed plot.")
                 continue
 
             try:
@@ -144,8 +162,8 @@ class PlotWidget(QtWidgets.QWidget):
                 if y0 is None:
                     return
                 yfit = data.get_fit_ydata()
-            except ValueError as e:
-                print("Error getting ydata: " + repr(e))
+            except ValueError:
+                self.logger.exception("Failed to get y data for analyzed plot.")
                 continue
 
             if fitdisp and (xfit is not None) and (yfit is not None):
@@ -194,9 +212,8 @@ class PlotWidget(QtWidgets.QWidget):
     def refresh(self, data_list, data: PODMRData):
         try:
             self.plot_analyzed(data_list)
-        except TypeError as e:
-            # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
-            print("Error in plot_analyzed " + repr(e))
+        except TypeError:
+            self.logger.exception("Failed to plot analyzed data.")
 
         self.update_label(data)
 
@@ -221,8 +238,9 @@ class PlotWidget(QtWidgets.QWidget):
 
 
 class AltPlotWidget(QtWidgets.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, logger=None):
         QtWidgets.QWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         self.init_ui()
         self.init_view()
@@ -306,8 +324,8 @@ class AltPlotWidget(QtWidgets.QWidget):
         for data, _, c in data_list:
             try:
                 x = data.get_xdata()
-            except ValueError as e:
-                print("Error getting xdata: " + repr(e))
+            except ValueError:
+                self.logger.exception("Failed to get x data for alternate plot.")
                 continue
             if len(x) == 1:
                 continue
@@ -315,8 +333,8 @@ class AltPlotWidget(QtWidgets.QWidget):
                 y0, y1 = data.get_ydata()
                 if y0 is None:
                     return
-            except ValueError as e:
-                print("Error getting ydata: " + repr(e))
+            except ValueError:
+                self.logger.exception("Failed to get y data for alternate plot.")
                 continue
 
             f, S0 = self.real_fft(x, y0)
@@ -348,9 +366,8 @@ class AltPlotWidget(QtWidgets.QWidget):
 
         try:
             self.plot_fft(data_list)
-        except TypeError as e:
-            # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
-            print("Error in plot_fft " + repr(e))
+        except TypeError:
+            self.logger.exception("Failed to plot FFT data.")
 
         self.update_label(data)
 
@@ -377,8 +394,9 @@ class AltPlotWidget(QtWidgets.QWidget):
 
 
 class RawPlotWidget(QtWidgets.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, logger=None):
         QtWidgets.QWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         self.init_widgets()
         self.update_font_size()
@@ -586,9 +604,8 @@ class RawPlotWidget(QtWidgets.QWidget):
     def refresh(self, data: PODMRData):
         try:
             self.plot_raw(data)
-        except TypeError as e:
-            # import sys, traceback; traceback.print_tb(sys.exc_info()[2])
-            print("Error in plot_raw " + repr(e))
+        except TypeError:
+            self.logger.exception("Failed to plot raw data.")
 
     def update_font_size(self):
         font = QtGui.QFont()
@@ -840,13 +857,17 @@ class PODMRWidgetBase(ClientWidget):
         gconf: dict,
         name,
         gparams_name,
+        enable_resume: bool,
         plot: PlotWidget,
         alt_plot: AltPlotWidget,
         raw_plot: RawPlotWidget,
         context,
         parent=None,
+        logger=None,
+        file_transport_dir=None,
     ):
         ClientWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
         self.setup_measurement_ui()
 
         self.conf = local_conf(gconf, name)
@@ -854,10 +875,12 @@ class PODMRWidgetBase(ClientWidget):
         self._finalizing = False
         self._has_fg = False
         self._found_sg1 = False
-        self._pg_freq = None
+        self._timing_info: TimingInfo | None = None
+        self._timing_params_key = None
         self._params = None
         self._meas_state = BinaryState.IDLE
 
+        self.enableresumeBox.setChecked(enable_resume)
         self.init_radiobuttons()
         self.tabWidget.setCurrentIndex(0)
         self.plot = plot
@@ -866,7 +889,9 @@ class PODMRWidgetBase(ClientWidget):
 
         self.data = self.DATA_CLASS()
 
-        self.cli = self.CLIENT_CLASS(gconf, name, context=context, parent=self)
+        self.cli = self.CLIENT_CLASS(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -915,15 +940,11 @@ class PODMRWidgetBase(ClientWidget):
         self.fg_buttons = QtWidgets.QButtonGroup(parent=self)
         set_group(self.fg_buttons, 0, [b for b, l in self.get_fg_mode_dict()])
 
-    def init_with_status(self, status: PODMRStatus):
+    def init_with_status(self, status: BinaryStatus):
         """initialize widget after receiving first status."""
 
         # only once.
         self.cli.statusUpdated.disconnect(self.init_with_status)
-
-        self._pg_freq = status.pg_freq
-        self.pgfreqLabel.setText(f"PG freq: {self._pg_freq*1e-9:.2f} GHz")
-        self.update_timing_box_step()
 
         self.methodBox.clear()
         methods = P.filter_out_label_prefix("fit", self.cli.get_param_dict_labels())
@@ -948,6 +969,7 @@ class PODMRWidgetBase(ClientWidget):
 
     def init_connection(self):
         self.startButton.clicked.connect(self.request_start)
+        self.validateButton.clicked.connect(self.request_validate)
         self.stopButton.clicked.connect(self.request_stop)
         self.saveButton.clicked.connect(self.save_data)
         self.exportButton.clicked.connect(self.export_data)
@@ -965,9 +987,13 @@ class PODMRWidgetBase(ClientWidget):
             w.valueChanged.connect(self.update_stop)
         for w in (self.NstartBox, self.NstepBox, self.NnumBox):
             w.valueChanged.connect(self.update_Nstop)
+        self.powerBox.valueChanged.connect(partial(self.update_volt_label, self.voltLabel))
+        self.power1Box.valueChanged.connect(partial(self.update_volt_label, self.volt1Label))
 
+        self._method_handler = ParamDictComboBoxHandler(self.methodBox)
         self.methodBox.currentIndexChanged.connect(self.switch_method)
         self.partialBox.currentIndexChanged.connect(self.switch_partial)
+        self.paramTable.paramsChanged.connect(self.update_timing_info)
 
         self._wire_plot_widgets(True)
         self.plotenableBox.toggled.connect(self.update_plot_enable)
@@ -1002,6 +1028,7 @@ class PODMRWidgetBase(ClientWidget):
             [
                 ("power", self.powerBox),
                 ("freq", self.freqBox, 1e-6),
+                ("nomw", self.nomwBox),
                 ("interval", self.intervalBox, 1e3),
                 ("timebin", self.binBox, 1e9),
                 ("sweeps", self.sweepsBox),
@@ -1026,6 +1053,7 @@ class PODMRWidgetBase(ClientWidget):
                 [
                     ("power1", self.power1Box),
                     ("freq1", self.freq1Box, 1e-6),
+                    ("nomw1", self.nomw1Box),
                 ],
             )
         apply_widgets(
@@ -1062,11 +1090,16 @@ class PODMRWidgetBase(ClientWidget):
 
     def update_stop(self):
         stop = self.startBox.value() + self.stepBox.value() * (self.numBox.value() - 1)
-        self.stopLabel.setText(f"stop: {stop:.1f} ns")
+        self.stopLabel.setText(f"stop: {stop:_.1f} ns")
 
     def update_Nstop(self):
         Nstop = self.NstartBox.value() + self.NstepBox.value() * (self.NnumBox.value() - 1)
-        self.NstopLabel.setText(f"stop: {Nstop:d}")
+        self.NstopLabel.setText(f"stop: {Nstop:_d}")
+
+    def update_volt_label(self, widget, power_dBm: float):
+        imp = 50
+        Vp = SI_format(dBm_to_Vpeak(power_dBm, imp), suffix="Vp")
+        widget.setText(f"{Vp} ({imp} Ω)")
 
     def switch_fg(self):
         disabled = self.fg_disableButton.isChecked()
@@ -1084,10 +1117,20 @@ class PODMRWidgetBase(ClientWidget):
             self._found_sg1 = True
 
     def switch_method(self):
-        method = self.methodBox.currentText()
-        self._params = self.cli.get_param_dict(method)
+        params = self._method_handler.get(self.cli.get_param_dict)
+        if params is None:
+            return
+        self._params = params
         self.update_cond_widgets()
         self._apply_sg1(self._params)
+        apply_widget_bounds(
+            self._params["pulse"],
+            [
+                ("90pulse", self.t90pulseBox, 1e9),
+                ("180pulse", self.t180pulseBox, 1e9),
+                ("270pulse", self.t270pulseBox, 1e9),
+            ],
+        )
         pp = P.ParamDict(
             pulse={
                 k: v
@@ -1097,7 +1140,10 @@ class PODMRWidgetBase(ClientWidget):
         )
         if "pd" in self._params:
             pp["pd"] = self._params["pd"]
+        if "awg" in self._params:
+            pp["awg"] = self._params["awg"]
         self.paramTable.update_contents(pp)
+        self.update_timing_info(force=True)
         self.reset_partial_modes(self._params["partial"].maximum())
         self.reset_plot_modes(
             self._params["plot"]["plotmode"].options(),
@@ -1272,6 +1318,10 @@ class PODMRWidgetBase(ClientWidget):
         if "pd" in p:
             for k, v in p["pd"].items():
                 self.paramTable.apply_value("pd." + k, v)
+        # optional awg params
+        if "awg" in p:
+            for k, v in p["awg"].items():
+                self.paramTable.apply_value("awg." + k, v)
 
     def apply_meas_widgets(self):
         p = self.data.params
@@ -1354,7 +1404,7 @@ class PODMRWidgetBase(ClientWidget):
         if "plot" in self.data.params:
             p = self.data.params["plot"]
         else:
-            print("params['plot'] is not found.")
+            self.logger.error("params['plot'] is not found.")
             p = {}
 
         # avoid sending many requests
@@ -1389,6 +1439,8 @@ class PODMRWidgetBase(ClientWidget):
             params["pulse"]["270pulse"] = self.t270pulseBox.value() * 1e-9
         if "pd" in pt:
             params["pd"] = pt["pd"]
+        if "awg" in pt:
+            params["awg"] = pt["awg"]
 
     def get_params(self) -> tuple[dict, str]:
         label = self.methodBox.currentText()
@@ -1483,24 +1535,38 @@ class PODMRWidgetBase(ClientWidget):
         self.cli.stop()
 
     def request_start(self):
-        self.round_timing_box_values()
+        result = self.prepare_timing_params()
+        if result is not None:
+            self.start(*result)
 
-        if self.validate_pulse():
-            self.start()
+    def request_validate(self):
+        result = self.prepare_timing_params()
+        if result is None:
+            return
+        if self.cli.validate(*result):
+            QtWidgets.QMessageBox.information(
+                self, "Pulse validation", "Pulse parameters are valid."
+            )
+        else:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Pulse validation failed",
+                "Pulse parameters are invalid. See the log for details.",
+            )
 
-    def validate_pulse(self):
-        return self.cli.validate(*self.get_params())
-
-    def start(self):
+    def start(self, params: dict, label: str):
         """start the measurement."""
 
-        params, label = self.get_params()
         title = "Continue?"
         body = (
             "Continue with current data?"
             + " Press No to clear current data and start a new measurement."
         )
-        if self.data.can_resume(params, label) and Qt.question_yn(self, title, body):
+        if (
+            self.enableresumeBox.isChecked()
+            and self.data.can_resume(params, label)
+            and Qt.question_yn(self, title, body)
+        ):
             params["resume"] = True
             params["ident"] = self.data.ident
         else:
@@ -1678,10 +1744,12 @@ class PODMRWidgetBase(ClientWidget):
     def update_state(self, state: BinaryState, last_state: BinaryState):
         for w in (
             self.startButton,
+            self.validateButton,
             self.saveButton,
             self.exportButton,
             self.exportaltButton,
             self.loadButton,
+            self.enableresumeBox,
             self.quickresumeBox,
             self.binBox,
             self.freqBox,
@@ -1706,6 +1774,7 @@ class PODMRWidgetBase(ClientWidget):
             self.initdelayBox,
             self.finaldelayBox,
             self.moffsetBox,
+            self.roundTimingBox,
             self.paramTable,
         ):
             w.setEnabled(state == BinaryState.IDLE)
@@ -1716,6 +1785,9 @@ class PODMRWidgetBase(ClientWidget):
 
     def has_fg(self):
         return self._has_fg
+
+    def is_awg_mode(self) -> bool:
+        return self._params is not None and "awg" in self._params
 
     def timing_boxes(self):
         return (
@@ -1734,56 +1806,98 @@ class PODMRWidgetBase(ClientWidget):
             self.t270pulseBox,
         )
 
-    def update_timing_box_step(self):
-        if round(self._pg_freq) == round(2.0e9):
-            step = 0.5
-        elif round(self._pg_freq) == round(1.0e9):
-            step = 1.0
-        elif round(self._pg_freq) == round(0.5e9):
-            step = 2.0
-        else:
-            print(f"Cannot determine timing box step with PG freq {self._pg_freq*1e-9:.2f} GHz")
-            step = 1.0
+    def timing_params_key(self):
+        """Return the parameters that can affect timing information."""
 
+        label = self.methodBox.currentText()
+        params = P.unwrap(self.paramTable.params())
+        awg_rate = params.get("awg", {}).get("rate")
+        return label, awg_rate
+
+    def update_timing_info(self, force: bool = False) -> TimingInfo | None:
+        """Fetch timing information and update timing controls when necessary."""
+
+        # The current non-AWG backend derives TimingInfo solely from its static pg_freq
+        # configuration. Reuse a successful result to avoid requests while the node is busy.
+        # Remove this short-circuit if non-AWG timing becomes parameter-dependent.
+        if not self.is_awg_mode() and self._timing_info is not None:
+            return self._timing_info
+
+        key = self.timing_params_key()
+        if not force and key == self._timing_params_key:
+            return self._timing_info
+
+        params, label = self.get_params()
+        self._timing_params_key = key
+        self._timing_info = self.cli.get_timing_info(params, label)
+        self.update_timing_freq_label()
+        self.update_timing_box_step()
+        return self._timing_info
+
+    def update_timing_freq_label(self):
+        name = "AWG digital rate" if self.is_awg_mode() else "PG freq"
+        if self._timing_info is None:
+            self.pgfreqLabel.setText(f"{name}: Unknown")
+            return
+
+        freq = SI_format(self._timing_info.pg_freq, precision=4, suffix="Hz")
+        period = SI_format(self._timing_info.period, precision=4, suffix="s")
+        self.pgfreqLabel.setText(f"{name}: {freq} ({period} period)")
+
+    def update_timing_box_step(self):
+        if self._timing_info is None:
+            return
+
+        step = self._timing_info.period * 1e9
+        decimals = decimals_for_period(step)
         for b in self.timing_boxes():
+            b.setDecimals(max(b.decimals(), decimals))
             b.setSingleStep(step)
 
     def round_timing_box_values(self):
-        """check and round values of QDoubleSpinBox for timing parameters."""
+        """Round timing parameters to the current digital clock period."""
 
-        if round(self._pg_freq) == round(2.0e9):
-            _round = round_halfint
-        elif round(self._pg_freq) == round(1.0e9):
-            _round = round
-        elif round(self._pg_freq) == round(0.5e9):
-            _round = round_evenint
-        else:
-            print(f"Cannot determine round method with PG freq {self._pg_freq*1e-9:.2f} GHz")
-            _round = round
+        if not self.roundTimingBox.isChecked() or self._timing_info is None:
+            return
 
+        period_ns = self._timing_info.period * 1e9
         for b in self.timing_boxes():
-            b.setValue(_round(b.value()))
+            b.setValue(round(b.value() / period_ns) * period_ns)
+
+    def prepare_timing_params(self) -> tuple[dict, str] | None:
+        """Fetch timing information, optionally round values, and rebuild parameters."""
+
+        if self.update_timing_info(force=True) is None:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Timing information unavailable",
+                "Failed to determine the digital timing resolution.",
+            )
+            return None
+
+        self.round_timing_box_values()
+        return self.get_params()
 
     def set_method(self, method: str):
         i = self.methodBox.findText(method)
         if i >= 0:
             self.methodBox.setCurrentIndex(i)
         else:
-            print(f"[ERROR] unknown method: {method}")
+            self.logger.error(f"Unknown method: {method}")
 
     def set_plot_mode(self, mode: str):
         i = self.plotmodeBox.findText(mode)
         if i >= 0:
             self.plotmodeBox.setCurrentIndex(i)
         else:
-            print(f"[ERROR] unknown plot mode: {mode}")
+            self.logger.error(f"Unknown plot mode: {mode}")
 
     def set_tau_mode(self, mode: str):
         i = self.taumodeBox.findText(mode)
         if i >= 0:
             self.taumodeBox.setCurrentIndex(i)
         else:
-            print(f"[ERROR] unknown tau mode: {mode}")
+            self.logger.error(f"Unknown tau mode: {mode}")
 
     def reset_tau_modes(self, modes: list[str]):
         prev_mode = self.taumodeBox.currentText()
@@ -1840,7 +1954,7 @@ class PODMRWidgetBase(ClientWidget):
         if i >= 0:
             self.refmodeBox.setCurrentIndex(i)
         else:
-            print(f"[ERROR] unknown ref mode: {mode}")
+            self.logger.error(f"Unknown ref mode: {mode}")
 
     def get_fg_mode_dict(self):
         return [
@@ -1860,24 +1974,29 @@ class PODMRWidget(PODMRWidgetBase, Ui_PODMR):
 class PODMRMainWindow(QtWidgets.QMainWindow):
     """MainWindow with PODMRWidget and PlotWidget."""
 
-    def __init__(self, gconf: dict, name, context, parent=None):
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         lconf = local_conf(gconf, name)
         target = lconf["target"]
+        enable_resume = V.check_bool(lconf.get("enable_resume", True), "enable_resume")
 
-        self.plot = PlotWidget(parent=self)
-        self.alt_plot = AltPlotWidget(parent=self)
-        self.raw_plot = RawPlotWidget(parent=self)
+        self.plot = PlotWidget(parent=self, logger=self.logger)
+        self.alt_plot = AltPlotWidget(parent=self, logger=self.logger)
+        self.raw_plot = RawPlotWidget(parent=self, logger=self.logger)
         self.podmr = PODMRWidget(
             gconf,
             target["podmr"],
             target["gparams"],
+            enable_resume,
             self.plot,
             self.alt_plot,
             self.raw_plot,
             context,
             parent=self,
+            logger=self.logger,
+            file_transport_dir=lconf.get("file_transport_dir"),
         )
 
         self.setWindowTitle(f"MAHOS.PODMRGUI ({join_name(target['podmr'])})")
@@ -1916,12 +2035,20 @@ class PODMRMainWindow(QtWidgets.QMainWindow):
 class PODMRGUI(GUINode):
     """GUINode for Pulse ODMR using PODMRWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.podmr: Target PODMR node full name.
     :type target.podmr: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
+    :param enable_resume: (default: True) Initial state of "Enable resume" CheckBox.
+    :type enable_resume: bool
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return PODMRMainWindow(gconf, name, context)
+        return PODMRMainWindow(gconf, name, context, logger=self.logger)

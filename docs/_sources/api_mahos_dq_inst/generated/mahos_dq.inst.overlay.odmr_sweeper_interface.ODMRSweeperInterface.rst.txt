@@ -17,11 +17,12 @@
    .. autosummary::
    
       ~ODMRSweeperInterface.get_bounds
+      ~ODMRSweeperInterface.get_capability
       ~ODMRSweeperInterface.get_line
-      ~ODMRSweeperInterface.get_pd_analog
       ~ODMRSweeperInterface.get_point
       ~ODMRSweeperInterface.get_pulse_pattern
       ~ODMRSweeperInterface.get_unit
+      ~ODMRSweeperInterface.validate
    
    
 

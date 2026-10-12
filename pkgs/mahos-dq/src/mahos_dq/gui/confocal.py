@@ -62,7 +62,7 @@ from mahos.util.plot import colors_tab20_pair
 from mahos.util.stat import simple_moving_average
 from mahos.util.timer import FPSCounter
 from mahos.util.unit import SI_scale
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.dialog import save_dialog, load_dialog, export_dialog
 from mahos.gui.param import apply_widgets
 from mahos.gui.common_widget import ClientWidget
@@ -1240,8 +1240,12 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         move_interval_ms,
         context,
         parent=None,
+        logger=None,
+        file_transport_dir=None,
+        tracker_file_transport_dir=None,
     ):
         ClientWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
         self.setupUi(self)
 
         self.confocal_conf = local_conf(gconf, name)
@@ -1255,11 +1259,17 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         self._move_interval_ms = move_interval_ms
         self._track_save_dir = ""
 
-        self.cli = QConfocalClient(gconf, name, context=context, parent=self)
+        self.cli = QConfocalClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.tracker_cli = QConfocalTrackerClient(
-            gconf, tracker_name, context=context, parent=self
+            gconf,
+            tracker_name,
+            context=context,
+            parent=self,
+            file_transport_dir=tracker_file_transport_dir,
         )
         self.tracker_cli.stateUpdated.connect(self.update_tracker_state)
 
@@ -1932,7 +1942,7 @@ class ConfocalWidget(ClientWidget, Ui_Confocal):
         if self._scan_param_dict is None:
             params = self.cli.get_param_dict("scan")
             if params is None or "mode" not in params:
-                print("[ERROR] Failed to get scan params")
+                self.logger.error("Failed to get scan params.")
                 return None
             self._scan_param_dict = params
         return self._scan_param_dict
@@ -2161,7 +2171,17 @@ class traceView(ClientWidget, Ui_traceView):
 
     MAX_CHANNELS = 9
 
-    def __init__(self, gconf: dict, name, gparams_name, labels, context, cli=None, parent=None):
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        gparams_name,
+        labels,
+        context,
+        cli=None,
+        parent=None,
+        file_transport_dir=None,
+    ):
         ClientWidget.__init__(self, parent)
         self.setupUi(self)
 
@@ -2173,7 +2193,13 @@ class traceView(ClientWidget, Ui_traceView):
         self.graphicsView.setCentralItem(self.pi)
 
         if cli is None:
-            self.cli = QTracerClient(gconf, name, context=context, parent=self)
+            self.cli = QTracerClient(
+                gconf,
+                name,
+                context=context,
+                parent=self,
+                file_transport_dir=file_transport_dir,
+            )
         else:
             self.cli = cli
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -2246,7 +2272,13 @@ class traceView(ClientWidget, Ui_traceView):
         dfs = []
         for ch in range(trace.channels()):
             s, t = trace.valid_trace(ch, complex_conv=complex_conv)
-            dfs.append(pd.DataFrame(t, index=pd.DatetimeIndex(s)))
+            df = pd.DataFrame(t, index=pd.DatetimeIndex(s))
+            # Nearest alignment requires unique, ordered timestamps.
+            if not df.index.is_unique:
+                df = df.groupby(level=0, sort=True).mean()
+            elif not df.index.is_monotonic_increasing:
+                df = df.sort_index()
+            dfs.append(df)
         base_index = dfs[0].index
         # Align channels to PD0 timestamps for total trace.
         cdf = pd.concat([dfs[0]] + [df.reindex(base_index, method="nearest") for df in dfs[1:]])
@@ -2408,8 +2440,9 @@ class traceView(ClientWidget, Ui_traceView):
 class ConfocalMainWindow(QtWidgets.QMainWindow):
     """MainWindow with ConfocalWidget and traceView."""
 
-    def __init__(self, gconf: dict, name, context, parent=None):
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         lconf = local_conf(gconf, name)
         target = lconf["target"]
@@ -2421,6 +2454,8 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
         )
         move_interval_ms = lconf.get("move_interval_ms", 10)
         labels = lconf.get("labels", [])
+        file_transport_dir = lconf.get("file_transport_dir")
+        tracker_file_transport_dir = lconf.get("tracker_file_transport_dir")
 
         self.confocal = ConfocalWidget(
             gconf,
@@ -2433,9 +2468,18 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
             move_interval_ms,
             context,
             parent=self,
+            logger=self.logger,
+            file_transport_dir=file_transport_dir,
+            tracker_file_transport_dir=tracker_file_transport_dir,
         )
         self.traceView = traceView(
-            gconf, target["confocal"], target["gparams"], labels, context, parent=self
+            gconf,
+            target["confocal"],
+            target["gparams"],
+            labels,
+            context,
+            parent=self,
+            file_transport_dir=file_transport_dir,
         )
 
         self.setWindowTitle(f"MAHOS.ConfocalGUI ({join_name(target['confocal'])})")
@@ -2478,13 +2522,21 @@ class ConfocalMainWindow(QtWidgets.QMainWindow):
 class TraceWidget(QtWidgets.QWidget):
     """QWidget with traceView and a few buttons."""
 
-    def __init__(self, gconf: dict, name, context, parent=None):
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
         QtWidgets.QWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         lconf = local_conf(gconf, name)
         target = lconf["target"]
         labels = lconf.get("labels", [])
-        self.cli = QTraceNodeClient(gconf, target["trace"], context=context, parent=self)
+        file_transport_dir = lconf.get("file_transport_dir")
+        self.cli = QTraceNodeClient(
+            gconf,
+            target["trace"],
+            context=context,
+            parent=self,
+            file_transport_dir=file_transport_dir,
+        )
 
         self.traceView = traceView(
             gconf, target["trace"], target["gparams"], labels, context, cli=self.cli, parent=self
@@ -2528,6 +2580,10 @@ class TraceWidget(QtWidgets.QWidget):
 class ConfocalGUI(GUINode):
     """GUINode for Confocal using ConfocalMainWindow.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.confocal: Target Confocal node full name.
     :type target.confocal: tuple[str, str] | str
     :param target.tracker: Target ConfocalTracker node full name.
@@ -2547,24 +2603,35 @@ class ConfocalGUI(GUINode):
     :type move_interval_ms: int
     :param labels: PD channel labels for trace display.
     :type labels: list[str]
+    :param file_transport_dir: Optional GUI-side directory for Confocal file transport.
+    :type file_transport_dir: str
+    :param tracker_file_transport_dir: Optional GUI-side directory for ConfocalTracker file
+        transport.
+    :type tracker_file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return ConfocalMainWindow(gconf, name, context)
+        return ConfocalMainWindow(gconf, name, context, logger=self.logger)
 
 
 class TraceGUI(GUINode):
     """GUINode for trace-only view using TraceWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.trace: Target tracer/trace node full name.
     :type target.trace: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
     :param labels: PD channel labels for trace display.
     :type labels: list[str]
+    :param file_transport_dir: Optional GUI-side directory for TraceNode file transport.
+    :type file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return TraceWidget(gconf, name, context)
+        return TraceWidget(gconf, name, context, logger=self.logger)

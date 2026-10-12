@@ -19,7 +19,7 @@ from mahos.gui.Qt import QtCore, QtGui, QtWidgets
 from mahos.gui.client import QBasicMeasClient
 from mahos.gui.common_widget import ClientTopWidget, SpinBox
 from mahos.gui.dialog import export_dialog, load_dialog, save_dialog
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.param import apply_widgets
 from mahos.msgs.common_msgs import BinaryState, BinaryStatus
 from mahos.msgs.grid_sweeper_msgs import GridSweeperData
@@ -197,14 +197,19 @@ class GridSweeperWidget(ClientTopWidget):
         gparams_name,
         context,
         parent=None,
+        logger=None,
+        file_transport_dir=None,
     ):
         ClientTopWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         self.conf = local_conf(gconf, name)
         self.init_ui()
         self.setWindowTitle(f"MAHOS.GridSweeperGUI ({join_name(name)})")
 
-        self.cli = QGridSweeperClient(gconf, name, context=context, parent=self)
+        self.cli = QGridSweeperClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
 
@@ -308,7 +313,7 @@ class GridSweeperWidget(ClientTopWidget):
 
         params = self.cli.get_param_dict()
         if params is None:
-            print("[ERROR] Failed to get param dict")
+            self.logger.error("Failed to get param dict.")
             return
 
         flat = params.flatten()
@@ -428,18 +433,27 @@ class GridSweeperWidget(ClientTopWidget):
 class GridSweeperGUI(GUINode):
     """GUINode for GridSweeperWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.grid_sweeper: Target GridSweeper node full name.
     :type target.grid_sweeper: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        target = local_conf(gconf, name)["target"]
+        lconf = local_conf(gconf, name)
+        target = lconf["target"]
         return GridSweeperWidget(
             gconf,
             target["grid_sweeper"],
             target["gparams"],
             context,
+            logger=self.logger,
+            file_transport_dir=lconf.get("file_transport_dir"),
         )

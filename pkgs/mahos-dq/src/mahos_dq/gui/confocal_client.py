@@ -22,20 +22,18 @@ from mahos_dq.msgs.confocal_msgs import (
     ScanDirection,
     Trace,
     MoveReq,
-    SaveImageReq,
-    ExportImageReq,
-    ExportViewReq,
-    LoadImageReq,
     Image,
     BufferCommand,
     CommandBufferReq,
-    SaveTraceReq,
-    ExportTraceReq,
-    LoadTraceReq,
     CommandTraceReq,
     TraceCommand,
 )
-from mahos_dq.msgs.confocal_tracker_msgs import SaveParamsReq, LoadParamsReq, TrackNowReq
+from mahos_dq.msgs.confocal_tracker_msgs import TrackNowReq
+from mahos_dq.meas.confocal_req import (
+    ConfocalImageReqMixin,
+    ConfocalTraceReqMixin,
+    ConfocalTrackerReqMixin,
+)
 from mahos.gui.client import QStatusSubWorker, QStateReqClient, QReqClient, QStateClient
 
 
@@ -53,7 +51,7 @@ class QConfocalSubWorker(QStatusSubWorker):
         self.imageUpdated.emit(msg)
 
 
-class QConfocalClient(QStateReqClient):
+class QConfocalClient(QStateReqClient, ConfocalImageReqMixin):
     """Qt-based client for Confocal.
 
     This class operates on piezo and scanner parts of Confocal.
@@ -74,8 +72,9 @@ class QConfocalClient(QStateReqClient):
     yzImageUpdated = QtCore.pyqtSignal(Image)
     scanFinished = QtCore.pyqtSignal(Image)
 
-    def __init__(self, gconf: dict, name, context=None, parent=None):
+    def __init__(self, gconf: dict, name, context=None, parent=None, file_transport_dir=None):
         QStateReqClient.__init__(self, gconf, name, context=context, parent=parent)
+        self.init_file_transport(file_transport_dir)
 
         self._pos = None
         self._state = None
@@ -100,27 +99,6 @@ class QConfocalClient(QStateReqClient):
 
     def get_param_dict(self, label: str):
         rep = self.req.request(GetParamDictReq(label))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
-
-    def save_image(
-        self, file_name, direction: ScanDirection | None = None, note: str = ""
-    ) -> bool:
-        rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
-        return rep.success
-
-    def export_image(self, file_name, direction: ScanDirection | None = None, params=None) -> bool:
-        rep = self.req.request(ExportImageReq(file_name, direction, params))
-        return rep.success
-
-    def export_view(self, file_name, params=None) -> bool:
-        rep = self.req.request(ExportViewReq(file_name, params))
-        return rep.success
-
-    def load_image(self, file_name) -> Image:
-        rep = self.req.request(LoadImageReq(file_name))
         if rep.success:
             return rep.ret
         else:
@@ -221,24 +199,9 @@ class QTracerSubWorker(QStatusSubWorker):
         self.traceUpdated.emit(msg)
 
 
-class _TracingMixin(object):
+class _TracingMixin(ConfocalTraceReqMixin):
     def update_paused(self, status: ConfocalStatus | TraceStatus):
         self.paused.emit(status.tracer_paused)
-
-    def save_trace(self, file_name, note: str = "") -> bool:
-        rep = self.req.request(SaveTraceReq(file_name, note=note))
-        return rep.success
-
-    def export_trace(self, file_name, params=None) -> bool:
-        rep = self.req.request(ExportTraceReq(file_name, params=params))
-        return rep.success
-
-    def load_trace(self, file_name) -> Trace:
-        rep = self.req.request(LoadTraceReq(file_name))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
 
     def _command(self, command: TraceCommand):
         rep = self.req.request(CommandTraceReq(command))
@@ -260,8 +223,9 @@ class QTracerClient(QReqClient, _TracingMixin):
     paused = QtCore.pyqtSignal(bool)
     traceUpdated = QtCore.pyqtSignal(Trace)
 
-    def __init__(self, gconf: dict, name, context=None, parent=None):
+    def __init__(self, gconf: dict, name, context=None, parent=None, file_transport_dir=None):
         QReqClient.__init__(self, gconf, name, context=context, parent=parent)
+        self.init_file_transport(file_transport_dir)
 
         self._trace = None
 
@@ -295,8 +259,9 @@ class QTraceNodeClient(QStateReqClient, _TracingMixin):
     traceUpdated = QtCore.pyqtSignal(Trace)
     paused = QtCore.pyqtSignal(bool)
 
-    def __init__(self, gconf: dict, name, context=None, parent=None):
+    def __init__(self, gconf: dict, name, context=None, parent=None, file_transport_dir=None):
         QStateReqClient.__init__(self, gconf, name, context=context, parent=parent)
+        self.init_file_transport(file_transport_dir)
 
         self._state = None
         self._trace = None
@@ -323,22 +288,25 @@ class QTraceNodeClient(QStateReqClient, _TracingMixin):
         self._state = status.state
 
 
-class QConfocalTrackerClient(QStateClient):
+class QConfocalTrackerClient(QStateClient, ConfocalTrackerReqMixin):
     """Qt-based client for ConfocalTracker."""
 
     statusUpdated = QtCore.pyqtSignal(BinaryStatus)
     stateUpdated = QtCore.pyqtSignal(BinaryState, BinaryState)
 
-    def save_params(self, conf, file_name: str | None = None) -> bool:
-        rep = self.req.request(SaveParamsReq(conf, file_name=file_name))
-        return rep.success
-
-    def load_params(self, file_name: str | None = None) -> dict | None:
-        rep = self.req.request(LoadParamsReq(file_name))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        context=None,
+        parent=None,
+        rep_endpoint="rep_endpoint",
+        file_transport_dir=None,
+    ):
+        QStateClient.__init__(
+            self, gconf, name, context=context, parent=parent, rep_endpoint=rep_endpoint
+        )
+        self.init_file_transport(file_transport_dir)
 
     def track_now(self) -> bool:
         rep = self.req.request(TrackNowReq())

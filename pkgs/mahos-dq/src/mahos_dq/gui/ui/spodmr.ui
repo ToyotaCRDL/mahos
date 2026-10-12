@@ -64,6 +64,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="enableresumeBox">
+         <property name="text">
+          <string>Enable resume</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="quickresumeBox">
          <property name="text">
           <string>Quick resume</string>
@@ -251,7 +261,7 @@
                <string> MHz</string>
               </property>
               <property name="decimals">
-               <number>4</number>
+               <number>6</number>
               </property>
               <property name="minimum">
                <double>1.000000000000000</double>
@@ -296,7 +306,7 @@
                <string> MHz</string>
               </property>
               <property name="decimals">
-               <number>4</number>
+               <number>6</number>
               </property>
               <property name="maximum">
                <double>3000.000000000000000</double>
@@ -423,6 +433,9 @@
               <property name="toolTip">
                <string>Local (per unit pattern) offset for all MW channels</string>
               </property>
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="prefix">
                <string>MW offset: </string>
               </property>
@@ -444,6 +457,9 @@
              <widget class="QDoubleSpinBox" name="ldelayBox">
               <property name="toolTip">
                <string>Delay between MW pattern end and laser pulse start</string>
+              </property>
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
               </property>
               <property name="prefix">
                <string>Laser delay: </string>
@@ -470,6 +486,9 @@
               <property name="toolTip">
                <string>Delay between laser pulse end and MW pattern start</string>
               </property>
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="prefix">
                <string>MW delay: </string>
               </property>
@@ -492,6 +511,9 @@
             </item>
             <item row="0" column="1">
              <widget class="QDoubleSpinBox" name="lwidthBox">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="prefix">
                <string>Laser width: </string>
               </property>
@@ -523,6 +545,9 @@
            <layout class="QGridLayout" name="gridLayout_3">
             <item row="1" column="1">
              <widget class="QSpinBox" name="NstartBox">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="suffix">
                <string/>
               </property>
@@ -566,6 +591,9 @@
             </item>
             <item row="0" column="3">
              <widget class="QSpinBox" name="numBox">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="suffix">
                <string/>
               </property>
@@ -585,6 +613,9 @@
             </item>
             <item row="0" column="1">
              <widget class="QDoubleSpinBox" name="startBox">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="prefix">
                <string>start: </string>
               </property>
@@ -607,6 +638,9 @@
             </item>
             <item row="1" column="4">
              <widget class="QSpinBox" name="NstepBox">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="suffix">
                <string/>
               </property>
@@ -626,6 +660,9 @@
             </item>
             <item row="0" column="4">
              <widget class="QDoubleSpinBox" name="stepBox">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="prefix">
                <string>step: </string>
               </property>
@@ -648,6 +685,9 @@
             </item>
             <item row="1" column="3">
              <widget class="QSpinBox" name="NnumBox">
+              <property name="showGroupSeparator" stdset="0">
+               <bool>true</bool>
+              </property>
               <property name="suffix">
                <string/>
               </property>
@@ -705,6 +745,9 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="showGroupSeparator" stdset="0">
+                 <bool>true</bool>
+                </property>
                 <property name="prefix">
                  <string>90 pulse: </string>
                 </property>
@@ -732,6 +775,9 @@
                 </property>
                 <property name="toolTip">
                  <string>negative value implies 90 pulse x 2</string>
+                </property>
+                <property name="showGroupSeparator" stdset="0">
+                 <bool>true</bool>
                 </property>
                 <property name="prefix">
                  <string>180 pulse: </string>
@@ -763,6 +809,9 @@
                 </property>
                 <property name="toolTip">
                  <string>negative value implies 90 pulse x 3</string>
+                </property>
+                <property name="showGroupSeparator" stdset="0">
+                 <bool>true</bool>
                 </property>
                 <property name="prefix">
                  <string>270 pulse: </string>
@@ -1269,6 +1318,7 @@
   <tabstop>exportButton</tabstop>
   <tabstop>exportaltButton</tabstop>
   <tabstop>loadButton</tabstop>
+  <tabstop>enableresumeBox</tabstop>
   <tabstop>quickresumeBox</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>sweepsBox</tabstop>

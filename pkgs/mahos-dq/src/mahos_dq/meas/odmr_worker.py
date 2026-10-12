@@ -14,20 +14,29 @@ import time
 import numpy as np
 
 from mahos_dq.msgs.odmr_msgs import ODMRData
-from mahos.msgs.pulse_msgs import PulsePattern
 from mahos.msgs import param_msgs as P
-from mahos.msgs.inst.pg_msgs import TriggerType
+from mahos.msgs.inst.pg_msgs import TriggerType, PulsePattern
 from mahos.inst.sg_interface import SGInterface
 from mahos.inst.pg_interface import PGInterface
 from mahos.inst.pd_interface import PDInterface
 from mahos.inst.daq_interface import ClockSourceInterface
 from mahos_dq.inst.overlay.odmr_sweeper_interface import ODMRSweeperInterface
 from mahos.util.conf import PresetLoader
+from mahos.util.param import ParamAccessor, ParamError
 from mahos_dq.meas.odmr_pg import ODMRPGMixin
+from mahos_dq.meas.odmr_sg import MOD_LABELS, configure_modulation
+from mahos_dq.meas.odmr_pd import (
+    configure_apds,
+    configure_analog_pds,
+    configure_trace_pds,
+    make_pd_param_dict,
+    make_trace_timing_param_dict,
+    reduce_traces,
+    result_unit,
+    sum_pd_blocks,
+    sum_pd_channels,
+)
 from mahos.meas.common_worker import Worker
-
-
-_MOD_LABELS = ["iq_ext", "am_ext", "fm_ext", "iq_int", "am_int", "fm_int"]
 
 
 class SweeperBase(Worker):
@@ -40,6 +49,81 @@ class SweeperBase(Worker):
         else:
             return None
 
+    def _normalize_line(self, line):
+        """Normalize one detector line before storing it in frequency order."""
+
+        return line
+
+    def _append_line_nobg(self, data, line):
+        line = self._normalize_line(line)
+        if data is None:
+            return np.array(line, ndmin=2).T
+        else:
+            return np.append(data, np.array(line, ndmin=2).T, axis=1)
+
+    def _append_line_bg(self, data, bg_data, line):
+        l_data = self._normalize_line(line[0::2])
+        l_bg = self._normalize_line(line[1::2])
+        if data is None:
+            return np.array(l_data, ndmin=2).T, np.array(l_bg, ndmin=2).T
+        else:
+            return (
+                np.append(data, np.array(l_data, ndmin=2).T, axis=1),
+                np.append(bg_data, np.array(l_bg, ndmin=2).T, axis=1),
+            )
+
+    def append_line(self, line):
+        """Append one detector line, splitting interleaved background data when enabled."""
+
+        if not self.data.measure_background():
+            self.data.data = self._append_line_nobg(self.data.data, line)
+        else:
+            self.data.data, self.data.bg_data = self._append_line_bg(
+                self.data.data, self.data.bg_data, line
+            )
+
+    def append_raw_line(self, traces: np.ndarray):
+        """Add one frequency-ordered trace line to the cumulative raw trace sum."""
+
+        traces = np.asarray(traces)
+        if self.data.raw_data_sum is None:
+            self.data.raw_data_sum = traces.copy()
+        elif self.data.raw_data_sum.shape != traces.shape:
+            self.logger.error(
+                "Cannot append raw trace line with shape "
+                f"{traces.shape} to raw_data_sum with shape {self.data.raw_data_sum.shape}."
+            )
+        else:
+            self.data.raw_data_sum += traces
+
+    def append_raw_point(self, traces: np.ndarray):
+        """Add one point's traces to the matching row in the cumulative raw trace sum."""
+
+        traces = np.asarray(traces)
+        point_count = 2 if self.data.measure_background() else 1
+        if traces.ndim != 2 or traces.shape[0] != point_count:
+            self.logger.error(
+                f"Invalid raw point trace shape {traces.shape}; expected ({point_count}, sample)."
+            )
+            return
+
+        if self.data.data is None or not np.isnan(self.data.data).any():
+            index = 0
+        else:
+            index = int(np.where(np.isnan(self.data.data[:, -1]))[0][0])
+
+        shape = (self.data.params["num"] * point_count, traces.shape[1])
+        if self.data.raw_data_sum is None:
+            self.data.raw_data_sum = np.zeros(shape, dtype=traces.dtype)
+        elif self.data.raw_data_sum.shape != shape:
+            self.logger.error(
+                f"Invalid raw_data_sum shape {self.data.raw_data_sum.shape}; expected {shape}."
+            )
+            return
+
+        start = index * point_count
+        self.data.raw_data_sum[start : start + point_count] += traces
+
     def is_finished(self) -> bool:
         if not self.data.has_params() or not self.data.has_data():
             return False
@@ -51,26 +135,91 @@ class SweeperBase(Worker):
 
     def validate_params(
         self, params: P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str
-    ) -> bool:
+    ) -> tuple[bool, str, str]:
         params = P.unwrap(params)
-        if params["start"] >= params["stop"]:
-            self.logger.error("stop must be greater than start")
-            return False
-        return True
+
+        try:
+            if label not in self.get_param_dict_labels():
+                raise ParamError(f"Unknown measurement label: {label}")
+
+            p = ParamAccessor(params)
+            start = p.num("start")
+            stop = p.num("stop")
+            if start >= stop:
+                raise ParamError("stop must be greater than start")
+            num = p.pos_int("num")
+            if num < 2:
+                raise ParamError(f"num must be at least 2. Got {num}")
+            p.num("power")
+            p.nonneg_int("sweeps", 0)
+
+            for key in ("delay", "background_delay", "final_delay"):
+                p.nonneg_num(key, 0.0)
+            for key in ("background", "resume", "continue_mw"):
+                p.bool(key, False)
+
+            timing = p.child("timing")
+            if label != "pulse" and "time_window" in timing:
+                timing.pos_num("time_window")
+                timing.nonneg_num("gate_delay", 0.0)
+                timing.nonneg_num("post_gate_delay", 0.0)
+
+            mod = p.child("mod", {})
+            if label in ("am_ext", "am_int"):
+                mod.num("am_depth")
+                mod.bool("am_log")
+                if label == "am_int":
+                    mod.pos_num("am_rate")
+            elif label in ("fm_ext", "fm_int"):
+                mod.num("fm_deviation")
+                if label == "fm_int":
+                    mod.pos_num("fm_rate")
+        except ParamError as e:
+            self.logger.error(f"Invalid ODMR parameters: {e}")
+            return False, str(e), ""
+
+        if label == "pulse":
+            return self._validate_pulse_params(params)
+        return True, "", ""
+
+    def _validate_pulse_params(self, params: dict) -> tuple[bool, str, str]:
+        return False, "validation method for pulse is not implemented", ""
 
     def get_param_dict_labels(self) -> list:
-        return ["cw", "pulse"] + _MOD_LABELS
+        return ["cw", "pulse"] + MOD_LABELS
 
-    def _make_param_dict(self, label, bounds, pd_analog) -> P.ParamDict[str, P.PDValue] | None:
-        if label in ["cw"] + _MOD_LABELS:
+    def _make_param_dict(
+        self, label, bounds, pd_analog, pd_trace=False, pd_chop=False
+    ) -> P.ParamDict[str, P.PDValue] | None:
+        if label in ["cw"] + MOD_LABELS:
             timing = P.ParamDict(
                 time_window=P.FloatParam(
-                    self.conf.get("time_window", 10e-3), 0.1e-3, 10.0, unit="s", SI_prefix=True
+                    self.conf.get("time_window", 10e-3),
+                    0.1e-3,
+                    10.0,
+                    unit="s",
+                    SI_prefix=True,
+                    doc="duration of the data acquisition window",
                 ),
                 gate_delay=P.FloatParam(
-                    self.conf.get("gate_delay", 0.0), 0.0, 10.0, unit="s", SI_prefix=True
+                    self.conf.get("gate_delay", 0.0),
+                    0.0,
+                    10.0,
+                    unit="s",
+                    SI_prefix=True,
+                    doc="delay from excitation onset to the start of data acquisition",
+                ),
+                post_gate_delay=P.FloatParam(
+                    self.conf.get("post_gate_delay", 0.0),
+                    0.0,
+                    10.0,
+                    unit="s",
+                    SI_prefix=True,
+                    doc="delay from the end of data acquisition to excitation end",
                 ),
             )
+        elif label == "pulse" and pd_trace:
+            timing = make_trace_timing_param_dict(self.conf)
         elif label == "pulse":
             timing = P.ParamDict(
                 laser_delay=P.FloatParam(
@@ -104,15 +253,50 @@ class SweeperBase(Worker):
             )
             if pd_analog:
                 timing["time_window"] = P.FloatParam(
-                    self.conf.get("time_window", 10e-3), 0.1e-3, 10.0, unit="s", SI_prefix=True
+                    self.conf.get("time_window", 10e-3),
+                    0.1e-3,
+                    10.0,
+                    unit="s",
+                    SI_prefix=True,
+                    doc="duration of the data acquisition window",
                 )
                 timing["gate_delay"] = P.FloatParam(
-                    self.conf.get("gate_delay", 0.0), 0.0, 10.0, unit="s", SI_prefix=True
+                    self.conf.get("gate_delay", 0.0),
+                    0.0,
+                    10.0,
+                    unit="s",
+                    SI_prefix=True,
+                    doc="delay from excitation onset to the start of data acquisition",
+                )
+                timing["post_gate_delay"] = P.FloatParam(
+                    self.conf.get("post_gate_delay", 0.0),
+                    0.0,
+                    10.0,
+                    unit="s",
+                    SI_prefix=True,
+                    doc="delay from the end of data acquisition to excitation end",
                 )
             else:
                 timing["burst_num"] = P.IntParam(
-                    100, 1, 100_000, doc="number of bursts at each freq."
+                    100, 1, 100_000, doc="number of bursts at each freq"
                 )
+                if pd_chop:
+                    timing["chop_delay"] = P.FloatParam(
+                        self.conf.get("chop_delay", 0.0),
+                        0.0,
+                        1e-3,
+                        unit="s",
+                        SI_prefix=True,
+                        doc="delay from laser onset to counter chop onset",
+                    )
+                    timing["chop_width"] = P.FloatParam(
+                        self.conf.get("chop_width", 100e-9),
+                        1e-9,
+                        1e-3,
+                        unit="s",
+                        SI_prefix=True,
+                        doc="width of counter chop window",
+                    )
 
         else:
             self.logger.error(f"Unknown param dict label: {label}")
@@ -126,11 +310,19 @@ class SweeperBase(Worker):
         f_start = max(min(self.conf.get("start", 2.74e9), f_max), f_min)
         f_stop = max(min(self.conf.get("stop", 3.00e9), f_max), f_min)
         d = P.ParamDict(
-            start=P.FloatParam(f_start, f_min, f_max),
-            stop=P.FloatParam(f_stop, f_min, f_max),
-            num=P.IntParam(self.conf.get("num", 101), 2, 10000),
-            power=P.FloatParam(self.conf.get("power", p_min), p_min, p_max),
-            sweeps=P.IntParam(0, 0, 1_000_000_000),
+            start=P.FloatParam(
+                f_start, f_min, f_max, unit="Hz", SI_prefix=True, doc="sweep start frequency"
+            ),
+            stop=P.FloatParam(
+                f_stop, f_min, f_max, unit="Hz", SI_prefix=True, doc="sweep stop frequency"
+            ),
+            num=P.IntParam(
+                self.conf.get("num", 101), 2, 10000, doc="number of frequency sweep points"
+            ),
+            power=P.FloatParam(
+                self.conf.get("power", p_min), p_min, p_max, unit="dBm", doc="MW power at SG"
+            ),
+            sweeps=P.IntParam(0, 0, 1_000_000_000, doc="number of sweeps (0 for infinite)"),
             timing=timing,
             background=P.BoolParam(False, doc="take background data"),
             delay=P.FloatParam(
@@ -148,6 +340,14 @@ class SweeperBase(Worker):
                 unit="s",
                 SI_prefix=True,
                 doc="delay between normal and background (reference) measurements",
+            ),
+            final_delay=P.FloatParam(
+                0.0,
+                0.0,
+                10.0,
+                unit="s",
+                SI_prefix=True,
+                doc="delay after measurement before triggering next frequency",
             ),
             resume=P.BoolParam(False),
             continue_mw=P.BoolParam(False),
@@ -191,11 +391,19 @@ class SweeperOverlay(SweeperBase):
     """Sweeper using Overlay.
 
     Refer to :mod:`mahos_dq.inst.overlay.odmr_sweeper` for docs of target overlay.
+    If the target overlay has ``pd_trace`` enabled, the ``pulse`` parameter dictionary uses
+    laser-resolved AnalogPD trace acquisition and exposes the trace-analysis timings below.
 
     :param sweeper.sweeper_name: (default: "sweeper") target overlay name in target.servers.
     :type sweeper.sweeper_name: str
     :param sweeper.point: (default: False) set True to publish data per point acquisition.
     :type sweeper.point: bool
+    :param sweeper.chop_delay: (default: 0.0) delay from commanded laser onset to the
+        SinglePhotonCounter chop window. Exposed for pulse mode when the target overlay has
+        ``pd_chop`` enabled.
+    :type sweeper.chop_delay: float
+    :param sweeper.chop_width: (default: 100e-9) width of the SinglePhotonCounter chop window.
+    :type sweeper.chop_width: float
 
     :param sweeper.start: (default param) start frequency in Hz.
     :type sweeper.start: float
@@ -209,6 +417,33 @@ class SweeperOverlay(SweeperBase):
     :type sweeper.time_window: float
     :param sweeper.gate_delay: (default param) gate delay before counting.
     :type sweeper.gate_delay: float
+    :param sweeper.post_gate_delay: (default param) extra excitation after measurement window.
+    :type sweeper.post_gate_delay: float
+    :param sweeper.trigger_width: (default: 20e-9) detector-trigger width for trace mode.
+    :type sweeper.trigger_width: float
+    :param sweeper.burst_num: (default: 100) traces averaged at each frequency in trace mode.
+    :type sweeper.burst_num: int
+    :param sweeper.roi_head: (default: 20e-9) detector-trigger to laser delay in trace mode.
+    :type sweeper.roi_head: float
+    :param sweeper.roi_tail: (default: 100e-9) trace margin after the laser pulse.
+    :type sweeper.roi_tail: float
+    :param sweeper.sig_delay: (default: 0.0) signal-window delay after the laser.
+    :type sweeper.sig_delay: float
+    :param sweeper.sig_width: (default: 100e-9) signal-window width.
+    :type sweeper.sig_width: float
+    :param sweeper.ref_delay: (default: 0.0) reference delay after the signal window.
+    :type sweeper.ref_delay: float
+    :param sweeper.ref_width: (default: 100e-9) reference-window width.
+    :type sweeper.ref_width: float
+    :param sweeper.refmode: (default: "divide") trace reduction mode: ``subtract``, ``divide``,
+        or ``ignore``.
+    :type sweeper.refmode: str
+    :param sweeper.pd.buffer_size_coeff: (default param: 20) detector buffer size relative to
+        one callback block.
+    :type sweeper.pd.buffer_size_coeff: int
+    :param sweeper.pd.eos_deadtime: (default param: 200e-9) required deadtime after each
+        realized trace before the next detector trigger.
+    :type sweeper.pd.eos_deadtime: float
 
     :param sweeper.am_depth: (default param) depth of AM modulation.
     :type sweeper.am_depth: float
@@ -230,14 +465,24 @@ class SweeperOverlay(SweeperBase):
         self.add_instruments(self.sweeper)
 
         self._class_name = cli.class_name(self.sweeper_name)
+        capability = self.sweeper.get_capability()
+        self._pd_analog = bool(capability["pd_analog"])
+        self._pd_trace = bool(capability.get("pd_trace", False))
+        self._pd_chop = bool(capability.get("pd_chop", False))
+        self._pd_spectrum = False
         self.point = self.conf.get("point", False)
         self.data = ODMRData()
 
+    def _validate_pulse_params(self, params: dict) -> tuple[bool, str, str]:
+        """Delegate pulse param validation to the overlay that owns the hardware configuration."""
+
+        return self.sweeper.validate(params, "pulse")
+
     def get_param_dict_labels(self) -> list[str]:
         if self._class_name.startswith("ODMRSweeperCommand"):
-            return ["cw"] + _MOD_LABELS
+            return ["cw"] + MOD_LABELS
         else:
-            return ["cw", "pulse"] + _MOD_LABELS
+            return ["cw", "pulse"] + MOD_LABELS
 
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
         if self._class_name.startswith("ODMRSweeperCommand") and label == "pulse":
@@ -248,9 +493,9 @@ class SweeperOverlay(SweeperBase):
             self.logger.error("Failed to get bounds from sweeper.")
             return None
 
-        pd_analog = self.sweeper.get_pd_analog()
-        d = self._make_param_dict(label, bounds, pd_analog)
-        pd = self.sweeper.get_param_dict("pd")
+        d = self._make_param_dict(label, bounds, self._pd_analog, self._pd_trace, self._pd_chop)
+        pd_label = "pd_trace" if label == "pulse" and self._pd_trace else "pd"
+        pd = self.sweeper.get_param_dict(pd_label)
         if pd is not None:
             d["pd"] = pd
 
@@ -288,40 +533,17 @@ class SweeperOverlay(SweeperBase):
             # new measurement.
             self.data = ODMRData(params, label)
             self.data.start()
-            self.data.yunit = self.sweeper.get_unit()
             self.logger.info("Started sweeper.")
         else:
             # resume.
             self.data.update_params(params)
             self.data.resume()
             self.logger.info("Resuming sweeper.")
+        self.data.yunit = result_unit(
+            self.sweeper.get_unit(), self.data.params, self.data.label, self._pd_trace
+        )
 
         return True
-
-    def _append_line_nobg(self, data, line):
-        if data is None:
-            return np.array(line, ndmin=2).T
-        else:
-            return np.append(data, np.array(line, ndmin=2).T, axis=1)
-
-    def _append_line_bg(self, data, bg_data, line):
-        l_data = line[0::2]
-        l_bg = line[1::2]
-        if data is None:
-            return np.array(l_data, ndmin=2).T, np.array(l_bg, ndmin=2).T
-        else:
-            return (
-                np.append(data, np.array(l_data, ndmin=2).T, axis=1),
-                np.append(bg_data, np.array(l_bg, ndmin=2).T, axis=1),
-            )
-
-    def append_line(self, line):
-        if not self.data.measure_background():
-            self.data.data = self._append_line_nobg(self.data.data, line)
-        else:
-            self.data.data, self.data.bg_data = self._append_line_bg(
-                self.data.data, self.data.bg_data, line
-            )
 
     def _new_line(self, dtype):
         return np.array([np.nan] * self.data.params["num"], dtype=dtype)
@@ -404,6 +626,12 @@ class SweeperOverlay(SweeperBase):
             self.logger.error("Got None from sweeper.get_point()")
             return
 
+        if self.data.label == "pulse" and self._pd_trace:
+            if not isinstance(point, (list, tuple)) or len(point) != 2:
+                self.logger.error("Got invalid point and raw-trace pair from sweeper.")
+                return
+            point, traces = point
+            self.append_raw_point(traces)
         self.append_point(point)
 
     def stop(self) -> bool:
@@ -447,13 +675,29 @@ class Sweeper(SweeperBase, ODMRPGMixin):
     :type sweeper.pd_names: list[str]
     :param sweeper.pd_analog: (default: False) set True if PD is AnalogIn-based.
     :type sweeper.pd_analog: bool
+    :param sweeper.pd_spectrum: (default: False) set True if PD is Spectrum_AnalogIn-based.
+    :type sweeper.pd_spectrum: bool
+    :param sweeper.pd_trace: (default: False) enable laser-resolved AnalogPD trace acquisition
+        for the ``pulse`` method. Requires ``pd_analog`` or ``pd_spectrum``.
+    :type sweeper.pd_trace: bool
+    :param sweeper.pd_chop: (default: False) enable the active-high SinglePhotonCounter chop
+        output. Requires ``pd_analog`` and ``pd_spectrum`` to be False and a configured ``chop``
+        PG channel.
+    :type sweeper.pd_chop: bool
     :param sweeper.pd_rate: (default param) analog PD sampling rate.
     :type sweeper.pd_rate: float
     :param sweeper.pd_bounds: (default: [-10.0, 10.0]) analog PD voltage bounds.
     :type sweeper.pd_bounds: tuple[float, float]
     :param sweeper.pd_data_transfer: DAQ data transfer mode for analog PD.
     :type sweeper.pd_data_transfer: str
-    :param sweeper.buffer_size_coeff: (default: 20) multiplier for PD buffer size.
+    :param sweeper.pd_segment_granularity: (default: 16) logical post-trigger sample
+        granularity for Spectrum PD segments.
+    :type sweeper.pd_segment_granularity: int
+    :param sweeper.pd_segment_offset: (default: 0) sample offset subtracted after Spectrum
+        segment rounding.
+    :type sweeper.pd_segment_offset: int
+    :param sweeper.buffer_size_coeff: (default: 20) default and fallback value for
+        ``pd.buffer_size_coeff``.
     :type sweeper.buffer_size_coeff: int
     :param sweeper.clock_name: (default: "clock") DAQ clock source name in target.servers.
     :type sweeper.clock_name: str
@@ -481,6 +725,41 @@ class Sweeper(SweeperBase, ODMRPGMixin):
     :type sweeper.time_window: float
     :param sweeper.gate_delay: (default param) gate delay before counting.
     :type sweeper.gate_delay: float
+    :param sweeper.post_gate_delay: (default param) extra excitation after measurement window.
+    :type sweeper.post_gate_delay: float
+    :param sweeper.trigger_width: (default: 20e-9) detector-trigger width for trace mode.
+    :type sweeper.trigger_width: float
+    :param sweeper.burst_num: (default: 100) traces averaged at each frequency in trace mode.
+    :type sweeper.burst_num: int
+    :param sweeper.roi_head: (default: 20e-9) detector-trigger to laser delay in trace mode.
+    :type sweeper.roi_head: float
+    :param sweeper.roi_tail: (default: 100e-9) trace margin after the laser pulse.
+    :type sweeper.roi_tail: float
+    :param sweeper.sig_delay: (default: 0.0) signal-window delay after the laser.
+    :type sweeper.sig_delay: float
+    :param sweeper.sig_width: (default: 100e-9) signal-window width.
+    :type sweeper.sig_width: float
+    :param sweeper.ref_delay: (default: 0.0) reference delay after the signal window.
+    :type sweeper.ref_delay: float
+    :param sweeper.ref_width: (default: 100e-9) reference-window width.
+    :type sweeper.ref_width: float
+    :param sweeper.refmode: (default: "divide") trace reduction mode: ``subtract``, ``divide``,
+        or ``ignore``.
+    :type sweeper.refmode: str
+    :param sweeper.chop_delay: (default: 0.0) delay from commanded laser onset to the
+        SinglePhotonCounter chop window.
+    :type sweeper.chop_delay: float
+    :param sweeper.chop_width: (default: 100e-9) width of the SinglePhotonCounter chop window.
+    :type sweeper.chop_width: float
+    :param sweeper.pd.hardware_average: (default param: True) use Spectrum hardware averaging
+        for trace bursts. This parameter is exposed only for Spectrum trace mode.
+    :type sweeper.pd.hardware_average: bool
+    :param sweeper.pd.buffer_size_coeff: (default param: 20) detector buffer size relative to
+        one callback block.
+    :type sweeper.pd.buffer_size_coeff: int
+    :param sweeper.pd.eos_deadtime: (default param: 200e-9) required deadtime after each
+        realized trace before the next detector trigger.
+    :type sweeper.pd.eos_deadtime: float
 
     :param sweeper.am_depth: (default param) depth of AM modulation.
     :type sweeper.am_depth: float
@@ -504,14 +783,23 @@ class Sweeper(SweeperBase, ODMRPGMixin):
         self.pg = PGInterface(cli, "pg")
         self.pd_names = self.conf.get("pd_names", ["pd0", "pd1"])
         self.pds = [PDInterface(cli, n) for n in self.pd_names]
-        self._pd_analog = self.conf.get("pd_analog", False)
-        if self._pd_analog:
+        self._pd_spectrum = self.conf.get("pd_spectrum", False)
+        self._pd_analog = self.conf.get("pd_analog", False) or self._pd_spectrum
+        self._pd_trace = self.conf.get("pd_trace", False)
+        if self._pd_trace and not self._pd_analog:
+            raise ValueError("pd_trace requires pd_analog or pd_spectrum")
+        self._pd_chop = self.conf.get("pd_chop", False)
+        if self._pd_chop and self._pd_analog:
+            raise ValueError("pd_chop requires a SinglePhotonCounter (pd_analog = False)")
+        if self._pd_analog and not self._pd_spectrum:
             self.clock = ClockSourceInterface(cli, self.conf.get("clock_name", "clock"))
         else:
             self.clock = None
-        self.add_instruments(self.sg, self.pg, *self.pds)
+        self.add_instruments(self.sg, self.pg, self.clock, *self.pds)
 
-        self.check_required_conf(["pd_clock", "block_base", "minimum_block_length"])
+        self.check_required_conf(
+            ["pd_clock", "block_base", "pg_freq_cw", "pg_freq_pulse", "minimum_block_length"]
+        )
         self._pd_clock = self.conf["pd_clock"]
         self._pd_data_transfer = self.conf.get("pd_data_transfer")
         self._minimum_block_length = self.conf["minimum_block_length"]
@@ -521,9 +809,15 @@ class Sweeper(SweeperBase, ODMRPGMixin):
         self._pg_immediate = self.conf.get("pg_immediate", False)
         self._channel_remap = self.conf.get("channel_remap")
         self._continue_mw = False
+        self._samples_per_trace = None
 
         self.pulse_pattern = None
         self.data = ODMRData()
+
+    def _validate_pulse_params(self, params: dict) -> tuple[bool, str, str]:
+        """Validate pulse parameters using the direct sweeper configuration."""
+
+        return self.validate_pulse_params(params)
 
     def load_pg_conf_preset(self, cli):
         loader = PresetLoader(self.logger, PresetLoader.Mode.FORWARD)
@@ -572,17 +866,15 @@ class Sweeper(SweeperBase, ODMRPGMixin):
         loader.load_preset(self.conf, cli.class_name("sg"))
 
     def get_param_dict(self, label: str) -> P.ParamDict[str, P.PDValue] | None:
-        d = self._make_param_dict(label, self.sg.get_bounds(), self._pd_analog)
+        d = self._make_param_dict(
+            label, self.sg.get_bounds(), self._pd_analog, self._pd_trace, self._pd_chop
+        )
         if self._pd_analog:
-            d["pd"] = P.ParamDict()
-            d["pd"]["rate"] = P.FloatParam(
-                self.conf.get("pd_rate", 400e3), 1e3, 10000e3, doc="PD sampling rate"
+            d["pd"] = make_pd_param_dict(
+                self.conf,
+                pd_trace=label == "pulse" and self._pd_trace,
+                has_hardware_average=label == "pulse" and self._pd_trace and self._pd_spectrum,
             )
-            lb, ub = self.conf.get("pd_bounds", (-10.0, 10.0))
-            d["pd"]["bounds"] = [
-                P.FloatParam(lb, -10.0, 10.0, unit="V"),
-                P.FloatParam(ub, -10.0, 10.0, unit="V"),
-            ]
         return d
 
     def configure_sg(self, params: dict, label: str) -> bool:
@@ -590,111 +882,64 @@ class Sweeper(SweeperBase, ODMRPGMixin):
         success = self.sg.configure_point_trig_freq_sweep(
             p["start"], p["stop"], p["num"], p["power"]
         )
-        mod = params.get("mod", {})
-        if label == "iq_ext":
-            success &= self.sg.configure_iq_ext()
-        elif label == "iq_int":
-            success &= self.sg.configure_iq_int()
-        elif label == "fm_ext":
-            success &= self.sg.configure_fm_ext(mod["fm_deviation"])
-        elif label == "fm_int":
-            success &= self.sg.configure_fm_int(mod["fm_deviation"], mod["fm_rate"])
-        elif label == "am_ext":
-            success &= self.sg.configure_am_ext(mod["am_depth"], mod["am_log"])
-        elif label == "am_int":
-            success &= self.sg.configure_am_int(mod["am_depth"], mod["am_log"], mod["am_rate"])
+        success &= configure_modulation(self.sg, label, params.get("mod", {}))
         success &= self.sg.get_opc()
         return success
 
     def start_apd(self, params: dict, label: str) -> bool:
-        if label != "pulse":
-            time_window = params["timing"]["time_window"]
-        else:
-            # time_window is used to compute APD's count rate.
-            # gate is opened for whole burst sequence, but meaning time window for APD
-            # is just burst_num * laser_width.
-            t = params["timing"]
-            time_window = t["burst_num"] * t["laser_width"]
-
-        # max. expected sampling rate. double expected freq due to gate mode.
-        # this max rate is achieved if freq switching time was zero (it's non-zero in reality).
-        rate = 2.0 / time_window
-        num = params["num"]
-        if params.get("background", False):
-            num *= 2
-        buffer_size = num * self.conf.get("buffer_size_coeff", 20)
         # when sg_first or pg_immediate,
         # drop the first line because it contains invalid data at the first point
         # (line will be [f_N-1, f_0, f_1, ..., f_N-2) in general, however,
         #  SG is unknown state at the first point of the first line)
         drop_first = 1 if self._sg_first or self._pg_immediate else 0
-        params_pd = {
-            "clock": self._pd_clock,
-            "cb_samples": num,
-            "samples": buffer_size,
-            "buffer_size": buffer_size,
-            "rate": rate,
-            "finite": False,
-            "every": False,
-            "drop_first": drop_first,
-            "gate": True,
-            "time_window": time_window,
-        }
 
-        success = all([pd.configure(params_pd) for pd in self.pds]) and all(
-            [pd.start() for pd in self.pds]
-        )
-        return success
+        if not configure_apds(
+            self.pds,
+            self._pd_clock,
+            self.apd_time_window(params, label),
+            params["num"] * (2 if params.get("background", False) else 1),
+            self.conf.get("buffer_size_coeff", 20),
+            drop_first,
+        ):
+            return False
+        return all([pd.start() for pd in self.pds])
 
     def start_analog_pd(self, params: dict, label: str) -> bool:
-        rate = params["pd"]["rate"]
-        oversamp = round(params["timing"]["time_window"] * rate)
-
-        self.logger.info(f"Analog PD oversample: {oversamp}")
-
-        params_clock = {
-            "freq": rate,
-            "samples": oversamp,
-            "finite": True,
-            "trigger_source": self._pd_clock,
-            "trigger_dir": True,
-            "retriggerable": True,
-        }
-        if not self.clock.configure(params_clock):
-            return self.fail_with("failed to configure clock.")
-        clock_pd = self.clock.get_internal_output()
-
-        num = params["num"]
-        if params.get("background", False):
-            num *= 2
-        buffer_size = num * self.conf.get("buffer_size_coeff", 20)
-        # when sg_first or pg_immediate,
-        # drop the first line because it contains invalid data at the first point
-        # (line will be [f_N-1, f_0, f_1, ..., f_N-2) in general, however,
-        #  SG is unknown state at the first point of the first line)
+        point_count = params["num"] * (2 if params.get("background", False) else 1)
         drop_first = 1 if self._sg_first or self._pg_immediate else 0
-        params_pd = {
-            "clock": clock_pd,
-            "cb_samples": num,
-            "samples": buffer_size,
-            "buffer_size": buffer_size,
-            "rate": rate,
-            "finite": False,
-            "every": False,
-            "drop_first": drop_first,
-            "clock_mode": True,
-            "oversample": oversamp,
-            "bounds": params["pd"].get("bounds", (-10.0, 10.0)),
-        }
-        if self._pd_data_transfer:
-            params_pd["data_transfer"] = self._pd_data_transfer
 
-        success = (
-            all([pd.configure(params_pd) for pd in self.pds])
-            and self.clock.start()
-            and all([pd.start() for pd in self.pds])
-        )
-        return success
+        if label == "pulse" and self._pd_trace:
+            self._samples_per_trace = configure_trace_pds(
+                self.clock,
+                self.pds,
+                self._pd_clock,
+                params,
+                self.conf,
+                self._pd_spectrum,
+                point_count,
+                drop_first,
+                self._pd_data_transfer,
+                self.logger,
+            )
+            if self._samples_per_trace is None:
+                return False
+        else:
+            if not configure_analog_pds(
+                self.clock,
+                self.pds,
+                self._pd_clock,
+                params,
+                self.conf,
+                self._pd_spectrum,
+                point_count,
+                drop_first,
+                self._pd_data_transfer,
+                self.logger,
+            ):
+                return False
+
+        success = self.clock is None or self.clock.start()
+        return success and all([pd.start() for pd in self.pds])
 
     def start(
         self, params: None | P.ParamDict[str, P.PDValue] | dict[str, P.RawPDValue], label: str = ""
@@ -712,7 +957,9 @@ class Sweeper(SweeperBase, ODMRPGMixin):
         else:
             # TODO: check ident if resume?
             self.data.update_params(params)
-        self.data.yunit = self.pds[0].get_unit()
+        self.data.yunit = result_unit(
+            self.pds[0].get_unit(), self.data.params, self.data.label, self._pd_trace
+        )
 
         if not self.configure_sg(self.data.params, self.data.label):
             return self.fail_with_release("Failed to configure SG.")
@@ -769,47 +1016,30 @@ class Sweeper(SweeperBase, ODMRPGMixin):
         else:
             return line
 
-    def _append_line_nobg(self, data, line):
-        line = self._roll_line(line)
-        if data is None:
-            return np.array(line, ndmin=2).T
-        else:
-            return np.append(data, np.array(line, ndmin=2).T, axis=1)
-
-    def _append_line_bg(self, data, bg_data, line):
-        l_data = self._roll_line(line[0::2])
-        l_bg = self._roll_line(line[1::2])
-        if data is None:
-            return np.array(l_data, ndmin=2).T, np.array(l_bg, ndmin=2).T
-        else:
-            return (
-                np.append(data, np.array(l_data, ndmin=2).T, axis=1),
-                np.append(bg_data, np.array(l_bg, ndmin=2).T, axis=1),
-            )
-
-    def append_line(self, line):
-        if not self.data.measure_background():
-            self.data.data = self._append_line_nobg(self.data.data, line)
-        else:
-            self.data.data, self.data.bg_data = self._append_line_bg(
-                self.data.data, self.data.bg_data, line
-            )
+    def _normalize_line(self, line):
+        return self._roll_line(line)
 
     def work(self):
         if not self.data.running:
             return  # or raise Error?
 
-        lines = []
-        for pd in self.pds:
-            ls = pd.pop_block()
-            if isinstance(ls, list):
-                # PD has multi channel
-                lines.extend(ls)
-            else:
-                # single channel, assume ls is np.ndarray
-                lines.append(ls)
-
-        line = np.sum(lines, axis=0)
+        blocks = [pd.pop_block() for pd in self.pds]
+        if self.data.label == "pulse" and self._pd_trace:
+            bg_factor = 2 if self.data.measure_background() else 1
+            point_count = self.data.params["num"] * bg_factor
+            try:
+                traces = sum_pd_blocks(blocks, point_count, self._samples_per_trace)
+                line = reduce_traces(
+                    traces, self.data.params["timing"], self.data.params["pd"]["rate"]
+                )
+            except ValueError:
+                self.logger.exception("Failed to reduce AnalogPD traces")
+                return
+            if self._sg_first or self._pg_immediate:
+                traces = np.roll(traces, -bg_factor, axis=0)
+            self.append_raw_line(traces)
+        else:
+            line = sum_pd_channels(blocks)
         self.append_line(line)
 
     def stop(self) -> bool:
@@ -825,7 +1055,7 @@ class Sweeper(SweeperBase, ODMRPGMixin):
             success &= self.sg.set_output(False)
 
         success &= all([pd.stop() for pd in self.pds])
-        if self._pd_analog:
+        if self.clock is not None:
             success &= self.clock.stop()
         success &= self.pg.stop()
         success &= self.release_instruments()

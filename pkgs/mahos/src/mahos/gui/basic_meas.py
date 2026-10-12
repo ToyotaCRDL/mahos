@@ -23,9 +23,10 @@ from mahos.msgs.common_meas_msgs import Buffer
 from mahos.msgs.common_meas_msgs import BasicMeasData
 from mahos.msgs.param_msgs import filter_out_label_prefix
 from mahos.node.global_params import GlobalParamsClient
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientWidget
 from mahos.gui.fit_widget import FitWidget
+from mahos.gui.param import ParamDictComboBoxHandler
 from mahos.gui.dialog import save_dialog, load_dialog, export_dialog
 from mahos.node.node import local_conf, join_name
 
@@ -98,7 +99,16 @@ class PlotWidget(QtWidgets.QWidget):
 
 
 class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
-    def __init__(self, gconf: dict, name, gparams_name, plot: PlotWidget, context, parent=None):
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        gparams_name,
+        plot: PlotWidget,
+        context,
+        parent=None,
+        file_transport_dir=None,
+    ):
         ClientWidget.__init__(self, parent)
         self.setupUi(self)
 
@@ -107,7 +117,9 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         self.plot = plot
         self.data = BasicMeasData()
 
-        self.cli = QBasicMeasClient(gconf, name, context=context, parent=self)
+        self.cli = QBasicMeasClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -130,6 +142,7 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
 
         labels = filter_out_label_prefix("fit", self.cli.get_param_dict_labels())
         self.labelBox.addItems(labels)
+        self._param_dict_handler = ParamDictComboBoxHandler(self.labelBox)
         self.labelBox.currentIndexChanged.connect(self.update_param_table)
         if labels:
             self.update_param_table()
@@ -156,7 +169,7 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
 
     def save_data(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
-        fn = save_dialog(self, default_path, "" "")
+        fn = save_dialog(self, default_path, "")
         if not fn:
             return
 
@@ -194,8 +207,9 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
         self.refresh_plot()
 
     def update_param_table(self):
-        label = self.labelBox.currentText()
-        d = self.cli.get_param_dict(label)
+        d = self._param_dict_handler.get(self.cli.get_param_dict)
+        if d is None:
+            return
         self.paramTable.update_contents(d)
 
     def refresh_plot(self):
@@ -254,15 +268,22 @@ class BasicMeasWidget(ClientWidget, Ui_BasicMeas):
 class BasicMeasMainWindow(QtWidgets.QMainWindow):
     """MainWindow with BasicMeasWidget and PlotWidget."""
 
-    def __init__(self, gconf: dict, name, context, parent=None):
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         lconf = local_conf(gconf, name)
         target = lconf["target"]
 
         self.plot = PlotWidget(parent=self)
         self.meas = BasicMeasWidget(
-            gconf, target["meas"], target["gparams"], self.plot, context, parent=self
+            gconf,
+            target["meas"],
+            target["gparams"],
+            self.plot,
+            context,
+            parent=self,
+            file_transport_dir=lconf.get("file_transport_dir"),
         )
 
         self.setWindowTitle(f"MAHOS.BasicMeasGUI ({join_name(target['meas'])})")
@@ -286,12 +307,18 @@ class BasicMeasMainWindow(QtWidgets.QMainWindow):
 class BasicMeasGUI(GUINode):
     """GUINode for BasicMeasNode using BasicMeasWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.meas: Target BasicMeas node full name.
     :type target.meas: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return BasicMeasMainWindow(gconf, name, context)
+        return BasicMeasMainWindow(gconf, name, context, logger=self.logger)

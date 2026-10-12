@@ -27,6 +27,7 @@
       ~AnalogIn.pop_all_block
       ~AnalogIn.pop_all_opt
       ~AnalogIn.pop_block
+      ~AnalogIn.pop_block_with_status
       ~AnalogIn.pop_opt
       ~AnalogIn.read_on_demand
       ~AnalogIn.set_buffer_size

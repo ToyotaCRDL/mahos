@@ -383,7 +383,7 @@ class Coherent_OBIS(VisaInstrument):
             self.logger.exception(f"{self._header(i)}Unexpected reply: {ans}")
             return 0.0
 
-    def get_mode(self, i: str = "") -> bool:
+    def get_mode(self, i: str = "") -> str:
         return self.inst.query(f"SOUR{i}:AM:SOUR?")
 
     def set_mode(self, mode: str, i: str = "") -> bool:
@@ -481,3 +481,110 @@ class Coherent_OBIS(VisaInstrument):
         i = self._devices[label]
         # not checking error here because the error queue can be messed up in some devices.
         return self.set_mode(ps["mode"], i) and self.set_power(ps["power"], i)
+
+
+class Thorlabs_LD(VisaInstrument):
+    """Thorlabs Laser Diode Drivers. This class implements ParamDict interface for Tweaker.
+
+    Supported models are ITC4000 and CLD1000 series integrated LD drivers.
+
+    NOTE: This class currently assumes the device is running in constant current
+    (not in constant power). Also, temperature is read-only
+    (setting command is omitted) for safety reasons.
+
+    """
+
+    def __init__(self, name, conf, prefix=None):
+        if "write_termination" not in conf:
+            conf["write_termination"] = "\n"
+        if "read_termination" not in conf:
+            conf["read_termination"] = "\n"
+
+        VisaInstrument.__init__(self, name, conf, prefix=prefix)
+
+        if self.get_control_mode():
+            raise ValueError("This class assumes constant current mode.")
+
+    def get_control_mode(self) -> bool:
+        """Get control mode. True (False) means constant power (current) mode."""
+
+        ans = self.inst.query("SOUR:FUNC:MODE?").strip().upper()
+        if ans in ("POW", "POWER"):
+            return True
+        elif ans in ("CURR", "CURRENT"):
+            return False
+        self.logger.error(f"Unexpected reply: {ans}")
+        return True
+
+    def get_enable(self) -> bool:
+        """get if the laser is turned on."""
+
+        return self.inst.query("OUTP?") == "1"
+
+    def set_enable(self, on: bool) -> bool:
+        """set laser enable."""
+
+        if on:
+            self.logger.info("Turning on the laser.")
+            self.inst.write("OUTP 1")
+        else:
+            self.logger.info("Turning off the laser.")
+            self.inst.write("OUTP 0")
+        return True
+
+    def get_current(self) -> float:
+        """Get current set point in A."""
+
+        ans = self.inst.query("SOUR:CURR?")
+        try:
+            return float(ans)
+        except ValueError:
+            self.logger.exception(f"Unexpected reply: {ans}")
+            return 0.0
+
+    def set_current(self, current_A: float) -> bool:
+        """Set power set point in A."""
+
+        self.inst.write(f"SOUR:CURR {current_A:.6e}")
+        return True
+
+    def get_temperature(self) -> float:
+        """Get TEC temperature set point in degC."""
+
+        ans = self.inst.query("SOUR2:TEMP?")
+        try:
+            return float(ans)
+        except ValueError:
+            self.logger.exception(f"Unexpected reply: {ans}")
+            return 0.0
+
+    # Standard API
+
+    def start(self, label: str = "") -> bool:
+        return self.set_enable(True)
+
+    def stop(self, label: str = "") -> bool:
+        return self.set_enable(False)
+
+    def get_param_dict_labels(self) -> list[str]:
+        return [""]
+
+    def get_param_dict(self, label: str = "") -> P.ParamDict[str, P.PDValue]:
+        d = P.ParamDict(
+            current=P.FloatParam(
+                self.get_current(), minimum=0.0, unit="A", SI_prefix=True, doc="Current setpoint"
+            ),
+            # read only params
+            temperature=P.FloatParam(
+                self.get_temperature(),
+                read_only=True,
+                unit="degC",
+                doc="TEC setpoint",
+            ),
+        )
+        return d
+
+    def configure(self, params: dict, label: str = "") -> bool:
+        ps = P.unwrap(params)
+        self.set_current(ps["current"])
+        return self.check_error()

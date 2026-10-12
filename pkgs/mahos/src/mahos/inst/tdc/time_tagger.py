@@ -98,7 +98,7 @@ class TimeTagger(TDCBase):
         if ch:
             self.tagger.setTriggerLevel(ch, level)
             self.tagger.setSoftwareClock(ch, freq)
-            self.logger.info(f"Software reference clock at ch={ch} freq={freq*1e-6:.1f} MHz.")
+            self.logger.info(f"Software reference clock at ch={ch} freq={freq * 1e-6:.1f} MHz.")
         else:
             disable_reference_clock = getattr(self.tagger, "disableReferenceClock", None)
             if callable(disable_reference_clock):

@@ -111,7 +111,7 @@ class PatternGenerator(object):
         return self.mw_modes[0]
 
     def mode_has_4phase(self, ch=None) -> bool:
-        return self.mode(ch) in (MWMode.QPSK, MWMode.ArbPhase)
+        return self.mode(ch) in (MWMode.QPSK, MWMode.ArbPhase, MWMode.AWG)
 
     def _need_p270(self) -> bool:
         return any(m == MWMode.Ext2Phase for m in self.mw_modes)
@@ -121,7 +121,7 @@ class PatternGenerator(object):
             return
         if p270 < p90:
             raise ValueError(
-                f"270pulse ({p270*1e9:.1f} ns) must be >= 90pulse ({p90*1e9:.1f} ns)."
+                f"270pulse ({p270 * 1e9:.1f} ns) must be >= 90pulse ({p90 * 1e9:.1f} ns)."
             )
 
     def get_common_pulses(self, params: dict):
@@ -274,7 +274,14 @@ class T1Generator(PatternGenerator):
     def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
         pd = P.ParamDict()
         pd["180pulse"] = P.FloatParam(
-            10e-9, 1e-9, 1e-6, unit="s", SI_prefix=True, step=1e-9, doc="180 deg (pi) pulse width."
+            10e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="180 deg (pi) pulse width.",
         )
         pd["flip_head"] = P.BoolParam(False)
         return pd
@@ -341,20 +348,22 @@ class FIDGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         if self._need_p270():
             pd["270pulse"] = P.FloatParam(
                 -1e-9,
                 -1e-9,
-                1e-6,
+                1e-3,
                 unit="s",
                 SI_prefix=True,
                 step=1e-9,
+                adaptive_step=False,
                 doc="270 deg (3/2 pi) pulse width for inverted readout.",
             )
         return pd
@@ -446,29 +455,32 @@ class SpinEchoGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         if self._need_p270():
             pd["270pulse"] = P.FloatParam(
                 -1e-9,
                 -1e-9,
-                1e-6,
+                1e-3,
                 unit="s",
                 SI_prefix=True,
                 step=1e-9,
+                adaptive_step=False,
                 doc="270 deg (3/2 pi) pulse width for inverted readout.",
             )
         pd["readY"] = P.BoolParam(False, doc="readout (apply pi/2 pulse) with phase Y.")
@@ -573,33 +585,43 @@ class TRSEGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         if self._need_p270():
             pd["270pulse"] = P.FloatParam(
                 -1e-9,
                 -1e-9,
-                1e-6,
+                1e-3,
                 unit="s",
                 SI_prefix=True,
                 step=1e-9,
+                adaptive_step=False,
                 doc="270 deg (3/2 pi) pulse width for inverted readout.",
             )
         pd["tauconst"] = P.FloatParam(
-            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="first inter-pulse time."
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="first inter-pulse time.",
         )
         return pd
 
@@ -699,29 +721,32 @@ class DDGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         if self._need_p270():
             pd["270pulse"] = P.FloatParam(
                 -1e-9,
                 -1e-9,
-                1e-6,
+                1e-3,
                 unit="s",
                 SI_prefix=True,
                 step=1e-9,
+                adaptive_step=False,
                 doc="270 deg (3/2 pi) pulse width for inverted readout.",
             )
         pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
@@ -1022,19 +1047,21 @@ class RDDGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
@@ -1057,8 +1084,8 @@ class RDDGenerator(PatternGenerator):
         reduce_start_divisor: int,
         fix_base_width: int | None,
     ):
-        if self.mode() != MWMode.ArbPhase:
-            raise ValueError("MW mode must be ArbPhase.")
+        if self.mode() not in (MWMode.ArbPhase, MWMode.AWG):
+            raise ValueError("MW mode must be ArbPhase or AWG.")
 
         p90, p180, Nconst, readY = [
             pulse_params[k] for k in ["90pulse", "180pulse", "Nconst", "readY"]
@@ -1171,33 +1198,43 @@ class DDNGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         if self._need_p270():
             pd["270pulse"] = P.FloatParam(
                 -1e-9,
                 -1e-9,
-                1e-6,
+                1e-3,
                 unit="s",
                 SI_prefix=True,
                 step=1e-9,
+                adaptive_step=False,
                 doc="270 deg (3/2 pi) pulse width for inverted readout.",
             )
         pd["tauconst"] = P.FloatParam(
-            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="free evolution time."
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="free evolution time.",
         )
         pd["readY"] = P.BoolParam(False, doc="readout (apply pi/2 pulse) with phase Y.")
         pd["invertY"] = P.BoolParam(False, doc="invert Y phase.")
@@ -1317,7 +1354,14 @@ class PiTrainGenerator(PatternGenerator):
     def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
         pd = P.ParamDict()
         pd["tauconst"] = P.FloatParam(
-            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="first inter-pulse time."
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="first inter-pulse time.",
         )
         pd["Nconst"] = P.IntParam(1, 1, 10000, doc="Number of pulse repetitions.")
         return pd
@@ -1389,10 +1433,24 @@ class SEHalfPiSweepGenerator(PatternGenerator):
     def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
         pd = P.ParamDict()
         pd["180pulse"] = P.FloatParam(
-            10e-9, 1e-9, 1e-6, unit="s", SI_prefix=True, step=1e-9, doc="180 deg (pi) pulse width."
+            10e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="180 deg (pi) pulse width.",
         )
         pd["tauconst"] = P.FloatParam(
-            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="inter-pulse time."
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="inter-pulse time.",
         )
         return pd
 
@@ -1466,21 +1524,25 @@ class SpinLockGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
-        pd["iq_delay"] = P.FloatParam(10e-9, 1e-9, 1000e-9, unit="s", SI_prefix=True, step=1e-9)
+        pd["iq_delay"] = P.FloatParam(
+            10e-9, 1e-9, 1000e-9, unit="s", SI_prefix=True, step=1e-9, adaptive_step=False
+        )
         if self._need_p270():
             pd["270pulse"] = P.FloatParam(
                 -1e-9,
                 -1e-9,
-                1e-6,
+                1e-3,
                 unit="s",
                 SI_prefix=True,
                 step=1e-9,
+                adaptive_step=False,
                 doc="270 deg (3/2 pi) pulse width for inverted readout.",
             )
         return pd
@@ -1579,33 +1641,43 @@ class XY8CorrelationGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         if self._need_p270():
             pd["270pulse"] = P.FloatParam(
                 -1e-9,
                 -1e-9,
-                1e-6,
+                1e-3,
                 unit="s",
                 SI_prefix=True,
                 step=1e-9,
+                adaptive_step=False,
                 doc="270 deg (3/2 pi) pulse width for inverted readout.",
             )
         pd["tauconst"] = P.FloatParam(
-            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="first inter-pulse time."
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="first inter-pulse time.",
         )
         pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
         pd["reinitX"] = P.BoolParam(False, doc="reinitialize X.")
@@ -1736,33 +1808,43 @@ class XY8CorrelationNflipGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         if self._need_p270():
             pd["270pulse"] = P.FloatParam(
                 -1e-9,
                 -1e-9,
-                1e-6,
+                1e-3,
                 unit="s",
                 SI_prefix=True,
                 step=1e-9,
+                adaptive_step=False,
                 doc="270 deg (3/2 pi) pulse width for inverted readout.",
             )
         pd["tauconst"] = P.FloatParam(
-            1e-9, 1e-9, 1e-3, unit="s", SI_prefix=True, step=1e-9, doc="first inter-pulse time."
+            1e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="first inter-pulse time.",
         )
         pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
         pd["reinitX"] = P.BoolParam(False, doc="reinitialize X.")
@@ -1939,19 +2021,21 @@ class DDGateGenerator(PatternGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         pd["tauconst"] = P.FloatParam(
@@ -1961,6 +2045,7 @@ class DDGateGenerator(PatternGenerator):
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="duration of free-evolution.",
         )
         pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
@@ -2074,19 +2159,21 @@ class DDNGateGenerator(DDGateGenerator):
         pd["90pulse"] = P.FloatParam(
             10e-9,
             1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="90 deg (pi/2) pulse width.",
         )
         pd["180pulse"] = P.FloatParam(
             -1e-9,
             -1e-9,
-            1e-6,
+            1e-3,
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="180 deg (pi) pulse width. Negative value means 2 * 90pulse.",
         )
         pd["tauconst"] = P.FloatParam(
@@ -2096,6 +2183,7 @@ class DDNGateGenerator(DDGateGenerator):
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="duration of free-evolution.",
         )
         pd["tau2const"] = P.FloatParam(
@@ -2105,6 +2193,7 @@ class DDNGateGenerator(DDGateGenerator):
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="duration of free-evolution.",
         )
         pd["Nconst"] = P.IntParam(4, 1, 10000, doc="Number of pulse train repetitions.")
@@ -2203,7 +2292,14 @@ class DRabiGenerator(PatternGenerator):
     def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
         pd = P.ParamDict()
         pd["180pulse"] = P.FloatParam(
-            10e-9, 1e-9, 1e-6, unit="s", SI_prefix=True, step=1e-9, doc="180 deg (pi) pulse width."
+            10e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="180 deg (pi) pulse width.",
         )
         pd["mw1_delay"] = P.FloatParam(
             1e-9,
@@ -2212,6 +2308,7 @@ class DRabiGenerator(PatternGenerator):
             unit="s",
             SI_prefix=True,
             step=1e-9,
+            adaptive_step=False,
             doc="small wait time between mw and mw1 pulses.",
         )
         return pd
@@ -2285,7 +2382,14 @@ class DQ2RamseyGenerator(PatternGenerator):
     def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
         pd = P.ParamDict()
         pd["90pulse"] = P.FloatParam(
-            10e-9, 1e-9, 1e-6, unit="s", SI_prefix=True, step=1e-9, doc="90 deg (pi) pulse width."
+            10e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="90 deg (pi) pulse width.",
         )
         return pd
 
@@ -2364,7 +2468,14 @@ class DQ4RamseyGenerator(PatternGenerator):
     def pulse_params(self) -> P.ParamDict[str, P.PDValue]:
         pd = P.ParamDict()
         pd["90pulse"] = P.FloatParam(
-            10e-9, 1e-9, 1e-6, unit="s", SI_prefix=True, step=1e-9, doc="90 deg (pi) pulse width."
+            10e-9,
+            1e-9,
+            1e-3,
+            unit="s",
+            SI_prefix=True,
+            step=1e-9,
+            adaptive_step=False,
+            doc="90 deg (pi) pulse width.",
         )
         return pd
 
@@ -2462,7 +2573,7 @@ def make_generators(
 ):
     if generators is not None and not isinstance(generators, dict):
         raise TypeError(
-            "generators must be dict[str, [module_name, class_name]], " f"got {generators!r}"
+            f"generators must be dict[str, [module_name, class_name]], got {generators!r}"
         )
     mw_modes = tuple(MWMode.parse(m) for m in mw_modes)
 
@@ -2512,14 +2623,14 @@ def make_generators(
     if len(mw_modes) > 1:
         # add sequences using multiple mw channels here
         generators["drabi"] = DRabiGenerator(*args)
-        if all(m in (MWMode.QPSK, MWMode.ArbPhase) for m in mw_modes[:2]):
+        if all(m in (MWMode.QPSK, MWMode.ArbPhase, MWMode.AWG) for m in mw_modes[:2]):
             generators["dq2ramsey"] = DQ2RamseyGenerator(*args)
             generators["dq4ramsey"] = DQ4RamseyGenerator(*args)
     if all(m == MWMode.Ext2Phase for m in mw_modes):
         # these methods requires 4 phases (x, y, x_inv, y_inv) and unavailable in 2-phase mode.
         for key in ["xy16", "xy16N", "ddgate", "ddgateN"]:
             del generators[key]
-    if any(m == MWMode.ArbPhase for m in mw_modes):
+    if any(m in (MWMode.ArbPhase, MWMode.AWG) for m in mw_modes):
         # Randomized DD. no rcpmg because it is equivalent to rcp.
         generators["rcp"] = RDDGenerator(*args, method="cp")
         generators["rxy4"] = RDDGenerator(*args, method="xy4")

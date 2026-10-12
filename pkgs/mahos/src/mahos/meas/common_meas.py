@@ -10,8 +10,16 @@ Common implementations for meas nodes.
 
 from __future__ import annotations
 
+import os
+
 from mahos.msgs.common_msgs import BinaryStatus, BinaryState, StateReq, Request, Reply
 from mahos.msgs.common_msgs import SaveDataReq, ExportDataReq, LoadDataReq
+from mahos.msgs.common_msgs import (
+    SaveArtifactReq,
+    ExportArtifactReq,
+    LoadArtifactReq,
+    CleanupArtifactReq,
+)
 from mahos.msgs.common_meas_msgs import PopBufferReq, ClearBufferReq, FitReq, ClearFitReq
 from mahos.msgs.common_meas_msgs import Buffer, BasicMeasData
 from mahos.msgs import param_msgs as P
@@ -19,10 +27,11 @@ from mahos.inst.server import MultiInstrumentClient
 from mahos.node.node import Node, NodeName
 from mahos.node.client import NodeClient, StateClientMixin
 from mahos.node.comm import Context
+from mahos.meas.file_transport import FileTransportClientMixin, FileTransportNodeMixin
 from mahos.meas.tweaker import TweakSaver
 
 
-class BasicMeasClientBase(NodeClient):
+class BasicMeasClientBase(FileTransportClientMixin, NodeClient):
     def __init__(
         self,
         gconf: dict,
@@ -32,6 +41,7 @@ class BasicMeasClientBase(NodeClient):
         status_handler=None,
         data_handler=None,
         buffer_handler=None,
+        file_transport_dir: str | None = None,
     ):
         NodeClient.__init__(self, gconf, name, context=context, prefix=prefix)
 
@@ -40,6 +50,7 @@ class BasicMeasClientBase(NodeClient):
         )
 
         self.req = self.add_req(gconf)
+        self.init_file_transport(file_transport_dir)
 
     def get_status(self) -> BinaryStatus | None:
         return self._get_status()
@@ -84,7 +95,7 @@ class BaseMeasClientMixin(StateClientMixin, ParamDictReqMixin):
     pass
 
 
-class BasicMeasReqMixin(object):
+class BasicMeasReqMixin(FileTransportClientMixin):
     """implements start(), stop(), {save,export,load}_data(), and {pop,clear}_buffer()."""
 
     def start(self, params=None, label: str = "") -> bool:
@@ -100,8 +111,11 @@ class BasicMeasReqMixin(object):
     def save_data(self, file_name: str, params: dict | None = None, note: str = "") -> bool:
         """Save data to `file_name`."""
 
-        rep = self.req.request(SaveDataReq(file_name, params=params, note=note))
-        return rep.success
+        return self.request_output(
+            SaveDataReq(file_name, params=params, note=note),
+            SaveArtifactReq(os.path.basename(file_name), params=params, note=note),
+            file_name,
+        )
 
     def export_data(
         self,
@@ -115,8 +129,11 @@ class BasicMeasReqMixin(object):
 
         """
 
-        rep = self.req.request(ExportDataReq(file_name, data=data, params=params))
-        return rep.success
+        return self.request_output(
+            ExportDataReq(file_name, data=data, params=params),
+            ExportArtifactReq(os.path.basename(file_name), data=data, params=params),
+            file_name,
+        )
 
     def load_data(self, file_name: str, to_buffer: bool = False) -> BasicMeasData | None:
         """Load data from `file_name`.
@@ -125,11 +142,14 @@ class BasicMeasReqMixin(object):
 
         """
 
-        rep = self.req.request(LoadDataReq(file_name, to_buffer=to_buffer))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
+        rep = self.request_input(
+            LoadDataReq(file_name, to_buffer=to_buffer),
+            lambda artifact: LoadArtifactReq(
+                artifact, os.path.basename(file_name), to_buffer=to_buffer
+            ),
+            file_name,
+        )
+        return rep.ret if rep.success else None
 
     def pop_buffer(self, index: int = -1) -> BasicMeasData | None:
         rep = self.req.request(PopBufferReq(index))
@@ -168,7 +188,7 @@ class BasicMeasClient(BasicMeasClientBase, BaseMeasClientMixin, BasicMeasReqMixi
         return s.state if s is not None else None
 
 
-class BasicMeasNode(Node):
+class BasicMeasNode(FileTransportNodeMixin, Node):
     """Base implementation for basic measurement nodes (a node with BinaryState, Data, and Buffer).
 
     Implements initialization (clients and communication), ``change_state()``,
@@ -182,6 +202,9 @@ class BasicMeasNode(Node):
     :type target.log: str
     :param inst_remap: Optional logical-to-physical instrument name remapping.
     :type inst_remap: dict[str, str]
+    :param file_transport_dir: Optional measurement-side directory for client-measurement file
+        transport.
+    :type file_transport_dir: str
 
     """
 
@@ -192,6 +215,8 @@ class BasicMeasNode(Node):
         Node.__init__(self, gconf, name, context=context)
 
         self.state = BinaryState.IDLE
+
+        self.init_file_transport()
 
         self.cli = MultiInstrumentClient(
             gconf,
@@ -242,6 +267,48 @@ class BasicMeasNode(Node):
         """Load data. Inherited class must implement this."""
 
         return Reply(False, "load_data() is not implemented.")
+
+    def _save_data_for_artifact(self, msg: SaveDataReq) -> Reply:
+        """Save synchronously for artifact publication; override asynchronous implementations."""
+
+        return self.save_data(msg)
+
+    def save_artifact(self, msg: SaveArtifactReq) -> Reply:
+        """Atomically create a saved-data transport artifact."""
+
+        return self.publish_artifact(
+            msg.file_name,
+            "save",
+            lambda path: self._save_data_for_artifact(
+                SaveDataReq(path, params=msg.params, note=msg.note)
+            ),
+            "Failed to save artifact",
+        )
+
+    def export_artifact(self, msg: ExportArtifactReq) -> Reply:
+        """Atomically create an exported-data transport artifact."""
+
+        return self.publish_artifact(
+            msg.file_name,
+            "export",
+            lambda path: self.export_data(ExportDataReq(path, data=msg.data, params=msg.params)),
+            "Failed to export artifact",
+        )
+
+    def load_artifact(self, msg: LoadArtifactReq) -> Reply:
+        """Load data from a validated shared artifact."""
+
+        return self.consume_artifact(
+            msg.artifact,
+            lambda path: self.load_data(
+                LoadDataReq(
+                    path,
+                    to_buffer=msg.to_buffer,
+                    buffer_name=os.path.basename(msg.file_name),
+                )
+            ),
+            "Failed to load artifact",
+        )
 
     def pop_buffer(self, msg: PopBufferReq) -> Reply:
         """Pop data from the buffer. Inherited class should have attribute buffer: Buffer."""
@@ -316,6 +383,14 @@ class BasicMeasNode(Node):
                 return self.export_data(msg)
             elif isinstance(msg, LoadDataReq):
                 return self.load_data(msg)
+            elif isinstance(msg, SaveArtifactReq):
+                return self.save_artifact(msg)
+            elif isinstance(msg, ExportArtifactReq):
+                return self.export_artifact(msg)
+            elif isinstance(msg, LoadArtifactReq):
+                return self.load_artifact(msg)
+            elif isinstance(msg, CleanupArtifactReq):
+                return self.cleanup_artifact(msg)
             elif isinstance(msg, PopBufferReq):
                 return self.pop_buffer(msg)
             elif isinstance(msg, ClearBufferReq):

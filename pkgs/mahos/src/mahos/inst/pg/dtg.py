@@ -180,6 +180,11 @@ class DTG5000(VisaInstrument, DTGCoreMixin):
     def get_sequencer_status(self) -> str:
         return self.inst.query("TBAS:RST?")
 
+    def get_finished(self) -> bool:
+        """Get if PG has finished sequence and ready for next trigger."""
+
+        return self.get_sequencer_status() in ("WAIT", "STOP")
+
     def start_loop(self) -> bool:
         """repeat start command until it actually starts."""
 
@@ -244,6 +249,8 @@ class DTG5000(VisaInstrument, DTGCoreMixin):
             return self.offsets  # offsets of last configure
         elif key == "opc":
             return self.query_opc(delay=args)
+        elif key == "finished":
+            return self.get_finished()
         elif key == "validate":
             if "blocks" in args and "freq" in args:
                 return self.validate_blocks(args["blocks"], args["freq"])

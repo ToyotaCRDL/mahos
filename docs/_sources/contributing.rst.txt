@@ -20,8 +20,8 @@ Testing
 Please use the following commands in the project's root directory to check whether your patch can be merged.
 You can also hit ``make`` to do all.
 
-- ``black .`` to format the code.
-- ``flake8 .`` for code linting.
+- ``ruff format .`` to format the code.
+- ``ruff check .`` for code linting.
 - ``pytest`` to check whether all the unit tests are passing.
 
 Contributor License Agreement

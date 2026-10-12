@@ -14,7 +14,7 @@ import threading
 import numpy as np
 
 from mahos.inst.overlay.overlay import InstrumentOverlay
-from mahos.util.locked_queue import LockedQueue
+from mahos.util.queue import RollingQueue
 
 
 class IODMRSweeperCommand(InstrumentOverlay):
@@ -32,7 +32,7 @@ class IODMRSweeperCommand(InstrumentOverlay):
         self.add_instruments(self.sg, self.camera)
 
         self._queue_size = self.conf.get("queue_size", 8)
-        self._queue = LockedQueue(self._queue_size)
+        self._queue = RollingQueue(self._queue_size)
         self._stop_ev = self._thread = None
         self.running = False
 
@@ -76,7 +76,7 @@ class IODMRSweeperCommand(InstrumentOverlay):
             return False
 
         self._set_attrs(params)
-        self._queue = LockedQueue(self._queue_size)
+        self._queue = RollingQueue(self._queue_size)
 
         if not (
             self.sg.configure_cw(self.start_f, self.power)

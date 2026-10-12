@@ -521,6 +521,8 @@ These classes are loaded at worker initialization and can add or override method
 <li><p><strong>pulser.mw_channels</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Optional SG channel identifiers for MW outputs.</p></li>
 <li><p><strong>pulser.pd_rate</strong> (<em>float</em>) – (default: 500e3) PD sampling rate in Hz.</p></li>
 <li><p><strong>pulser.pd_data_transfer</strong> (<em>str</em>) – Optional DAQ transfer mode label.</p></li>
+<li><p><strong>pulser.pd_segment_granularity</strong> (<em>int</em>) – (default: 16) logical post-trigger sample
+granularity for Spectrum PD segments.</p></li>
 <li><p><strong>pulser.eos_margin</strong> (<em>float</em>) – (default: 0.0) End-of-sequence timing margin in seconds.</p></li>
 <li><p><strong>pulser.buffer_size_coeff</strong> (<em>int</em>) – Buffer size coefficient multiplied by <code class="docutils literal notranslate"><span class="pre">num</span></code>.</p></li>
 <li><p><strong>pulser.accum_window</strong> (<em>float</em>) – (default: 1e-3) Accumulation window in seconds.</p></li>

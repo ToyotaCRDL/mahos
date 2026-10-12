@@ -333,7 +333,7 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
 
         length_s = self.length / self._freq
         scale, prefix = SI_scale(length_s)
-        msg = f"Configured with blocks. length: {self.length} ({length_s*scale:.3f} {prefix}s),"
+        msg = f"Configured with blocks. length: {self.length} ({length_s * scale:.3f} {prefix}s),"
         msg += f" {self._last_addr + 1}/{self._max_instructions} inst"
         self.logger.info(msg)
         return True
@@ -698,7 +698,9 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
 
         length_s = self.length / self._freq
         scale, prefix = SI_scale(length_s)
-        msg = f"Configured with blockseq. length: {self.length} ({length_s*scale:.3f} {prefix}s),"
+        msg = (
+            f"Configured with blockseq. length: {self.length} ({length_s * scale:.3f} {prefix}s),"
+        )
         msg += f" {self._last_addr + 1}/{self._max_instructions} inst"
         self.logger.info(msg)
         return True
@@ -712,6 +714,10 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             running=bool(s & 0b100),
             waiting=bool(s & 0b1000),
         )
+
+    def get_finished(self) -> bool:
+        stat = self.get_status()
+        return not stat.running
 
     def trigger(self) -> bool:
         """issue a software trigger."""
@@ -768,6 +774,8 @@ class SpinCore_PulseBlasterESR_PRO(Instrument):
             return self.offsets  # offsets of last configure
         elif key == "opc":  # for API compatibility
             return True
+        elif key == "finished":
+            return self.get_finished()
         elif key == "validate":
             if "blocks" in args and "freq" in args:
                 return self.validate_blocks(args["blocks"], args["freq"])

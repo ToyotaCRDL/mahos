@@ -509,7 +509,10 @@ List of PG channels to set high continuously on INTERACT or SCAN states.</p></li
 <li><p><strong>tracer.interval_sec</strong> (<em>float</em>) – (default: 0.5) Interval to poll trace data.</p></li>
 <li><p><strong>tracer.size</strong> (<em>int</em>) – (default: 500) Size of trace data.</p></li>
 <li><p><strong>tracer.samples</strong> (<em>int</em>) – (default: 5) Number of samples per chunk.</p></li>
-<li><p><strong>tracer.oversample</strong> (<em>int</em>) – (default: 1) Oversample factor.</p></li>
+<li><p><strong>tracer.pd_rate</strong> (<em>float</em>) – Optional analog-PD sampling rate. Leave unset when using
+<code class="docutils literal notranslate"><span class="pre">SinglePhotonCounter</span></code>. When set, this takes precedence over <code class="docutils literal notranslate"><span class="pre">tracer.oversample</span></code>.</p></li>
+<li><p><strong>tracer.oversample</strong> (<em>int</em>) – (default: 1) Analog-PD oversampling factor. Leave unset when using
+<code class="docutils literal notranslate"><span class="pre">SinglePhotonCounter</span></code>.</p></li>
 <li><p><strong>tracer.time_window_sec</strong> (<em>float</em>) – (default: 0.01) Time window for single data point.</p></li>
 <li><p><strong>tracer.pd_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – (default: (-10.0, 10.0)) PD’s voltage bounds.</p></li>
 </ul>

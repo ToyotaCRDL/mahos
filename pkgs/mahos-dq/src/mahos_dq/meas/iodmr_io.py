@@ -281,7 +281,7 @@ class IODMRIO(object):
             idx = np.abs(freq_data - params["freq"]).argmin()
         return freq_data[idx], d[idx, :, :]
 
-    def _export_freq_slice(self, fn, data_list: list[IODMRData], params: dict):
+    def _export_freq_slice(self, fn, data_list: list[IODMRData], params: dict) -> bool:
         for i, data in enumerate(data_list):
             freq, img = self.get_freq_image(data, params)
             hslice, wslice = self.get_hwslice(data, params)
@@ -293,7 +293,7 @@ class IODMRIO(object):
                 edgecolor="#1E90FF",
             )
             head, ext = path.splitext(fn)
-            freq_str = f"{freq*1E-6:.1f}MHz"
+            freq_str = f"{freq * 1e-6:.1f}MHz"
             xfn = f"{head}_d{i}f{freq_str}{ext}"
             save_image(
                 xfn,
@@ -304,6 +304,7 @@ class IODMRIO(object):
                 fontsize=params.get("fontsize"),
                 title="f = " + freq_str,
             )
+        return True
 
     def _export_data_image(self, fn, data_list: list[IODMRData], params: dict) -> bool:
         coeff = 1e-6

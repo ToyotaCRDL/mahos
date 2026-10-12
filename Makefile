@@ -1,4 +1,6 @@
-.PHONY: all format lint install-dev test dq-ext docs browse clean
+.PHONY: all format format-check lint install-dev test dq-ext docs browse clean
+
+TEST_QPA_PLATFORM ?= offscreen
 
 ifeq ($(OS),Windows_NT)
     OPEN := "start"
@@ -14,17 +16,20 @@ endif
 all: format lint test
 
 format:
-	black .
+	ruff format .
+
+format-check:
+	ruff format --check .
 
 lint:
-	flake8 . --show-source --statistics
+	ruff check . --statistics
 
 install-dev:
 	python -m pip install -e './pkgs/mahos[dev]' -e ./pkgs/mahos-dq
 
 test:
 	@python -c "import mahos, mahos_dq" >/dev/null 2>&1 || make install-dev
-	python -m pytest --timeout=30
+	QT_QPA_PLATFORM="$(TEST_QPA_PLATFORM)" python -m pytest --timeout=30
 
 dq-ext:
 	cd pkgs/mahos-dq-ext/src/mahos_dq_ext && make

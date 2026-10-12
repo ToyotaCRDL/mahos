@@ -27,7 +27,7 @@ from mahos_dq.msgs.spectroscopy_msgs import SpectroscopyData, SpectroscopyStatus
 from mahos.msgs.inst.spectrometer_msgs import Temperature
 from mahos.node.global_params import GlobalParamsClient
 from mahos_dq.meas.confocal import ConfocalIORequester
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientWidget
 from mahos.gui.fit_widget import FitWidget
 from mahos.gui.dialog import save_dialog, load_dialog, export_dialog
@@ -230,6 +230,8 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
         plot: PlotWidget,
         context,
         parent=None,
+        file_transport_dir=None,
+        confocal_file_transport_dir=None,
     ):
         ClientWidget.__init__(self, parent)
         self.setupUi(self)
@@ -239,12 +241,19 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
         self.plot = plot
         self.data = SpectroscopyData()
 
-        self.cli = QSpectroscopyClient(gconf, name, context=context, parent=self)
+        self.cli = QSpectroscopyClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
         if confocal_name:
-            self.confocal_cli = ConfocalIORequester(gconf, confocal_name, context=context)
+            self.confocal_cli = ConfocalIORequester(
+                gconf,
+                confocal_name,
+                context=context,
+                file_transport_dir=confocal_file_transport_dir,
+            )
         else:
             self.confocal_cli = None
 
@@ -446,8 +455,9 @@ class SpectroscopyWidget(ClientWidget, Ui_Spectroscopy):
 class SpectroscopyMainWindow(QtWidgets.QMainWindow):
     """MainWindow with SpectroscopyWidget and PlotWidget."""
 
-    def __init__(self, gconf: dict, name, context, parent=None):
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         lconf = local_conf(gconf, name)
         target = lconf["target"]
@@ -461,6 +471,8 @@ class SpectroscopyMainWindow(QtWidgets.QMainWindow):
             self.plot,
             context,
             parent=self,
+            file_transport_dir=lconf.get("file_transport_dir"),
+            confocal_file_transport_dir=lconf.get("confocal_file_transport_dir"),
         )
 
         self.setWindowTitle(f"MAHOS.SpectroscopyGUI ({join_name(target['spectroscopy'])})")
@@ -484,14 +496,23 @@ class SpectroscopyMainWindow(QtWidgets.QMainWindow):
 class SpectroscopyGUI(GUINode):
     """GUINode for Spectroscopy using SpectroscopyWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.spectroscopy: Target Spectroscopy node full name.
     :type target.spectroscopy: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
     :param target.confocal: Optional Confocal node used for view export on save.
     :type target.confocal: tuple[str, str] | str
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
+    :param confocal_file_transport_dir: Optional GUI-side directory for shared file transport
+        with the auxiliary Confocal node.
+    :type confocal_file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return SpectroscopyMainWindow(gconf, name, context)
+        return SpectroscopyMainWindow(gconf, name, context, logger=self.logger)

@@ -471,6 +471,11 @@ def encode_mw_phase(
 
     mw_modes = _normalize_mw_modes(mw_modes)
 
+    if MWMode.AWG in mw_modes:
+        if not all(mode == MWMode.AWG for mode in mw_modes):
+            raise ValueError("Mixing AWG and non-AWG modes is not supported.")
+        return blocks
+
     if num_mw == 1:
         return _encode_mw_phase_single(blocks, params, mw_modes, iq_amplitude)
     else:

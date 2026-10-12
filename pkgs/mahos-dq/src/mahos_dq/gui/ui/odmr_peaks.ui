@@ -418,10 +418,10 @@
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout_2">
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_13">
-       <property name="text">
-        <string>Peaks (ES): </string>
+     <item row="2" column="3">
+      <widget class="QLineEdit" name="esEdit">
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -432,13 +432,6 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="2">
-      <widget class="QLineEdit" name="esEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_12">
        <property name="text">
@@ -446,17 +439,38 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="2">
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="showesBox">
+       <property name="text">
+        <string>show</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
       <widget class="QLineEdit" name="gsEdit">
        <property name="readOnly">
         <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QCheckBox" name="showesBox">
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_13">
        <property name="text">
-        <string>show</string>
+        <string>Peaks (ES): </string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QCheckBox" name="sortgsBox">
+       <property name="text">
+        <string>sort</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QCheckBox" name="sortesBox">
+       <property name="text">
+        <string>sort</string>
        </property>
       </widget>
      </item>
@@ -498,8 +512,10 @@
   <tabstop>gammaBox</tabstop>
   <tabstop>kperpBox</tabstop>
   <tabstop>showgsBox</tabstop>
+  <tabstop>sortgsBox</tabstop>
   <tabstop>gsEdit</tabstop>
   <tabstop>showesBox</tabstop>
+  <tabstop>sortesBox</tabstop>
   <tabstop>esEdit</tabstop>
  </tabstops>
  <resources/>

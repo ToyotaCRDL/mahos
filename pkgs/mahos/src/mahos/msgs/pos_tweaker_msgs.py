@@ -11,7 +11,9 @@ Message Types for the PosTweaker.
 from __future__ import annotations
 from pprint import pformat
 
-from mahos.msgs.common_msgs import Request, Status
+from mahos.msgs.common_msgs import Message, Request, Status
+from mahos.msgs.tweaker_msgs import SaveReq as SaveReq
+from mahos.msgs.tweaker_msgs import LoadReq as LoadReq
 
 
 class PosTweakerStatus(Status):
@@ -30,6 +32,17 @@ class PosTweakerStatus(Status):
 
     def __str__(self):
         return "PosTweaker->axis_states:\n" + pformat(self.axis_states)
+
+
+class PosTweakerState(Message):
+    """Serialized PosTweaker state.
+
+    :ivar axis_states: Current positioner states keyed by axis name.
+
+    """
+
+    def __init__(self, axis_states: dict):
+        self.axis_states = axis_states
 
 
 class SetTargetReq(Request):
@@ -63,19 +76,3 @@ class StopAllReq(Request):
     """Stop motion of all the axes."""
 
     pass
-
-
-class SaveReq(Request):
-    """Save current states to a file"""
-
-    def __init__(self, file_name: str, group: str = ""):
-        self.file_name = file_name
-        self.group = group
-
-
-class LoadReq(Request):
-    """Load target positions from a file"""
-
-    def __init__(self, file_name: str, group: str = ""):
-        self.file_name = file_name
-        self.group = group

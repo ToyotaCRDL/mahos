@@ -12,7 +12,6 @@ from __future__ import annotations
 import typing as T
 import uuid
 import os
-import math
 
 import numpy as np
 import pyqtgraph as pg
@@ -33,10 +32,10 @@ from mahos_dq.meas.confocal import ConfocalIORequester
 from mahos.util import conv
 from mahos_dq.util import nv
 from mahos.util.plot import colors_tab20_pair
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientWidget
 from mahos.gui.fit_widget import FitWidget
-from mahos.gui.param import apply_widgets
+from mahos.gui.param import ParamDictComboBoxHandler, apply_widgets
 from mahos.gui.dialog import save_dialog, load_dialog, export_dialog
 from mahos.node.node import local_conf, join_name
 
@@ -126,9 +125,14 @@ class PlotWidget(QtWidgets.QWidget):
         hl.addWidget(self.graphicsView)
         hl.addWidget(self.histo)
 
+        hl_bottom = QtWidgets.QHBoxLayout()
+        self.label = QtWidgets.QLabel("Ready")
+        hl_bottom.addWidget(self.label)
+
         vl = QtWidgets.QVBoxLayout()
         vl.addLayout(hl0)
         vl.addLayout(hl)
+        vl.addLayout(hl_bottom)
         self.setLayout(vl)
 
     def init_view(self):
@@ -149,6 +153,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.img_plot.setLabel("bottom", "Microwave frequency", "Hz")
         self.img_plot.setLabel("left", "Number of accumulation")
 
+        self.plot.scene().sigMouseMoved.connect(self.update_pos)
         self.showimgBox.toggled.connect(self.toggle_image)
         self.normalizenBox.valueChanged.connect(self.update_normalize)
 
@@ -181,6 +186,18 @@ class PlotWidget(QtWidgets.QWidget):
         self.img.resetTransform()
         self.img.setPos(data.params["start"], 0.0)
         self.img.setTransform(QtGui.QTransform.fromScale(data.step(), 1.0))
+
+    def update_pos(self, pos):
+        if not self.plot.sceneBoundingRect().contains(pos):
+            return
+        point = self.plot.getViewBox().mapSceneToView(pos)
+        x, y = point.x(), point.y()
+        self.update_label(x, y)
+
+    def update_label(self, x, y):
+        sx = pg.siFormat(x, precision=6, suffix="Hz")
+        sy = pg.siFormat(y, precision=6, suffix=self._yunit)
+        self.label.setText(f"{sx}, {sy}")
 
     def add_error_bar(self, x, y, height, pen):
         item = pg.ErrorBarItem(x=x, y=y, height=height, pen=pen)
@@ -413,8 +430,11 @@ class ODMRPeaksWidget(QtWidgets.QWidget, Ui_ODMRPeaks):
             l0.setValue(freq[i * 2] * 1e6)
             l1.setValue(freq[i * 2 + 1] * 1e6)
 
-        f_str = set([f"{f:.1f}" for f in sorted(freq)])
-        txt = ", ".join(sorted(f_str))
+        if self.sortgsBox.isChecked():
+            f_str = sorted(set([f"{f:.3f}" for f in freq]))
+        else:
+            f_str = [f"{f:.3f}" for f in freq]
+        txt = ", ".join(f_str)
         self.gsEdit.setText(txt + " MHz")
 
         # Excited state
@@ -424,8 +444,11 @@ class ODMRPeaksWidget(QtWidgets.QWidget, Ui_ODMRPeaks):
             l0.setValue(freq[i * 2] * 1e6)
             l1.setValue(freq[i * 2 + 1] * 1e6)
 
-        f_str = set([f"{f:.1f}" for f in sorted(freq)])
-        txt = ", ".join(sorted(f_str))
+        if self.sortesBox.isChecked():
+            f_str = sorted(set([f"{f:.3f}" for f in freq]))
+        else:
+            f_str = [f"{f:.3f}" for f in freq]
+        txt = ", ".join(f_str)
         self.esEdit.setText(txt + " MHz")
 
     def update_B_angle_label(self):
@@ -509,8 +532,12 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         plot: PlotWidget,
         context,
         parent=None,
+        logger=None,
+        file_transport_dir=None,
+        confocal_file_transport_dir=None,
     ):
         ClientWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
         self.setupUi(self)
 
         self.conf = local_conf(gconf, name)
@@ -518,12 +545,19 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.plot = plot
         self.data = ODMRData()
 
-        self.cli = QODMRClient(gconf, name, context=context, parent=self)
+        self.cli = QODMRClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
         if confocal_name:
-            self.confocal_cli = ConfocalIORequester(gconf, confocal_name, context=context)
+            self.confocal_cli = ConfocalIORequester(
+                gconf,
+                confocal_name,
+                context=context,
+                file_transport_dir=confocal_file_transport_dir,
+            )
         else:
             self.confocal_cli = None
 
@@ -538,9 +572,6 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self._peaksTab_layout = QtWidgets.QVBoxLayout(self.peaksTab)
         self.peaks = ODMRPeaksWidget(self.plot.plot, parent=self.peaksTab)
         self._peaksTab_layout.addWidget(self.peaks)
-
-        self._cw_has_time_window = self._cw_has_gate_delay = True
-        self._pulse_has_time_window = self._pulse_has_gate_delay = self._pulse_has_burst_num = True
 
         self.setEnabled(False)
 
@@ -573,29 +604,27 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         self.saveButton.clicked.connect(self.save_data)
         self.exportButton.clicked.connect(self.export_data)
         self.loadButton.clicked.connect(self.load_data)
+        self.validateButton.clicked.connect(self.request_validate)
 
         for w in (self.startBox, self.stopBox, self.numBox):
             w.valueChanged.connect(self.update_step_label)
+        for w in (
+            self.startBox,
+            self.stopBox,
+            self.numBox,
+            self.powerBox,
+            self.sweepsBox,
+            self.delayBox,
+            self.bgdelayBox,
+            self.finaldelayBox,
+        ):
+            w.valueChanged.connect(self.reset_pulse_label)
+        for w in (self.backgroundBox, self.mwcontBox):
+            w.toggled.connect(self.reset_pulse_label)
 
-        boxes = [
-            self.laserdelayBox,
-            self.laserwidthBox,
-            self.mwdelayBox,
-            self.mwwidthBox,
-        ]
-        if self._pulse_has_burst_num:
-            boxes.append(self.bnumBox)
-            for b in boxes:
-                b.valueChanged.connect(self.update_pulse_label_apd)
-        else:
-            if self._pulse_has_time_window:
-                boxes.append(self.windowBox)
-            if self._pulse_has_gate_delay:
-                boxes.append(self.gatedelayBox)
-            for b in boxes:
-                b.valueChanged.connect(self.update_pulse_label_analog)
-
+        self._method_handler = ParamDictComboBoxHandler(self.methodBox)
         self.methodBox.currentIndexChanged.connect(self.switch_method)
+        self.paramTable.paramsChanged.connect(self.reset_pulse_label)
 
     def init_widgets(self):
         self.tabWidget.setCurrentIndex(0)
@@ -605,45 +634,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         methods = P.filter_out_label_prefix("fit", labels)
         self.methodBox.addItems(methods)
 
-        if "pulse" in labels:
-            params = self.cli.get_param_dict("pulse")
-            apply_widgets(
-                params["timing"],
-                [
-                    ("laser_delay", self.laserdelayBox, 1e9),  # s to ns
-                    ("laser_width", self.laserwidthBox, 1e9),
-                    ("mw_delay", self.mwdelayBox, 1e9),
-                    ("mw_width", self.mwwidthBox, 1e9),
-                    ("trigger_width", self.triggerwidthBox, 1e9),
-                    ("mw_offset", self.mwoffsetBox, 1e9),
-                ],
-            )
-            self._pulse_has_time_window = "time_window" in params["timing"]
-            self._pulse_has_gate_delay = "gate_delay" in params["timing"]
-            self._pulse_has_burst_num = "burst_num" in params["timing"]
-
         params = self.cli.get_param_dict("cw")
-        self._cw_has_time_window = "time_window" in params["timing"]
-        if self._cw_has_time_window:
-            apply_widgets(
-                params["timing"],
-                [
-                    ("time_window", self.windowBox, 1e3),
-                ],
-            )
-        else:
-            self.windowBox.setEnabled(False)
-        self._cw_has_gate_delay = "gate_delay" in params["timing"]
-        if self._cw_has_gate_delay:
-            apply_widgets(
-                params["timing"],
-                [
-                    ("gate_delay", self.gatedelayBox, 1e3),
-                ],
-            )
-        else:
-            self.gatedelayBox.setEnabled(False)
-
         apply_widgets(
             params,
             [
@@ -653,6 +644,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
                 ("stop", self.stopBox, 1e-6),
                 ("delay", self.delayBox, 1e3),
                 ("background_delay", self.bgdelayBox, 1e3),
+                ("final_delay", self.finaldelayBox, 1e3),
             ],
         )
 
@@ -665,18 +657,19 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.methodBox.setCurrentIndex(i)
             return True
         else:
-            print(f"[ERROR] unknown method: {method}")
+            self.logger.error(f"Unknown method: {method}")
             return False
 
     def switch_method(self):
-        method = self.methodBox.currentText()
-        params = self.cli.get_param_dict(method)
+        params = self._method_handler.get(self.cli.get_param_dict)
+        if params is None:
+            return
         ps = P.ParamDict()
-        if params.get("pd"):
-            ps["pd"] = params["pd"]
-        if params.get("mod"):
-            ps["mod"] = params["mod"]
+        for key in ("timing", "pd", "mod"):
+            if key in params:
+                ps[key] = params[key]
         self.paramTable.update_contents(ps)
+        self.reset_pulse_label()
 
     def update_step_label(self):
         self.stepLabel.setText(
@@ -685,37 +678,8 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             )
         )
 
-    def update_pulse_label_apd(self):
-        """For APD (SPCM) measurement, burst num is specified and windows are derived."""
-
-        window = self.get_pulse_window()
-        if not window:
-            return  # avoid zero div
-
-        tot = pg.siFormat(window * self.bnumBox.value(), suffix="s")
-        single = pg.siFormat(window, suffix="s")
-        rate = pg.siFormat(1.0 / window, suffix="Hz")
-        self.pulseLabel.setText(f"total window: {tot} single window: {single} (rate: {rate})")
-
-    def update_pulse_label_analog(self):
-        """For Analog PD measurement, time windows are specified and burst nums are derived."""
-
-        window = self.get_pulse_window()
-        if not window:
-            return  # avoid zero div
-
-        time_window = self.windowBox.value() * 1e-3  # sec
-        gate_delay = self.gatedelayBox.value() * 1e-3  # sec
-        burst_num = math.ceil(time_window / window)
-        if self._pulse_has_gate_delay:
-            gate_delay_num = math.ceil(gate_delay / window)
-            self.pulseLabel.setText(f"Burst num: {burst_num} Gate Delay Num: {gate_delay_num}")
-        else:
-            self.pulseLabel.setText(f"Burst num: {burst_num}")
-
-    def get_pulse_window(self):
-        boxes = (self.laserdelayBox, self.laserwidthBox, self.mwdelayBox, self.mwwidthBox)
-        return sum([b.value() for b in boxes]) * 1e-9
+    def reset_pulse_label(self):
+        self.pulseLabel.setText("Not validated yet")
 
     def apply_widgets(self, data: ODMRData):
         start, stop = data.bounds()
@@ -731,37 +695,18 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.delayBox.setValue(data.params["delay"] * 1e3)
         if bg and "background_delay" in data.params:
             self.bgdelayBox.setValue(data.params["background_delay"] * 1e3)
+        if "final_delay" in data.params:
+            self.finaldelayBox.setValue(data.params["final_delay"] * 1e3)
 
         if not self.set_method(data.label):
             return
 
         ps = {}
-        if data.params.get("pd"):
-            ps["pd"] = data.params["pd"]
-        if data.params.get("mod"):
-            ps["mod"] = data.params["mod"]
+        for key in ("timing", "pd", "mod"):
+            if key in data.params:
+                ps[key] = data.params[key]
         for k, v in P.flatten(ps).items():
             self.paramTable.apply_value(k, v)
-
-        timing = data.params["timing"]
-        if data.label != "pulse":
-            if "time_window" in timing:
-                self.windowBox.setValue(timing["time_window"] * 1e3)
-            if "gate_delay" in timing:
-                self.gatedelayBox.setValue(timing["gate_delay"] * 1e3)
-        else:
-            self.laserdelayBox.setValue(timing["laser_delay"] * 1e9)
-            self.laserwidthBox.setValue(timing["laser_width"] * 1e9)
-            self.mwdelayBox.setValue(timing["mw_delay"] * 1e9)
-            self.mwwidthBox.setValue(timing["mw_width"] * 1e9)
-            self.triggerwidthBox.setValue(timing["trigger_width"] * 1e9)
-            self.mwoffsetBox.setValue(timing.get("mw_offset", 0.0) * 1e9)
-            if "time_window" in timing:
-                self.windowBox.setValue(timing["time_window"] * 1e3)
-            if "gate_delay" in timing:
-                self.gatedelayBox.setValue(timing["gate_delay"] * 1e3)
-            if "burst_num" in timing:
-                self.bnumBox.setValue(timing["burst_num"])
 
     def save_data(self):
         default_path = str(self.gparams_cli.get_param("work_dir"))
@@ -832,38 +777,28 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
         params["background"] = self.backgroundBox.isChecked()
         params["delay"] = self.delayBox.value() * 1e-3  # ms to s
         params["background_delay"] = self.bgdelayBox.value() * 1e-3  # ms to s
-
-        label = self.methodBox.currentText()
-        if label != "pulse":
-            t = {}
-            if self._cw_has_time_window:
-                t["time_window"] = self.windowBox.value() * 1e-3  # ms to s
-            if self._cw_has_gate_delay:
-                t["gate_delay"] = self.gatedelayBox.value() * 1e-3  # ms to s
-        else:
-            t = {}
-            t["laser_delay"] = self.laserdelayBox.value() * 1e-9  # ns to s
-            t["laser_width"] = self.laserwidthBox.value() * 1e-9
-            t["mw_delay"] = self.mwdelayBox.value() * 1e-9
-            t["mw_width"] = self.mwwidthBox.value() * 1e-9
-            t["trigger_width"] = self.triggerwidthBox.value() * 1e-9
-            t["mw_offset"] = self.mwoffsetBox.value() * 1e-9
-            if self._pulse_has_burst_num:
-                t["burst_num"] = self.bnumBox.value()
-            if self._pulse_has_time_window:
-                t["time_window"] = self.windowBox.value() * 1e-3  # ms to s
-            if self._pulse_has_gate_delay:
-                t["gate_delay"] = self.gatedelayBox.value() * 1e-3  # ms to s
-        params["timing"] = t
+        params["final_delay"] = self.finaldelayBox.value() * 1e-3  # ms to s
         params["continue_mw"] = self.mwcontBox.isChecked()
 
         params.update(P.unwrap(self.paramTable.params()))
+        label = self.methodBox.currentText()
 
         return params, label
 
     def request_start(self):
-        if self.cli.validate(*self.get_params()):
+        if self.request_validate():
             self.start_sweep()
+
+    def request_validate(self) -> bool:
+        params, label = self.get_params()
+        success, error_message, pulse_summary = self.cli.validate(params, label)
+        if not success:
+            self.pulseLabel.setText(f"Validation failed: {error_message}")
+        elif label == "pulse":
+            self.pulseLabel.setText(pulse_summary)
+        else:
+            self.pulseLabel.setText("Parameters are valid")
+        return success
 
     def start_sweep(self):
         params, label = self.get_params()
@@ -910,6 +845,7 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.saveButton,
             self.exportButton,
             self.loadButton,
+            self.validateButton,
             self.mwcontBox,
             self.startBox,
             self.stopBox,
@@ -918,41 +854,22 @@ class ODMRWidget(ClientWidget, Ui_ODMR):
             self.sweepsBox,
             self.backgroundBox,
             self.delayBox,
+            self.finaldelayBox,
             self.methodBox,
             self.paramTable,
         ):
             w.setEnabled(is_IDLE)
 
         self.bgdelayBox.setEnabled(is_IDLE and self.backgroundBox.isChecked())
-
-        is_pulse = self.methodBox.currentText() == "pulse"
-        if is_pulse:
-            self.windowBox.setEnabled(is_IDLE and self._pulse_has_time_window)
-            self.gatedelayBox.setEnabled(is_IDLE and self._pulse_has_gate_delay)
-            self.bnumBox.setEnabled(is_IDLE and self._pulse_has_burst_num)
-        else:
-            self.windowBox.setEnabled(is_IDLE and self._cw_has_time_window)
-            self.gatedelayBox.setEnabled(is_IDLE and self._cw_has_gate_delay)
-            self.bnumBox.setEnabled(False)
-
-        for w in (
-            self.laserdelayBox,
-            self.laserwidthBox,
-            self.mwdelayBox,
-            self.mwwidthBox,
-            self.triggerwidthBox,
-            self.mwoffsetBox,
-        ):
-            w.setEnabled(is_IDLE and is_pulse)
-
         self.stopButton.setEnabled(state == BinaryState.ACTIVE)
 
 
 class ODMRMainWindow(QtWidgets.QMainWindow):
     """MainWindow with ODMRWidget and PlotWidget."""
 
-    def __init__(self, gconf: dict, name, context, parent=None):
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         lconf = local_conf(gconf, name)
         target = lconf["target"]
@@ -966,6 +883,9 @@ class ODMRMainWindow(QtWidgets.QMainWindow):
             self.plot,
             context,
             parent=self,
+            logger=self.logger,
+            file_transport_dir=lconf.get("file_transport_dir"),
+            confocal_file_transport_dir=lconf.get("confocal_file_transport_dir"),
         )
 
         self.setWindowTitle(f"MAHOS.ODMRGUI ({join_name(target['odmr'])})")
@@ -989,14 +909,23 @@ class ODMRMainWindow(QtWidgets.QMainWindow):
 class ODMRGUI(GUINode):
     """GUINode for ODMR using ODMRWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.odmr: Target ODMR node full name.
     :type target.odmr: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
     :param target.confocal: Optional Confocal node used for view export on save.
     :type target.confocal: tuple[str, str] | str
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
+    :param confocal_file_transport_dir: Optional GUI-side directory for shared file transport
+        with the auxiliary Confocal node.
+    :type confocal_file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return ODMRMainWindow(gconf, name, context)
+        return ODMRMainWindow(gconf, name, context, logger=self.logger)

@@ -493,10 +493,21 @@ pg_immediate takes precedence over sg_first; when this is True, sg_first has no 
 <li><p><strong>sweeper.pd_clock</strong> (<em>str</em>) – DAQ terminal name for PD’s clock (gate)</p></li>
 <li><p><strong>sweeper.pd_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – (default: [“pd0”, “pd1”]) PD names in target.servers.</p></li>
 <li><p><strong>sweeper.pd_analog</strong> (<em>bool</em>) – (default: False) set True if PD is AnalogIn-based.</p></li>
+<li><p><strong>sweeper.pd_spectrum</strong> (<em>bool</em>) – (default: False) set True if PD is Spectrum_AnalogIn-based.</p></li>
+<li><p><strong>sweeper.pd_trace</strong> (<em>bool</em>) – (default: False) enable laser-resolved AnalogPD trace acquisition
+for the <code class="docutils literal notranslate"><span class="pre">pulse</span></code> method. Requires <code class="docutils literal notranslate"><span class="pre">pd_analog</span></code> or <code class="docutils literal notranslate"><span class="pre">pd_spectrum</span></code>.</p></li>
+<li><p><strong>sweeper.pd_chop</strong> (<em>bool</em>) – (default: False) enable the active-high SinglePhotonCounter chop
+output. Requires <code class="docutils literal notranslate"><span class="pre">pd_analog</span></code> and <code class="docutils literal notranslate"><span class="pre">pd_spectrum</span></code> to be False and a configured <code class="docutils literal notranslate"><span class="pre">chop</span></code>
+PG channel.</p></li>
 <li><p><strong>sweeper.pd_rate</strong> (<em>float</em>) – (default param) analog PD sampling rate.</p></li>
 <li><p><strong>sweeper.pd_bounds</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – (default: [-10.0, 10.0]) analog PD voltage bounds.</p></li>
 <li><p><strong>sweeper.pd_data_transfer</strong> (<em>str</em>) – DAQ data transfer mode for analog PD.</p></li>
-<li><p><strong>sweeper.buffer_size_coeff</strong> (<em>int</em>) – (default: 20) multiplier for PD buffer size.</p></li>
+<li><p><strong>sweeper.pd_segment_granularity</strong> (<em>int</em>) – (default: 16) logical post-trigger sample
+granularity for Spectrum PD segments.</p></li>
+<li><p><strong>sweeper.pd_segment_offset</strong> (<em>int</em>) – (default: 0) sample offset subtracted after Spectrum
+segment rounding.</p></li>
+<li><p><strong>sweeper.buffer_size_coeff</strong> (<em>int</em>) – (default: 20) default and fallback value for
+<code class="docutils literal notranslate"><span class="pre">pd.buffer_size_coeff</span></code>.</p></li>
 <li><p><strong>sweeper.clock_name</strong> (<em>str</em>) – (default: “clock”) DAQ clock source name in target.servers.</p></li>
 <li><p><strong>sweeper.channel_remap</strong> (<em>dict</em><em>[</em><em>str</em><em> | </em><em>int</em><em>, </em><em>str</em><em> | </em><em>int</em><em>]</em>) – mapping to fix default channel names.</p></li>
 <li><p><strong>sweeper.pg_freq_cw</strong> (<em>float</em>) – (has preset) PG frequency for CW mode.</p></li>
@@ -509,6 +520,26 @@ pg_immediate takes precedence over sg_first; when this is True, sg_first has no 
 <li><p><strong>sweeper.power</strong> (<em>float</em>) – (default param) SG output power in dBm.</p></li>
 <li><p><strong>sweeper.time_window</strong> (<em>float</em>) – (default param) time window for cw mode.</p></li>
 <li><p><strong>sweeper.gate_delay</strong> (<em>float</em>) – (default param) gate delay before counting.</p></li>
+<li><p><strong>sweeper.post_gate_delay</strong> (<em>float</em>) – (default param) extra excitation after measurement window.</p></li>
+<li><p><strong>sweeper.trigger_width</strong> (<em>float</em>) – (default: 20e-9) detector-trigger width for trace mode.</p></li>
+<li><p><strong>sweeper.burst_num</strong> (<em>int</em>) – (default: 100) traces averaged at each frequency in trace mode.</p></li>
+<li><p><strong>sweeper.roi_head</strong> (<em>float</em>) – (default: 20e-9) detector-trigger to laser delay in trace mode.</p></li>
+<li><p><strong>sweeper.roi_tail</strong> (<em>float</em>) – (default: 100e-9) trace margin after the laser pulse.</p></li>
+<li><p><strong>sweeper.sig_delay</strong> (<em>float</em>) – (default: 0.0) signal-window delay after the laser.</p></li>
+<li><p><strong>sweeper.sig_width</strong> (<em>float</em>) – (default: 100e-9) signal-window width.</p></li>
+<li><p><strong>sweeper.ref_delay</strong> (<em>float</em>) – (default: 0.0) reference delay after the signal window.</p></li>
+<li><p><strong>sweeper.ref_width</strong> (<em>float</em>) – (default: 100e-9) reference-window width.</p></li>
+<li><p><strong>sweeper.refmode</strong> (<em>str</em>) – (default: “divide”) trace reduction mode: <code class="docutils literal notranslate"><span class="pre">subtract</span></code>, <code class="docutils literal notranslate"><span class="pre">divide</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">ignore</span></code>.</p></li>
+<li><p><strong>sweeper.chop_delay</strong> (<em>float</em>) – (default: 0.0) delay from commanded laser onset to the
+SinglePhotonCounter chop window.</p></li>
+<li><p><strong>sweeper.chop_window</strong> (<em>float</em>) – (default: 100e-9) width of the SinglePhotonCounter chop window.</p></li>
+<li><p><strong>sweeper.pd.hardware_average</strong> (<em>bool</em>) – (default param: True) use Spectrum hardware averaging
+for trace bursts. This parameter is exposed only for Spectrum trace mode.</p></li>
+<li><p><strong>sweeper.pd.buffer_size_coeff</strong> (<em>int</em>) – (default param: 20) detector buffer size relative to
+one callback block.</p></li>
+<li><p><strong>sweeper.pd.eos_deadtime</strong> (<em>float</em>) – (default param: 200e-9) required deadtime after each
+realized trace before the next detector trigger.</p></li>
 <li><p><strong>sweeper.am_depth</strong> (<em>float</em>) – (default param) depth of AM modulation.</p></li>
 <li><p><strong>sweeper.am_log</strong> (<em>bool</em>) – (default param) True indicates log-scale AM depth.</p></li>
 <li><p><strong>sweeper.am_rate</strong> (<em>float</em>) – (default param) rate (baseband frequency) of AM in Hz.</p></li>
@@ -531,34 +562,31 @@ in inherited class.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#mahos_dq.meas.odmr_worker.Sweeper.__init__" title="mahos_dq.meas.odmr_worker.Sweeper.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(cli, logger, conf)</p></td>
 <td><p>Init client (cli), logger, conf, and internal instrument list (_instruments).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_line</span></code>(line)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_sg</span></code>(params, label)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_sg</span></code>(params, label)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict</span></code>(label)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param_dict</span></code>(label)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_pg_conf_preset</span></code>(cli)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_pg_conf_preset</span></code>(cli)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_sg_conf_preset</span></code>(cli)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_sg_conf_preset</span></code>(cli)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>(params[, label])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>(params[, label])</p></td>
 <td><p>Start the worker.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_analog_pd</span></code>(params, label)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_analog_pd</span></code>(params, label)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_apd</span></code>(params, label)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_apd</span></code>(params, label)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop</span></code>()</p></td>
 <td><p>Stop the worker.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">work</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">work</span></code>()</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

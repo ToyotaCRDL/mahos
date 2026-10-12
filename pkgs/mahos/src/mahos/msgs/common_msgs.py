@@ -153,8 +153,98 @@ class ExportDataReq(Request):
 
 
 class LoadDataReq(Request):
-    """Generic Load Data Request"""
+    """Generic request to load measurement data.
 
-    def __init__(self, file_name: str, to_buffer: bool = False):
+    :ivar file_name: Input file path.
+    :ivar to_buffer: Whether to append loaded data to the node-side buffer.
+    :ivar buffer_name: Name associated with buffered data; defaults to ``file_name``.
+
+    """
+
+    def __init__(self, file_name: str, to_buffer: bool = False, buffer_name: str | None = None):
         self.file_name = file_name
         self.to_buffer = to_buffer
+        self.buffer_name = file_name if buffer_name is None else buffer_name
+
+
+class FileArtifact(Message):
+    """Metadata for an artifact in a configured shared transport directory.
+
+    :ivar basename: Safe basename of the artifact; never a path.
+    :ivar size: Artifact size in bytes.
+
+    """
+
+    def __init__(self, basename: str, size: int):
+        self.basename = basename
+        self.size = size
+
+
+class FileArtifactBundle(Message):
+    """Metadata for a primary output artifact and its derived sidecar files.
+
+    :ivar primary: The artifact copied to the client-requested destination.
+    :ivar sidecars: Pairs of destination basename and artifact metadata for files copied beside
+        the primary output.
+
+    """
+
+    def __init__(self, primary: FileArtifact, sidecars: list[tuple[str, FileArtifact]]):
+        self.primary = primary
+        self.sidecars = sidecars
+
+
+class SaveArtifactReq(Request):
+    """Request creation of a saved-data artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+    :ivar params: Optional save parameters.
+    :ivar note: Optional note stored with the dataset.
+
+    """
+
+    def __init__(self, file_name: str, params=None, note: str = ""):
+        self.file_name = file_name
+        self.params = params
+        self.note = note
+
+
+class ExportArtifactReq(Request):
+    """Request creation of an exported-data artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+    :ivar data: Optional explicit data payload for exporting.
+    :ivar params: Optional export parameters.
+
+    """
+
+    def __init__(self, file_name: str, data=None, params=None):
+        self.file_name = file_name
+        self.data = data
+        self.params = params
+
+
+class LoadArtifactReq(Request):
+    """Request loading data from a shared artifact.
+
+    :ivar artifact: Metadata identifying the staged input file.
+    :ivar file_name: Original input basename, used as the buffer name.
+    :ivar to_buffer: Whether to append loaded data to the node-side buffer.
+
+    """
+
+    def __init__(self, artifact: FileArtifact, file_name: str, to_buffer: bool = False):
+        self.artifact = artifact
+        self.file_name = file_name
+        self.to_buffer = to_buffer
+
+
+class CleanupArtifactReq(Request):
+    """Acknowledge receipt and request removal of a producer-owned artifact.
+
+    :ivar artifact: Metadata identifying the artifact or artifact bundle to remove.
+
+    """
+
+    def __init__(self, artifact: FileArtifact | FileArtifactBundle):
+        self.artifact = artifact

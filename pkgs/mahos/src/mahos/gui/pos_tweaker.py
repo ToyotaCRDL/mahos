@@ -17,7 +17,7 @@ from mahos.gui.Qt import QtCore, QtWidgets, QtGui, question_yn
 from mahos.msgs.pos_tweaker_msgs import PosTweakerStatus
 from mahos.node.global_params import GlobalParamsClient
 from mahos.gui.pos_tweaker_client import QPosTweakerClient
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientTopWidget
 from mahos.node.node import local_conf, join_name
 from mahos.gui.dialog import save_dialog, load_dialog
@@ -92,8 +92,20 @@ class AxisWidgets(object):
 class PosTweakerWidget(ClientTopWidget):
     """Top widget for PosTweakerGUI"""
 
-    def __init__(self, gconf: dict, name, gparams_name, fontsize, decimals, context):
-        ClientTopWidget.__init__(self)
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        gparams_name,
+        fontsize,
+        decimals,
+        context,
+        parent=None,
+        logger=None,
+        file_transport_dir=None,
+    ):
+        ClientTopWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
         self.setWindowTitle(f"MAHOS.PosTweakerGUI ({join_name(name)})")
 
         self._fontsize = fontsize
@@ -102,7 +114,9 @@ class PosTweakerWidget(ClientTopWidget):
         self._group_name = "__" + name + "__"
         self._refresh_timer = OneshotTimer(1.0)
 
-        self.cli = QPosTweakerClient(gconf, name, context=context)
+        self.cli = QPosTweakerClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -295,6 +309,10 @@ class PosTweakerWidget(ClientTopWidget):
 class PosTweakerGUI(GUINode):
     """GUINode for PosTweakerWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.pos_tweaker: Target PosTweaker node full name.
     :type target.pos_tweaker: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
@@ -303,6 +321,8 @@ class PosTweakerGUI(GUINode):
     :type fontsize: int
     :param decimals: Number of decimal digits for target and step spin boxes.
     :type decimals: int
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
 
     """
 
@@ -312,5 +332,12 @@ class PosTweakerGUI(GUINode):
         fontsize = lconf.get("fontsize", 26)
         decimals = lconf.get("decimals", 3)
         return PosTweakerWidget(
-            gconf, target["pos_tweaker"], target["gparams"], fontsize, decimals, context
+            gconf,
+            target["pos_tweaker"],
+            target["gparams"],
+            fontsize,
+            decimals,
+            context,
+            logger=self.logger,
+            file_transport_dir=lconf.get("file_transport_dir"),
         )

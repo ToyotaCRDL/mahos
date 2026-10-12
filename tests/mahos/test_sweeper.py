@@ -8,7 +8,6 @@ Tests for Sweeper.
 
 """
 
-
 from mahos.meas.sweeper import SweeperClient, SweeperIO
 from mahos.msgs.common_msgs import BinaryState
 from util import get_some, expect_value, save_load_test

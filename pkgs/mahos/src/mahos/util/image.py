@@ -8,7 +8,6 @@ Plot / Convertion functions for 2D image data.
 
 """
 
-
 import os
 
 import numpy as np

@@ -210,6 +210,8 @@ _str_to_log_level = {
 
 
 def init_logger(gconf, my_name, log_name, context: Context):
+    """Initialize a logger and return it with its context-owned PUBHandler."""
+
     # avoid invoking logging.basicConfig() through functions such as logging.info etc.
     # 3rd party libraries could call these functions.
     logging.root.addHandler(logging.NullHandler())
@@ -217,17 +219,15 @@ def init_logger(gconf, my_name, log_name, context: Context):
     my_conf = local_conf(gconf, my_name)
     log_conf = local_conf(gconf, log_name)
 
-    if "log_level" in my_conf:
-        level = _str_to_log_level[my_conf["log_level"].upper()]
-    else:
-        level = logging.INFO
+    level_name = str(get_value(gconf, my_conf, "log_level", "INFO"))
+    level = _str_to_log_level[level_name.upper()]
 
     joined_name = join_name(my_name)
     handler = context.add_pub_handler(log_conf["xsub_endpoint"], root_topic=joined_name)
     logger = logging.getLogger(joined_name)
     logger.setLevel(level)
     logger.addHandler(handler)
-    return logger
+    return logger, handler
 
 
 class Node(NodeBase):
@@ -253,17 +253,23 @@ class Node(NodeBase):
     TOPIC_TYPES = {}
 
     def __init__(self, gconf: dict, name: NodeName, context: Context | None = None):
+        self._closed = False
+        self._clients = []
+        self.ctx = None
+        self._log_handler = None
+        self._shutdown = False
+
         NodeBase.__init__(self, gconf, name)
+
         self.ctx = Context(
             context=context, poll_timeout_ms=get_value(gconf, self.conf, "poll_timeout_ms")
         )
         if "target" in self.conf and "log" in self.conf["target"]:
-            self.logger = init_logger(gconf, name, self.conf["target"]["log"], self.ctx)
+            self.logger, self._log_handler = init_logger(
+                gconf, name, self.conf["target"]["log"], self.ctx
+            )
         else:
             self.logger = DummyLogger(join_name(name))
-        self._clients = []
-        self._closed = False
-        self._shutdown = False
 
     def __del__(self):
         self.close()
@@ -275,8 +281,10 @@ class Node(NodeBase):
             return
         self._closed = True
 
-        self.close_resources()
-        self._close_comm()
+        try:
+            self.close_resources()
+        finally:
+            self._close_comm()
 
     def close_resources(self):
         """Close custom resources."""
@@ -290,7 +298,11 @@ class Node(NodeBase):
             cli.close(close_ctx=False)
 
         if close_ctx:
-            self.ctx.close()
+            if self._log_handler is not None:
+                self.logger.removeHandler(self._log_handler)
+                self._log_handler = None
+            if self.ctx is not None:
+                self.ctx.close()
 
     def set_shutdown(self):
         """Shutdown this node, quitting from the main loop."""

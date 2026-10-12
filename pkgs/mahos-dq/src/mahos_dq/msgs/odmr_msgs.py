@@ -30,15 +30,25 @@ class ValidateReq(Request):
 
 
 class ODMRData(BasicMeasData, ComplexDataMixin):
-    """Data type for ODMR measurement."""
+    """Data type for ODMR measurement.
+
+    :ivar data: Signal values with shape ``(frequency, sweep)``.
+    :ivar bg_data: Background values with shape ``(frequency, sweep)``, or None.
+    :ivar raw_data_sum: Sum of the burst-averaged AnalogPD traces across ODMR sweeps with
+        shape ``(point, sample)``. Signal and background points are interleaved when background
+        acquisition is enabled. This is populated only for ``pd_trace`` pulse acquisition.
+    :ivar fit_complex_conv: Complex conversion used for loading fitted data.
+
+    """
 
     def __init__(self, params: dict | None = None, label: str = ""):
-        self.set_version(4)
+        self.set_version(5)
         self.init_params(params, label)
         self.init_attrs()
 
         self.data = None
         self.bg_data = None
+        self.raw_data_sum = None
 
         #: complex_conv used for loading data fit
         self.fit_complex_conv: str = ""
@@ -57,7 +67,7 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
         return self.data is not None
 
     def has_background(self) -> bool:
-        return self.bg_data is not None and (self.bg_data != 0).all()
+        return self.bg_data is not None
 
     def is_complex(self) -> bool:
         return self.has_data() and np.issubdtype(self.data.dtype, np.complexfloating)
@@ -142,7 +152,7 @@ class ODMRData(BasicMeasData, ComplexDataMixin):
 
         if not self.has_data():
             return None, None
-        if last_n < 0 and self.data.shape[1] <= -last_n:
+        if last_n < 0 and self._rm_nan(self.data).shape[1] <= -last_n:
             return None, None
 
         if self.has_background():
@@ -296,5 +306,10 @@ def update_data(data: ODMRData):
                 del data.params["pd_bounds"]
 
         data.set_version(4)
+
+    if data.version() <= 4:
+        # version 4 to 5
+        data.raw_data_sum = None
+        data.set_version(5)
 
     return data

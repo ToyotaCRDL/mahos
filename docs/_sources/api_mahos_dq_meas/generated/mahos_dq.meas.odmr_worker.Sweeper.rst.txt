@@ -17,7 +17,6 @@
    .. autosummary::
    
       ~Sweeper.__init__
-      ~Sweeper.append_line
       ~Sweeper.configure_sg
       ~Sweeper.get_param_dict
       ~Sweeper.load_pg_conf_preset

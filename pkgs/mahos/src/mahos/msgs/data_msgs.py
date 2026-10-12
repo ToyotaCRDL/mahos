@@ -216,7 +216,7 @@ class Data(Message):
         if key in readers:
             return readers[key](val)
         elif isinstance(val, np.void):
-            d = msgpack.loads(val.tobytes())
+            d = msgpack.loads(val.tobytes(), strict_map_key=False)
             if "ident" in d and isinstance(d["ident"], str):
                 d["ident"] = uuid.UUID(hex=d["ident"])
             return d

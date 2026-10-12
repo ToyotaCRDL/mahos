@@ -23,12 +23,12 @@ jobs:
           pip install './pkgs/mahos[dev]'
           pip install ./pkgs/mahos-dq
           pip install ./pkgs/mahos-dq-ext
-      - name: Lint with flake8
+      - name: Lint with Ruff
         run: |
-          flake8 . --statistics
-      - name: Formatting check with black
+          ruff check . --statistics
+      - name: Formatting check with Ruff
         run: |
-          black . --check
+          ruff format --check .
       - name: Test with pytest (excluding GUI E2E)
         run: |
           pytest --timeout=30 -m "not gui_e2e" \

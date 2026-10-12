@@ -11,19 +11,29 @@ Typed Interface for ODMR Sweeper.
 import numpy as np
 
 from mahos.inst.interface import InstrumentInterface
-from mahos.msgs.pulse_msgs import PulsePattern
+from mahos.msgs.inst.pg_msgs import PulsePattern
 
 
 class ODMRSweeperInterface(InstrumentInterface):
     """Interface for ODMR Sweeper."""
+
+    def validate(self, params: dict, label: str) -> tuple[bool, str, str]:
+        """Validate parameters using sweeper-specific constraints."""
+
+        ret = self.get("validate", params, label)
+        if ret is None:
+            return False, "Failed to request validation from ODMR sweeper.", ""
+        if not isinstance(ret, tuple) or len(ret) != 3:
+            return False, "Invalid validation response from ODMR sweeper.", ""
+        return ret
 
     def get_line(self) -> np.ndarray | None:
         """Get single sweep line."""
 
         return self.get("line")
 
-    def get_point(self) -> np.ndarray | None:
-        """Get single point in sweep line."""
+    def get_point(self) -> np.ndarray | tuple[np.ndarray, np.ndarray] | None:
+        """Get a point, paired with its raw traces when trace acquisition is enabled."""
 
         return self.get("point")
 
@@ -43,10 +53,10 @@ class ODMRSweeperInterface(InstrumentInterface):
 
         return self.get("bounds")
 
-    def get_pd_analog(self) -> bool:
-        """Get if this sweeper uses AnalogPD or not."""
+    def get_capability(self) -> dict[str, bool]:
+        """Get detector and pulse-generation capabilities."""
 
-        return self.get("pd_analog")
+        return self.get("capability")
 
     def get_pulse_pattern(self) -> PulsePattern | None:
         """Get current pulse pattern."""

@@ -18,7 +18,7 @@ import numpy as np
 from pypylon import pylon
 
 from mahos.inst.instrument import Instrument
-from mahos.util.locked_queue import LockedQueue
+from mahos.util.queue import RollingQueue
 from mahos.msgs.inst.camera_msgs import FrameResult
 
 
@@ -112,7 +112,7 @@ class ThorlabsCamera(Instrument):
 
         self._mode = self.Mode.UNCONFIGURED
         self._queue_size = self.conf.get("queue_size", 8)
-        self._queue = LockedQueue(self._queue_size)
+        self._queue = RollingQueue(self._queue_size)
         self._running = False
         self._burst_num = 1
 
@@ -218,7 +218,7 @@ class ThorlabsCamera(Instrument):
 
         self._mode = self.Mode.CONTINUOUS
 
-        self._queue = LockedQueue(self._queue_size)
+        self._queue = RollingQueue(self._queue_size)
 
         self.logger.info("Configured for continuous capture.")
         return True
@@ -252,7 +252,7 @@ class ThorlabsCamera(Instrument):
         self._mode = self.Mode.SOFT_TRIGGER
         self._burst_num = burst_num
 
-        self._queue = LockedQueue(self._queue_size)
+        self._queue = RollingQueue(self._queue_size)
 
         self.logger.info("Configured for software capture.")
         return True
@@ -428,7 +428,7 @@ class BaslerPylonCamera(Instrument):
         self._mode = self.Mode.UNCONFIGURED
         self._running = False
         self._queue_size = self.conf.get("queue_size", 8)
-        self._queue = LockedQueue(self._queue_size)
+        self._queue = RollingQueue(self._queue_size)
         self._frame_count = 0
         self._burst_num = 1
 
@@ -599,7 +599,7 @@ class BaslerPylonCamera(Instrument):
             return self._fail_with_close()
 
         self._mode = self.Mode.CONTINUOUS
-        self._queue = LockedQueue(self._queue_size)
+        self._queue = RollingQueue(self._queue_size)
         self._frame_count = 0
         self._burst_num = 1
 
@@ -731,7 +731,7 @@ class BaslerPylonCamera(Instrument):
             return self._fail_with_close()
 
         self._mode = self.Mode.HARD_TRIGGER
-        self._queue = LockedQueue(self._queue_size)
+        self._queue = RollingQueue(self._queue_size)
         self._frame_count = 0
         self._burst_num = burst_num
         self.logger.info("Configured for hardware-triggered capture.")
@@ -829,14 +829,19 @@ class BaslerPylonCamera(Instrument):
         if self._mode == self.Mode.CONTINUOUS:
             if self._queue is None:
                 return FrameResult(frame=None)
-            return self._queue.pop_block(timeout_sec=timeout_sec)
+            r = self._queue.pop_block(timeout_sec=timeout_sec)
+            if r is None:
+                return FrameResult(frame=None)
+            else:
+                return r
         elif self._mode == self.Mode.HARD_TRIGGER:
             if self._queue is None:
                 return FrameResult(frame=None)
             # TODO: more error to check (camera's skipped image count?).
-            full = self._queue.is_full()
-            r: FrameResult = self._queue.pop_block(timeout_sec=timeout_sec)
-            r.invalid = full
+            r, invalid = self._queue.pop_block_with_status(timeout_sec=timeout_sec)
+            if r is None:
+                return FrameResult(frame=None)
+            r.invalid = invalid
             return r
         elif self._mode == self.Mode.SOFT_TRIGGER:
             return FrameResult(frame=self.get_frame_soft_trig_imm())

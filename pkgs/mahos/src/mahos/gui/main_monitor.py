@@ -13,7 +13,7 @@ import os
 from mahos.gui.Qt import QtCore, QtWidgets
 from mahos.gui.ui.mainMonitor import Ui_MainMonitor
 
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientTopWidget
 from mahos.node.node import local_conf, join_name
 from mahos.node.log_broker import format_log_html_color, should_show, LogEntry
@@ -26,8 +26,9 @@ from mahos.msgs.global_params_msgs import GlobalParamsStatus
 
 
 class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
-    def __init__(self, gconf: dict, name, context):
-        ClientTopWidget.__init__(self)
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
+        ClientTopWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
         self.setupUi(self)
         self.stateTable.horizontalHeader().setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.Stretch
@@ -46,14 +47,14 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
             self.gparams_cli.statusUpdated.connect(self.init_param)
             self.add_clients(self.gparams_cli)
         else:
-            print("[WARN] gparams is not defined for {}.target".format(name))
+            self.logger.warning(f"gparams is not defined for {name}.target")
 
         if "log" in target:
             self.log_cli = QLogSubscriber(gconf, target["log"], context=context, parent=self)
             self.log_cli.logArrived.connect(self.write_log)
             self.add_clients(self.log_cli)
         else:
-            print("[WARN] log is not defined for {}.target".format(name))
+            self.logger.warning(f"log is not defined for {name}.target")
 
         self.inst_clis = {}
         self.locks = {}
@@ -66,7 +67,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
                 self.locks[n] = None
                 self.add_clients(cli)
         else:
-            print("[WARN] servers is not defined for {}.target".format(name))
+            self.logger.warning(f"servers is not defined for {name}.target")
 
         if "manager" in target:
             self.manager_cli = QManagerSubscriber(
@@ -75,7 +76,7 @@ class MainMonitorWidget(ClientTopWidget, Ui_MainMonitor):
             self.manager_cli.statesUpdated.connect(self.update_states)
             self.add_clients(self.manager_cli)
         else:
-            print("[WARN] manager is not defined for {}.target".format(name))
+            self.logger.warning(f"manager is not defined for {name}.target")
 
     def init_param(self, msg: GlobalParamsStatus):
         # only once.
@@ -224,9 +225,11 @@ class MainMonitor(GUINode):
     :param target.gparams: GlobalParams node name for note and work-dir synchronization.
         Optional; if omitted, work-dir and note synchronization are disabled.
     :type target.gparams: tuple[str, str] | str
-    :param target.log: LogBroker node name used for log subscription.
-        Optional; if omitted, log streaming is disabled.
+    :param target.log: LogBroker node name used for log subscription and formal GUI logging.
+        Optional; if omitted, log streaming and formal logging are disabled.
     :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.servers: Instrument server node names used to display lock owners.
         Optional; if omitted, lock table updates are disabled.
     :type target.servers: list[tuple[str, str] | str]
@@ -239,4 +242,4 @@ class MainMonitor(GUINode):
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return MainMonitorWidget(gconf, name, context)
+        return MainMonitorWidget(gconf, name, context, logger=self.logger)

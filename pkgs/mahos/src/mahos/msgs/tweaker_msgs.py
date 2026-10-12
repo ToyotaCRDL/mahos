@@ -11,7 +11,7 @@ Message Types for the Tweaker.
 from __future__ import annotations
 from pprint import pformat
 
-from mahos.msgs.common_msgs import Request, Status
+from mahos.msgs.common_msgs import FileArtifact, Message, Request, Status
 from mahos.msgs import param_msgs as P
 
 
@@ -89,12 +89,30 @@ class ResetReq(Request):
         self.param_dict_id = param_dict_id
 
 
+class GetStateReq(Request):
+    """Request a serialized snapshot of the current Tweaker state."""
+
+    pass
+
+
+class TweakerState(Message):
+    """Serialized Tweaker state.
+
+    :ivar param_dicts: Current parameter dictionaries keyed by identifier.
+    :ivar start_stop_states: Current start/stop states keyed by identifier.
+
+    """
+
+    def __init__(self, param_dicts: dict, start_stop_states: dict):
+        self.param_dicts = param_dicts
+        self.start_stop_states = start_stop_states
+
+
 class SaveReq(Request):
     """Save current parameters to a file"""
 
-    def __init__(self, file_name: str, group: str = ""):
+    def __init__(self, file_name: str):
         self.file_name = file_name
-        self.group = group
 
 
 class LoadReq(Request):
@@ -102,4 +120,28 @@ class LoadReq(Request):
 
     def __init__(self, file_name: str, group: str = ""):
         self.file_name = file_name
+        self.group = group
+
+
+class SaveArtifactReq(Request):
+    """Request creation of a Tweaker-state artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+
+    """
+
+    def __init__(self, file_name: str):
+        self.file_name = file_name
+
+
+class LoadArtifactReq(Request):
+    """Request loading Tweaker state from a shared artifact.
+
+    :ivar artifact: Metadata identifying the staged file.
+    :ivar group: HDF5 group from which to load the state.
+
+    """
+
+    def __init__(self, artifact: FileArtifact, group: str = ""):
+        self.artifact = artifact
         self.group = group

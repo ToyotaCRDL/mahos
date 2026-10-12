@@ -81,10 +81,10 @@ class SPODMRStatus(Status):
         self.pg_freq = pg_freq
 
     def __repr__(self):
-        return f"SPODMRStatus({self.state}, {self.pg_freq*1e-9:.2f} GHz)"
+        return f"SPODMRStatus({self.state}, {self.pg_freq * 1e-9:.2f} GHz)"
 
     def __str__(self):
-        return f"SPODMR({self.state.name}, {self.pg_freq*1e-9:.2f} GHz)"
+        return f"SPODMR({self.state.name}, {self.pg_freq * 1e-9:.2f} GHz)"
 
 
 class SPODMRData(BasicMeasData, ComplexDataMixin):

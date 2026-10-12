@@ -120,6 +120,9 @@ class SPODMR(BasicMeasNode):
     :type pulser.pd_rate: float
     :param pulser.pd_data_transfer: Optional DAQ transfer mode label.
     :type pulser.pd_data_transfer: str
+    :param pulser.pd_segment_granularity: (default: 16) logical post-trigger sample
+        granularity for Spectrum PD segments.
+    :type pulser.pd_segment_granularity: int
     :param pulser.eos_margin: (default: 0.0) End-of-sequence timing margin in seconds.
     :type pulser.eos_margin: float
     :param pulser.buffer_size_coeff: Buffer size coefficient multiplied by ``num``.
@@ -247,7 +250,7 @@ class SPODMR(BasicMeasNode):
             return Reply(False)
         else:
             if msg.to_buffer:
-                self.buffer.append((msg.file_name, data))
+                self.buffer.append((msg.buffer_name, data))
             else:
                 if self.state == BinaryState.ACTIVE:
                     return Reply(False, "Cannot load data when active.")

@@ -23,6 +23,7 @@
       ~PulseStreamer.configure_blocks
       ~PulseStreamer.configure_blockseq
       ~PulseStreamer.get
+      ~PulseStreamer.get_finished
       ~PulseStreamer.reset
       ~PulseStreamer.set
       ~PulseStreamer.start

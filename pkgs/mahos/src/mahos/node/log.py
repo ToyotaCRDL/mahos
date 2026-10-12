@@ -36,6 +36,7 @@ class PUBHandler(logging.Handler):
 
     def __init__(self, socket: zmq.Socket, root_topic: str = ""):
         logging.Handler.__init__(self)
+        self._socket_closed = False
         self._root_topic = root_topic
         self.formatters = {
             logging.DEBUG: logging.Formatter(
@@ -102,6 +103,9 @@ class PUBHandler(logging.Handler):
     def emit(self, record):
         """Emit a log message on my socket."""
 
+        if self._socket_closed:
+            return
+
         try:
             topic, record.msg = record.msg.split(TOPIC_DELIM, 1)
         except Exception:
@@ -125,6 +129,21 @@ class PUBHandler(logging.Handler):
         btopic = cast_bytes(TOPIC_DELIM).join(cast_bytes(t) for t in topic_list)
 
         self.socket.send_multipart([btopic, bmsg])
+
+    def close(self):
+        """Close the PUB socket and this handler."""
+
+        self.acquire()
+        try:
+            if self._socket_closed:
+                return
+            self._socket_closed = True
+            try:
+                self.socket.close()
+            finally:
+                logging.Handler.close(self)
+        finally:
+            self.release()
 
 
 class TopicLogger(logging.Logger):
@@ -151,7 +170,7 @@ class TopicLogger(logging.Logger):
             exc_info=exc_info,
             extra=extra,
             stack_info=stack_info,
-            stacklevel=stacklevel,
+            stacklevel=stacklevel + 1,
         )
 
 

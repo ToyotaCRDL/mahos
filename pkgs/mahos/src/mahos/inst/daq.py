@@ -17,7 +17,7 @@ from typing import Callable, Optional
 import numpy as np
 import PyDAQmx as D
 
-from mahos.util.locked_queue import LockedQueue
+from mahos.util.queue import RollingQueue
 from mahos.util.conf import PresetLoader
 from mahos.inst.instrument import Instrument
 from mahos.inst.exceptions import InstError
@@ -475,8 +475,8 @@ class AnalogInTask(D.Task):
         line_num: int,
         every: bool,
         oversample: int,
+        block_samples: int,
         block_reduce_factor: int,
-        block_reduce_samples: int,
         block_reduce_op: str,
         reduce_factor: int,
         reduce_op: str,
@@ -492,8 +492,8 @@ class AnalogInTask(D.Task):
         self._line_num = line_num
         self._every = every
         self._oversample = oversample
+        self._block_samples = block_samples
         self._block_reduce_factor = block_reduce_factor
-        self._block_reduce_samples = block_reduce_samples
         self._block_reduce_op = block_reduce_op
         self._reduce_factor = reduce_factor
         self._reduce_op = reduce_op
@@ -555,7 +555,7 @@ class AnalogInTask(D.Task):
             # Note that self._cb_samples % self._oversample is always 0.
             d = d.reshape(self._cb_samples // self._oversample, self._oversample).mean(axis=1)
             if self._block_reduce_factor > 1:
-                d = d.reshape(-1, self._block_reduce_factor, self._block_reduce_samples)
+                d = d.reshape(-1, self._block_reduce_factor, self._block_samples)
                 if self._block_reduce_op == "sum":
                     d = d.sum(axis=1)
                 else:
@@ -628,12 +628,12 @@ class AnalogIn(ConfigurableTask):
     :param oversample: (default: 1) cb_samples, samples, and buffer_size are multiplied by
                        `oversample`, and everyN_handler is passed mean of `oversample` readings.
     :type oversample: int
+    :param block_samples: (default: 1) number of samples in one logical block after oversample
+        averaging. Used when ``block_reduce_factor > 1``.
+    :type block_samples: int
     :param block_reduce_factor: (default: 1) additional reduction stage before ``reduce_factor``.
         cb_samples, samples, and buffer_size are multiplied by ``block_reduce_factor``.
     :type block_reduce_factor: int
-    :param block_reduce_samples: (default: 0) block size (after oversample averaging) for
-        ``block_reduce_factor`` reduction stage. required when ``block_reduce_factor > 1``.
-    :type block_reduce_samples: int
     :param block_reduce_op: (default: mean) reduction operation for blockwise reduction.
         one of ``sum`` or ``mean``.
     :type block_reduce_op: str
@@ -675,7 +675,7 @@ class AnalogIn(ConfigurableTask):
         self.lines = conf["lines"]
 
         self.queue_size = self.conf.get("queue_size", 10000)
-        self.queue = LockedQueue(self.queue_size)
+        self.queue = RollingQueue(self.queue_size)
         self._silent = self.conf.get("silent", False)
         self._stamp = False
         self.clock_mode = False
@@ -788,6 +788,13 @@ class AnalogIn(ConfigurableTask):
 
         return self.queue.pop_block()
 
+    def pop_block_with_status(
+        self,
+    ) -> tuple[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float], bool]:
+        """Get data and whether the software queue has discarded data."""
+
+        return self.queue.pop_block_with_status()
+
     def pop_all_block(
         self,
     ) -> list[np.ndarray | list[np.ndarray] | tuple[np.ndarray | list[np.ndarray], float]]:
@@ -850,8 +857,8 @@ class AnalogIn(ConfigurableTask):
         self._stamp = params.get("stamp", False)
         drop_first = params.get("drop_first", 0)
         oversample = params.get("oversample", 1)
+        block_samples = params.get("block_samples", 1)
         block_reduce_factor = params.get("block_reduce_factor", 1)
-        block_reduce_samples = params.get("block_reduce_samples", 0)
         block_reduce_op = str(params.get("block_reduce_op", "mean")).lower()
         reduce_factor = params.get("reduce_factor", 1)
         reduce_op = str(params.get("reduce_op", "mean")).lower()
@@ -859,16 +866,14 @@ class AnalogIn(ConfigurableTask):
         if oversample < 1:
             self.logger.error("oversample must be positive.")
             return False
+        if block_samples < 1:
+            self.logger.error("block_samples must be positive.")
+            return False
         if block_reduce_factor < 1:
             self.logger.error("block_reduce_factor must be positive.")
             return False
         if block_reduce_op not in ("sum", "mean"):
             self.logger.error(f"block_reduce_op must be 'sum' or 'mean', got: {block_reduce_op}")
-            return False
-        if block_reduce_factor > 1 and block_reduce_samples < 1:
-            self.logger.error(
-                "block_reduce_samples must be positive when block_reduce_factor > 1."
-            )
             return False
         if reduce_factor < 1:
             self.logger.error("reduce_factor must be positive.")
@@ -877,8 +882,8 @@ class AnalogIn(ConfigurableTask):
             self.logger.error(f"reduce_op must be 'sum' or 'mean', got: {reduce_op}")
             return False
 
-        if block_reduce_factor > 1 and cb_samples % block_reduce_samples != 0:
-            self.logger.error("cb_samples must be integer multiple of block_reduce_samples.")
+        if block_reduce_factor > 1 and cb_samples % block_samples != 0:
+            self.logger.error("cb_samples must be integer multiple of block_samples.")
             return False
 
         cb_samples *= oversample * block_reduce_factor * reduce_factor
@@ -893,7 +898,7 @@ class AnalogIn(ConfigurableTask):
             return False
         self.logger.debug(f"Input voltage bounds: {bounds}")
 
-        self.queue = LockedQueue(self.queue_size)
+        self.queue = RollingQueue(self.queue_size)
 
         every1_handler = params.get("every1_handler", self._null_every1_handler)
         done_handler = params.get("done_handler", self._null_done_handler)
@@ -902,8 +907,8 @@ class AnalogIn(ConfigurableTask):
             len(self.lines),
             every,
             oversample,
+            block_samples,
             block_reduce_factor,
-            block_reduce_samples,
             block_reduce_op,
             reduce_factor,
             reduce_op,
@@ -1012,6 +1017,10 @@ class AnalogIn(ConfigurableTask):
                 return self.pop_block()
             else:
                 return self.pop_opt()
+        elif key == "data_with_status":
+            if not self.clock_mode:
+                return self.read_on_demand(), False
+            return self.pop_block_with_status()
         elif key == "all_data":
             if args:
                 return self.pop_all_block()
@@ -1185,7 +1194,7 @@ class BufferedEdgeCounter(ConfigurableTask):
         self.source_dir = _edge_polarity(conf.get("source_dir", True))
 
         self.queue_size = self.conf.get("queue_size", 10000)
-        self.queue = LockedQueue(self.queue_size)
+        self.queue = RollingQueue(self.queue_size)
         self._stamp = False
 
     def _null_every1_handler(self):
@@ -1270,7 +1279,7 @@ class BufferedEdgeCounter(ConfigurableTask):
             self.logger.error("samples must be greater than 1 in diff mode.")
             return False
 
-        self.queue = LockedQueue(self.queue_size)
+        self.queue = RollingQueue(self.queue_size)
 
         every1_handler = params.get("every1_handler", self._null_every1_handler)
         done_handler = params.get("done_handler", self._null_done_handler)
@@ -1320,6 +1329,8 @@ class BufferedEdgeCounter(ConfigurableTask):
                 return self.pop_block()
             else:
                 return self.pop_opt()
+        elif key == "data_with_status":
+            return self.queue.pop_block_with_status()
         elif key == "all_data":
             if args:
                 return self.pop_all_block()

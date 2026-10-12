@@ -18,7 +18,7 @@ from mahos.gui.common_widget import ClientTopWidget
 from mahos.gui.tweaker_client import QTweakerClient
 from mahos.gui.param import ParamTable
 from mahos.node.node import local_conf, join_name
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.dialog import save_dialog, load_dialog
 from mahos.gui.Qt import QtWidgets
 
@@ -26,12 +26,25 @@ from mahos.gui.Qt import QtWidgets
 class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
     """Top widget for TweakerGUI."""
 
-    def __init__(self, gconf: dict, name, gparams_name, verbose, context, parent=None):
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        gparams_name,
+        verbose,
+        context,
+        parent=None,
+        logger=None,
+        file_transport_dir=None,
+    ):
         ClientTopWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
         self.setupUi(self)
         self.setWindowTitle(f"MAHOS.TweakerGUI ({join_name(name)})")
 
-        self.cli = QTweakerClient(gconf, name, context=context, parent=self)
+        self.cli = QTweakerClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -174,12 +187,18 @@ class TweakerWidget(ClientTopWidget, Ui_TweakerWidget):
 class TweakerGUI(GUINode):
     """GUINode for TweakerWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.tweaker: Target Tweaker node full name.
     :type target.tweaker: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
     :param verbose: Show warning dialogs when RPC requests fail.
     :type verbose: bool
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
 
     """
 
@@ -187,4 +206,12 @@ class TweakerGUI(GUINode):
         lconf = local_conf(gconf, name)
         target = lconf["target"]
         verbose = lconf.get("verbose", True)
-        return TweakerWidget(gconf, target["tweaker"], target["gparams"], verbose, context)
+        return TweakerWidget(
+            gconf,
+            target["tweaker"],
+            target["gparams"],
+            verbose,
+            context,
+            logger=self.logger,
+            file_transport_dir=lconf.get("file_transport_dir"),
+        )

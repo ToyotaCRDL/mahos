@@ -16,33 +16,103 @@ from mahos.inst.daq_interface import BufferedReaderInterface
 
 
 class PDInterface(BufferedReaderInterface):
-    """Common interface for SinglePhotonCounter and AnalogIn-based PD."""
+    """Common interface for SinglePhotonCounter (BufferedEdgeCounter) and AnalogIn-based PD."""
 
-    # override pop_*() methods because PD has one channel per class.
+    def configure_triggered(
+        self,
+        trigger_source: str,
+        cb_samples: int,
+        samples: int,
+        rate: float,
+        *,
+        buffer_size: int = 0,
+        bounds=(-10.0, 10.0),
+        finite: bool = False,
+        every: bool = False,
+        drop_first: int = 0,
+        oversample: int = 1,
+        block_samples: int = 1,
+        block_reduce_factor: int = 1,
+        block_reduce_op: str = "mean",
+        reduce_factor: int = 1,
+        reduce_op: str = "mean",
+        data_transfer: str | None = None,
+        trigger_dir: bool = True,
+        hardware_average: bool = True,
+    ) -> bool:
+        """Configure triggered fixed-length acquisition.
 
-    def pop_block(self) -> np.ndarray:
-        """Get data from buffer. If buffer is empty, this function blocks until data is ready."""
+        This is only for Analog PD now (not for SinglePhotonCounter/BufferedEdgeCounter).
 
-        return self.get("data", True)
-
-    def pop_all_block(self) -> list[np.ndarray]:
-        """Get all data from buffer as list.
-
-        If buffer is empty, this function blocks until data is ready.
+        ``trigger_source`` is the DAQ sample clock for conventional AnalogIn and the hardware
+        trigger input for Spectrum digitizers.
 
         """
 
-        return self.get("all_data", True)
+        params = {
+            "cb_samples": cb_samples,
+            "samples": samples,
+            "rate": rate,
+            "bounds": bounds,
+            "finite": finite,
+            "buffer_size": buffer_size,
+            "drop_first": drop_first,
+            "oversample": oversample,
+            "block_samples": block_samples,
+            "block_reduce_factor": block_reduce_factor,
+            "block_reduce_op": block_reduce_op,
+            "reduce_factor": reduce_factor,
+            "reduce_op": reduce_op,
+            # DAQ (AnalogIn) parameters
+            "clock": trigger_source,
+            "clock_mode": True,
+            "clock_dir": trigger_dir,
+            "data_transfer": data_transfer,
+            "every": every,
+            # Spectrum_AnalogIn parameters
+            "trigger_source": trigger_source,
+            "trigger_dir": trigger_dir,
+            "hardware_average": hardware_average,
+        }
+        # label is referred by Spectrum_AnalogIn only
+        return self.configure(params, "triggered")
 
-    def pop_opt(self) -> np.ndarray | None:
-        """Get data from buffer. If buffer is empty, returns None."""
+    def configure_stream(
+        self,
+        cb_samples: int,
+        buffer_size: int,
+        rate: float,
+        time_window: float,
+        *,
+        bounds=(-10.0, 10.0),
+        oversample: int = 1,
+        clock: str = "",
+        stamp: bool = True,
+        data_transfer: str | None = None,
+    ) -> bool:
+        """Configure continuously running infinite (stream) acquisition."""
 
-        return self.get("data", False)
-
-    def pop_all_opt(self) -> list[np.ndarray] | None:
-        """Get all data from buffer as list. If buffer is empty, returns None."""
-
-        return self.get("all_data", False)
+        params = {
+            "cb_samples": cb_samples,
+            "buffer_size": buffer_size,
+            "rate": rate,
+            "stamp": stamp,
+            # BufferedEdgeCounter parameters
+            "time_window": time_window,
+            # Analog (AnalogIn and Spectrum_AnalogIn) parameters
+            "oversample": oversample,
+            "bounds": bounds,
+            # DAQ (BufferedEdgeCounter and AnalogIn) parameters
+            "samples": buffer_size,
+            "clock": clock,
+            "finite": False,
+            "every": False,
+            # AnalogIn parameters
+            "clock_mode": True,
+            "data_transfer": data_transfer,
+        }
+        # label is referred by Spectrum_AnalogIn only
+        return self.configure(params, "stream")
 
 
 class SinglePhotonCounterInterface(PDInterface):

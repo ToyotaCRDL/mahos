@@ -10,21 +10,60 @@ Generic tweaker for manually-tunable Instrument's ParamDicts.
 
 from __future__ import annotations
 
-from mahos.msgs.common_msgs import Reply
+import os
+
+from mahos.msgs.common_msgs import CleanupArtifactReq, Reply
 from mahos.msgs import param_msgs as P
 from mahos.msgs import tweaker_msgs
 from mahos.msgs.tweaker_msgs import TweakerStatus, ReadReq, ReadAllReq, WriteReq, WriteAllReq
 from mahos.msgs.tweaker_msgs import StartReq, StopReq, ResetReq, SaveReq, LoadReq
+from mahos.msgs.tweaker_msgs import GetStateReq, TweakerState, SaveArtifactReq, LoadArtifactReq
+from mahos.msgs.pos_tweaker_msgs import PosTweakerState
 from mahos.node.node import Node
 from mahos.node.client import NodeClient, StatusClient
 from mahos.inst.server import MultiInstrumentClient
+from mahos.meas.file_transport import FileTransportClientMixin, FileTransportNodeMixin
 from mahos.meas.tweaker_io import TweakerIO
+from mahos.meas.pos_tweaker_io import PosTweakerIO
 
 
-class TweakerClient(StatusClient):
+class TweakerFileReqMixin(FileTransportClientMixin):
+    """Implement optional shared-file transport for Tweaker-like clients."""
+
+    def save_file(self, file_name: str) -> bool:
+        return self.request_output(
+            SaveReq(file_name), SaveArtifactReq(os.path.basename(file_name)), file_name
+        )
+
+    def load_file(self, file_name: str, group: str = "") -> Reply:
+        return self.request_input(
+            LoadReq(file_name, group), lambda artifact: LoadArtifactReq(artifact, group), file_name
+        )
+
+
+class TweakerClient(TweakerFileReqMixin, StatusClient):
     """Simple Tweaker Client."""
 
     M = tweaker_msgs
+
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        context=None,
+        prefix=None,
+        status_handler=None,
+        file_transport_dir=None,
+    ):
+        StatusClient.__init__(
+            self,
+            gconf,
+            name,
+            context=context,
+            prefix=prefix,
+            status_handler=status_handler,
+        )
+        self.init_file_transport(file_transport_dir)
 
     def read_all(self) -> tuple[bool, dict[str, P.ParamDict[str, P.PDValue] | None]]:
         rep = self.req.request(ReadAllReq())
@@ -55,33 +94,43 @@ class TweakerClient(StatusClient):
         rep = self.req.request(ResetReq(param_dict_id))
         return rep.success
 
-    def save(self, file_name: str, group: str = "") -> bool:
-        rep = self.req.request(SaveReq(file_name, group))
-        return rep.success
+    def save(self, file_name: str) -> bool:
+        return self.save_file(file_name)
 
     def load(
         self, file_name: str, group: str = ""
     ) -> dict[str, P.ParamDict[str, P.PDValue] | None] | None:
-        rep = self.req.request(LoadReq(file_name, group))
+        rep = self.load_file(file_name, group)
         if rep.success:
             return rep.ret
 
 
 class TweakSaver(NodeClient):
-    """TweakerClient with limited capability, only save request."""
+    """Client that embeds remote Tweaker state into a local measurement file."""
 
     M = tweaker_msgs
 
     def __init__(self, gconf: dict, name, context=None, prefix=None):
         NodeClient.__init__(self, gconf, name, context=context, prefix=prefix)
         self.req = self.add_req(gconf)
+        self.tweaker_io = TweakerIO(self.logger)
+        self.pos_tweaker_io = PosTweakerIO(self.logger)
 
     def save(self, file_name: str, group: str = "") -> bool:
-        rep = self.req.request(SaveReq(file_name, group))
-        return rep.success
+        rep = self.req.request(GetStateReq())
+        if not rep.success:
+            return False
+        if isinstance(rep.ret, TweakerState):
+            return self.tweaker_io.save_data(
+                file_name, group, rep.ret.param_dicts, rep.ret.start_stop_states
+            )
+        elif isinstance(rep.ret, PosTweakerState):
+            return self.pos_tweaker_io.save_data(file_name, group, rep.ret.axis_states)
+        self.logger.error(f"Invalid Tweaker state type: {type(rep.ret)}")
+        return False
 
 
-class Tweaker(Node):
+class Tweaker(FileTransportNodeMixin, Node):
     """Generic tweaker for manually tunable Instrument ParamDicts.
 
     The instrument must provide a ParamDict-based interface, i.e.,
@@ -94,6 +143,8 @@ class Tweaker(Node):
     :type target.log: str
     :param param_dicts: The list of <instrument name>::<ParamDict label name>.
     :type param_dicts: list[str]
+    :param file_transport_dir: Optional node-side directory for client-node file transport.
+    :type file_transport_dir: str
 
     """
 
@@ -116,6 +167,7 @@ class Tweaker(Node):
         self.status_pub = self.add_pub(b"status")
 
         self.io = TweakerIO(self.logger)
+        self.init_file_transport(("save",))
 
     def _parse_param_dict_id(self, pid: str) -> tuple[str, str]:
         """returns (inst, label)."""
@@ -200,11 +252,19 @@ class Tweaker(Node):
             self._start_stop_states[msg.param_dict_id] = False
         return Reply(success)
 
+    def get_state(self, msg: GetStateReq) -> Reply:
+        """Return a serializable snapshot for local embedding by a measurement node."""
+
+        return Reply(
+            True,
+            ret=TweakerState(self._param_dicts.copy(), self._start_stop_states.copy()),
+        )
+
     def save(self, msg: SaveReq) -> Reply:
         """Save tweaker state (param_dicts and start_stop_state) to file using h5."""
 
         return Reply(
-            self.io.save_data(msg.file_name, msg.group, self._param_dicts, self._start_stop_states)
+            self.io.save_data(msg.file_name, "", self._param_dicts, self._start_stop_states)
         )
 
     def load(self, msg: LoadReq) -> Reply:
@@ -226,6 +286,27 @@ class Tweaker(Node):
                         self.logger.error(f"Cannot set {pid}[{key}] to {lp}")
         return Reply(True, ret=self._param_dicts)
 
+    def save_artifact(self, msg: SaveArtifactReq) -> Reply:
+        """Atomically create a Tweaker-state transport artifact."""
+
+        return self.publish_artifact(
+            msg.file_name,
+            "save",
+            lambda path: Reply(
+                self.io.save_data(path, "", self._param_dicts, self._start_stop_states)
+            ),
+            "Failed to create Tweaker artifact",
+        )
+
+    def load_artifact(self, msg: LoadArtifactReq) -> Reply:
+        """Load Tweaker state from a validated shared artifact."""
+
+        return self.consume_artifact(
+            msg.artifact,
+            lambda path: self.load(LoadReq(path, msg.group)),
+            "Failed to load Tweaker artifact",
+        )
+
     def handle_req(self, msg):
         if isinstance(msg, ReadReq):
             return self.read(msg)
@@ -241,10 +322,18 @@ class Tweaker(Node):
             return self.stop(msg)
         elif isinstance(msg, ResetReq):
             return self.reset(msg)
+        elif isinstance(msg, GetStateReq):
+            return self.get_state(msg)
         elif isinstance(msg, SaveReq):
             return self.save(msg)
         elif isinstance(msg, LoadReq):
             return self.load(msg)
+        elif isinstance(msg, SaveArtifactReq):
+            return self.save_artifact(msg)
+        elif isinstance(msg, LoadArtifactReq):
+            return self.load_artifact(msg)
+        elif isinstance(msg, CleanupArtifactReq):
+            return self.cleanup_artifact(msg)
         else:
             return self.fail_with("Invalid message type")
 

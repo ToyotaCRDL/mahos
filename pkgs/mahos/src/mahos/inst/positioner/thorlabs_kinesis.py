@@ -119,6 +119,7 @@ class _Thorlabs_Kinesis(Instrument):
             Decimal.ToDouble(self.device.AdvancedMotorLimits.LengthMaximum),
         ]
         self.logger.debug(f"limits: {self.limits[0]:.3f} {self.limits[1]:.3f}")
+        self.digit = self.conf.get("digit", 6)
         self.range = self.conf.get("range", self.limits)
         if self.range[0] < self.limits[0]:
             msg = f"Given range is out of limit: {self.range[0]} < {self.limits[0]}"
@@ -265,7 +266,11 @@ class _Thorlabs_Kinesis(Instrument):
         if label == "pos":
             return P.ParamDict(
                 target=P.FloatParam(
-                    self.get_target(), self.range[0], self.range[1], doc="target position"
+                    self.get_target(),
+                    self.range[0],
+                    self.range[1],
+                    digit=self.digit,
+                    doc="target position",
                 )
             )
         else:

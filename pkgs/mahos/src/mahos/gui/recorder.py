@@ -22,8 +22,9 @@ from mahos.gui.recorder_client import QRecorderClient
 from mahos.msgs.common_msgs import BinaryState, BinaryStatus
 from mahos.msgs.recorder_msgs import RecorderData
 from mahos.node.global_params import GlobalParamsClient
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientWidget
+from mahos.gui.param import ParamDictComboBoxHandler
 from mahos.gui.dialog import save_dialog, load_dialog, export_dialog
 from mahos.node.node import local_conf, join_name
 from mahos.util.plot import colors_tab10
@@ -91,12 +92,21 @@ class PlotWidget(QtWidgets.QWidget):
             unit = data.get_unit(ch)
             if len(y):
                 scale, prefix = SI_scale(y[-1])
-                latest_data.append(f"{ch}: {y[-1]*scale:.3f} {prefix}{unit}")
+                latest_data.append(f"{ch}: {y[-1] * scale:.3f} {prefix}{unit}")
         self.label.setText(" ".join(latest_data))
 
 
 class RecorderWidget(ClientWidget, Ui_Recorder):
-    def __init__(self, gconf: dict, name, gparams_name, plot: PlotWidget, context, parent=None):
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        gparams_name,
+        plot: PlotWidget,
+        context,
+        parent=None,
+        file_transport_dir=None,
+    ):
         ClientWidget.__init__(self, parent)
         self.setupUi(self)
 
@@ -105,7 +115,9 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
         self.plot = plot
         self.data = RecorderData()
 
-        self.cli = QRecorderClient(gconf, name, context=context, parent=self)
+        self.cli = QRecorderClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -124,6 +136,7 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
 
         labels = self.cli.get_param_dict_labels()
         self.labelBox.addItems(labels)
+        self._param_dict_handler = ParamDictComboBoxHandler(self.labelBox)
         self.labelBox.currentIndexChanged.connect(self.update_param_table)
         if labels:
             self.update_param_table()
@@ -183,8 +196,9 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
         self.apply_widgets(self.data)
 
     def update_param_table(self):
-        label = self.labelBox.currentText()
-        d = self.cli.get_param_dict(label)
+        d = self._param_dict_handler.get(self.cli.get_param_dict)
+        if d is None:
+            return
         self.paramTable.update_contents(d)
 
     def refresh_plot(self):
@@ -236,15 +250,22 @@ class RecorderWidget(ClientWidget, Ui_Recorder):
 class RecorderMainWindow(QtWidgets.QMainWindow):
     """MainWindow with RecorderWidget and PlotWidget."""
 
-    def __init__(self, gconf: dict, name, context, parent=None):
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         lconf = local_conf(gconf, name)
         target = lconf["target"]
 
         self.plot = PlotWidget(parent=self)
         self.meas = RecorderWidget(
-            gconf, target["recorder"], target["gparams"], self.plot, context, parent=self
+            gconf,
+            target["recorder"],
+            target["gparams"],
+            self.plot,
+            context,
+            parent=self,
+            file_transport_dir=lconf.get("file_transport_dir"),
         )
 
         self.setWindowTitle(f"MAHOS.RecorderGUI ({join_name(target['recorder'])})")
@@ -268,12 +289,18 @@ class RecorderMainWindow(QtWidgets.QMainWindow):
 class RecorderGUI(GUINode):
     """GUINode for Recorder using RecorderMainWindow.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.recorder: Target Recorder node full name.
     :type target.recorder: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return RecorderMainWindow(gconf, name, context)
+        return RecorderMainWindow(gconf, name, context, logger=self.logger)

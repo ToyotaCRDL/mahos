@@ -11,11 +11,26 @@ Logic and instrument control part of confocal microscope.
 from __future__ import annotations
 import typing as T
 
-from mahos.msgs.common_msgs import Reply, StateReq, ShutdownReq, BinaryState
+from mahos.msgs.common_msgs import (
+    BinaryState,
+    CleanupArtifactReq,
+    Reply,
+    StateReq,
+    ShutdownReq,
+)
 from mahos_dq.msgs import confocal_msgs
 from mahos_dq.msgs.confocal_msgs import Axis, ConfocalState, MoveReq
 from mahos_dq.msgs.confocal_msgs import SaveImageReq, ExportImageReq, ExportViewReq, LoadImageReq
 from mahos_dq.msgs.confocal_msgs import SaveTraceReq, ExportTraceReq, LoadTraceReq
+from mahos_dq.msgs.confocal_msgs import (
+    ExportImageArtifactReq,
+    ExportTraceArtifactReq,
+    ExportViewArtifactReq,
+    LoadImageArtifactReq,
+    LoadTraceArtifactReq,
+    SaveImageArtifactReq,
+    SaveTraceArtifactReq,
+)
 from mahos_dq.msgs.confocal_msgs import (
     TraceCommand,
     CommandTraceReq,
@@ -31,11 +46,15 @@ from mahos.util.timer import IntervalTimer
 from mahos.meas.tweaker import TweakSaver
 from mahos.meas.common_meas import BaseMeasClientMixin
 from mahos.meas.common_worker import DummyWorker, PulseGen_CW, Switch
+from mahos.meas.file_transport import FileTransportNodeMixin
 from mahos_dq.meas.confocal_worker import Piezo, Tracer, Scanner
 from mahos_dq.meas.confocal_io import ConfocalIO
+from mahos_dq.meas.confocal_req import ConfocalImageReqMixin, ConfocalTraceReqMixin
 
 
-class ConfocalClient(NodeClient, BaseMeasClientMixin):
+class ConfocalClient(
+    ConfocalImageReqMixin, ConfocalTraceReqMixin, NodeClient, BaseMeasClientMixin
+):
     """Simple Confocal Client.
 
     Simple client API for measurement services provided by Confocal.
@@ -55,6 +74,7 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
         status_handler=None,
         image_handler=None,
         trace_handler=None,
+        file_transport_dir=None,
     ):
         NodeClient.__init__(self, gconf, name, context=context, prefix=prefix)
 
@@ -67,6 +87,7 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
         self.get_trace: T.Callable[[], Trace] = getters[2]
 
         self.req = self.add_req(gconf)
+        self.init_file_transport(file_transport_dir)
 
     def shutdown(self) -> bool:
         rep = self.req.request(ShutdownReq())
@@ -75,42 +96,6 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
     def move(self, ax: Axis | list[Axis], pos: float | list[float]) -> bool:
         rep = self.req.request(MoveReq(ax, pos))
         return rep.success
-
-    def save_image(
-        self, file_name, direction: ScanDirection | None = None, note: str = ""
-    ) -> bool:
-        rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
-        return rep.success
-
-    def export_image(self, file_name, direction: ScanDirection | None = None, params=None) -> bool:
-        rep = self.req.request(ExportImageReq(file_name, direction, params))
-        return rep.success
-
-    def export_view(self, file_name, params=None) -> bool:
-        rep = self.req.request(ExportViewReq(file_name, params))
-        return rep.success
-
-    def load_image(self, file_name) -> Image | None:
-        rep = self.req.request(LoadImageReq(file_name))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
-
-    def save_trace(self, file_name) -> bool:
-        rep = self.req.request(SaveTraceReq(file_name))
-        return rep.success
-
-    def export_trace(self, file_name, params=None) -> bool:
-        rep = self.req.request(ExportTraceReq(file_name, params=params))
-        return rep.success
-
-    def load_trace(self, file_name) -> Trace | None:
-        rep = self.req.request(LoadTraceReq(file_name))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
 
     def _command_trace(self, command: TraceCommand):
         rep = self.req.request(CommandTraceReq(command))
@@ -143,7 +128,7 @@ class ConfocalClient(NodeClient, BaseMeasClientMixin):
             return []
 
 
-class ConfocalIORequester(NodeClient):
+class ConfocalIORequester(ConfocalImageReqMixin, ConfocalTraceReqMixin, NodeClient):
     """ConfocalClient with limited capability of IO requests.
 
     It is safer to use this when you only need IO requests.
@@ -152,45 +137,10 @@ class ConfocalIORequester(NodeClient):
 
     M = confocal_msgs
 
-    def __init__(self, gconf: dict, name, context=None, prefix=None):
+    def __init__(self, gconf: dict, name, context=None, prefix=None, file_transport_dir=None):
         NodeClient.__init__(self, gconf, name, context=context, prefix=prefix)
         self.req = self.add_req(gconf)
-
-    def save_image(
-        self, file_name, direction: ScanDirection | None = None, note: str = ""
-    ) -> bool:
-        rep = self.req.request(SaveImageReq(file_name, direction=direction, note=note))
-        return rep.success
-
-    def export_image(self, file_name, direction: ScanDirection | None = None, params=None) -> bool:
-        rep = self.req.request(ExportImageReq(file_name, direction, params))
-        return rep.success
-
-    def export_view(self, file_name, params=None) -> bool:
-        rep = self.req.request(ExportViewReq(file_name, params))
-        return rep.success
-
-    def load_image(self, file_name) -> Image | None:
-        rep = self.req.request(LoadImageReq(file_name))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
-
-    def save_trace(self, file_name) -> bool:
-        rep = self.req.request(SaveTraceReq(file_name))
-        return rep.success
-
-    def export_trace(self, file_name, params=None) -> bool:
-        rep = self.req.request(ExportTraceReq(file_name, params=params))
-        return rep.success
-
-    def load_trace(self, file_name) -> Trace | None:
-        rep = self.req.request(LoadTraceReq(file_name))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
+        self.init_file_transport(file_transport_dir)
 
 
 class ImageBuffer(object):
@@ -232,7 +182,7 @@ class ImageBuffer(object):
         return [self.latest(d) for d in (ScanDirection.XY, ScanDirection.XZ, ScanDirection.YZ)]
 
 
-class Confocal(Node):
+class Confocal(FileTransportNodeMixin, Node):
     """Node that coordinates confocal scan, piezo control, and PD tracing.
 
     The node switches between IDLE/PIEZO/INTERACT/SCAN states, starts the required
@@ -256,6 +206,8 @@ class Confocal(Node):
     :type pg_channels: list[str]
     :param pub_interval_sec: Period for forced periodic publication while running.
     :type pub_interval_sec: float
+    :param file_transport_dir: Optional node-side directory for client-node file transport.
+    :type file_transport_dir: str
     :param scanner: Scanner worker configuration dictionary.
     :type scanner: dict
     :param scanner.xnum: (default: 51) Default value of param xnum.
@@ -290,7 +242,11 @@ class Confocal(Node):
     :type tracer.size: int
     :param tracer.samples: (default: 5) Number of samples per chunk.
     :type tracer.samples: int
-    :param tracer.oversample: (default: 1) Oversample factor.
+    :param tracer.pd_rate: Optional analog-PD sampling rate. Leave unset when using
+        ``SinglePhotonCounter``. When set, this takes precedence over ``tracer.oversample``.
+    :type tracer.pd_rate: float
+    :param tracer.oversample: (default: 1) Analog-PD oversampling factor. Leave unset when using
+        ``SinglePhotonCounter``.
     :type tracer.oversample: int
     :param tracer.time_window_sec: (default: 0.01) Time window for single data point.
     :type tracer.time_window_sec: float
@@ -305,6 +261,7 @@ class Confocal(Node):
         Node.__init__(self, gconf, name, context=context)
 
         self.state = ConfocalState.IDLE
+        self.init_file_transport()
 
         self.cli = MultiInstrumentClient(
             gconf,
@@ -568,6 +525,51 @@ class Confocal(Node):
         else:
             return Reply(True, ret=trace)
 
+    def save_image_artifact(self, msg: SaveImageArtifactReq) -> Reply:
+        return self.publish_artifact(
+            msg.file_name,
+            "save",
+            lambda path: self.save_image(SaveImageReq(path, msg.direction, msg.note)),
+        )
+
+    def export_image_artifact(self, msg: ExportImageArtifactReq) -> Reply:
+        return self.publish_artifact(
+            msg.file_name,
+            "export",
+            lambda path: self.export_image(ExportImageReq(path, msg.direction, msg.params)),
+        )
+
+    def export_view_artifact(self, msg: ExportViewArtifactReq) -> Reply:
+        return self.publish_artifact(
+            msg.file_name,
+            "export",
+            lambda path: self.export_view(ExportViewReq(path, msg.params)),
+        )
+
+    def load_image_artifact(self, msg: LoadImageArtifactReq) -> Reply:
+        return self.consume_artifact(
+            msg.artifact, lambda path: self.load_image(LoadImageReq(path))
+        )
+
+    def save_trace_artifact(self, msg: SaveTraceArtifactReq) -> Reply:
+        return self.publish_artifact(
+            msg.file_name,
+            "save",
+            lambda path: self.save_trace(SaveTraceReq(path, note=msg.note)),
+        )
+
+    def export_trace_artifact(self, msg: ExportTraceArtifactReq) -> Reply:
+        return self.publish_artifact(
+            msg.file_name,
+            "export",
+            lambda path: self.export_trace(ExportTraceReq(path, params=msg.params)),
+        )
+
+    def load_trace_artifact(self, msg: LoadTraceArtifactReq) -> Reply:
+        return self.consume_artifact(
+            msg.artifact, lambda path: self.load_trace(LoadTraceReq(path))
+        )
+
     def command_trace(self, msg: CommandTraceReq) -> Reply:
         if msg.command == TraceCommand.CLEAR:
             self.tracer.clear_buf()
@@ -620,6 +622,22 @@ class Confocal(Node):
             return self.export_trace(msg)
         elif isinstance(msg, LoadTraceReq):
             return self.load_trace(msg)
+        elif isinstance(msg, SaveImageArtifactReq):
+            return self.save_image_artifact(msg)
+        elif isinstance(msg, ExportImageArtifactReq):
+            return self.export_image_artifact(msg)
+        elif isinstance(msg, ExportViewArtifactReq):
+            return self.export_view_artifact(msg)
+        elif isinstance(msg, LoadImageArtifactReq):
+            return self.load_image_artifact(msg)
+        elif isinstance(msg, SaveTraceArtifactReq):
+            return self.save_trace_artifact(msg)
+        elif isinstance(msg, ExportTraceArtifactReq):
+            return self.export_trace_artifact(msg)
+        elif isinstance(msg, LoadTraceArtifactReq):
+            return self.load_trace_artifact(msg)
+        elif isinstance(msg, CleanupArtifactReq):
+            return self.cleanup_artifact(msg)
         elif isinstance(msg, CommandTraceReq):
             return self.command_trace(msg)
         elif isinstance(msg, CommandBufferReq):
@@ -661,7 +679,7 @@ class Confocal(Node):
         self._publish(time_to_pub)
 
 
-class TraceNodeClient(NodeClient, BaseMeasClientMixin):
+class TraceNodeClient(ConfocalTraceReqMixin, NodeClient, BaseMeasClientMixin):
     """Simple TraceNode Client.
 
     Simple client API for measurement services provided by Trace.
@@ -680,6 +698,7 @@ class TraceNodeClient(NodeClient, BaseMeasClientMixin):
         prefix=None,
         status_handler=None,
         trace_handler=None,
+        file_transport_dir=None,
     ):
         NodeClient.__init__(self, gconf, name, context=context, prefix=prefix)
 
@@ -689,6 +708,7 @@ class TraceNodeClient(NodeClient, BaseMeasClientMixin):
         self.get_trace: T.Callable[[], Trace] = getters[1]
 
         self.req = self.add_req(gconf)
+        self.init_file_transport(file_transport_dir)
 
     def start(self, params=None, label: str = "") -> bool:
         """Start the measurement, i.e., change state to ACTIVE."""
@@ -699,21 +719,6 @@ class TraceNodeClient(NodeClient, BaseMeasClientMixin):
         """Stop the measurement, i.e., change state to IDLE."""
 
         return self.change_state(BinaryState.IDLE, params=params, label=label)
-
-    def save_trace(self, file_name) -> bool:
-        rep = self.req.request(SaveTraceReq(file_name))
-        return rep.success
-
-    def export_trace(self, file_name, params=None) -> bool:
-        rep = self.req.request(ExportTraceReq(file_name, params=params))
-        return rep.success
-
-    def load_trace(self, file_name) -> Trace | None:
-        rep = self.req.request(LoadTraceReq(file_name))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
 
     def _command_trace(self, command: TraceCommand):
         rep = self.req.request(CommandTraceReq(command))
@@ -729,7 +734,7 @@ class TraceNodeClient(NodeClient, BaseMeasClientMixin):
         return self._command_trace(TraceCommand.CLEAR)
 
 
-class TraceNode(Node):
+class TraceNode(FileTransportNodeMixin, Node):
     """Node that provides standalone PD trace acquisition without scanning.
 
     This node reuses tracer(switch/pg) workers from the confocal stack, but exposes
@@ -750,6 +755,8 @@ class TraceNode(Node):
     :param pg_channels: (default: ["laser"], only target.servers.pg is given)
         List of PG channels to set high continuously when ACTIVE.
     :type pg_channels: list[str]
+    :param file_transport_dir: Optional node-side directory for client-node file transport.
+    :type file_transport_dir: str
 
     :param tracer: Trace worker configuration dictionary.
     :type tracer: dict
@@ -761,7 +768,11 @@ class TraceNode(Node):
     :type tracer.size: int
     :param tracer.samples: (default: 5) Number of samples per chunk.
     :type tracer.samples: int
-    :param tracer.oversample: (default: 1) Oversample factor.
+    :param tracer.pd_rate: Optional analog-PD sampling rate. Leave unset when using
+        ``SinglePhotonCounter``. When set, this takes precedence over ``tracer.oversample``.
+    :type tracer.pd_rate: float
+    :param tracer.oversample: (default: 1) Analog-PD oversampling factor. Leave unset when using
+        ``SinglePhotonCounter``.
     :type tracer.oversample: int
     :param tracer.time_window_sec: (default: 0.01) Time window for single data point.
     :type tracer.time_window_sec: float
@@ -776,6 +787,7 @@ class TraceNode(Node):
         Node.__init__(self, gconf, name, context=context)
 
         self.state = BinaryState.IDLE
+        self.init_file_transport()
 
         self.cli = MultiInstrumentClient(
             gconf,
@@ -868,6 +880,25 @@ class TraceNode(Node):
         else:
             return Reply(True, ret=trace)
 
+    def save_trace_artifact(self, msg: SaveTraceArtifactReq) -> Reply:
+        return self.publish_artifact(
+            msg.file_name,
+            "save",
+            lambda path: self.save_trace(SaveTraceReq(path, note=msg.note)),
+        )
+
+    def export_trace_artifact(self, msg: ExportTraceArtifactReq) -> Reply:
+        return self.publish_artifact(
+            msg.file_name,
+            "export",
+            lambda path: self.export_trace(ExportTraceReq(path, params=msg.params)),
+        )
+
+    def load_trace_artifact(self, msg: LoadTraceArtifactReq) -> Reply:
+        return self.consume_artifact(
+            msg.artifact, lambda path: self.load_trace(LoadTraceReq(path))
+        )
+
     def command_trace(self, msg: CommandTraceReq) -> Reply:
         if msg.command == TraceCommand.CLEAR:
             self.tracer.clear_buf()
@@ -890,6 +921,14 @@ class TraceNode(Node):
             return self.export_trace(msg)
         elif isinstance(msg, LoadTraceReq):
             return self.load_trace(msg)
+        elif isinstance(msg, SaveTraceArtifactReq):
+            return self.save_trace_artifact(msg)
+        elif isinstance(msg, ExportTraceArtifactReq):
+            return self.export_trace_artifact(msg)
+        elif isinstance(msg, LoadTraceArtifactReq):
+            return self.load_trace_artifact(msg)
+        elif isinstance(msg, CleanupArtifactReq):
+            return self.cleanup_artifact(msg)
         elif isinstance(msg, CommandTraceReq):
             return self.command_trace(msg)
         else:

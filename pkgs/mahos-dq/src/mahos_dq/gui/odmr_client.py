@@ -20,6 +20,12 @@ class QODMRClient(QBasicMeasClient):
     dataUpdated = QtCore.pyqtSignal(ODMRData)
     stopped = QtCore.pyqtSignal(ODMRData)
 
-    def validate(self, params: dict, label: str) -> bool:
+    def validate(self, params: dict, label: str) -> tuple[bool, str, str]:
+        """validate the ODMR measurement parameter.
+
+        :returns: (success, error_message, pulse_summary)
+
+        """
+
         rep = self.req.request(ValidateReq(params, label))
-        return rep.success
+        return rep.success, rep.message, rep.ret

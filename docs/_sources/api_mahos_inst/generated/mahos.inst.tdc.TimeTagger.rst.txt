@@ -22,6 +22,7 @@
       ~TimeTagger.configure
       ~TimeTagger.configure_correlation
       ~TimeTagger.configure_histogram
+      ~TimeTagger.configure_multi_histogram
       ~TimeTagger.configure_raw_events
       ~TimeTagger.get
       ~TimeTagger.get_data
@@ -37,6 +38,7 @@
       ~TimeTagger.set_duration
       ~TimeTagger.set_range_bin
       ~TimeTagger.set_reference_clock
+      ~TimeTagger.set_sweeps
       ~TimeTagger.start
       ~TimeTagger.stop
    

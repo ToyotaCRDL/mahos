@@ -421,6 +421,7 @@ class FloatParam(NumberParam):
     :param digit: (GUI) Number of decimals shown in GUI widgets.
     :param step: (GUI) Base increment/decrement step for GUI widgets.
     :param adaptive_step: (GUI) Enable magnitude-dependent stepping in GUI widgets.
+        If not given, this defaults to SI_prefix value.
     :param adaptive_min_step: (GUI) Minimum step for adaptive stepping in GUI widgets.
     :param optional: If True, this parameter can be enabled/disabled.
     :param enable: Initial enabled state.
@@ -438,13 +439,15 @@ class FloatParam(NumberParam):
         SI_prefix: bool = False,
         digit: int = 6,
         step: float = 1.0,
-        adaptive_step: bool = False,
+        adaptive_step: bool | None = None,
         adaptive_min_step: float | None = None,
         optional: bool = False,
         enable: bool = True,
         read_only: bool = False,
         doc: str = "",
     ):
+        if adaptive_step is None:
+            adaptive_step = bool(SI_prefix)
         NumberParam.__init__(
             self,
             float,

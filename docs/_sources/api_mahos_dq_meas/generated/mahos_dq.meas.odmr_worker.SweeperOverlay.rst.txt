@@ -17,7 +17,6 @@
    .. autosummary::
    
       ~SweeperOverlay.__init__
-      ~SweeperOverlay.append_line
       ~SweeperOverlay.append_point
       ~SweeperOverlay.get_param_dict
       ~SweeperOverlay.get_param_dict_labels

@@ -20,6 +20,7 @@
       ~ODMRSweeperCommandBase.configure
       ~ODMRSweeperCommandBase.configure_pd
       ~ODMRSweeperCommandBase.get
+      ~ODMRSweeperCommandBase.get_capability
       ~ODMRSweeperCommandBase.get_line
       ~ODMRSweeperCommandBase.get_param_dict
       ~ODMRSweeperCommandBase.get_param_dict_labels

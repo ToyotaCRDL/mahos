@@ -490,6 +490,8 @@ Optional keys: <code class="docutils literal notranslate"><span class="pre">fg</
 <li><p><strong>switch_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Optional switch instrument names to route signal/optical paths.</p></li>
 <li><p><strong>switch_command</strong> (<em>str</em>) – Switch command label passed to Switch worker.</p></li>
 <li><p><strong>pub_interval_sec</strong> (<em>float</em>) – Maximum interval between periodic status/data publications.</p></li>
+<li><p><strong>pulser.start_delay</strong> (<em>float</em>) – (sec.) delay before starting PG output. (default: 0.5)
+A non-zero value is recommended when multi_histogram mode is used.</p></li>
 <li><p><strong>pulser.quick_resume</strong> (<em>bool</em>) – default value of quick_resume.
 If True, it skips instrument configurations on resume.</p></li>
 <li><p><strong>pulser.mw_modes</strong> (<em>tuple</em><em>[</em><em>str</em><em> | </em><em>int</em><em>]</em>) – mw phase control modes for each channel.

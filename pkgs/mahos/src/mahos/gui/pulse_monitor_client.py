@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from mahos.gui.Qt import QtCore
 
-from mahos.msgs.pulse_msgs import PulsePattern
+from mahos.msgs.inst.pg_msgs import PulsePattern
 from mahos.gui.client import QSubWorker, QNodeClient
 
 

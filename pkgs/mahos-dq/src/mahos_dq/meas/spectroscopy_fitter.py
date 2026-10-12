@@ -186,7 +186,7 @@ class MultiFitter(Fitter):
     ):
         for i in range(1, raw_params["n_peaks"]):
             fit_params.add(
-                f"center_diff{i}", expr=f"p{i}_center-p{i-1}_center", min=0.0, max=np.max(xdata)
+                f"center_diff{i}", expr=f"p{i}_center-p{i - 1}_center", min=0.0, max=np.max(xdata)
             )
 
     def guess_fit_params(

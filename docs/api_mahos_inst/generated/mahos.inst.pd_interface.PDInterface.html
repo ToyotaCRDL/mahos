@@ -381,6 +381,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../InstrumentInterface.html">mahos.inst.interface.InstrumentInterface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../camera.html">mahos.inst.camera</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../daq.html">mahos.inst.daq</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../digitizer.html">mahos.inst.digitizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../dmm.html">mahos.inst.dmm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../fg.html">mahos.inst.fg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../filter_wheel.html">mahos.inst.filter_wheel</a></li>
@@ -486,7 +487,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="mahos.inst.pd_interface.PDInterface">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos.inst.pd_interface.</span></span><span class="sig-name descname"><span class="pre">PDInterface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mahos.inst.server.InstrumentClient.html#mahos.inst.server.InstrumentClient" title="mahos.inst.server.InstrumentClient"><span class="pre">InstrumentClient</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">MultiInstrumentClient</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inst</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.pd_interface.PDInterface" title="Link to this definition">#</a></dt>
-<dd><p>Common interface for SinglePhotonCounter and AnalogIn-based PD.</p>
+<dd><p>Common interface for SinglePhotonCounter (BufferedEdgeCounter) and AnalogIn-based PD.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mahos.inst.pd_interface.PDInterface.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mahos.inst.server.InstrumentClient.html#mahos.inst.server.InstrumentClient" title="mahos.inst.server.InstrumentClient"><span class="pre">InstrumentClient</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">MultiInstrumentClient</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inst</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos.inst.pd_interface.PDInterface.__init__" title="Link to this definition">#</a></dt>
@@ -495,17 +496,11 @@
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_all_block</span></code>()</p></td>
-<td><p>Get all data from buffer as list.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_stream</span></code>(cb_samples, buffer_size, ...)</p></td>
+<td><p>Configure continuously running infinite (stream) acquisition.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_all_opt</span></code>()</p></td>
-<td><p>Get all data from buffer as list.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_block</span></code>()</p></td>
-<td><p>Get data from buffer.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_opt</span></code>()</p></td>
-<td><p>Get data from buffer.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_triggered</span></code>(trigger_source, ...[, ...])</p></td>
+<td><p>Configure triggered fixed-length acquisition.</p></td>
 </tr>
 </tbody>
 </table>

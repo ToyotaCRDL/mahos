@@ -33,6 +33,12 @@ def build_parser(add_help: bool = True):
         action="store_true",
         help="print rate statistics instead of message itself.",
     )
+    parser.add_argument(
+        "-s",
+        "--size",
+        action="store_true",
+        help="print serialized payload size instead of message itself (combine with --rate).",
+    )
     parser.add_argument("node", type=str, help="node name or full name (host::node)")
     return parser
 
@@ -66,7 +72,9 @@ def main(args=None):
     else:
         type_ = None
 
-    sub = EchoSubscriber(gconf, joined_name, topic=args.topic, rate=args.rate, type_=type_)
+    sub = EchoSubscriber(
+        gconf, joined_name, topic=args.topic, rate=args.rate, size=args.size, type_=type_
+    )
 
     try:
         while True:

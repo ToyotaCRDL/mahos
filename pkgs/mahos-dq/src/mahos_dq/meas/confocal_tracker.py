@@ -14,7 +14,6 @@ import copy
 import sys
 import pickle
 import time
-from typing import Optional
 
 import numpy as np
 
@@ -25,19 +24,34 @@ except ImportError:
 
 from mahos import CONFIG_DIR
 from mahos_dq.meas.confocal import ConfocalClient
-from mahos.msgs.common_msgs import Reply, StateReq, BinaryState
+from mahos.msgs.common_msgs import BinaryState, CleanupArtifactReq, Reply, StateReq
 from mahos_dq.msgs import confocal_msgs
-from mahos_dq.msgs.confocal_msgs import Image, ScanDirection, ScanMode, PiezoPos
-from mahos_dq.msgs.confocal_msgs import ConfocalState
-from mahos_dq.msgs.confocal_msgs import direction_to_labels, direction_to_axes
-from mahos_dq.msgs.confocal_tracker_msgs import OptMode, ConfocalTrackerStatus
-from mahos_dq.msgs.confocal_tracker_msgs import SaveParamsReq, LoadParamsReq, TrackNowReq
+from mahos_dq.msgs.confocal_msgs import (
+    Image,
+    ScanDirection,
+    ScanMode,
+    PiezoPos,
+    ConfocalState,
+    direction_to_labels,
+    direction_to_axes,
+)
+from mahos_dq.msgs.confocal_tracker_msgs import (
+    OptMode,
+    ConfocalTrackerStatus,
+    SaveParamsReq,
+    LoadParamsReq,
+    TrackNowReq,
+    LoadParamsArtifactReq,
+    SaveParamsArtifactReq,
+)
 from mahos_dq.msgs import confocal_tracker_msgs
 from mahos.node.node import Node
 from mahos.node.client import StateClient
+from mahos.meas.file_transport import FileTransportNodeMixin
 from mahos.util.timer import OneshotTimer
 from mahos.util import conv, fit
 from mahos.meas.state_manager import StateManagerClient
+from mahos_dq.meas.confocal_req import ConfocalTrackerReqMixin
 
 
 def optimize_pos(mode: OptMode, data, prev_data, print_fn=print):
@@ -165,7 +179,7 @@ class ImageBuffer(object):
             )
 
 
-class ConfocalTrackerClient(StateClient):
+class ConfocalTrackerClient(ConfocalTrackerReqMixin, StateClient):
     """Simple ConfocalTracker Client."""
 
     #: The module that defines message types for target node (ConfocalTracker).
@@ -174,23 +188,26 @@ class ConfocalTrackerClient(StateClient):
     #: The module that defines message types for Confocal.
     MC = confocal_msgs
 
-    def save_params(self, params: dict, file_name: Optional[str] = None) -> bool:
-        rep = self.req.request(SaveParamsReq(params, file_name=file_name))
-        return rep.success
-
-    def load_params(self, file_name: Optional[str] = None) -> Optional[dict]:
-        rep = self.req.request(LoadParamsReq(file_name))
-        if rep.success:
-            return rep.ret
-        else:
-            return None
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        context=None,
+        prefix=None,
+        status_handler=None,
+        file_transport_dir=None,
+    ):
+        StateClient.__init__(
+            self, gconf, name, context=context, prefix=prefix, status_handler=status_handler
+        )
+        self.init_file_transport(file_transport_dir)
 
     def track_now(self) -> bool:
         rep = self.req.request(TrackNowReq())
         return rep.success
 
 
-class ConfocalTracker(Node):
+class ConfocalTracker(FileTransportNodeMixin, Node):
     """Node that performs periodic position re-centering of confocal.
 
     The tracker coordinates Confocal and StateManager nodes, runs scheduled
@@ -200,6 +217,9 @@ class ConfocalTracker(Node):
     :type target.confocal: tuple[str, str] | str
     :param target.manager: StateManager node name used for state coordination.
     :type target.manager: tuple[str, str] | str
+    :param file_transport_dir: Optional node-side directory for explicit parameter-file
+        transport.
+    :type file_transport_dir: str
 
     """
 
@@ -209,6 +229,7 @@ class ConfocalTracker(Node):
         Node.__init__(self, gconf, name, context=context)
 
         self.state = BinaryState.IDLE
+        self.init_file_transport(("save",))
 
         self.cli = ConfocalClient(gconf, self.conf["target"]["confocal"], context=self.ctx)
         self.sm_cli = StateManagerClient(gconf, self.conf["target"]["manager"], context=self.ctx)
@@ -285,6 +306,21 @@ class ConfocalTracker(Node):
             self.logger.exception(msg)
             return Reply(False, msg)
 
+    def save_params_artifact(self, msg: SaveParamsArtifactReq) -> Reply:
+        return self.publish_artifact(
+            msg.file_name,
+            "save",
+            lambda file_name: self.save_params(SaveParamsReq(msg.params, file_name)),
+            "Failed to create tracker parameter artifact",
+        )
+
+    def load_params_artifact(self, msg: LoadParamsArtifactReq) -> Reply:
+        return self.consume_artifact(
+            msg.artifact,
+            lambda file_name: self.load_params(LoadParamsReq(file_name)),
+            "Failed to load tracker parameter artifact",
+        )
+
     def handle_req(self, msg):
         if isinstance(msg, StateReq):
             return self.change_state(msg)
@@ -294,6 +330,12 @@ class ConfocalTracker(Node):
             return self.save_params(msg)
         elif isinstance(msg, LoadParamsReq):
             return self.load_params(msg)
+        elif isinstance(msg, SaveParamsArtifactReq):
+            return self.save_params_artifact(msg)
+        elif isinstance(msg, LoadParamsArtifactReq):
+            return self.load_params_artifact(msg)
+        elif isinstance(msg, CleanupArtifactReq):
+            return self.cleanup_artifact(msg)
         else:
             return Reply(False, "Invalid message type")
 

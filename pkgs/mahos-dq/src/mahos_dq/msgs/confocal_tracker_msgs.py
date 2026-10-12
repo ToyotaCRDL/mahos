@@ -10,7 +10,7 @@ Message Types for ConfocalTracker.
 
 import enum
 
-from mahos.msgs.common_msgs import Message, Status, Request, BinaryState
+from mahos.msgs.common_msgs import FileArtifact, Message, Status, Request, BinaryState
 
 
 class OptMode(Message, enum.Enum):
@@ -61,6 +61,30 @@ class LoadParamsReq(Request):
 
     def __init__(self, file_name=None):
         self.file_name = file_name
+
+
+class SaveParamsArtifactReq(Request):
+    """Request creation of a tracker-parameter artifact.
+
+    :ivar file_name: Original destination basename, used to preserve its suffix.
+    :ivar params: Tracker parameter dictionary to persist.
+
+    """
+
+    def __init__(self, file_name: str, params: dict):
+        self.file_name = file_name
+        self.params = params
+
+
+class LoadParamsArtifactReq(Request):
+    """Request loading tracker parameters from a shared artifact.
+
+    :ivar artifact: Metadata identifying the staged parameter file.
+
+    """
+
+    def __init__(self, artifact: FileArtifact):
+        self.artifact = artifact
 
 
 class TrackNowReq(Request):

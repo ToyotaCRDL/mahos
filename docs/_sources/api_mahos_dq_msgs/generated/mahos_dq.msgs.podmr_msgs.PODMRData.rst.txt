@@ -42,6 +42,7 @@
       ~PODMRData.init_xdata
       ~PODMRData.is_CPlike
       ~PODMRData.is_correlation
+      ~PODMRData.is_multi_histogram
       ~PODMRData.is_partial
       ~PODMRData.is_supersampling
       ~PODMRData.is_sweepN

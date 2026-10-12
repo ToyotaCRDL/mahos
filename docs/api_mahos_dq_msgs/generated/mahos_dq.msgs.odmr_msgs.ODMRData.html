@@ -464,6 +464,18 @@
 <dt class="sig sig-object py" id="mahos_dq.msgs.odmr_msgs.ODMRData">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mahos_dq.msgs.odmr_msgs.</span></span><span class="sig-name descname"><span class="pre">ODMRData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos_dq.msgs.odmr_msgs.ODMRData" title="Link to this definition">#</a></dt>
 <dd><p>Data type for ODMR measurement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – Signal values with shape <code class="docutils literal notranslate"><span class="pre">(frequency,</span> <span class="pre">sweep)</span></code>.</p></li>
+<li><p><strong>bg_data</strong> – Background values with shape <code class="docutils literal notranslate"><span class="pre">(frequency,</span> <span class="pre">sweep)</span></code>, or None.</p></li>
+<li><p><strong>raw_data_sum</strong> – Sum of the burst-averaged AnalogPD traces across ODMR sweeps with
+shape <code class="docutils literal notranslate"><span class="pre">(point,</span> <span class="pre">sample)</span></code>. Signal and background points are interleaved when background
+acquisition is enabled. This is populated only for <code class="docutils literal notranslate"><span class="pre">pd_trace</span></code> pulse acquisition.</p></li>
+<li><p><strong>fit_complex_conv</strong> – Complex conversion used for loading fitted data.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mahos_dq.msgs.odmr_msgs.ODMRData.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mahos_dq.msgs.odmr_msgs.ODMRData.__init__" title="Link to this definition">#</a></dt>

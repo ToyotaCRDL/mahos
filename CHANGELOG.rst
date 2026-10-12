@@ -2,6 +2,27 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+Added
+^^^^^
+
+- inst: ``digitizer`` module and ``Spectrum_AnalogIn`` Instrument.
+- ODMR:
+  - new params ``final_delay`` and ``post_gate_delay`` (for certain modes).
+  - new conf switches ``pd_trace`` and ``pd_chop`` for pulse ODMR.
+
+
+Changed
+^^^^^^^
+
+- Development tooling: replace black and flake8 with Ruff for formatting and linting.
+- rename ``mahos.util.locked_queue`` to ``mahos.util.queue.RollingQueue``.
+
+Fixed
+^^^^^
+
 [0.4.0] - 2026-05-20
 --------------------
 

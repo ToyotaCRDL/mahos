@@ -105,7 +105,8 @@ class Requester(object):
         except zmq.ZMQError:
             # Comes here when timed-out for example.
             self.logger.exception("ZMQError in Requester.request().")
-            self.logger.info("Creating new socket.")
+            self.logger.info("Closing current socket and creating new socket.")
+            self._socket.close()
             self.create_socket()
             return Reply(False, message="ZMQError in request()")
         return rep
@@ -209,6 +210,7 @@ class Context(object):
         self.rep_handlers: dict[zmq.Socket, tuple[RepHandler, T.Type[Message] | None]] = {}
         self.sub_handlers: dict[zmq.Socket, tuple[SubHandler, T.Type[Message] | None, bool]] = {}
         self.broker_handlers = []
+        self.pub_handlers: list[PUBHandler] = []
 
         self.poller = zmq.Poller()
         self._closed = False
@@ -228,6 +230,8 @@ class Context(object):
         for xpub, xsub, _, _ in self.broker_handlers:
             xpub.close()
             xsub.close()
+        for handler in self.pub_handlers:
+            handler.close()
 
         # Since close_zmq_ctx is False by default, we don't terminate zmq context here.
         # But this will be done in zmq context's destructor.
@@ -328,7 +332,9 @@ class Context(object):
         sock = self.ctx.socket(zmq.PUB)
         sock.setsockopt(zmq.LINGER, self.linger_ms)
         sock.connect(endpoint)  # pub but connect because targeting xpub/xsub broker.
-        return PUBHandler(sock, root_topic=root_topic)
+        handler = PUBHandler(sock, root_topic=root_topic)
+        self.pub_handlers.append(handler)
+        return handler
 
     def add_broker(
         self,

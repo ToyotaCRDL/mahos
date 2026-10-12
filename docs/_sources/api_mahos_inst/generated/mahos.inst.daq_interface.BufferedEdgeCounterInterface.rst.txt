@@ -19,6 +19,7 @@
       ~BufferedEdgeCounterInterface.pop_all_block
       ~BufferedEdgeCounterInterface.pop_all_opt
       ~BufferedEdgeCounterInterface.pop_block
+      ~BufferedEdgeCounterInterface.pop_block_with_status
       ~BufferedEdgeCounterInterface.pop_opt
    
    

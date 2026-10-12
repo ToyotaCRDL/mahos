@@ -14,7 +14,7 @@ from mahos.gui.Qt import QtCore, QtWidgets, QtGui
 from mahos.inst.daq_interface import DigitalOutInterface
 from mahos.inst.server import MultiInstrumentClient
 
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientTopWidget
 from mahos.node.node import local_conf, join_name
 
@@ -28,8 +28,9 @@ def set_fontsize(widget, fontsize: int):
 class DigitalOutWidget(ClientTopWidget):
     """Top widget for DigitalOutGUI"""
 
-    def __init__(self, gconf: dict, name, context):
-        ClientTopWidget.__init__(self)
+    def __init__(self, gconf: dict, name, context, parent=None, logger=None):
+        ClientTopWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
 
         self.conf = local_conf(gconf, name)
         servers: dict = self.conf["target"]["servers"]
@@ -86,6 +87,10 @@ class DigitalOutGUI(GUINode):
     This node creates :class:`DigitalOutWidget` and uses the node-local configuration
     to build one toggle button per target server.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.servers: Mapping of display names to target DigitalOut server nodes.
     :type target.servers: dict[str, tuple[str, str] | str]
     :param alias: Optional per-output labels for low/high states.
@@ -96,4 +101,4 @@ class DigitalOutGUI(GUINode):
     """
 
     def init_widget(self, gconf: dict, name, context):
-        return DigitalOutWidget(gconf, name, context)
+        return DigitalOutWidget(gconf, name, context, logger=self.logger)

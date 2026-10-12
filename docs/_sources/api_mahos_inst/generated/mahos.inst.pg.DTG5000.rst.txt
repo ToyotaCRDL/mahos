@@ -23,6 +23,7 @@
       ~DTG5000.configure_blocks
       ~DTG5000.configure_blockseq
       ~DTG5000.get
+      ~DTG5000.get_finished
       ~DTG5000.get_sequencer_status
       ~DTG5000.min_block_len
       ~DTG5000.set

@@ -34,8 +34,8 @@ class Fitter(BaseFitter):
         return xdata, y0
 
 
-def rabi_decay_cos(x, A, T, f, dt):
-    return A * np.exp(-(x - dt) / T) * np.cos(2.0 * np.pi * f * (x - dt))
+def rabi_decay_cos(x, A, T, f, dt, c, slope):
+    return c + slope * (x - dt) + A * np.exp(-(x - dt) / T) * np.cos(2.0 * np.pi * f * (x - dt))
 
 
 class RabiFitter(Fitter):
@@ -66,6 +66,14 @@ class RabiFitter(Fitter):
                 fixable=True,
                 doc="shift in time (x-axis)",
             ),
+            slope=self.make_model_param(
+                self.conf.get("slope", 0.0),
+                self.conf.get("slope_min", -1.0),
+                self.conf.get("slope_max", 1.0),
+                fixable=True,
+                fixed=True,
+                doc="linear baseline slope",
+            ),
         )
 
     def guess_fit_params(
@@ -89,16 +97,15 @@ class RabiFitter(Fitter):
             fit_params["dt"].set(0.0)
 
     def model(self, raw_params: dict[str, P.RawPDValue]) -> F.Model:
-        baseline = F.models.ConstantModel()
-        return baseline + F.Model(rabi_decay_cos)
+        return F.Model(rabi_decay_cos)
 
     def additional_msg(self, popt: P.ParamDict[str, P.FloatParam]):
-        f, dt, A, c = [popt[n].value() for n in ("f", "dt", "A", "c")]
+        f, dt, A = [popt[n].value() for n in ("f", "dt", "A")]
         p90, p180, p270 = 1 / 4 / f + dt, 1 / 2 / f + dt, 3 / 4 / f + dt
         p2p = 2 * abs(A)
         return (
             f"Peak-to-Peak: 2|A| = {p2p:.3%}, "
-            f"MW pulses: {p90*1e9:.1f}, {p180*1e9:.1f}, {p270*1e9:.1f} ns"
+            f"MW pulses: {p90 * 1e9:.1f}, {p180 * 1e9:.1f}, {p270 * 1e9:.1f} ns"
         )
 
 
@@ -186,8 +193,8 @@ class SpinEchoFitter(Fitter):
         return baseline + F.Model(spinecho_exp_decay)
 
 
-def fid_decay_cos(x, A, T2s, detuning):
-    return A * (1 - np.exp(-x / T2s) * np.cos(2 * np.pi * detuning * x))
+def fid_decay_cos(x, A, T2s, detuning, phi):
+    return A * np.exp(-x / T2s) * np.cos(2 * np.pi * detuning * x + phi)
 
 
 class FIDFitter(Fitter):
@@ -199,7 +206,10 @@ class FIDFitter(Fitter):
                 10e-6, 1e-9, 1.0, unit="s", SI_prefix=True, doc="spin-spin relaxation time"
             ),
             detuning=self.make_model_param(
-                1e6, 0.0, 1e9, unit="Hz", SI_prefix=True, doc="detuning frequency"
+                1e6, 0.0, 1e9, fixable=True, unit="Hz", SI_prefix=True, doc="detuning frequency"
+            ),
+            phi=self.make_model_param(
+                0.0, -np.pi / 2, np.pi / 2, fixable=True, doc="initial phase"
             ),
         )
 
@@ -444,7 +454,7 @@ class MultiPeakFitter(SinglePeakFitter):
     ):
         for i in range(1, raw_params["n_peaks"]):
             fit_params.add(
-                f"center_diff{i}", expr=f"p{i}_center-p{i-1}_center", min=0.0, max=np.max(xdata)
+                f"center_diff{i}", expr=f"p{i}_center-p{i - 1}_center", min=0.0, max=np.max(xdata)
             )
 
     def guess_fit_params(

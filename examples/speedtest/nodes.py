@@ -39,7 +39,7 @@ class Tester(Node):
         self.data = np.random.default_rng(11).normal(size=server_conf.get("data_size", 100))
         self.data_bytes = self.data.size * self.data.itemsize
         self.count = -1
-        print(f"Payload size: {self.data_bytes*1E-6} MB")
+        print(f"Payload size: {self.data_bytes * 1e-6} MB")
 
     def main(self):
         self._dummy = self.cli.request(self.data)

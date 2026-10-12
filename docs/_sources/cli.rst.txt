@@ -99,6 +99,10 @@ mahos echo
 
 ``mahos echo -t [topicname] [nodename]`` subscribes to a topic and prints published messages.
 
+Add ``--rate (-r)`` to print message rate statistics, or ``--size (-s)`` to print the serialized
+payload size without deserializing the message.  Combine them as ``--rate --size (-rs)`` to print
+message rate, latest and average payload size, and throughput.
+
 mahos shell
 ^^^^^^^^^^^
 

@@ -72,6 +72,7 @@ Node name
 
 The configuration of the whole system (global conf) is structured as a dictionary with nested string keys.
 TOML can effectively express such data structure.
+
 The top-level key specifies the hostname, except for the following two special names:
 
 - ``global`` block is used to define global configurations (default configurations for all the nodes).
@@ -85,6 +86,19 @@ and is expressed as ``<hostname>::<nodename>`` (e.g. ``localhost::server``).
 The configuration of each node (local config) is written as a dictionary under the nodename
 (under the block ``[<hostname>::<nodename>]``),
 and this dictionary is bound as the ``conf`` attribute of the :class:`Node <mahos.node.node.Node>`.
+
+Global configuration
+^^^^^^^^^^^^^^^^^^^^
+
+Currently, the following keys in the ``global`` block are used as defaults for all nodes.
+A value in a node's local configuration takes precedence over the corresponding global value.
+
+- ``poll_timeout_ms``: timeout for polling inbound communication.
+- ``req_timeout_ms``: timeout for REQ-REP communication.
+- ``log_level``: logging level. If it is omitted from both the local and global
+  configurations, ``INFO`` is used.
+
+Other keys in the ``global`` block have no effect unless the code explicitly reads them.
 
 Fundamental keys
 ----------------

@@ -117,7 +117,7 @@ This includes ``argcomplete``, which is used for :ref:`bash/zsh CLI completion <
 Dev requirements
 ................
 
-Development tools (pytest, black, flake8, sphinx, etc.) are in
+Development tools (pytest, Ruff, Sphinx, etc.) are in
 ``dev-requirements.txt``.
 
 - You can install all of them by ``pip install -e './pkgs/mahos[dev]'`` or
@@ -181,6 +181,23 @@ To install things `inside` the virtual environment:
   pip uninstall PyQt6 PyQt6-sip PyQt6-Qt6
   source <mahos env directory>/bin/activate # or source <mahos env directory>/Scripts/activate
   pip install PyQt6
+
+Qt on WSL
+^^^^^^^^^
+
+Under WSL, Qt may select the Wayland platform plugin automatically.
+If a mahos GUI intermittently crashes during interaction,
+try using the XCB platform plugin instead. ::
+
+  QT_QPA_PLATFORM=xcb mahos launch
+
+This selects WSLg's XWayland path, which seems more stable with mahos.
+To enable it for every mahos session, the environment variable can be exported
+when activating the mahos virtual environment.
+
+If Qt reports that the XCB platform plugin cannot be initialized,
+additional system XCB libraries may be required.
+On Ubuntu, install ``libxcb-cursor0`` first.
 
 Qt tools on Ubuntu
 ^^^^^^^^^^^^^^^^^^

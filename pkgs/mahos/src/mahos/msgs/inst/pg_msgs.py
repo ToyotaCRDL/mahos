@@ -13,6 +13,7 @@ import typing as T
 from collections import UserList
 import enum
 import copy
+import uuid
 
 import numpy as np
 from numpy.typing import NDArray
@@ -25,6 +26,25 @@ class TriggerType(enum.Enum):
     SOFTWARE = 1  # software trigger
     HARDWARE_RISING = 2  # hardware trigger, rising edge
     HARDWARE_FALLING = 3  # hardware trigger, falling edge
+
+
+class PulsePattern(Message):
+    """Pulse pattern message for visualization/debug."""
+
+    def __init__(
+        self,
+        blocks: Blocks[Block] | BlockSeq,
+        freq: float,
+        markers: list[int] | None = None,
+        ident: uuid.UUID | None = None,
+    ):
+        self.blocks = blocks
+        self.freq = freq
+        self.markers = markers
+        if ident is None:
+            self.ident = uuid.uuid4()
+        else:
+            self.ident = ident
 
 
 class AnalogChannel(object):

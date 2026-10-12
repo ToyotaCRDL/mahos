@@ -29,9 +29,15 @@ class ODMRClient(BasicMeasClient):
     #: Message types for ODMR.
     M = odmr_msgs
 
-    def validate(self, params: dict, label: str) -> bool:
+    def validate(self, params: dict, label: str) -> tuple[bool, str, str]:
+        """validate the ODMR measurement parameter.
+
+        :returns: (success, error_message, pulse_summary)
+
+        """
+
         rep = self.req.request(ValidateReq(params, label))
-        return rep.success
+        return rep.success, rep.message, rep.ret
 
 
 class ODMR(BasicMeasNode):
@@ -188,7 +194,7 @@ class ODMR(BasicMeasNode):
             return Reply(False)
         else:
             if msg.to_buffer:
-                self.buffer.append((msg.file_name, data))
+                self.buffer.append((msg.buffer_name, data))
             else:
                 if self.state == BinaryState.ACTIVE:
                     return Reply(False, "Cannot load data when active.")
@@ -198,7 +204,8 @@ class ODMR(BasicMeasNode):
     def validate(self, msg: ValidateReq) -> Reply:
         """Validate the measurement params."""
 
-        return Reply(self.worker.validate_params(msg.params, msg.label))
+        success, error, summary = self.worker.validate_params(msg.params, msg.label)
+        return Reply(success, message=error, ret=summary)
 
     def handle_req(self, msg: Request) -> Reply:
         if isinstance(msg, ValidateReq):

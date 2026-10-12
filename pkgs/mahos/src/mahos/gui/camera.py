@@ -20,7 +20,7 @@ from mahos.gui.camera_client import QCameraClient
 from mahos.msgs.common_msgs import BinaryState, BinaryStatus
 from mahos.msgs.camera_msgs import Image
 from mahos.node.global_params import GlobalParamsClient
-from mahos.gui.gui_node import GUINode
+from mahos.gui.gui_node import GUINode, get_gui_logger
 from mahos.gui.common_widget import ClientTopWidget
 from mahos.gui.dialog import save_dialog, load_dialog
 from mahos.gui.param import apply_widgets
@@ -31,8 +31,18 @@ from mahos.util.timer import FPSCounter
 class CameraWidget(ClientTopWidget, Ui_Camera):
     """Top widget for Camera."""
 
-    def __init__(self, gconf: dict, name, gparams_name, context, parent=None):
+    def __init__(
+        self,
+        gconf: dict,
+        name,
+        gparams_name,
+        context,
+        parent=None,
+        logger=None,
+        file_transport_dir=None,
+    ):
         ClientTopWidget.__init__(self, parent)
+        self.logger = get_gui_logger(logger, self.__class__.__name__)
         self.setupUi(self)
         self.setWindowTitle(f"MAHOS.CameraGUI ({join_name(name)})")
 
@@ -44,7 +54,9 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
         self._finalizing = False
         self.fps_counter = FPSCounter()
 
-        self.cli = QCameraClient(gconf, name, context=context, parent=self)
+        self.cli = QCameraClient(
+            gconf, name, context=context, parent=self, file_transport_dir=file_transport_dir
+        )
         self.cli.statusUpdated.connect(self.init_with_status)
 
         self.gparams_cli = GlobalParamsClient(gconf, gparams_name, context=context)
@@ -209,13 +221,27 @@ class CameraWidget(ClientTopWidget, Ui_Camera):
 class CameraGUI(GUINode):
     """GUINode for Camera using CameraWidget.
 
+    :param target.log: Optional LogBroker target for formal GUI logging.
+    :type target.log: tuple[str, str] | str
+    :param log_level: (default: ``"INFO"``) Optional logging level.
+    :type log_level: str
     :param target.camera: Target Camera node full name.
     :type target.camera: tuple[str, str] | str
     :param target.gparams: Target GlobalParams node full name.
     :type target.gparams: tuple[str, str] | str
+    :param file_transport_dir: Optional GUI-side directory for shared file transport.
+    :type file_transport_dir: str
 
     """
 
     def init_widget(self, gconf: dict, name, context):
-        target = local_conf(gconf, name)["target"]
-        return CameraWidget(gconf, target["camera"], target["gparams"], context)
+        lconf = local_conf(gconf, name)
+        target = lconf["target"]
+        return CameraWidget(
+            gconf,
+            target["camera"],
+            target["gparams"],
+            context,
+            logger=self.logger,
+            file_transport_dir=lconf.get("file_transport_dir"),
+        )

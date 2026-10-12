@@ -118,6 +118,12 @@ class IODMR(BasicMeasNode):
         )
         return Reply(success)
 
+    def _save_data_for_artifact(self, msg: SaveDataReq) -> Reply:
+        """Synchronously save an artifact before atomic publication."""
+
+        success = self.io.save_data(msg.file_name, self.isweeper.data_msg(), msg.params, msg.note)
+        return Reply(success)
+
     def export_data(self, msg: ExportDataReq) -> Reply:
         success = self.io.export_data(msg.file_name, self.isweeper.data_msg())
         return Reply(success)
